@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NEXTWEB — Student Practice Portal</title>
+</head><body>
+
+<style>
+:root{
+  --ground:#0B1020;
+  --panel:#141C33;
+  --panel-2:#1B2543;
+  --edge:rgba(160,180,235,.16);
+  --ink:#EDF1FB;
+  --ink-2:#A3B0D0;
+  --ink-3:#6E7C9F;
+  --marigold:#F5A524;
+  --indigo:#6C7BFF;
+  --mint:#34D399;
+  --rose:#FF6B8B;
+  --shadow:0 26px 60px -22px rgba(0,0,0,.85);
+  --r:18px;
+  --ease:cubic-bezier(.22,1,.36,1);
+  --back:cubic-bezier(.34,1.56,.64,1);
+  --display:Georgia,"Iowan Old Style","Times New Roman",serif;
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:light){
+  :root{
+    --ground:#FBF7EF; --panel:#FFFFFF; --panel-2:#F4EFE4;
+    --edge:rgba(30,40,70,.14);
+    --ink:#171C2E; --ink-2:#4C566F; --ink-3:#7C87A0;
+    --indigo:#4E5CE0; --marigold:#C97C06;
+    --shadow:0 20px 44px -24px rgba(30,40,70,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0B1020; --panel:#141C33; --panel-2:#1B2543;
+  --edge:rgba(160,180,235,.16);
+  --ink:#EDF1FB; --ink-2:#A3B0D0; --ink-3:#6E7C9F;
+  --marigold:#F5A524; --indigo:#6C7BFF;
+  --shadow:0 26px 60px -22px rgba(0,0,0,.85);
+}
+:root[data-theme="light"]{
+  --ground:#FBF7EF; --panel:#FFFFFF; --panel-2:#F4EFE4;
+  --edge:rgba(30,40,70,.14);
+  --ink:#171C2E; --ink-2:#4C566F; --ink-3:#7C87A0;
+  --indigo:#4E5CE0; --marigold:#C97C06;
+  --shadow:0 20px 44px -24px rgba(30,40,70,.4);
+}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);line-height:1.55;overflow-x:hidden}
+button{font:inherit;color:inherit}
+
+.glow{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;filter:blur(80px);opacity:.42}
+.glow b{position:absolute;display:block;border-radius:50%}
+.glow b:nth-child(1){width:44vw;height:44vw;left:-10vw;top:-12vh;background:radial-gradient(circle,var(--indigo),transparent 62%);animation:d1 24s var(--ease) infinite alternate}
+.glow b:nth-child(2){width:36vw;height:36vw;right:-8vw;top:20vh;background:radial-gradient(circle,var(--marigold),transparent 60%);animation:d2 30s var(--ease) infinite alternate}
+.glow b:nth-child(3){width:40vw;height:40vw;left:30vw;bottom:-20vh;background:radial-gradient(circle,var(--mint),transparent 64%);animation:d3 27s var(--ease) infinite alternate}
+@keyframes d1{to{transform:translate3d(12vw,10vh,0) scale(1.2)}}
+@keyframes d2{to{transform:translate3d(-10vw,14vh,0) scale(1.14)}}
+@keyframes d3{to{transform:translate3d(8vw,-12vh,0) scale(1.2)}}
+
+.view{position:relative;z-index:1;display:none;min-height:100vh}
+.view.on{display:block;animation:vIn .55s var(--ease) both}
+@keyframes vIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* ---------- login ---------- */
+.lwrap{min-height:100vh;display:grid;place-items:center;padding:28px 18px;perspective:1300px}
+.lcard{width:min(420px,100%);padding:36px 30px 24px;background:var(--panel);border:1px solid var(--edge);
+  border-radius:var(--r);box-shadow:var(--shadow);transform-style:preserve-3d;animation:cIn .8s var(--back) both}
+@keyframes cIn{from{opacity:0;transform:translateY(38px) rotateX(14deg) scale(.94)}to{opacity:1;transform:none}}
+.lcard.shake{animation:shk .45s var(--ease)}
+@keyframes shk{20%,80%{transform:translateX(6px)}35%,65%{transform:translateX(-9px)}50%{transform:translateX(9px)}}
+.mark{display:grid;place-items:center;height:76px;perspective:600px;margin-bottom:10px}
+.cube{position:relative;width:46px;height:46px;transform-style:preserve-3d;animation:spin 15s linear infinite}
+@keyframes spin{from{transform:rotateX(-20deg) rotateY(0)}to{transform:rotateX(-20deg) rotateY(360deg)}}
+.cube i{position:absolute;inset:0;border:1px solid var(--marigold);border-radius:7px;
+  background:linear-gradient(135deg,rgba(245,165,36,.28),rgba(108,123,255,.2))}
+.cube i:nth-child(1){transform:translateZ(23px)}
+.cube i:nth-child(2){transform:rotateY(180deg) translateZ(23px)}
+.cube i:nth-child(3){transform:rotateY(90deg) translateZ(23px)}
+.cube i:nth-child(4){transform:rotateY(-90deg) translateZ(23px)}
+.cube i:nth-child(5){transform:rotateX(90deg) translateZ(23px)}
+.cube i:nth-child(6){transform:rotateX(-90deg) translateZ(23px)}
+.bname{font-family:var(--display);font-size:30px;letter-spacing:.02em;text-align:center;margin:0}
+.bname em{font-style:normal;color:var(--marigold)}
+.bsub{text-align:center;color:var(--ink-2);font-size:12.5px;margin:6px 0 26px;letter-spacing:.08em;text-transform:uppercase}
+.f{position:relative;margin-bottom:14px}
+.f input{width:100%;padding:16px 44px 16px 15px;border-radius:12px;background:var(--panel-2);
+  border:1px solid var(--edge);color:var(--ink);outline:none;transition:border-color .22s,box-shadow .22s}
+.f input:focus{border-color:var(--marigold);box-shadow:0 0 0 4px rgba(245,165,36,.16)}
+.f label{position:absolute;left:15px;top:16px;color:var(--ink-3);pointer-events:none;transition:all .2s var(--ease)}
+.f input:focus+label,.f input:not(:placeholder-shown)+label{top:-8px;left:11px;font-size:11px;padding:0 6px;
+  background:var(--panel);color:var(--marigold);letter-spacing:.06em;text-transform:uppercase}
+.eye{position:absolute;right:12px;top:13px;background:none;border:0;cursor:pointer;opacity:.6;font-size:15px}
+.eye:hover{opacity:1}
+.err{min-height:18px;margin:2px 0 8px;color:var(--rose);font-size:13px;text-align:center}
+.hint{margin-top:18px;padding:11px;border-radius:11px;text-align:center;font-size:12.5px;color:var(--ink-2);
+  background:var(--panel-2);border:1px dashed var(--edge)}
+.hint b{display:block;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--marigold);margin-bottom:4px}
+.hint code{font-family:var(--mono);background:rgba(128,150,200,.16);padding:2px 7px;border-radius:6px}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:12px;
+  border:1px solid var(--edge);background:transparent;cursor:pointer;font-weight:600;
+  transition:transform .18s var(--back),box-shadow .22s,border-color .22s,background .22s}
+.btn:hover{transform:translateY(-2px)}
+.btn:active{transform:scale(.98)}
+.btn:focus-visible{outline:2px solid var(--marigold);outline-offset:3px}
+.pri{background:var(--marigold);border-color:transparent;color:#20160A;box-shadow:0 12px 28px -14px rgba(245,165,36,.9)}
+.pri:hover{filter:brightness(1.06)}
+.gh{color:var(--ink-2)}
+.gh:hover{color:var(--ink);border-color:var(--indigo);background:var(--panel-2)}
+.blk{width:100%;padding:15px}
+.sm{padding:7px 13px;font-size:13px;border-radius:10px}
+
+/* ---------- chrome ---------- */
+.bar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:16px;padding:13px 22px;
+  background:color-mix(in srgb,var(--ground) 82%,transparent);backdrop-filter:blur(16px);border-bottom:1px solid var(--edge)}
+.bar .lg{display:inline-flex;align-items:center;gap:8px;background:none;border:0;cursor:pointer;
+  font-family:var(--display);font-size:17px}
+.bar .lg em{font-style:normal;color:var(--marigold)}
+.pip{width:8px;height:8px;border-radius:50%;background:var(--mint);box-shadow:0 0 10px var(--mint);animation:pl 2.4s ease-in-out infinite}
+@keyframes pl{50%{opacity:.3;transform:scale(.7)}}
+.crumb{flex:1;display:flex;gap:7px;align-items:center;font-size:13px;color:var(--ink-3);flex-wrap:wrap}
+.crumb button{background:var(--panel-2);border:1px solid var(--edge);border-radius:9px;padding:4px 10px;cursor:pointer;transition:.2s}
+.crumb button:hover{color:var(--ink);border-color:var(--indigo)}
+.crumb .now{color:var(--marigold)}
+.who{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:99px;font-size:13px;
+  background:var(--panel-2);border:1px solid var(--edge)}
+
+.stage{max-width:1080px;margin:0 auto;padding:38px 20px 70px}
+.step{display:none}
+.step.on{display:block;animation:sIn .5s var(--ease) both}
+@keyframes sIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.head{text-align:center;margin-bottom:30px}
+.head h2{font-family:var(--display);font-weight:400;font-size:clamp(26px,4.4vw,40px);margin:0;text-wrap:balance}
+.head h2 em{font-style:italic;color:var(--marigold)}
+.head p{margin:8px 0 0;color:var(--ink-2);font-size:14px}
+
+/* ---------- cards ---------- */
+.grid{display:grid;gap:16px}
+.g-cls{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.g-sub{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.g-ch{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.card{position:relative;text-align:left;cursor:pointer;padding:20px;border-radius:var(--r);
+  border:1px solid var(--edge);background:var(--panel);overflow:hidden;
+  transition:transform .3s var(--ease),border-color .25s,box-shadow .3s;animation:pIn .45s var(--back) both}
+@keyframes pIn{from{opacity:0;transform:translateY(18px) scale(.96)}to{opacity:1;transform:none}}
+.card:hover{transform:translateY(-5px);border-color:var(--marigold);box-shadow:var(--shadow)}
+.card:focus-visible{outline:2px solid var(--marigold);outline-offset:3px}
+.card .ico{display:grid;place-items:center;width:46px;height:46px;border-radius:13px;font-size:21px;margin-bottom:12px;
+  background:var(--panel-2);border:1px solid var(--edge);transition:transform .3s var(--back)}
+.card:hover .ico{transform:scale(1.1) rotate(-7deg)}
+.card h3{margin:0 0 4px;font-size:16.5px;font-weight:650;line-height:1.35}
+.card p{margin:0;color:var(--ink-2);font-size:13px}
+.card .num{font-family:var(--display);font-size:42px;line-height:1;color:var(--marigold)}
+.chip{position:absolute;top:14px;right:14px;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;
+  padding:3px 8px;border-radius:99px;background:var(--panel-2);border:1px solid var(--edge);color:var(--ink-3)}
+.chip.live{color:var(--mint);border-color:color-mix(in srgb,var(--mint) 45%,transparent)}
+.card.off{opacity:.45;cursor:not-allowed}
+.card.off:hover{transform:none;border-color:var(--edge);box-shadow:none}
+.ch{display:flex;gap:13px;align-items:flex-start;padding:17px}
+.ch .n{flex:0 0 auto;display:grid;place-items:center;width:36px;height:36px;border-radius:10px;font-family:var(--mono);
+  font-size:13px;background:var(--panel-2);border:1px solid var(--edge);color:var(--marigold)}
+.ch h3{font-size:14.5px}
+.ch p{font-size:12px;color:var(--ink-3)}
+
+/* ---------- test ---------- */
+.thead{display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:flex-end;margin-bottom:14px}
+.eb{margin:0 0 4px;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--marigold)}
+.thead h2{font-family:var(--display);font-weight:400;margin:0;font-size:clamp(21px,3vw,29px)}
+.pill{display:inline-flex;align-items:center;gap:7px;padding:7px 14px;border-radius:99px;font-size:13px;
+  background:var(--panel-2);border:1px solid var(--edge);color:var(--ink-2)}
+.pill b{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--ink)}
+.prog{height:5px;border-radius:99px;background:var(--panel-2);overflow:hidden;margin-bottom:24px}
+.prog i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--marigold),var(--indigo));transition:width .4s var(--ease)}
+.qs{list-style:none;margin:0;padding:0;display:grid;gap:16px}
+.q{padding:20px;border-radius:var(--r);border:1px solid var(--edge);background:var(--panel);
+  animation:pIn .4s var(--ease) both;transition:border-color .25s}
+.q.done{border-color:color-mix(in srgb,var(--indigo) 45%,transparent)}
+.q.right{border-color:color-mix(in srgb,var(--mint) 55%,transparent)}
+.q.wrong{border-color:color-mix(in srgb,var(--rose) 55%,transparent)}
+.qt{display:flex;gap:12px;margin-bottom:14px}
+.qi{flex:0 0 auto;display:grid;place-items:center;width:29px;height:29px;border-radius:9px;font-family:var(--mono);
+  font-size:12.5px;background:var(--panel-2);border:1px solid var(--edge)}
+.qt p{margin:2px 0 0;font-size:15.5px;font-weight:600;line-height:1.5}
+.opts{display:grid;gap:9px}
+.opt{display:flex;align-items:center;gap:11px;text-align:left;width:100%;padding:12px 15px;border-radius:12px;
+  border:1px solid var(--edge);background:var(--panel-2);cursor:pointer;transition:all .2s var(--ease)}
+.opt:hover{border-color:var(--indigo);transform:translateX(3px)}
+.opt:focus-visible{outline:2px solid var(--marigold);outline-offset:2px}
+.opt .k{flex:0 0 auto;display:grid;place-items:center;width:25px;height:25px;border-radius:7px;font-family:var(--mono);
+  font-size:12px;background:var(--panel);border:1px solid var(--edge);transition:.2s}
+.opt .tx{font-size:14.5px}
+.opt.pick{border-color:var(--indigo);background:color-mix(in srgb,var(--indigo) 16%,var(--panel-2))}
+.opt.pick .k{background:var(--indigo);color:#fff;border-color:transparent}
+.opt.ok{border-color:var(--mint);background:color-mix(in srgb,var(--mint) 15%,var(--panel-2))}
+.opt.ok .k{background:var(--mint);color:#06281B;border-color:transparent}
+.opt.no{border-color:var(--rose);background:color-mix(in srgb,var(--rose) 14%,var(--panel-2))}
+.opt.no .k{background:var(--rose);color:#2C0710;border-color:transparent}
+.opt .mk{margin-left:auto;font-size:14px}
+.q.marked .opt{pointer-events:none;transform:none}
+.note{margin:13px 0 0;padding:10px 13px;border-radius:10px;font-size:13px;color:var(--ink-2);
+  background:var(--panel-2);border-left:3px solid var(--marigold)}
+.note b{color:var(--ink)}
+.acts{display:flex;flex-wrap:wrap;gap:11px;justify-content:center;margin-top:28px}
+
+/* ---------- result ---------- */
+.res{max-width:600px;margin:0 auto;padding:36px 28px 28px;text-align:center;border-radius:var(--r);
+  border:1px solid var(--edge);background:var(--panel);box-shadow:var(--shadow)}
+.ring{position:relative;width:190px;height:190px;margin:0 auto 18px}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:12;stroke-linecap:round}
+.ring .bgc{stroke:var(--panel-2)}
+.ring .fgc{stroke:var(--marigold);stroke-dasharray:534;stroke-dashoffset:534;transition:stroke-dashoffset 1.1s var(--ease),stroke .4s}
+.ring .mid{position:absolute;inset:0;display:grid;place-content:center}
+.ring .mid b{font-family:var(--mono);font-size:48px;font-weight:700;line-height:1}
+.ring .mid span{font-size:13px;color:var(--ink-3)}
+.res h2{font-family:var(--display);font-weight:400;font-size:27px;margin:0 0 6px}
+.res .ln{margin:0 0 20px;color:var(--ink-2);font-size:14px}
+.stats{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:22px}
+.st{padding:11px 17px;border-radius:12px;background:var(--panel-2);border:1px solid var(--edge);min-width:92px}
+.st b{display:block;font-family:var(--mono);font-size:21px}
+.st span{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3)}
+.st.g b{color:var(--mint)} .st.r b{color:var(--rose)} .st.y b{color:var(--marigold)}
+
+.conf{position:fixed;inset:0;pointer-events:none;z-index:60;overflow:hidden}
+.conf i{position:absolute;width:8px;height:14px;animation:fall linear forwards}
+@keyframes fall{0%{opacity:1;transform:translateY(-12vh) rotate(0)}100%{opacity:0;transform:translateY(106vh) rotate(720deg)}}
+
+.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,24px);z-index:80;padding:11px 20px;border-radius:99px;
+  font-size:13.5px;background:var(--panel);border:1px solid var(--edge);box-shadow:var(--shadow);opacity:0;
+  transition:all .3s var(--back);pointer-events:none}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.foot{text-align:center;padding:20px;font-size:12px;color:var(--ink-3);border-top:1px solid var(--edge)}
+
+@media (max-width:720px){
+  .bar{padding:11px 13px;gap:9px;flex-wrap:wrap}
+  .crumb{order:3;flex-basis:100%}
+  .stage{padding:26px 13px 60px}
+  .ring{width:160px;height:160px}
+  .ring .mid b{font-size:40px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+</style>
+
+<div class="glow" aria-hidden="true"><b></b><b></b><b></b></div>
+
+<!-- LOGIN -->
+<section id="vLogin" class="view on">
+  <div class="lwrap">
+    <div class="lcard" id="lcard">
+      <div class="mark" aria-hidden="true"><div class="cube"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+      <h1 class="bname">NEXT<em>WEB</em></h1>
+      <p class="bsub">Student practice portal</p>
+      <form id="loginForm" autocomplete="off">
+        <div class="f">
+          <input type="text" id="u" placeholder=" " required />
+          <label for="u">Username</label>
+        </div>
+        <div class="f">
+          <input type="password" id="p" placeholder=" " required />
+          <label for="p">Passcode</label>
+          <button class="eye" type="button" id="eye" aria-label="Show passcode">&#128065;</button>
+        </div>
+        <p class="err" id="err" role="alert"></p>
+        <button class="btn pri blk" type="submit">Enter portal</button>
+      </form>
+      <div class="hint"><b>Test login</b><code>Naksh</code> &nbsp;&middot;&nbsp; <code>121212</code></div>
+    </div>
+  </div>
+</section>
+
+<!-- APP -->
+<section id="vApp" class="view">
+  <header class="bar">
+    <button class="lg" id="home"><span class="pip"></span>NEXT<em>WEB</em></button>
+    <nav class="crumb" id="crumb" aria-label="Breadcrumb"></nav>
+    <span class="who" id="who"></span>
+    <button class="btn gh sm" id="out" type="button">Log out</button>
+  </header>
+
+  <main class="stage">
+    <div class="step" id="sClass">
+      <div class="head"><h2>Choose your <em>class</em></h2><p>Classes 8 to 12 &middot; NCERT syllabus</p></div>
+      <div class="grid g-cls" id="gClass"></div>
+    </div>
+
+    <div class="step" id="sSub">
+      <div class="head"><h2>Pick a <em>subject</em></h2><p id="subP"></p></div>
+      <div class="grid g-sub" id="gSub"></div>
+      <div class="acts"><button class="btn gh" data-back="class" type="button">&larr; Classes</button></div>
+    </div>
+
+    <div class="step" id="sCh">
+      <div class="head"><h2>Select a <em>chapter</em></h2><p id="chP"></p></div>
+      <div class="grid g-ch" id="gCh"></div>
+      <div class="acts"><button class="btn gh" data-back="sub" type="button">&larr; Subjects</button></div>
+    </div>
+
+    <div class="step" id="sTest">
+      <div class="thead">
+        <div><p class="eb" id="tEb"></p><h2 id="tT"></h2></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <span class="pill">&#9201; <b id="clock">00:00</b></span>
+          <span class="pill"><b id="ansN">0</b>/20 answered</span>
+        </div>
+      </div>
+      <div class="prog"><i id="bar"></i></div>
+      <ol class="qs" id="qs"></ol>
+      <div class="acts">
+        <button class="btn pri" id="submit" type="button">Submit &amp; mark instantly</button>
+        <button class="btn gh" id="reset" type="button">&#8635; Reset test</button>
+        <button class="btn gh" data-back="ch" type="button">&larr; Chapters</button>
+      </div>
+    </div>
+
+    <div class="step" id="sRes">
+      <div class="res">
+        <div class="ring">
+          <svg viewBox="0 0 200 200" aria-hidden="true">
+            <circle class="bgc" cx="100" cy="100" r="85"></circle>
+            <circle class="fgc" cx="100" cy="100" r="85" id="ringFg"></circle>
+          </svg>
+          <div class="mid"><b id="scN">0</b><span>out of 20</span></div>
+        </div>
+        <h2 id="verdict"></h2>
+        <p class="ln" id="resLine"></p>
+        <div class="stats" id="stats"></div>
+        <div class="acts">
+          <button class="btn pri" id="review" type="button">Review answers</button>
+          <button class="btn gh" id="retake" type="button">&#8635; Reset &amp; retake</button>
+          <button class="btn gh" data-back="ch" type="button">Another chapter</button>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer class="foot">NEXTWEB &middot; NCERT practice tests &middot; preview build</footer>
+</section>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ============ tiny helpers ============ */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const R=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const P=a=>a[Math.floor(Math.random()*a.length)];
+const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const gcd=(a,b)=>b?gcd(b,a%b):Math.abs(a);
+const fx=n=>{const r=Math.round(n*100)/100;return String(r);};
+
+/* build a question: correct answer + candidate distractors */
+function mk(q,ans,dis,note){
+  ans=String(ans);
+  const seen=new Set([ans]), out=[];
+  (dis||[]).forEach(d=>{d=String(d);if(!seen.has(d)){seen.add(d);out.push(d);}});
+  let k=1;
+  while(out.length<3&&k<60){
+    const n=parseFloat(ans);
+    const v=isNaN(n)?ans+" (none of these)"+"".padEnd(k,"'"):fx(n+k*(k%2?1:-1)*(Math.abs(n)>20?R(2,9):1));
+    if(!seen.has(v)){seen.add(v);out.push(v);}
+    k++;
+  }
+  return {q:q,ans:ans,opts:shuf([ans,...out.slice(0,3)]),note:note||""};
+}
+
+/* ============ syllabus ============ */
+const SUB={
+  science:{name:"Science",icon:"\u{1F52C}"},
+  maths:{name:"Mathematics",icon:"\u{1F4D0}"},
+  physics:{name:"Physics",icon:"\u{269B}\u{FE0F}"},
+  chemistry:{name:"Chemistry",icon:"\u{1F9EA}"},
+  biology:{name:"Biology",icon:"\u{1F9EC}"}
+};
+const SY={
+ 8:{blurb:"Foundation year",subjects:{
+  science:["Crop Production and Management","Microorganisms: Friend and Foe","Coal and Petroleum","Combustion and Flame","Conservation of Plants and Animals","Reproduction in Animals","Reaching the Age of Adolescence","Force and Pressure","Friction","Sound","Chemical Effects of Electric Current","Some Natural Phenomena","Light"],
+  maths:["Rational Numbers","Linear Equations in One Variable","Understanding Quadrilaterals","Data Handling","Squares and Square Roots","Cubes and Cube Roots","Comparing Quantities","Algebraic Expressions and Identities","Mensuration","Exponents and Powers","Direct and Inverse Proportions","Factorisation","Introduction to Graphs"]}},
+ 9:{blurb:"Core concepts",subjects:{
+  science:["Matter in Our Surroundings","Is Matter Around Us Pure?","Atoms and Molecules","Structure of the Atom","The Fundamental Unit of Life","Tissues","Motion","Force and Laws of Motion","Gravitation","Work and Energy","Sound","Improvement in Food Resources"],
+  maths:["Number Systems","Polynomials","Coordinate Geometry","Linear Equations in Two Variables","Introduction to Euclid's Geometry","Lines and Angles","Triangles","Quadrilaterals","Circles","Heron's Formula","Surface Areas and Volumes","Statistics"]}},
+ 10:{blurb:"Board essentials",subjects:{
+  science:["Chemical Reactions and Equations","Acids, Bases and Salts","Metals and Non-metals","Carbon and its Compounds","Life Processes","Control and Coordination","How do Organisms Reproduce?","Heredity","Light — Reflection and Refraction","The Human Eye and the Colourful World","Electricity","Magnetic Effects of Electric Current","Our Environment"],
+  maths:["Real Numbers","Polynomials","Pair of Linear Equations in Two Variables","Quadratic Equations","Arithmetic Progressions","Triangles","Coordinate Geometry","Introduction to Trigonometry","Some Applications of Trigonometry","Circles","Areas Related to Circles","Surface Areas and Volumes","Statistics","Probability"]}},
+ 11:{blurb:"Streams split",subjects:{
+  physics:["Units and Measurements","Motion in a Straight Line","Motion in a Plane","Laws of Motion","Work, Energy and Power","System of Particles and Rotational Motion","Gravitation","Mechanical Properties of Solids","Mechanical Properties of Fluids","Thermal Properties of Matter","Thermodynamics","Kinetic Theory","Oscillations","Waves"],
+  chemistry:["Some Basic Concepts of Chemistry","Structure of Atom","Classification of Elements and Periodicity","Chemical Bonding and Molecular Structure","Thermodynamics","Equilibrium","Redox Reactions","Organic Chemistry — Basic Principles","Hydrocarbons"],
+  biology:["The Living World","Biological Classification","Plant Kingdom","Animal Kingdom","Morphology of Flowering Plants","Anatomy of Flowering Plants","Structural Organisation in Animals","Cell: The Unit of Life","Biomolecules","Cell Cycle and Cell Division","Photosynthesis in Higher Plants","Respiration in Plants","Plant Growth and Development","Breathing and Exchange of Gases","Body Fluids and Circulation","Excretory Products and their Elimination","Locomotion and Movement","Neural Control and Coordination","Chemical Coordination and Integration"],
+  maths:["Sets","Relations and Functions","Trigonometric Functions","Complex Numbers and Quadratic Equations","Linear Inequalities","Permutations and Combinations","Binomial Theorem","Sequences and Series","Straight Lines","Conic Sections","Introduction to Three Dimensional Geometry","Limits and Derivatives","Statistics","Probability"]}},
+ 12:{blurb:"Boards + entrance",subjects:{
+  physics:["Electric Charges and Fields","Electrostatic Potential and Capacitance","Current Electricity","Moving Charges and Magnetism","Magnetism and Matter","Electromagnetic Induction","Alternating Current","Electromagnetic Waves","Ray Optics and Optical Instruments","Wave Optics","Dual Nature of Radiation and Matter","Atoms","Nuclei","Semiconductor Electronics"],
+  chemistry:["Solutions","Electrochemistry","Chemical Kinetics","The d- and f-Block Elements","Coordination Compounds","Haloalkanes and Haloarenes","Alcohols, Phenols and Ethers","Aldehydes, Ketones and Carboxylic Acids","Amines","Biomolecules"],
+  biology:["Sexual Reproduction in Flowering Plants","Human Reproduction","Reproductive Health","Principles of Inheritance and Variation","Molecular Basis of Inheritance","Evolution","Human Health and Disease","Microbes in Human Welfare","Biotechnology: Principles and Processes","Biotechnology and its Applications","Organisms and Populations","Ecosystem","Biodiversity and Conservation"],
+  maths:["Relations and Functions","Inverse Trigonometric Functions","Matrices","Determinants","Continuity and Differentiability","Application of Derivatives","Integrals","Application of Integrals","Differential Equations","Vector Algebra","Three Dimensional Geometry","Linear Programming","Probability"]}}
+};
+
+/* ============ maths generators (fresh questions every reset) ============ */
+const G={
+ hcf(){const a=R(2,12)*R(2,9),b=R(2,12)*R(2,9);const h=gcd(a,b),l=a*b/h;
+   return P([
+     mk(`What is the HCF of ${a} and ${b}?`,h,[l,a,b,h*2],`HCF(${a}, ${b}) = ${h}.`),
+     mk(`What is the LCM of ${a} and ${b}?`,l,[h,a*b,a+b],`LCM = (${a}×${b}) ÷ HCF ${h} = ${l}.`),
+     mk(`If HCF(${a}, ${b}) = ${h}, what is their LCM?`,l,[h*h,a+b,a*b],`HCF × LCM = product, so LCM = ${a*b}/${h} = ${l}.`)
+   ]);},
+ poly(){const r1=R(-6,6),r2=R(-6,6);const s=r1+r2,p=r1*r2;
+   const sign=n=>(n<0?"− "+Math.abs(n):"+ "+n);
+   return P([
+     mk(`Find the sum of the zeroes of x² ${sign(-s)}x ${sign(p)}.`,s,[-s,p,-p],`Sum of zeroes = −b/a = ${s}.`),
+     mk(`Find the product of the zeroes of x² ${sign(-s)}x ${sign(p)}.`,p,[s,-p,-s],`Product of zeroes = c/a = ${p}.`),
+     mk(`The zeroes of x² ${sign(-s)}x ${sign(p)} are ${r1} and ___.`,r2,[-r2,r2+1,s],`Roots are ${r1} and ${r2}.`)
+   ]);},
+ quad(){const a=1,b=R(-9,9),c=R(-9,9);const d=b*b-4*a*c;
+   return P([
+     mk(`Find the discriminant of x² ${b<0?"− "+-b:"+ "+b}x ${c<0?"− "+-c:"+ "+c} = 0.`,d,[-d,b*b+4*c,b*b],`D = b² − 4ac = ${b*b} − ${4*c} = ${d}.`),
+     mk(`The roots of x² ${b<0?"− "+-b:"+ "+b}x ${c<0?"− "+-c:"+ "+c} = 0 are:`,
+        d>0?"real and distinct":d===0?"real and equal":"not real",
+        ["real and distinct","real and equal","not real","always positive"],`D = ${d}, so roots are ${d>0?"real and distinct":d===0?"real and equal":"not real"}.`)
+   ]);},
+ ap(){const a=R(-9,12),d=R(-7,9)||3,n=R(5,20);const tn=a+(n-1)*d,sn=n*(2*a+(n-1)*d)/2;
+   return P([
+     mk(`An AP has first term ${a} and common difference ${d}. Find its ${n}th term.`,tn,[a+n*d,a*n,tn+d],`aₙ = a + (n−1)d = ${a} + ${n-1}×${d} = ${tn}.`),
+     mk(`Find the sum of the first ${n} terms of the AP with a = ${a}, d = ${d}.`,sn,[n*tn,sn+n,a+tn],`Sₙ = n/2 [2a + (n−1)d] = ${sn}.`),
+     mk(`Find the common difference of the AP ${a}, ${a+d}, ${a+2*d}, ${a+3*d}, …`,d,[-d,a,a+d],`d = ${a+d} − ${a} = ${d}.`)
+   ]);},
+ trig(){const t=[["sin 30°","1/2"],["cos 60°","1/2"],["sin 60°","√3/2"],["cos 30°","√3/2"],["tan 45°","1"],["sin 90°","1"],["cos 90°","0"],["tan 60°","√3"],["tan 30°","1/√3"],["sin 0°","0"]];
+   const c=P(t);
+   return P([
+     mk(`What is the value of ${c[0]}?`,c[1],["1/2","√3/2","1/√3","√3","1","0"].filter(v=>v!==c[1]),`${c[0]} = ${c[1]}.`),
+     mk(`sin²θ + cos²θ equals:`,"1",["0","2","sec²θ","tan²θ"],"This is the fundamental Pythagorean identity."),
+     mk(`1 + tan²θ equals:`,"sec²θ",["cosec²θ","cot²θ","sin²θ","1"],"Dividing sin²θ + cos²θ = 1 by cos²θ gives 1 + tan²θ = sec²θ.")
+   ]);},
+ coord(){const trip=P([[3,4,5],[6,8,10],[5,12,13],[8,15,17],[9,12,15]]);
+   const x1=R(-6,6),y1=R(-6,6),x2=x1+trip[0],y2=y1+trip[1];
+   return P([
+     mk(`Find the distance between (${x1}, ${y1}) and (${x2}, ${y2}).`,trip[2],[trip[0]+trip[1],trip[2]+2,trip[0]*trip[1]],`√(${trip[0]}² + ${trip[1]}²) = √${trip[2]*trip[2]} = ${trip[2]}.`),
+     mk(`Find the midpoint of the line joining (${x1}, ${y1}) and (${x2}, ${y2}).`,
+        `(${fx((x1+x2)/2)}, ${fx((y1+y2)/2)})`,
+        [`(${fx((x2-x1)/2)}, ${fx((y2-y1)/2)})`,`(${x1+x2}, ${y1+y2})`,`(${fx((y1+y2)/2)}, ${fx((x1+x2)/2)})`],
+        `Midpoint = ((x₁+x₂)/2, (y₁+y₂)/2).`),
+     (()=>{const x=P([-5,-3,3,5]),y=P([-4,-2,2,4]);
+       const q=x>0&&y>0?"I":x<0&&y>0?"II":x<0&&y<0?"III":"IV";
+       return mk(`In which quadrant does the point (${x}, ${y}) lie?`,q,["I","II","III","IV"],`x is ${x>0?"positive":"negative"} and y is ${y>0?"positive":"negative"}, so quadrant ${q}.`);})()
+   ]);},
+ prob(){return P([
+     (()=>{const f=P([[ "an even number",3],["a number greater than 4",2],["a prime number",3],["a multiple of 3",2],["the number 6",1]]);
+       const g=gcd(f[1],6);
+       return mk(`A fair die is rolled once. What is the probability of getting ${f[0]}?`,`${f[1]/g}/${6/g}`,["1/6","1/2","1/3","2/3","5/6"],`Favourable outcomes = ${f[1]} out of 6.`);})(),
+     (()=>{const r=R(2,7),b=R(2,7),g=gcd(r,r+b);
+       return mk(`A bag has ${r} red and ${b} blue balls. One ball is drawn. P(red) = ?`,`${r/g}/${(r+b)/g}`,[`${b}/${r+b}`,`${r}/${b}`,`1/${r+b}`],`P(red) = ${r}/${r+b}.`);})(),
+     mk("A card is drawn from a well-shuffled deck of 52. What is the probability it is a king?","1/13",["1/52","1/4","4/13","1/26"],"There are 4 kings in 52 cards: 4/52 = 1/13."),
+     mk("The sum of the probabilities of all elementary events of an experiment is:","1",["0","0.5","depends on the experiment","2"],"Total probability of the sample space is always 1.")
+   ]);},
+ stats(){const n=5;const v=Array.from({length:n},()=>R(2,40));const sum=v.reduce((a,b)=>a+b,0);
+   const sorted=v.slice().sort((a,b)=>a-b);
+   return P([
+     mk(`Find the mean of: ${v.join(", ")}`,fx(sum/n),[sum,sorted[2],fx(sum/(n-1))],`Mean = ${sum} ÷ ${n} = ${fx(sum/n)}.`),
+     mk(`Find the median of: ${v.join(", ")}`,sorted[2],[fx(sum/n),sorted[0],sorted[4]],`Sorted: ${sorted.join(", ")}. Middle value = ${sorted[2]}.`),
+     mk(`Find the range of: ${v.join(", ")}`,sorted[4]-sorted[0],[sorted[4],sorted[0],fx(sum/n)],`Range = ${sorted[4]} − ${sorted[0]} = ${sorted[4]-sorted[0]}.`),
+     mk("The empirical relationship between mean, median and mode is:","Mode = 3 Median − 2 Mean",["Mode = 2 Median − 3 Mean","Mean = 3 Median − 2 Mode","Median = 3 Mode − 2 Mean"],"3 Median = Mode + 2 Mean.")
+   ]);},
+ circleArea(){const r=R(2,14),pi="π";const th=P([60,90,120,180]);
+   return P([
+     mk(`Find the area of a circle of radius ${r} cm. (take π = 22/7)`,fx(22/7*r*r)+" cm²",[fx(2*22/7*r)+" cm²",fx(22/7*r)+" cm²",fx(4*22/7*r*r)+" cm²"],`Area = πr² = 22/7 × ${r}² = ${fx(22/7*r*r)} cm².`),
+     mk(`Find the circumference of a circle of radius ${r} cm. (take π = 22/7)`,fx(2*22/7*r)+" cm",[fx(22/7*r*r)+" cm",fx(22/7*r)+" cm",fx(22/7*2*r*r)+" cm"],`Circumference = 2πr = ${fx(2*22/7*r)} cm.`),
+     mk(`Find the area of a sector of angle ${th}° in a circle of radius ${r} cm. (π = 22/7)`,fx(th/360*22/7*r*r)+" cm²",[fx(22/7*r*r)+" cm²",fx(th/360*2*22/7*r)+" cm²",fx(th/180*22/7*r*r)+" cm²"],`Area of sector = (θ/360) × πr² = ${fx(th/360*22/7*r*r)} cm².`)
+   ]);},
+ mens(){const r=R(2,10),h=R(3,15),l=R(3,14),b=R(3,14);
+   return P([
+     mk(`Find the volume of a cylinder of radius ${r} cm and height ${h} cm. (π = 22/7)`,fx(22/7*r*r*h)+" cm³",[fx(22/7*r*h)+" cm³",fx(1/3*22/7*r*r*h)+" cm³",fx(2*22/7*r*h)+" cm³"],`V = πr²h = ${fx(22/7*r*r*h)} cm³.`),
+     mk(`Find the volume of a cone of radius ${r} cm and height ${h} cm. (π = 22/7)`,fx(22/7*r*r*h/3)+" cm³",[fx(22/7*r*r*h)+" cm³",fx(4/3*22/7*r*r*r)+" cm³",fx(22/7*r*h)+" cm³"],`V = ⅓πr²h = ${fx(22/7*r*r*h/3)} cm³.`),
+     mk(`Find the volume of a sphere of radius ${r} cm. (π = 22/7)`,fx(4/3*22/7*r*r*r)+" cm³",[fx(22/7*r*r*r)+" cm³",fx(4*22/7*r*r)+" cm³",fx(2/3*22/7*r*r*r)+" cm³"],`V = 4⁄₃πr³ = ${fx(4/3*22/7*r*r*r)} cm³.`),
+     mk(`Find the area of a rectangle ${l} cm by ${b} cm.`,l*b+" cm²",[2*(l+b)+" cm²",l+b+" cm²",fx(l*b/2)+" cm²"],`Area = l × b = ${l*b} cm².`)
+   ]);},
+ pct(){const cp=R(2,20)*10,pr=P([10,20,25,5,15]);
+   return P([
+     mk(`What is ${pr}% of ${cp}?`,fx(cp*pr/100),[fx(cp*pr/10),fx(cp/pr),fx(cp*pr)],`${pr}% of ${cp} = ${fx(cp*pr/100)}.`),
+     mk(`An article bought for ₹${cp} is sold at a profit of ${pr}%. Find the selling price.`,fx(cp*(1+pr/100)),[fx(cp*(1-pr/100)),fx(cp+pr),fx(cp*pr/100)],`SP = CP × (1 + ${pr}/100) = ₹${fx(cp*(1+pr/100))}.`),
+     (()=>{const t=R(2,5);return mk(`Find the simple interest on ₹${cp} at ${pr}% per annum for ${t} years.`,fx(cp*pr*t/100),[fx(cp*pr/100),fx(cp*t/100),fx(cp*pr*t)],`SI = PRT/100 = ${cp}×${pr}×${t}/100 = ₹${fx(cp*pr*t/100)}.`);})()
+   ]);},
+ expo(){const a=R(2,9),m=R(2,5),n=R(2,4);
+   return P([
+     mk(`Simplify: ${a}<sup>${m}</sup> × ${a}<sup>${n}</sup>`,`${a}^${m+n}`,[`${a}^${m*n}`,`${a}^${m-n}`,`${2*a}^${m+n}`],`When bases are equal, add the exponents: ${a}^${m+n}.`),
+     mk(`Evaluate: ${a}<sup>${m}</sup>`,Math.pow(a,m),[a*m,Math.pow(m,a),Math.pow(a,m-1)],`${a}^${m} = ${Math.pow(a,m)}.`),
+     mk(`What is the value of ${a}<sup>0</sup>?`,"1",["0",String(a),"undefined"],"Any non-zero number raised to the power 0 equals 1."),
+     (()=>{const s=R(4,25);return mk(`Find √${s*s}.`,s,[s*s,s*2,fx(s/2)],`${s} × ${s} = ${s*s}, so √${s*s} = ${s}.`);})(),
+     (()=>{const s=R(2,12);return mk(`Find the cube root of ${s*s*s}.`,s,[s*s,s*3,s+1],`${s}³ = ${s*s*s}.`);})()
+   ]);},
+ rat(){const a=R(1,9),b=R(2,9),c=R(1,9),d=R(2,9);
+   const nu=a*d+c*b,de=b*d,g=gcd(nu,de);
+   return P([
+     mk(`Add: ${a}/${b} + ${c}/${d}`,`${nu/g}/${de/g}`,[`${a+c}/${b+d}`,`${a*c}/${b*d}`,`${nu}/${de+1}`],`LCD = ${de}; sum = ${nu}/${de} = ${nu/g}/${de/g}.`),
+     mk(`What is the reciprocal of ${a}/${b}?`,`${b}/${a}`,[`−${a}/${b}`,`${a}/${b}`,`−${b}/${a}`],"Reciprocal flips numerator and denominator."),
+     mk(`What is the additive inverse of ${a}/${b}?`,`−${a}/${b}`,[`${b}/${a}`,`${a}/${b}`,"0"],"The additive inverse of x is −x."),
+     mk("Which number is the multiplicative identity for rational numbers?","1",["0","−1","1/2"],"x × 1 = x for every rational x.")
+   ]);},
+ lin1(){const x=R(-9,9),a=R(2,9),b=R(-12,12);const c=a*x+b;
+   return mk(`Solve for x:  ${a}x ${b<0?"− "+-b:"+ "+b} = ${c}`,x,[-x,c-b,fx((c+b)/a)],`${a}x = ${c-b}, so x = ${x}.`);},
+ quadri(){const n=R(5,12);
+   return P([
+     mk(`What is the sum of the interior angles of a polygon with ${n} sides?`,(n-2)*180+"°",[n*180+"°",(n-1)*180+"°",360+"°"],`Sum = (n − 2) × 180° = ${(n-2)*180}°.`),
+     mk(`Each exterior angle of a regular polygon with ${n} sides measures:`,fx(360/n)+"°",[fx((n-2)*180/n)+"°",fx(180/n)+"°",fx(360/(n-2))+"°"],`Exterior angle = 360°/${n} = ${fx(360/n)}°.`),
+     mk(`Each interior angle of a regular polygon with ${n} sides measures:`,fx((n-2)*180/n)+"°",[fx(360/n)+"°",fx((n-2)*180)+"°",fx(180/n)+"°"],`Interior angle = (n−2)×180°/n = ${fx((n-2)*180/n)}°.`),
+     mk("In a parallelogram, opposite angles are:","equal",["supplementary","complementary","always right angles"],"Opposite angles of a parallelogram are equal.")
+   ]);},
+ ident(){const a=R(1,9),b=R(1,9);
+   return P([
+     mk(`Expand: (x + ${b})²`,`x² + ${2*b}x + ${b*b}`,[`x² + ${b*b}`,`x² − ${2*b}x + ${b*b}`,`x² + ${b}x + ${b*b}`],`(a+b)² = a² + 2ab + b².`),
+     mk(`Expand: (x − ${b})²`,`x² − ${2*b}x + ${b*b}`,[`x² + ${2*b}x + ${b*b}`,`x² − ${b*b}`,`x² − ${2*b}x − ${b*b}`],`(a−b)² = a² − 2ab + b².`),
+     mk(`Simplify: (x + ${b})(x − ${b})`,`x² − ${b*b}`,[`x² + ${b*b}`,`x² − ${2*b}x`,`x² − ${b}x − ${b*b}`],`(a+b)(a−b) = a² − b².`),
+     mk(`Factorise: ${a}x + ${a*b}`,`${a}(x + ${b})`,[`${a}x(${b})`,`x(${a} + ${b})`,`${a*b}(x + 1)`],`Take out the common factor ${a}.`)
+   ]);},
+ prop(){const a=R(2,9),b=a*R(2,9),k=R(2,8);
+   return P([
+     mk(`If ${a} pens cost ₹${b}, what do ${a*k} pens cost? (direct proportion)`,b*k,[b+k,fx(b/k),a*k],`Cost scales directly: ₹${b} × ${k} = ₹${b*k}.`),
+     mk(`${a*k} workers finish a job in ${b} days. How many days will ${a} workers take? (inverse proportion)`,b*k,[fx(b/k),b,a*b],`More workers → fewer days. x = ${a*k}×${b}/${a} = ${b*k} days.`),
+     mk("If x and y are in inverse proportion, then:","xy is constant",["x/y is constant","x + y is constant","x − y is constant"],"Inverse proportion means the product xy stays constant.")
+   ]);},
+ sets(){const a=R(10,40),b=R(10,40),i=R(2,Math.min(a,b));
+   return P([
+     mk(`If n(A) = ${a}, n(B) = ${b} and n(A∩B) = ${i}, find n(A∪B).`,a+b-i,[a+b,a+b+i,a-b+i],`n(A∪B) = n(A) + n(B) − n(A∩B) = ${a+b-i}.`),
+     (()=>{const n=R(2,7);return mk(`How many subsets does a set with ${n} elements have?`,Math.pow(2,n),[n*n,Math.pow(2,n)-1,2*n],`Number of subsets = 2ⁿ = 2^${n} = ${Math.pow(2,n)}.`);})(),
+     mk("The set with no elements is called:","the empty set",["the universal set","a singleton set","a power set"],"The empty set ∅ has no elements.")
+   ]);},
+ pnc(){const n=R(5,9),r=R(2,4);
+   const f=x=>{let s=1;for(let i=2;i<=x;i++)s*=i;return s;};
+   const nPr=f(n)/f(n-r), nCr=nPr/f(r);
+   return P([
+     mk(`Evaluate <sup>${n}</sup>P<sub>${r}</sub>.`,nPr,[nCr,f(n),f(r)],`nPr = n!/(n−r)! = ${nPr}.`),
+     mk(`Evaluate <sup>${n}</sup>C<sub>${r}</sub>.`,nCr,[nPr,n*r,f(r)],`nCr = n!/(r!(n−r)!) = ${nCr}.`),
+     mk(`In how many ways can ${n} people be seated in a row?`,f(n),[Math.pow(n,n),f(n-1),n*n],`Number of arrangements = ${n}! = ${f(n)}.`)
+   ]);},
+ cplx(){const p=R(1,40);const rem=p%4;const val=["1","i","−1","−i"][rem];
+   const a=R(1,8),b=R(1,8);
+   return P([
+     mk(`What is i<sup>${p}</sup>?`,val,["1","i","−1","−i"],`${p} mod 4 = ${rem}, so i^${p} = ${val}.`),
+     mk(`Find the modulus of ${a} + ${b}i.`,fx(Math.sqrt(a*a+b*b)),[a+b,fx(a*b),fx(a*a+b*b)],`|z| = √(${a}² + ${b}²) = ${fx(Math.sqrt(a*a+b*b))}.`),
+     mk(`Find the conjugate of ${a} + ${b}i.`,`${a} − ${b}i`,[`−${a} + ${b}i`,`${b} + ${a}i`,`−${a} − ${b}i`],"The conjugate flips the sign of the imaginary part.")
+   ]);},
+ binom(){const n=R(4,12),r=R(1,3);
+   const f=x=>{let s=1;for(let i=2;i<=x;i++)s*=i;return s;};
+   return P([
+     mk(`How many terms are there in the expansion of (a + b)<sup>${n}</sup>?`,n+1,[n,n-1,2*n],`An expansion of degree n has n + 1 terms.`),
+     mk(`In (a + b)<sup>${n}</sup>, the coefficient of the term a<sup>${n-r}</sup>b<sup>${r}</sup> is:`,f(n)/(f(r)*f(n-r)),[n*r,f(n),n+r],`Coefficient = <sup>${n}</sup>C<sub>${r}</sub> = ${f(n)/(f(r)*f(n-r))}.`),
+     mk(`What is the sum of all binomial coefficients in (1 + x)<sup>${n}</sup>?`,Math.pow(2,n),[n*n,Math.pow(2,n)-1,2*n],`Putting x = 1 gives 2ⁿ = ${Math.pow(2,n)}.`)
+   ]);},
+ matrix(){const m=R(2,4),n=R(2,4),k=R(2,4);
+   return P([
+     mk(`A matrix of order ${m} × ${n} has how many elements?`,m*n,[m+n,m*m,n*n],`Elements = rows × columns = ${m*n}.`),
+     mk(`If A is ${m}×${n} and B is ${n}×${k}, what is the order of AB?`,`${m} × ${k}`,[`${n} × ${m}`,`${k} × ${m}`,`${m} × ${n}`],`The product takes the rows of A and the columns of B: ${m}×${k}.`),
+     mk("A square matrix A is symmetric if:","A' = A",["A' = −A","A² = A","A = 0"],"A symmetric matrix equals its own transpose.")
+   ]);},
+ det(){const a=R(-8,9),b=R(-8,9),c=R(-8,9),d=R(-8,9);const v=a*d-b*c;
+   return P([
+     mk(`Evaluate the determinant of [[${a}, ${b}], [${c}, ${d}]].`,v,[a*d+b*c,a*b-c*d,a+d],`|A| = ad − bc = ${a*d} − ${b*c} = ${v}.`),
+     mk("If |A| = 0, the matrix A is called:","singular",["non-singular","symmetric","an identity matrix"],"A matrix with zero determinant is singular and has no inverse."),
+     mk("For a square matrix A of order n, |kA| equals:","kⁿ |A|",["k |A|","n |A|","|A|"],"Each of the n rows contributes a factor of k.")
+   ]);},
+ deriv(){const n=R(2,7),k=R(2,9);
+   const t=P([["x^"+n,`${n}x^${n-1}`],["sin x","cos x"],["cos x","−sin x"],["e^x","e^x"],["log x","1/x"],["tan x","sec²x"],[k+"x",String(k)]]);
+   return P([
+     mk(`Differentiate with respect to x:  ${t[0]}`,t[1],[`${n}x^${n}`,"1","x","0","−cos x","sec x tan x"],`d/dx (${t[0]}) = ${t[1]}.`),
+     mk(`Evaluate: lim(x→2) of (x² − 4)/(x − 2)`,"4",["0","2","does not exist"],"Factorising gives x + 2, and at x = 2 the limit is 4."),
+     mk("The derivative of a constant function is:","0",["1","the constant itself","undefined"],"A constant does not change, so its rate of change is 0.")
+   ]);},
+ integ(){const n=R(2,6),k=R(2,9);
+   return P([
+     mk(`Evaluate:  ∫ x<sup>${n}</sup> dx`,`x^${n+1}/${n+1} + C`,[`x^${n-1}/${n-1} + C`,`${n}x^${n-1} + C`,`x^${n+1} + C`],`∫xⁿ dx = xⁿ⁺¹/(n+1) + C.`),
+     mk("Evaluate:  ∫ sin x dx","−cos x + C",["cos x + C","−sin x + C","sec x + C"],"The integral of sin x is −cos x + C."),
+     mk("Evaluate:  ∫ (1/x) dx","log |x| + C",["1/x² + C","x log x + C","−1/x² + C"],"∫ dx/x = log|x| + C."),
+     mk(`Evaluate the definite integral ∫₀<sup>${k}</sup> x dx.`,fx(k*k/2),[k*k,fx(k/2),fx(k*k)],`[x²/2]₀^${k} = ${k*k}/2 = ${fx(k*k/2)}.`)
+   ]);},
+ vect(){const a=[R(1,6),R(1,6),R(1,6)],b=[R(1,6),R(1,6),R(1,6)];
+   const dot=a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+   const mag=Math.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]);
+   return P([
+     mk(`Find the dot product of (${a.join("i + ")}k) and (${b.join("i + ")}k).`,dot,[a[0]*b[0],dot+2,fx(mag)],`Dot product = ${a[0]}×${b[0]} + ${a[1]}×${b[1]} + ${a[2]}×${b[2]} = ${dot}.`),
+     mk(`Find the magnitude of the vector ${a[0]}i + ${a[1]}j + ${a[2]}k.`,fx(mag),[a[0]+a[1]+a[2],fx(mag*mag),fx(mag/2)],`|a| = √(${a[0]}²+${a[1]}²+${a[2]}²) = ${fx(mag)}.`),
+     mk("Two non-zero vectors are perpendicular when their dot product is:","0",["1","their magnitude","−1"],"Perpendicular vectors have cos 90° = 0, so a·b = 0.")
+   ]);},
+ pairlin(){const x=R(-6,6),y=R(-6,6);
+   const a1=R(1,6),b1=R(1,6),a2=R(1,6),b2=R(1,6)+6;
+   const c1=a1*x+b1*y, c2=a2*x+b2*y;
+   return P([
+     mk(`Solve:  ${a1}x + ${b1}y = ${c1}  and  ${a2}x + ${b2}y = ${c2}`,`x = ${x}, y = ${y}`,[`x = ${y}, y = ${x}`,`x = ${-x}, y = ${y}`,`x = ${x+1}, y = ${y-1}`],`Solving the pair gives x = ${x} and y = ${y}.`),
+     mk("A pair of linear equations with exactly one solution is called:","consistent and independent",["inconsistent","dependent","undefined"],"One unique solution means the lines intersect at a single point."),
+     mk("If a₁/a₂ = b₁/b₂ ≠ c₁/c₂, the lines are:","parallel with no solution",["intersecting at one point","coincident with infinite solutions","perpendicular"],"Equal ratios of coefficients but a different constant ratio means parallel lines.")
+   ]);}
+};
+
+/* map chapter -> generator (maths only, for now) */
+const MAP={
+ "8-maths-1":"rat","8-maths-2":"lin1","8-maths-3":"quadri","8-maths-4":"stats","8-maths-5":"expo",
+ "8-maths-6":"expo","8-maths-7":"pct","8-maths-8":"ident","8-maths-9":"mens","8-maths-10":"expo",
+ "8-maths-11":"prop","8-maths-12":"ident","8-maths-13":"coord",
+ "9-maths-1":"expo","9-maths-2":"poly","9-maths-3":"coord","9-maths-4":"pairlin","9-maths-6":"quadri",
+ "9-maths-8":"quadri","9-maths-10":"mens","9-maths-11":"mens","9-maths-12":"stats",
+ "10-maths-1":"hcf","10-maths-2":"poly","10-maths-3":"pairlin","10-maths-4":"quad","10-maths-5":"ap",
+ "10-maths-7":"coord","10-maths-8":"trig","10-maths-11":"circleArea","10-maths-12":"mens",
+ "10-maths-13":"stats","10-maths-14":"prob",
+ "11-maths-1":"sets","11-maths-3":"trig","11-maths-4":"cplx","11-maths-6":"pnc","11-maths-7":"binom",
+ "11-maths-8":"ap","11-maths-9":"coord","11-maths-12":"deriv","11-maths-13":"stats","11-maths-14":"prob",
+ "12-maths-3":"matrix","12-maths-4":"det","12-maths-5":"deriv","12-maths-6":"deriv","12-maths-7":"integ",
+ "12-maths-8":"integ","12-maths-10":"vect","12-maths-13":"prob"
+};
+
+/* ============ science banks (handwritten) ============ */
+const BANK={
+"10-science-1":[
+ ["A chemical equation is balanced to satisfy the law of:","conservation of mass","conservation of energy","constant proportions","multiple proportions","Atoms are neither created nor destroyed in a reaction."],
+ ["The reaction Fe + CuSO₄ → FeSO₄ + Cu is an example of:","a displacement reaction","a combination reaction","a decomposition reaction","a double displacement reaction","Iron is more reactive and displaces copper from its salt."],
+ ["When quicklime reacts with water, the reaction is:","exothermic","endothermic","photochemical","a redox reaction only","Heat is released, so the reaction is exothermic."],
+ ["The white silver chloride turns grey in sunlight. This is:","a photolytic decomposition reaction","a combination reaction","a neutralisation reaction","a displacement reaction","Light decomposes AgCl into silver and chlorine."],
+ ["Respiration is considered which type of reaction?","exothermic","endothermic","decomposition only","precipitation","Glucose oxidation releases energy."],
+ ["The substance that gains oxygen during a reaction is said to be:","oxidised","reduced","neutralised","precipitated","Gain of oxygen (or loss of hydrogen) is oxidation."],
+ ["The reddish-brown coating on iron left in moist air is due to:","corrosion","rancidity","reduction","sublimation","Iron reacts with oxygen and moisture to form rust."],
+ ["Bags of chips are flushed with nitrogen to prevent:","rancidity","corrosion","decomposition of the chips","photolysis","Nitrogen is unreactive and keeps oxygen away from the fat."],
+ ["2Pb(NO₃)₂ → 2PbO + 4NO₂ + O₂ is a:","thermal decomposition reaction","combination reaction","displacement reaction","neutralisation reaction","Heat splits one compound into simpler products."],
+ ["In the reaction CuO + H₂ → Cu + H₂O, the reducing agent is:","H₂","CuO","Cu","H₂O","Hydrogen removes oxygen from copper oxide."],
+ ["Barium chloride and sodium sulphate give a white precipitate. This is:","a double displacement reaction","a combination reaction","a displacement reaction","a decomposition reaction","Ions are exchanged between the two compounds."],
+ ["The colour of copper sulphate crystals on heating changes to:","white","blue","green","black","Loss of water of crystallisation turns them white."],
+ ["Which gas is produced when zinc reacts with dilute sulphuric acid?","hydrogen","oxygen","carbon dioxide","nitrogen","Metal + dilute acid → salt + hydrogen."],
+ ["Burning of magnesium ribbon in air is a:","combination reaction","decomposition reaction","displacement reaction","double displacement reaction","Magnesium and oxygen combine to give magnesium oxide."],
+ ["The symbol (aq) in a chemical equation means the substance is:","dissolved in water","a gas","a solid precipitate","in molten form","'aq' stands for aqueous solution."],
+ ["Silver articles turn black on exposure to air because of the formation of:","silver sulphide","silver oxide","silver chloride","silver carbonate","Hydrogen sulphide in air reacts with silver."],
+ ["Which of the following is an endothermic process?","decomposition of calcium carbonate on heating","burning of natural gas","respiration","rusting of iron","Heat must be supplied continuously to decompose limestone."],
+ ["Oxidation and reduction occurring together in one reaction is called a:","redox reaction","neutralisation reaction","precipitation reaction","displacement reaction","One species is oxidised while the other is reduced."],
+ ["Magnesium ribbon is cleaned before burning to remove:","the layer of magnesium oxide","moisture","dust only","carbon deposits","The oxide coating would otherwise stop the ribbon burning."],
+ ["The correct balanced form of  Fe + H₂O → Fe₃O₄ + H₂  is:","3Fe + 4H₂O → Fe₃O₄ + 4H₂","Fe + 4H₂O → Fe₃O₄ + H₂","3Fe + H₂O → Fe₃O₄ + 4H₂","2Fe + 3H₂O → Fe₃O₄ + 3H₂","Balancing Fe first, then O, then H gives 3, 4, 1, 4."]
+],
+"10-science-9":[
+ ["The image formed by a plane mirror is always:","virtual and erect","real and inverted","real and erect","virtual and inverted","Light only appears to come from behind a plane mirror."],
+ ["A concave mirror with an object placed at the focus forms an image at:","infinity","the focus","the centre of curvature","the pole","Rays from the focus emerge parallel after reflection."],
+ ["The relationship between focal length and radius of curvature is:","f = R/2","f = 2R","f = R","f = R²","For a spherical mirror the focus lies midway between pole and centre."],
+ ["The mirror used as a rear-view mirror in vehicles is:","convex","concave","plane","cylindrical","A convex mirror gives an erect, diminished image and a wide field of view."],
+ ["The magnification produced by a mirror is given by:","m = −v/u","m = v/u","m = u/v","m = uv","For mirrors, m = h'/h = −v/u."],
+ ["The SI unit of the power of a lens is:","dioptre","metre","watt","candela","Power P = 1/f, measured in dioptres when f is in metres."],
+ ["A convex lens of focal length 25 cm has a power of:","+4 D","+0.25 D","−4 D","+2.5 D","P = 1/f(m) = 1/0.25 = +4 D."],
+ ["The bending of light as it passes from one medium to another is called:","refraction","reflection","dispersion","scattering","Change of speed at the boundary bends the ray."],
+ ["The refractive index of a medium in which light travels slowest will be:","the highest","the lowest","equal to 1","zero","n = c/v, so a smaller v gives a larger n."],
+ ["The lens formula is:","1/v − 1/u = 1/f","1/v + 1/u = 1/f","1/u − 1/v = 1/f","v + u = f","This is the standard thin-lens relation with sign conventions."],
+ ["A concave lens always forms an image that is:","virtual, erect and diminished","real and inverted","real and magnified","virtual and magnified","A diverging lens cannot bring rays to a real focus."],
+ ["The angle of incidence equals the angle of reflection. This is:","the second law of reflection","Snell's law","the law of refraction","the lens maker's formula","Both angles are measured from the normal."],
+ ["Light travelling from air into glass bends:","towards the normal","away from the normal","along the normal","back into air","Glass is denser, so light slows and bends towards the normal."],
+ ["A real image formed by a concave mirror is always:","inverted","erect","virtual","magnified","Real images from a single mirror are inverted."],
+ ["The centre of the reflecting surface of a spherical mirror is called the:","pole","focus","centre of curvature","aperture","The pole is the geometric centre of the mirror surface."],
+ ["For a convex lens, an object placed beyond 2F forms an image that is:","real, inverted and diminished","real, inverted and magnified","virtual and erect","of the same size","The image lies between F and 2F on the other side."],
+ ["The refractive index of water is about 1.33. This means light in water travels:","slower than in vacuum","faster than in vacuum","at the same speed as in vacuum","at 1.33 times the speed of light","n > 1 means the speed is reduced."],
+ ["Snell's law states that:","sin i / sin r is constant","i = r","sin i × sin r is constant","i / r is constant","The ratio of sines equals the relative refractive index."],
+ ["The focal length of a plane mirror is:","infinite","zero","equal to its length","1 metre","A plane mirror does not converge or diverge light."],
+ ["A concave mirror is used as a dentist's mirror because it forms:","an enlarged virtual image","a diminished real image","an inverted real image","an image at infinity","With the object inside the focus the image is erect and magnified."]
+],
+"10-science-11":[
+ ["The SI unit of electric current is the:","ampere","volt","ohm","coulomb","One ampere is one coulomb per second."],
+ ["Ohm's law states that, at constant temperature:","V ∝ I","V ∝ 1/I","V ∝ I²","I ∝ V²","Potential difference is directly proportional to current."],
+ ["The SI unit of resistance is the:","ohm","ampere","volt","watt","Named after Georg Simon Ohm."],
+ ["Resistance of a conductor is directly proportional to its:","length","area of cross-section","temperature coefficient only","mass","R = ρl/A, so R rises with length."],
+ ["Resistance of a wire is inversely proportional to its:","area of cross-section","length","resistivity","potential difference","A thicker wire offers an easier path."],
+ ["Three resistors of 2 Ω, 3 Ω and 5 Ω in series give a total resistance of:","10 Ω","0.968 Ω","30 Ω","3.33 Ω","In series, resistances simply add."],
+ ["Two 6 Ω resistors joined in parallel give a total resistance of:","3 Ω","12 Ω","6 Ω","1.5 Ω","1/R = 1/6 + 1/6 = 1/3."],
+ ["Electrical power is given by:","P = VI","P = V/I","P = I/V","P = V + I","Power is the product of voltage and current."],
+ ["The commercial unit of electrical energy is the:","kilowatt-hour","joule","watt","volt-ampere","1 kWh = 3.6 × 10⁶ J."],
+ ["An ammeter is always connected in a circuit:","in series","in parallel","across the battery","at the switch","It must carry the same current as the component."],
+ ["A voltmeter is always connected:","in parallel with the component","in series","before the battery","after the fuse","It measures the potential difference across the component."],
+ ["The heating effect of current is given by Joule's law:","H = I²Rt","H = IRt","H = I²R/t","H = IR²t","Heat rises with the square of the current."],
+ ["The filament of an electric bulb is made of tungsten because it has a:","high melting point","low melting point","very low resistance","high conductivity only","Tungsten stays solid while glowing white hot."],
+ ["1 kilowatt-hour equals:","3.6 × 10⁶ J","3600 J","10³ J","10⁶ J","1000 W × 3600 s = 3.6 × 10⁶ J."],
+ ["The potential difference between two points is 1 volt when 1 joule of work moves a charge of:","1 coulomb","1 ampere","1 ohm","1 watt","V = W/Q."],
+ ["Resistivity of a material depends on:","the nature of the material and temperature","the length of the wire","the area of the wire","the current flowing","It is a property of the substance itself."],
+ ["In a household circuit, appliances are connected in parallel so that:","each gets the full supply voltage","the current is the same everywhere","the total resistance increases","less energy is used","Parallel wiring also lets each device be switched separately."],
+ ["The direction of conventional current is:","opposite to the flow of electrons","the same as the flow of electrons","perpendicular to the electron flow","undefined","Conventional current flows from positive to negative."],
+ ["An electric heater draws 5 A from a 220 V supply. Its power is:","1100 W","44 W","225 W","215 W","P = VI = 220 × 5 = 1100 W."],
+ ["The fuse wire in a circuit is connected:","in series with the live wire","in parallel with the appliance","in the neutral wire only","in the earth wire","A series fuse breaks the circuit when the current is too high."]
+],
+"9-science-7":[
+ ["The SI unit of speed is:","m/s","km/h","m/s²","m","Speed is distance per unit time."],
+ ["A quantity that has both magnitude and direction is called:","a vector","a scalar","a unit","a constant","Displacement, velocity and acceleration are vectors."],
+ ["Which of these is a scalar quantity?","distance","displacement","velocity","acceleration","Distance has magnitude only."],
+ ["Displacement of a body can be:","zero, positive or negative","only positive","only zero","always equal to distance","Displacement depends on direction and can vanish."],
+ ["The rate of change of velocity is called:","acceleration","speed","displacement","momentum","a = Δv/Δt."],
+ ["The first equation of motion is:","v = u + at","s = ut + ½at²","v² = u² + 2as","s = vt","It links final velocity to initial velocity, acceleration and time."],
+ ["The second equation of motion is:","s = ut + ½at²","v = u + at","v² − u² = 2as","a = v/t","It gives distance travelled in time t."],
+ ["A body moving with uniform velocity has an acceleration of:","zero","constant non-zero","increasing","negative","Uniform velocity means no change in velocity."],
+ ["The slope of a distance-time graph gives:","speed","acceleration","distance","displacement","Slope = change in distance / change in time."],
+ ["The slope of a velocity-time graph gives:","acceleration","speed","distance","displacement","Slope = change in velocity / change in time."],
+ ["The area under a velocity-time graph gives:","distance travelled","acceleration","speed","force","Area = velocity × time = distance."],
+ ["A car accelerates from rest to 20 m/s in 5 s. Its acceleration is:","4 m/s²","100 m/s²","0.25 m/s²","20 m/s²","a = (20 − 0)/5 = 4 m/s²."],
+ ["In uniform circular motion, the quantity that keeps changing is:","the direction of velocity","the speed","the distance covered per second","the radius","The direction changes continuously, so it is accelerated motion."],
+ ["An object thrown vertically upward has, at the topmost point:","zero velocity but non-zero acceleration","zero velocity and zero acceleration","maximum velocity","zero acceleration only","Gravity still acts at 9.8 m/s² downward."],
+ ["Negative acceleration is also called:","retardation","uniform motion","displacement","free fall","It slows the body down."],
+ ["A body covers equal distances in equal intervals of time. Its motion is:","uniform","non-uniform","accelerated","circular","Equal distances in equal times means constant speed."],
+ ["The distance-time graph of a body at rest is:","a straight line parallel to the time axis","a straight line through the origin","a curve","a vertical line","No change in distance over time."],
+ ["Average speed is defined as:","total distance / total time","total displacement / total time","final speed − initial speed","distance × time","It is a scalar based on the whole path length."],
+ ["A body starts from rest and moves with acceleration 2 m/s². Distance covered in 4 s is:","16 m","8 m","4 m","32 m","s = ut + ½at² = 0 + ½×2×16 = 16 m."],
+ ["The third equation of motion is:","v² = u² + 2as","v = u + at","s = ut + ½at²","s = vt − ½at²","It relates velocity and displacement without time."]
+]
+};
+
+/* which chapters are playable */
+function playable(id){return !!(MAP[id]||BANK[id]);}
+
+/* build a 20-question test */
+function buildTest(id){
+  const out=[],seen=new Set();
+  if(BANK[id]){
+    shuf(BANK[id]).forEach(r=>{
+      out.push({q:r[0],ans:r[1],opts:shuf([r[1],r[2],r[3],r[4]]),note:r[5]});
+    });
+  }
+  if(MAP[id]){
+    const gen=G[MAP[id]];
+    let guard=0;
+    while(out.length<20&&guard<600){
+      guard++;
+      const item=gen();
+      if(seen.has(item.q))continue;
+      seen.add(item.q);out.push(item);
+    }
+  }
+  return out.slice(0,20);
+}
+
+/* ============ state ============ */
+const S={cls:null,sub:null,ch:null,test:[],picks:[],marked:false,t0:0,timer:null};
+
+/* ============ views ============ */
+function show(v){$$(".view").forEach(x=>x.classList.remove("on"));$("#"+v).classList.add("on");}
+function step(s){
+  $$(".step").forEach(x=>x.classList.remove("on"));
+  $("#"+s).classList.add("on");
+  window.scrollTo({top:0,behavior:"smooth"});
+  crumbs();
+}
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),2100);}
+
+function crumbs(){
+  const c=$("#crumb");c.innerHTML="";
+  const add=(txt,fn)=>{const b=document.createElement("button");b.textContent=txt;b.onclick=fn;c.appendChild(b);};
+  const sep=()=>{const s=document.createElement("span");s.textContent="›";s.style.opacity=".5";c.appendChild(s);};
+  const now=t=>{const s=document.createElement("span");s.className="now";s.textContent=t;c.appendChild(s);};
+  if(!S.cls)return;
+  add("Class "+S.cls,()=>goSub(S.cls));
+  if(S.sub){sep();add(SUB[S.sub].name,()=>goCh(S.cls,S.sub));}
+  if(S.ch!==null){sep();now(SY[S.cls].subjects[S.sub][S.ch]);}
+}
+
+/* ---- class ---- */
+function goClass(){
+  S.cls=S.sub=null;S.ch=null;
+  const g=$("#gClass");g.innerHTML="";
+  Object.keys(SY).forEach((c,i)=>{
+    const n=Object.values(SY[c].subjects).reduce((a,b)=>a+b.length,0);
+    const b=document.createElement("button");
+    b.className="card";b.style.animationDelay=(i*60)+"ms";
+    b.innerHTML=`<div class="num">${c}</div><h3>Class ${c}</h3><p>${SY[c].blurb} &middot; ${n} chapters</p>`;
+    b.onclick=()=>goSub(c);
+    g.appendChild(b);
+  });
+  step("sClass");
+}
+/* ---- subject ---- */
+function goSub(c){
+  S.cls=c;S.sub=null;S.ch=null;
+  $("#subP").textContent=`Class ${c} · NCERT syllabus`;
+  const g=$("#gSub");g.innerHTML="";
+  Object.keys(SY[c].subjects).forEach((k,i)=>{
+    const list=SY[c].subjects[k];
+    const ready=list.filter((_,j)=>playable(c+"-"+k+"-"+(j+1))).length;
+    const b=document.createElement("button");
+    b.className="card";b.style.animationDelay=(i*60)+"ms";
+    b.innerHTML=`<span class="chip ${ready?"live":""}">${ready} of ${list.length} ready</span>
+      <div class="ico">${SUB[k].icon}</div><h3>${SUB[k].name}</h3><p>${list.length} chapters</p>`;
+    b.onclick=()=>goCh(c,k);
+    g.appendChild(b);
+  });
+  step("sSub");
+}
+/* ---- chapter ---- */
+function goCh(c,k){
+  S.cls=c;S.sub=k;S.ch=null;
+  $("#chP").textContent=`Class ${c} · ${SUB[k].name} · 20 questions per test`;
+  const g=$("#gCh");g.innerHTML="";
+  SY[c].subjects[k].forEach((name,i)=>{
+    const id=c+"-"+k+"-"+(i+1), ok=playable(id);
+    const b=document.createElement("button");
+    b.className="card ch"+(ok?"":" off");
+    b.style.animationDelay=Math.min(i*35,400)+"ms";
+    b.innerHTML=`<span class="n">${i+1}</span><div><h3>${name}</h3>
+      <p>${ok?"20-question test · instant marking":"Question bank coming soon"}</p></div>`;
+    if(ok)b.onclick=()=>startTest(c,k,i); else b.disabled=true;
+    g.appendChild(b);
+  });
+  step("sCh");
+}
+
+/* ---- test ---- */
+function startTest(c,k,i){
+  S.cls=c;S.sub=k;S.ch=i;
+  S.test=buildTest(c+"-"+k+"-"+(i+1));
+  S.picks=new Array(S.test.length).fill(null);
+  S.marked=false;
+  $("#tEb").textContent=`Class ${c} · ${SUB[k].name}`;
+  $("#tT").textContent=SY[c].subjects[k][i];
+  renderQs();
+  startClock();
+  step("sTest");
+}
+function renderQs(){
+  const ol=$("#qs");ol.innerHTML="";
+  S.test.forEach((q,qi)=>{
+    const li=document.createElement("li");
+    li.className="q";li.style.animationDelay=Math.min(qi*30,360)+"ms";
+    li.innerHTML=`<div class="qt"><span class="qi">${qi+1}</span><p>${q.q}</p></div>`;
+    const box=document.createElement("div");box.className="opts";
+    q.opts.forEach((o,oi)=>{
+      const btn=document.createElement("button");
+      btn.className="opt";btn.type="button";
+      btn.innerHTML=`<span class="k">${"ABCD"[oi]}</span><span class="tx">${o}</span>`;
+      btn.onclick=()=>{
+        if(S.marked)return;
+        S.picks[qi]=o;
+        [...box.children].forEach(c=>c.classList.remove("pick"));
+        btn.classList.add("pick");
+        li.classList.add("done");
+        updateProgress();
+      };
+      box.appendChild(btn);
+    });
+    li.appendChild(box);
+    ol.appendChild(li);
+  });
+  updateProgress();
+}
+function updateProgress(){
+  const n=S.picks.filter(x=>x!==null).length;
+  $("#ansN").textContent=n;
+  $("#bar").style.width=(n/S.test.length*100)+"%";
+}
+function startClock(){
+  clearInterval(S.timer);S.t0=Date.now();
+  const tick=()=>{
+    const s=Math.floor((Date.now()-S.t0)/1000);
+    $("#clock").textContent=String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
+  };
+  tick();S.timer=setInterval(tick,1000);
+}
+
+/* ---- marking ---- */
+function markAll(){
+  if(S.marked)return;
+  const blank=S.picks.filter(x=>x===null).length;
+  if(blank && !confirm(`${blank} question${blank>1?"s are":" is"} still unanswered. Submit anyway?`))return;
+  clearInterval(S.timer);
+  S.marked=true;
+  let score=0;
+  $$("#qs .q").forEach((li,qi)=>{
+    const q=S.test[qi],pick=S.picks[qi];
+    li.classList.add("marked");
+    const right=pick===q.ans;
+    if(right)score++;
+    li.classList.add(right?"right":"wrong");
+    [...li.querySelectorAll(".opt")].forEach(btn=>{
+      const txt=btn.querySelector(".tx").textContent;
+      if(txt===q.ans){btn.classList.add("ok");btn.insertAdjacentHTML("beforeend",'<span class="mk">✓</span>');}
+      else if(txt===pick){btn.classList.add("no");btn.insertAdjacentHTML("beforeend",'<span class="mk">✕</span>');}
+      btn.classList.remove("pick");
+    });
+    if(q.note){
+      const n=document.createElement("p");n.className="note";
+      n.innerHTML=`<b>${right?"Correct.":"Answer: "+q.ans+"."}</b> ${q.note}`;
+      li.appendChild(n);
+    }
+  });
+  showResult(score);
+}
+function showResult(score){
+  const total=S.test.length, pc=Math.round(score/total*100);
+  const secs=Math.floor((Date.now()-S.t0)/1000);
+  $("#scN").textContent=score;
+  const ring=$("#ringFg"), C=2*Math.PI*85;
+  ring.style.strokeDasharray=C;
+  ring.style.strokeDashoffset=C;
+  const col=pc>=75?"var(--mint)":pc>=40?"var(--marigold)":"var(--rose)";
+  setTimeout(()=>{ring.style.strokeDashoffset=C*(1-score/total);ring.style.stroke=col;},120);
+  $("#verdict").textContent=pc>=90?"Outstanding!":pc>=75?"Well done!":pc>=50?"Good effort":pc>=35?"Keep practising":"Needs revision";
+  $("#resLine").textContent=`You scored ${score} out of ${total} (${pc}%) in ${Math.floor(secs/60)}m ${secs%60}s.`;
+  $("#stats").innerHTML=
+    `<div class="st g"><b>${score}</b><span>Correct</span></div>
+     <div class="st r"><b>${S.picks.filter((p,i)=>p!==null&&p!==S.test[i].ans).length}</b><span>Wrong</span></div>
+     <div class="st y"><b>${S.picks.filter(p=>p===null).length}</b><span>Skipped</span></div>
+     <div class="st"><b>${pc}%</b><span>Score</span></div>`;
+  step("sRes");
+  if(pc>=75)confetti();
+}
+function confetti(){
+  const w=document.createElement("div");w.className="conf";document.body.appendChild(w);
+  const cols=["#F5A524","#6C7BFF","#34D399","#FF6B8B","#EDF1FB"];
+  for(let i=0;i<70;i++){
+    const p=document.createElement("i");
+    p.style.left=Math.random()*100+"vw";
+    p.style.background=P(cols);
+    p.style.animationDuration=(2.2+Math.random()*1.8)+"s";
+    p.style.animationDelay=(Math.random()*.7)+"s";
+    w.appendChild(p);
+  }
+  setTimeout(()=>w.remove(),5200);
+}
+function resetTest(){
+  S.picks=new Array(S.test.length).fill(null);
+  S.marked=false;
+  S.test=buildTest(S.cls+"-"+S.sub+"-"+(S.ch+1));
+  renderQs();startClock();step("sTest");
+  toast("Test reset — fresh questions loaded");
+}
+
+/* ============ events ============ */
+$("#loginForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  const u=$("#u").value.trim(), p=$("#p").value;
+  if(u.toLowerCase()==="naksh"&&p==="121212"){
+    $("#err").textContent="";
+    $("#who").textContent="\u{1F393} "+u;
+    show("vApp");goClass();
+    toast("Welcome back, "+u);
+  }else{
+    $("#err").textContent="Wrong username or passcode. Try Naksh / 121212.";
+    const c=$("#lcard");c.classList.remove("shake");void c.offsetWidth;c.classList.add("shake");
+  }
+});
+$("#eye").onclick=()=>{const p=$("#p");p.type=p.type==="password"?"text":"password";};
+$("#out").onclick=()=>{clearInterval(S.timer);$("#u").value="";$("#p").value="";show("vLogin");};
+$("#home").onclick=goClass;
+$("#submit").onclick=markAll;
+$("#reset").onclick=resetTest;
+$("#retake").onclick=resetTest;
+$("#review").onclick=()=>{step("sTest");};
+$$("[data-back]").forEach(b=>b.onclick=()=>{
+  const t=b.dataset.back;
+  if(t==="class")goClass();
+  else if(t==="sub")goSub(S.cls);
+  else goCh(S.cls,S.sub);
+});
+</script>
+</body></html>

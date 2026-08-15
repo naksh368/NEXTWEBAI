@@ -33,15 +33,18 @@ export function AssistantChat() {
   async function send(text: string) {
     const query = text.trim();
     if (!query || loading) return;
-    setMessages((m) => [...m, { role: "user", text: query }]);
+    const nextMessages: Msg[] = [...messages, { role: "user", text: query }];
+    setMessages(nextMessages);
     setInput("");
     setLoading(true);
     try {
-      const res = await fetch("/api/assistant/search", {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query }),
+      // Send conversation history so the LLM has context (grounded to real data).
+      const history = nextMessages.filter((m) => m.role === "user" || m.role === "assistant").map((m) => ({ role: m.role, content: m.text }));
+      const res = await fetch("/api/assistant/chat", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: history }),
       });
       const data = await res.json();
-      setMessages((m) => [...m, { role: "assistant", text: data.message ?? "Here's what I found.", results: data.results ?? [] }]);
+      setMessages((m) => [...m, { role: "assistant", text: data.reply ?? "Here's what I found.", results: data.results ?? [] }]);
     } catch {
       setMessages((m) => [...m, { role: "assistant", text: "Sorry, I couldn't reach the server. Please try again." }]);
     } finally {

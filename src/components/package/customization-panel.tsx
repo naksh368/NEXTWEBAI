@@ -139,13 +139,6 @@ export function CustomizationPanel(props: CustomizationProps) {
     router.push(`/packages/${props.packageSlug}/checkout?${params.toString()}`);
   }
 
-  const orderedGroupKeys = useMemo(() => {
-    return Array.from(groups.keys()).sort((a, b) => {
-      const ca = groups.get(a)![0].category, cb = groups.get(b)![0].category;
-      return CATEGORY_ORDER.indexOf(ca) - CATEGORY_ORDER.indexOf(cb);
-    });
-  }, [groups]);
-
   return (
     <div className="space-y-5">
       {/* Travellers */}
@@ -199,16 +192,16 @@ export function CustomizationPanel(props: CustomizationProps) {
         </div>
       )}
 
-      {/* Option groups */}
-      {orderedGroupKeys.map((gk) => {
-        const opts = groups.get(gk)!;
-        const category = opts[0].category;
+      {/* Option groups — one heading per category (exclusive = radios, additive = checkboxes) */}
+      {CATEGORY_ORDER.map((category) => {
         const meta = GROUP_META[category];
         if (!meta || !props.allow[meta.allowKey]) return null;
+        const opts = props.options.filter((o) => o.category === category);
+        if (opts.length === 0) return null;
         // hide single-option exclusive groups with no upgrades
         if (!meta.multi && opts.length <= 1) return null;
         return (
-          <div key={gk}>
+          <div key={category}>
             <p className="mb-2 text-sm font-semibold text-brand-navy">{meta.title}</p>
             <div className="space-y-2">
               {opts.map((o) => {
@@ -232,7 +225,7 @@ export function CustomizationPanel(props: CustomizationProps) {
                     </span>
                     <input
                       type={meta.multi ? "checkbox" : "radio"}
-                      name={gk}
+                      name={o.groupKey}
                       checked={isSelected}
                       onChange={() => toggleOption(o)}
                       className="sr-only"

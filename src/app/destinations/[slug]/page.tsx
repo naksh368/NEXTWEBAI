@@ -47,7 +47,7 @@ export default async function DestinationPage({ params }: { params: Promise<{ sl
               {d.region} · Holiday packages
             </p>
           )}
-          <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-brand-navy sm:text-5xl">{d.name}</h1>
+          <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-brand-blue sm:text-5xl">{d.name}</h1>
           <p className="mt-1 text-ink-muted">{d.country}</p>
           {d.shortSummary && <p className="mt-4 max-w-2xl text-lg text-ink-muted">{d.shortSummary}</p>}
           <Link href={`/packages?destination=${d.slug}`} className={buttonVariants({ variant: "orange", className: "mt-6" })}>

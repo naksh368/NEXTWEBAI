@@ -24,17 +24,17 @@ const config: Config = {
           blue: "#2340D9",
           blueDark: "#1B33AE",
           blueLight: "#EEF1FE",
-          // Deep navy for headings / body
-          navy: "#0B1B45",
+          // Brand blue reused where navy used to be — no dark navy anywhere.
+          navy: "#2340D9",
           // Orange accent (logo "trip")
           orange: "#FF6A1A",
           orangeDark: "#E85A0C",
           orangeLight: "#FFF2EA",
         },
         ink: {
-          DEFAULT: "#0B1B45",
-          muted: "#4A5570",
-          faint: "#8A93A9",
+          DEFAULT: "#1C1E26", // neutral dark for body text (not blue)
+          muted: "#565B6B",
+          faint: "#8A8F9E",
         },
         surface: {
           DEFAULT: "#FFFFFF",

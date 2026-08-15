@@ -4,6 +4,7 @@ import "./globals.css";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { AiFab } from "@/components/layout/ai-fab";
+import { HideOnAdmin } from "@/components/layout/hide-on-admin";
 
 // Rounded geometric brand font, self-hosted at build (no runtime font requests).
 const poppins = Poppins({
@@ -51,12 +52,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           Skip to content
         </a>
-        <Header />
+        <HideOnAdmin><Header /></HideOnAdmin>
         <main id="main" className="flex-1">
           {children}
         </main>
-        <Footer />
-        <AiFab />
+        <HideOnAdmin><Footer /></HideOnAdmin>
+        <HideOnAdmin><AiFab /></HideOnAdmin>
       </body>
     </html>
   );

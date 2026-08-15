@@ -83,6 +83,7 @@ Reusable primitives: `Button`, `Card`, `Badge`, `Input`/`Field`, `Skeleton`, `Ac
 | **C** Package detail · structured itinerary · live customization + **server-side reprice** | ✅ |
 | **D** OTP auth (mobile → OTP → mandatory email) · customer account · My Trips | ✅ (real, dev SMS = console) |
 | **E** Checkout · traveller capture · **booking engine** (real bookings + immutable snapshot + component statuses + state machine) · Razorpay wired | ✅ booking creation works with no keys; live **charge** activates when Razorpay keys are set |
+| **F** Admin operations (Phases 22–28): auth + server-side RBAC, dashboard, booking ops (audit-logged), packages/reviews/coupons/offers actions, finance, suppliers, support, users/roles, audit logs, settings | ✅ |
 | **G** ExpertzTrip AI | ✅ grounded package search over **real** data (no invented prices) |
 | Performance / SEO / a11y / security headers | ✅ baseline throughout |
 

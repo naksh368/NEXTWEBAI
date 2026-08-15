@@ -1,0 +1,734 @@
+// ExpertzTrip — Prisma schema (Phase 2: database first)
+//
+// Dev provider is SQLite for zero-setup local development. The schema is written
+// to port cleanly to PostgreSQL for staging/production (switch `provider` to
+// "postgresql" and set DATABASE_URL). SQLite has no native enums or scalar
+// lists, so status fields are `String` validated by centralized Zod enums in
+// src/lib/constants.ts, and list-like data uses `Json`.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────
+// AUTH · CUSTOMERS
+// ─────────────────────────────────────────────────────────────
+
+model Customer {
+  id           String   @id @default(cuid())
+  mobile       String   @unique // E.164, e.g. +919876543210
+  email        String?  @unique // mandatory after registration (used for docs/e-tickets)
+  fullName     String?
+  isVerified   Boolean  @default(false)
+  status       String   @default("ACTIVE") // ACTIVE | SUSPENDED
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  profile      CustomerProfile?
+  travellers   Traveller[]
+  bookings     Booking[]
+  otpSessions  OtpSession[]
+  reviews      Review[]
+  tickets      SupportTicket[]
+  aiSessions   AiConversation[]
+  notifications Notification[]
+
+  @@index([mobile])
+}
+
+model CustomerProfile {
+  id           String    @id @default(cuid())
+  customerId   String    @unique
+  customer     Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  dateOfBirth  DateTime?
+  gender       String?
+  city         String?
+  country      String?   @default("India")
+  passportNo   String?
+  avatarUrl    String?
+  marketingOptIn Boolean @default(false)
+  updatedAt    DateTime  @updatedAt
+}
+
+/// OTP sessions — code is stored hashed, never plaintext (Phase 13).
+model OtpSession {
+  id           String   @id @default(cuid())
+  mobile       String
+  codeHash     String
+  purpose      String   @default("LOGIN") // LOGIN | REGISTER
+  attempts     Int      @default(0)
+  maxAttempts  Int      @default(5)
+  resendCount  Int      @default(0)
+  consumedAt   DateTime?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  customerId   String?
+  customer     Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  @@index([mobile, purpose])
+  @@index([expiresAt])
+}
+
+/// A reusable traveller record owned by a customer.
+model Traveller {
+  id          String   @id @default(cuid())
+  customerId  String
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  fullName    String
+  type        String   @default("ADULT") // ADULT | CHILD | INFANT
+  dateOfBirth DateTime?
+  gender      String?
+  passportNo  String?
+  nationality String?  @default("India")
+  createdAt   DateTime @default(now())
+
+  bookingTravellers BookingTraveller[]
+
+  @@index([customerId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// DESTINATIONS
+// ─────────────────────────────────────────────────────────────
+
+model DestinationCategory {
+  id        String   @id @default(cuid())
+  name      String   @unique // Beach, Honeymoon, Family, Luxury, Adventure...
+  slug      String   @unique
+  sortOrder Int      @default(0)
+  destinations DestinationOnCategory[]
+}
+
+model Destination {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  name          String
+  country       String
+  region        String?  // Asia, Middle East, Europe...
+  heroImage     String?
+  thumbnail     String?
+  shortSummary  String?
+  overview      String?  // long-form
+  bestTimeToVisit String?
+  travelInfo    Json?    // { visa, currency, language, timezone, ... }
+  isPopular     Boolean  @default(false)
+  isPublished   Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  categories DestinationOnCategory[]
+  packages   Package[]
+  faqs       Faq[]
+  guides     TravelGuide[]
+
+  @@index([isPopular, isPublished])
+}
+
+model DestinationOnCategory {
+  destinationId String
+  categoryId    String
+  destination   Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  category      DestinationCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([destinationId, categoryId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// PACKAGES · VERSIONING · ITINERARY · OPTIONS
+// ─────────────────────────────────────────────────────────────
+
+/// Stable package identity. Content + pricing live in PackageVersion so that
+/// bookings can pin an immutable version (Phase 11).
+model Package {
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  destinationId  String
+  destination    Destination @relation(fields: [destinationId], references: [id])
+  name           String
+  theme          String?  // HONEYMOON | FAMILY | LUXURY | GROUP | ...
+  status         String   @default("DRAFT") // DRAFT|IN_REVIEW|PUBLISHED|PAUSED|ARCHIVED
+  isFeatured     Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  currentVersionId String? @unique
+  currentVersion   PackageVersion? @relation("CurrentVersion", fields: [currentVersionId], references: [id])
+  versions         PackageVersion[] @relation("AllVersions")
+  bookings         Booking[]
+  reviews          Review[]
+  faqs             Faq[]
+
+  @@index([destinationId, status])
+  @@index([status, isFeatured])
+}
+
+model PackageVersion {
+  id            String   @id @default(cuid())
+  packageId     String
+  package       Package  @relation("AllVersions", fields: [packageId], references: [id], onDelete: Cascade)
+  versionNumber Int      @default(1)
+  isPublished   Boolean  @default(false)
+
+  // Snapshot-able content
+  name          String
+  summary       String?
+  overview      String?
+  durationDays  Int
+  durationNights Int
+  currency      String   @default("INR")
+  basePrice     Int      // authoritative base price in minor-friendly whole rupees
+  childPrice    Int?     // per-child price if perPerson pricing
+  perPersonPricing Boolean @default(true)
+  highlights    Json?    // string[]
+  inclusions    Json?    // string[]
+  exclusions    Json?    // string[]
+  cancellationPolicy String?
+  importantInfo String?
+
+  // Which customizations the admin enabled (Phase 10: only show enabled options)
+  allowHotelChange    Boolean @default(true)
+  allowFlightChange   Boolean @default(true)
+  allowTransferChange Boolean @default(true)
+  allowActivityChange Boolean @default(true)
+  allowMealChange     Boolean @default(true)
+  allowAddons         Boolean @default(true)
+  allowDateChange     Boolean @default(true)
+  minTravellers       Int     @default(1)
+  maxTravellers       Int     @default(12)
+
+  createdAt     DateTime @default(now())
+
+  currentOf     Package? @relation("CurrentVersion")
+  images        PackageImage[]
+  days          PackageDay[]
+  options       PackageOption[]
+  departures    PackageDeparture[]
+  pricingRules  PackagePricingRule[]
+  bookings      Booking[]
+
+  @@unique([packageId, versionNumber])
+  @@index([packageId, isPublished])
+}
+
+model PackageImage {
+  id        String   @id @default(cuid())
+  versionId String
+  version   PackageVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  url       String
+  alt       String?
+  isCover   Boolean  @default(false)
+  sortOrder Int      @default(0)
+
+  @@index([versionId])
+}
+
+/// A single day of the itinerary. Structured — never stored as raw HTML (Phase 8).
+model PackageDay {
+  id        String   @id @default(cuid())
+  versionId String
+  version   PackageVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  dayNumber Int
+  title     String
+  summary   String?
+  items     PackageDayItem[]
+
+  @@unique([versionId, dayNumber])
+  @@index([versionId])
+}
+
+model PackageDayItem {
+  id        String   @id @default(cuid())
+  dayId     String
+  day       PackageDay @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  timeslot  String   @default("MORNING") // MORNING | AFTERNOON | EVENING
+  kind      String   // FLIGHT|TRANSFER|HOTEL|ACTIVITY|MEAL|FREE_TIME|NOTE
+  title     String
+  description String?
+  sortOrder Int      @default(0)
+
+  @@index([dayId])
+}
+
+/// Unified customization option catalogue for a version. `category` maps to the
+/// spec's PackageFlights / PackageHotels / PackageTransfers / PackageActivities /
+/// PackageMeals / PackageAddons. Pricing is driven by `priceDelta` (server side).
+model PackageOption {
+  id         String   @id @default(cuid())
+  versionId  String
+  version    PackageVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  category   String   // HOTEL|FLIGHT|TRANSFER|ACTIVITY|MEAL|ADDON
+  groupKey   String   // e.g. "hotel", "outbound-flight" — options within a group are mutually exclusive
+  label      String
+  description String?
+  meta       Json?    // { stars, roomType, cabin, private, ... }
+  priceDelta Int      @default(0) // per-person delta vs base (whole rupees)
+  perPerson  Boolean  @default(true)
+  isDefault  Boolean  @default(false)
+  isEnabled  Boolean  @default(true)
+  sortOrder  Int      @default(0)
+
+  @@index([versionId, category])
+}
+
+/// Selectable departure dates with optional per-date surcharge (Phase 10 date change).
+model PackageDeparture {
+  id         String   @id @default(cuid())
+  versionId  String
+  version    PackageVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  date       DateTime
+  priceDelta Int      @default(0)
+  seatsLeft  Int?     // null = not seat-limited in this build
+  isEnabled  Boolean  @default(true)
+
+  @@index([versionId, date])
+}
+
+/// Extensible pricing rules (per-traveller multipliers, discounts, surcharges).
+model PackagePricingRule {
+  id         String   @id @default(cuid())
+  versionId  String
+  version    PackageVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  kind       String   // GROUP_DISCOUNT | SEASONAL_SURCHARGE | FLAT_DISCOUNT
+  config     Json     // rule-specific parameters
+  isActive   Boolean  @default(true)
+
+  @@index([versionId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// BOOKINGS · SNAPSHOTS · COMPONENT STATUS
+// ─────────────────────────────────────────────────────────────
+
+model Booking {
+  id             String   @id @default(cuid())
+  reference      String   @unique // human-friendly, e.g. ETX-2K7QF3
+  customerId     String
+  customer       Customer @relation(fields: [customerId], references: [id])
+  packageId      String
+  package        Package  @relation(fields: [packageId], references: [id])
+  packageVersionId String
+  packageVersion PackageVersion @relation(fields: [packageVersionId], references: [id])
+
+  status         String   @default("DRAFT") // see BOOKING_STATUS in constants
+  travelDate     DateTime?
+  travellerCount Int      @default(1)
+  currency       String   @default("INR")
+
+  // Authoritative money (whole rupees), copied from server-side reprice at checkout
+  baseAmount     Int      @default(0)
+  addonsAmount   Int      @default(0)
+  discountAmount Int      @default(0)
+  taxAmount      Int      @default(0)
+  totalAmount    Int      @default(0)
+
+  couponCode     String?
+  internalNotes  String?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  items          BookingItem[]
+  snapshot       BookingSnapshot?
+  componentStatuses BookingComponentStatus[]
+  travellers     BookingTraveller[]
+  payments       Payment[]
+  refunds        Refund[]
+  invoices       Invoice[]
+  documents      Document[]
+  events         BookingEvent[]
+  tickets        SupportTicket[]
+
+  @@index([customerId, status])
+  @@index([status])
+}
+
+/// Line items of the price breakdown at booking time.
+model BookingItem {
+  id        String  @id @default(cuid())
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  kind      String  // BASE | HOTEL | FLIGHT | TRANSFER | ACTIVITY | MEAL | ADDON | DISCOUNT | TAX
+  label     String
+  amount    Int     // signed whole rupees (discounts negative)
+  sortOrder Int     @default(0)
+
+  @@index([bookingId])
+}
+
+/// Immutable snapshot of package + itinerary + selected config + pricing (Phase 11).
+model BookingSnapshot {
+  id         String   @id @default(cuid())
+  bookingId  String   @unique
+  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  packageData Json    // frozen package/version content
+  itinerary  Json     // frozen day-by-day
+  selection  Json     // chosen options, travellers, date
+  pricing    Json     // frozen breakdown
+  createdAt  DateTime @default(now())
+}
+
+model BookingComponentStatus {
+  id        String  @id @default(cuid())
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  component String  // FLIGHT | HOTEL | TRANSFER | ACTIVITY
+  status    String  @default("PENDING") // PENDING | CONFIRMED | FAILED
+  reference String? // supplier reference
+  note      String?
+  updatedAt DateTime @updatedAt
+
+  @@unique([bookingId, component])
+}
+
+model BookingTraveller {
+  id          String  @id @default(cuid())
+  bookingId   String
+  booking     Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  travellerId String?
+  traveller   Traveller? @relation(fields: [travellerId], references: [id], onDelete: SetNull)
+  // denormalized snapshot so historical bookings stay accurate
+  fullName    String
+  type        String  @default("ADULT")
+  dateOfBirth DateTime?
+  passportNo  String?
+
+  @@index([bookingId])
+}
+
+model BookingEvent {
+  id        String   @id @default(cuid())
+  bookingId String
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  fromStatus String?
+  toStatus   String
+  message    String?
+  actor      String?  // "system" | adminUserId | "customer"
+  createdAt  DateTime @default(now())
+
+  @@index([bookingId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// PAYMENTS · REFUNDS · INVOICES · DOCUMENTS
+// ─────────────────────────────────────────────────────────────
+
+model Payment {
+  id            String   @id @default(cuid())
+  bookingId     String
+  booking       Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  provider      String   @default("razorpay")
+  providerOrderId String? @unique
+  providerPaymentId String? @unique
+  signatureValid Boolean @default(false)
+  amount        Int
+  currency      String   @default("INR")
+  status        String   @default("PENDING") // PENDING|PAID|FAILED|REFUND_PENDING|REFUNDED|PARTIAL_REFUND
+  method        String?
+  errorReason   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  refunds       Refund[]
+
+  @@index([bookingId, status])
+}
+
+model Refund {
+  id          String   @id @default(cuid())
+  bookingId   String
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  paymentId   String?
+  payment     Payment? @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+  amount      Int
+  status      String   @default("PENDING") // PENDING | PROCESSED | FAILED
+  providerRefundId String?
+  reason      String?
+  createdAt   DateTime @default(now())
+
+  @@index([bookingId])
+}
+
+model Invoice {
+  id         String   @id @default(cuid())
+  bookingId  String
+  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  number     String   @unique
+  amount     Int
+  currency   String   @default("INR")
+  issuedAt   DateTime @default(now())
+  storageKey String?  // where the rendered PDF lives (private)
+
+  @@index([bookingId])
+}
+
+/// Access-controlled documents (Phase 20 + Phase 30 document access control).
+model Document {
+  id         String   @id @default(cuid())
+  bookingId  String
+  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  type       String   // INVOICE | CONFIRMATION | E_TICKET | HOTEL_VOUCHER | TRANSFER_VOUCHER | ACTIVITY_VOUCHER | ITINERARY
+  title      String
+  storageKey String   // private storage reference, never a public URL
+  createdAt  DateTime @default(now())
+
+  @@index([bookingId, type])
+}
+
+// ─────────────────────────────────────────────────────────────
+// MARKETING · CONTENT · REVIEWS
+// ─────────────────────────────────────────────────────────────
+
+model Offer {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String?
+  image       String?
+  badge       String?  // "Limited time", etc.
+  ctaHref     String?
+  startsAt    DateTime?
+  endsAt      DateTime?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+}
+
+model Coupon {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  description String?
+  kind        String   @default("PERCENT") // PERCENT | FLAT
+  value       Int      // percent (0-100) or flat rupees
+  maxDiscount Int?
+  minAmount   Int?
+  usageLimit  Int?
+  usedCount   Int      @default(0)
+  startsAt    DateTime?
+  endsAt      DateTime?
+  isActive    Boolean  @default(true)
+}
+
+/// Reviews are real only — created by verified customers, moderated. Never seeded fake.
+model Review {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+  packageId  String?
+  package    Package? @relation(fields: [packageId], references: [id], onDelete: SetNull)
+  rating     Int
+  title      String?
+  body       String?
+  status     String   @default("PENDING") // PENDING | PUBLISHED | REJECTED
+  createdAt  DateTime @default(now())
+
+  @@index([packageId, status])
+}
+
+model TravelGuide {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  destinationId String?
+  destination   Destination? @relation(fields: [destinationId], references: [id], onDelete: SetNull)
+  title         String
+  excerpt       String?
+  body          String?
+  coverImage    String?
+  isPublished   Boolean  @default(true)
+  publishedAt   DateTime @default(now())
+
+  @@index([destinationId, isPublished])
+}
+
+model Faq {
+  id            String   @id @default(cuid())
+  scope         String   @default("GLOBAL") // GLOBAL | DESTINATION | PACKAGE
+  destinationId String?
+  destination   Destination? @relation(fields: [destinationId], references: [id], onDelete: SetNull)
+  packageId     String?
+  package       Package? @relation(fields: [packageId], references: [id], onDelete: SetNull)
+  question      String
+  answer        String
+  sortOrder     Int      @default(0)
+
+  @@index([scope])
+}
+
+// ─────────────────────────────────────────────────────────────
+// SUPPORT
+// ─────────────────────────────────────────────────────────────
+
+model SupportTicket {
+  id         String   @id @default(cuid())
+  reference  String   @unique
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+  bookingId  String?
+  booking    Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  category   String   // BOOKING | PAYMENT | MODIFICATION | CANCELLATION | DOCUMENTS | GENERAL
+  subject    String
+  status     String   @default("OPEN") // OPEN|IN_PROGRESS|WAITING_FOR_CUSTOMER|RESOLVED|CLOSED
+  priority   String   @default("NORMAL")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  messages   SupportMessage[]
+
+  @@index([customerId, status])
+}
+
+model SupportMessage {
+  id        String   @id @default(cuid())
+  ticketId  String
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorType String  // CUSTOMER | AGENT
+  authorId  String?
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([ticketId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// AI ASSISTANT
+// ─────────────────────────────────────────────────────────────
+
+model AiConversation {
+  id         String   @id @default(cuid())
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  title      String?
+  createdAt  DateTime @default(now())
+  messages   AiMessage[]
+
+  @@index([customerId])
+}
+
+model AiMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  conversation   AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           String   // user | assistant | tool
+  content        String
+  toolCalls      Json?    // grounded tool calls against real data
+  createdAt      DateTime @default(now())
+
+  @@index([conversationId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// SUPPLIERS
+// ─────────────────────────────────────────────────────────────
+
+model Supplier {
+  id        String   @id @default(cuid())
+  name      String
+  type      String   // FLIGHT | HOTEL | TRANSFER | ACTIVITY | DMC
+  status    String   @default("ACTIVE")
+  // NOTE: no secrets stored here. Credentials live in secret storage keyed by `credentialRef`.
+  credentialRef String?
+  createdAt DateTime @default(now())
+
+  mappings  SupplierMapping[]
+}
+
+model SupplierMapping {
+  id         String   @id @default(cuid())
+  supplierId String
+  supplier   Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  category   String   // HOTEL | FLIGHT | ...
+  internalRef String  // our option/product id
+  externalRef String  // supplier product code
+  createdAt  DateTime @default(now())
+
+  @@index([supplierId, category])
+}
+
+// ─────────────────────────────────────────────────────────────
+// ADMIN · RBAC
+// ─────────────────────────────────────────────────────────────
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  fullName     String
+  passwordHash String
+  status       String   @default("ACTIVE")
+  roleId       String?
+  role         Role?    @relation(fields: [roleId], references: [id])
+  lastLoginAt  DateTime?
+  createdAt    DateTime @default(now())
+
+  auditLogs    AuditLog[]
+
+  @@index([roleId])
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  key         String   @unique // SUPER_ADMIN | OPERATIONS | PACKAGE_MANAGER | FINANCE | SUPPORT | CONTENT_MANAGER | ANALYST
+  name        String
+  description String?
+  admins      AdminUser[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  id    String @id @default(cuid())
+  key   String @unique // e.g. "package.publish", "booking.refund"
+  name  String
+  roles RolePermission[]
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// SYSTEM · NOTIFICATIONS · AUDIT · SETTINGS
+// ─────────────────────────────────────────────────────────────
+
+model Notification {
+  id         String   @id @default(cuid())
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  channel    String   @default("IN_APP") // IN_APP | EMAIL | SMS
+  type       String
+  title      String
+  body       String?
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([customerId, isRead])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorType   String   @default("ADMIN") // ADMIN | SYSTEM | CUSTOMER
+  adminUserId String?
+  admin       AdminUser? @relation(fields: [adminUserId], references: [id], onDelete: SetNull)
+  action      String   // e.g. "package.price.update"
+  resource    String   // "Package:cuid"
+  before      Json?
+  after       Json?
+  ip          String?
+  createdAt   DateTime @default(now())
+
+  @@index([resource])
+  @@index([action])
+}
+
+model BusinessSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}

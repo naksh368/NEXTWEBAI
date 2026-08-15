@@ -24,8 +24,8 @@ const config: Config = {
           blue: "#2340D9",
           blueDark: "#1B33AE",
           blueLight: "#EEF1FE",
-          // Brand blue reused where navy used to be — no dark navy anywhere.
-          navy: "#2340D9",
+          // Headings/titles are near-black (not blue). Only the tagline + accents use brand blue.
+          navy: "#16171C",
           // Orange accent (logo "trip")
           orange: "#FF6A1A",
           orangeDark: "#E85A0C",

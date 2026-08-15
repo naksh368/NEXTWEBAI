@@ -28,8 +28,8 @@
     text-rendering: optimizeLegibility;
   }
   h1, h2, h3, h4 {
-    /* Headings carry the brand (logo) blue — used restrained; body stays dark. */
-    @apply text-brand-blue font-bold tracking-tight;
+    /* Headings are near-black; only the hero tagline + accents use brand blue. */
+    @apply text-brand-navy font-bold tracking-tight;
     text-wrap: balance;
   }
   ::selection {

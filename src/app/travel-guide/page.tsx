@@ -27,7 +27,7 @@ export default async function TravelGuidePage() {
         <Container className="relative py-12 sm:py-16">
           <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Travel Guide" }]} />
           <p className="mt-5 text-sm font-bold uppercase tracking-[0.16em] text-brand-orange">Plan smarter</p>
-          <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-brand-blue sm:text-5xl">Travel guides</h1>
+          <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-brand-navy sm:text-5xl">Travel guides</h1>
           <p className="mt-3 max-w-2xl text-lg text-ink-muted">Expert tips on visas, timing, itineraries and making the most of every destination.</p>
         </Container>
       </section>

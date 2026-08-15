@@ -16,11 +16,19 @@ const COMPONENT_TONE: Record<string, "success" | "warning" | "danger"> = {
   CONFIRMED: "success", PENDING: "warning", FAILED: "danger",
 };
 
-export default async function TripDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function TripDetailPage({
+  params, searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const customer = await getCurrentCustomer();
   if (!customer) return <Container className="py-12 sm:py-16"><LoginFlow /></Container>;
 
   const { id } = await params;
+  const sp = await searchParams;
+  const justPaid = sp.paid === "1";
+  const justCreated = sp.created === "1";
   const booking = await db.booking.findFirst({
     where: { id, customerId: customer.id }, // ownership enforced
     include: {
@@ -44,6 +52,14 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
         <Badge tone={meta.tone}>{meta.label}</Badge>
       </div>
       <p className="mt-1 text-ink-muted">Ref {booking.reference} · {booking.travellerCount} traveller{booking.travellerCount > 1 ? "s" : ""}{booking.travelDate ? ` · ${formatDate(booking.travelDate)}` : ""}</p>
+
+      {(justPaid || justCreated) && (
+        <div className={`mt-5 rounded-xl border p-4 text-sm ${justPaid ? "border-success/30 bg-[#E7F6EC] text-success" : "border-brand-blue/20 bg-brand-blueLight text-brand-blue"}`}>
+          {justPaid
+            ? "Payment verified — your booking is now being processed. We'll confirm each component and email your documents."
+            : "Booking created. Payment isn't enabled in this environment, so it's held as payment pending — add Razorpay keys to complete the charge."}
+        </div>
+      )}
 
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">

@@ -82,7 +82,7 @@ Reusable primitives: `Button`, `Card`, `Badge`, `Input`/`Field`, `Skeleton`, `Ac
 | **B** Homepage · destination pages · package listing (search / filter / paginate) | ✅ |
 | **C** Package detail · structured itinerary · live customization + **server-side reprice** | ✅ |
 | **D** OTP auth (mobile → OTP → mandatory email) · customer account · My Trips | ✅ (real, dev SMS = console) |
-| **E** Checkout **review** with server reprice; booking state machine + tests | ◑ review + engine done; live Razorpay charge/booking creation is follow-up |
+| **E** Checkout · traveller capture · **booking engine** (real bookings + immutable snapshot + component statuses + state machine) · Razorpay wired | ✅ booking creation works with no keys; live **charge** activates when Razorpay keys are set |
 | **G** ExpertzTrip AI | ✅ grounded package search over **real** data (no invented prices) |
 | Performance / SEO / a11y / security headers | ✅ baseline throughout |
 

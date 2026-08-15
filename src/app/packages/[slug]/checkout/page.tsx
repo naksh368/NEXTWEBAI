@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ShieldCheck, Lock, CreditCard, Info, ArrowLeft } from "lucide-react";
+import { ArrowLeft, Lock } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Card, CardBody } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
+import { LoginFlow } from "@/components/auth/login-flow";
+import { CheckoutForm } from "@/components/checkout/checkout-form";
 import { getPackageBySlug } from "@/lib/queries";
 import { reprice } from "@/lib/services/pricing-service";
+import { getCurrentCustomer } from "@/lib/auth";
 import { formatINR, formatDelta } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Review & checkout", robots: { index: false } };
@@ -29,13 +32,7 @@ export default async function CheckoutPage({
   const departureId = first(sp.departure) ?? null;
   const couponCode = first(sp.coupon) ?? null;
 
-  // Reprice on the SERVER — this is the authoritative number (Phase 10/15).
-  const result = await reprice({
-    versionId: v.id, travellerCount: travellers,
-    selectedOptionIds: optionIds, departureId, couponCode,
-  });
-
-  const razorpayConfigured = Boolean(process.env.RAZORPAY_KEY_ID);
+  const result = await reprice({ versionId: v.id, travellerCount: travellers, selectedOptionIds: optionIds, departureId, couponCode });
 
   if (!result.ok) {
     return (
@@ -53,6 +50,15 @@ export default async function CheckoutPage({
   const b = result.breakdown;
   const selectedOptions = v.options.filter((o) => result.selectedOptionIds.includes(o.id));
   const departure = v.departures.find((d) => d.id === departureId);
+  const customer = await getCurrentCustomer();
+
+  const queryString = new URLSearchParams({
+    travellers: String(travellers),
+    ...(optionIds.length ? { options: optionIds.join(",") } : {}),
+    ...(departureId ? { departure: departureId } : {}),
+    ...(couponCode ? { coupon: couponCode } : {}),
+  }).toString();
+  const redirectTo = `/packages/${slug}/checkout?${queryString}`;
 
   return (
     <Container className="py-8">
@@ -64,56 +70,59 @@ export default async function CheckoutPage({
           { label: "Checkout" },
         ]}
       />
-      <h1 className="mt-4 text-2xl font-bold sm:text-3xl">Review your holiday</h1>
+      <h1 className="mt-4 text-2xl font-bold sm:text-3xl">Review &amp; book</h1>
       <p className="mt-1 text-ink-muted">Everything below is priced and verified on our servers.</p>
 
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
-          {/* Trip */}
           <Card><CardBody>
             <h2 className="text-lg font-bold">{pkg.name}</h2>
             <p className="mt-1 text-sm text-ink-muted">
               {pkg.destination.name} · {v.durationNights}N / {v.durationDays}D · {travellers} traveller{travellers > 1 ? "s" : ""}
               {departure ? ` · Departs ${new Date(departure.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}` : ""}
             </p>
+            {selectedOptions.length > 0 && (
+              <ul className="mt-3 flex flex-wrap gap-2">
+                {selectedOptions.filter((o) => o.priceDelta !== 0 || !o.isDefault).map((o) => (
+                  <li key={o.id} className="rounded-full border border-surface-border bg-surface-muted px-3 py-1 text-xs text-ink">
+                    {o.label}{o.priceDelta !== 0 ? ` · ${formatDelta(o.priceDelta * (o.perPerson ? travellers : 1))}` : ""}
+                  </li>
+                ))}
+              </ul>
+            )}
           </CardBody></Card>
 
-          {/* Selected options */}
-          <Card><CardBody>
-            <h2 className="text-lg font-bold">Your selections</h2>
-            <ul className="mt-3 divide-y divide-surface-border">
-              {selectedOptions.map((o) => (
-                <li key={o.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
-                  <span className="text-ink">
-                    <span className="text-xs uppercase tracking-wide text-ink-faint">{o.category}</span>
-                    <br />
-                    {o.label}
-                  </span>
-                  <span className="font-medium">{o.priceDelta === 0 ? "Included" : formatDelta(o.priceDelta * (o.perPerson ? travellers : 1))}</span>
-                </li>
-              ))}
-            </ul>
-          </CardBody></Card>
-
-          {/* Traveller details note */}
-          <Card><CardBody>
-            <h2 className="text-lg font-bold">Traveller details</h2>
-            <p className="mt-1 text-sm text-ink-muted">
-              You&apos;ll add each traveller&apos;s name and passport details after verifying your mobile number.
-            </p>
-            <div className="mt-4 rounded-xl border border-dashed border-surface-border bg-surface-muted/50 p-4 text-sm text-ink-muted">
-              <div className="flex items-start gap-2">
-                <Lock className="mt-0.5 h-4 w-4 shrink-0 text-brand-blue" />
-                <span>
-                  Sign in with your mobile number and OTP to continue. Your details are only ever collected over a
-                  secure, verified session.
-                </span>
+          {customer ? (
+            <Card><CardBody>
+              <h2 className="text-lg font-bold">Traveller details</h2>
+              <p className="mt-1 text-sm text-ink-muted">Signed in as {customer.mobile}{customer.email ? ` · ${customer.email}` : ""}.</p>
+              {!customer.email && (
+                <p className="mt-3 rounded-lg bg-[#FDF7EC] px-3 py-2 text-xs text-warning">
+                  Add your email in <Link href="/account/profile" className="font-semibold underline">your profile</Link> so we can send tickets and invoices.
+                </p>
+              )}
+              <div className="mt-4">
+                <CheckoutForm
+                  versionId={v.id}
+                  travellerCount={travellers}
+                  selectedOptionIds={result.selectedOptionIds}
+                  departureId={departureId}
+                  couponCode={couponCode}
+                  total={b.total}
+                  prefillName={customer.fullName}
+                />
               </div>
-            </div>
-          </CardBody></Card>
+            </CardBody></Card>
+          ) : (
+            <Card><CardBody>
+              <div className="mb-4 flex items-center gap-2 text-sm text-ink-muted">
+                <Lock className="h-4 w-4 text-brand-blue" /> Sign in with your mobile to continue — it takes a few seconds.
+              </div>
+              <LoginFlow redirectTo={redirectTo} />
+            </CardBody></Card>
+          )}
         </div>
 
-        {/* Summary */}
         <div className="lg:col-span-1">
           <div className="lg:sticky lg:top-20">
             <Card><CardBody>
@@ -132,26 +141,7 @@ export default async function CheckoutPage({
                 <span className="font-semibold">Total payable</span>
                 <span className="text-2xl font-bold text-brand-navy">{formatINR(b.total)}</span>
               </div>
-
-              <div className="mt-5 space-y-3">
-                <Link href="/account" className={buttonVariants({ variant: "orange", size: "lg", className: "w-full" })}>
-                  <ShieldCheck className="h-4 w-4" /> Verify mobile & continue
-                </Link>
-                <div className="flex items-center justify-center gap-1.5 text-xs text-ink-muted">
-                  <CreditCard className="h-3.5 w-3.5" /> Secure payment via Razorpay
-                </div>
-              </div>
-
-              {!razorpayConfigured && (
-                <div className="mt-4 flex items-start gap-2 rounded-xl bg-brand-orangeLight/60 p-3 text-xs text-brand-orangeDark">
-                  <Info className="mt-0.5 h-4 w-4 shrink-0" />
-                  <span>
-                    Live payment is not enabled in this environment. Add <code className="font-mono">RAZORPAY_KEY_ID</code> and{" "}
-                    <code className="font-mono">RAZORPAY_KEY_SECRET</code> to turn on Razorpay checkout with server-side
-                    signature &amp; webhook verification.
-                  </span>
-                </div>
-              )}
+              <p className="mt-2 text-xs text-ink-muted">Per person on twin-sharing · incl. taxes &amp; fees.</p>
             </CardBody></Card>
           </div>
         </div>

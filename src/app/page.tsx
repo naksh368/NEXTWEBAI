@@ -36,27 +36,30 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* HERO */}
-      <section className="relative overflow-hidden bg-brand-navy">
-        <div className="absolute inset-0 opacity-20" aria-hidden>
-          <SmartImage src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=2000&q=60" alt="" sizes="100vw" priority />
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-b from-brand-navy/70 via-brand-navy/85 to-brand-navy" aria-hidden />
+      {/* HERO — clean light background, no photo */}
+      <section className="relative overflow-hidden dotted-bg">
+        <div className="absolute inset-0 hero-wash" aria-hidden />
         <Container className="relative py-16 sm:py-24">
           <div className="mx-auto max-w-3xl text-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-sm font-medium text-white/90">
-              <Sparkles className="h-4 w-4 text-brand-orange" /> Real packages · clear pricing · expert support
-            </span>
-            <h1 className="mt-5 text-4xl font-extrabold leading-tight text-white sm:text-6xl">
-              Your holiday.
-              <br />
-              Your <span className="text-brand-orange">way.</span>
+            <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand-orange">
+              Complete holiday packages
+            </p>
+            <h1 className="mt-4 text-5xl font-extrabold leading-[1.05] tracking-tight sm:text-7xl">
+              <span className="text-brand-blue">Your holiday.</span>{" "}
+              <span className="text-brand-orange">Your way.</span>
             </h1>
-            <p className="mx-auto mt-4 max-w-xl text-lg text-white/75">
+            <p className="mx-auto mt-5 max-w-xl text-lg text-ink-muted">
               Real holiday packages. Clear pricing. Expert support.
             </p>
-            <div className="mx-auto mt-8 max-w-2xl">
+            <div className="mx-auto mt-9 max-w-2xl">
               <SearchBox />
+            </div>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm font-medium text-ink">
+              <span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-brand-blue" /> 100% real packages</span>
+              <span className="hidden text-ink-faint sm:inline">·</span>
+              <span className="inline-flex items-center gap-2"><Wallet className="h-4 w-4 text-brand-blue" /> Transparent pricing</span>
+              <span className="hidden text-ink-faint sm:inline">·</span>
+              <span className="inline-flex items-center gap-2"><Headset className="h-4 w-4 text-brand-blue" /> 24×7 expert support</span>
             </div>
           </div>
         </Container>

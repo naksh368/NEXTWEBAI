@@ -457,6 +457,17 @@ async function main() {
     ],
   });
 
+  console.log("🌱 Travel guides…");
+  await db.travelGuide.createMany({
+    data: [
+      { slug: "dubai-first-timers-guide", destinationId: destBySlug.get("dubai"), title: "Dubai for first-timers: everything you need to know", excerpt: "Visas, best time to visit, getting around and the must-see sights for your first Dubai trip.", coverImage: img("photo-1512453979798-5ea266f8880c"), body: "Dubai is one of the easiest international holidays for Indian travellers. This guide covers visas, the best months to visit, how to get around, and how to pace a first-time itinerary between the Burj Khalifa, a desert safari and the beaches." },
+      { slug: "bali-honeymoon-planning", destinationId: destBySlug.get("bali"), title: "Planning the perfect Bali honeymoon", excerpt: "Where to stay, romantic experiences and the ideal number of days for a Bali honeymoon.", coverImage: img("photo-1537996194471-e657df975ab4"), body: "From private-pool villas in Ubud to sunset dinners in Seminyak, here's how to plan a Bali honeymoon that balances romance, culture and relaxation." },
+      { slug: "maldives-resort-choosing", destinationId: destBySlug.get("maldives"), title: "How to choose the right Maldives resort", excerpt: "Overwater vs beach villas, meal plans and transfers explained.", coverImage: img("photo-1514282401047-d79a71a590e8"), body: "The Maldives has a resort for every budget. This guide explains overwater versus beach villas, board basis (breakfast, half-board, all-inclusive), and speedboat versus seaplane transfers so you pick the right island." },
+      { slug: "thailand-island-hopping", destinationId: destBySlug.get("thailand"), title: "Thailand island-hopping: Phuket, Krabi & beyond", excerpt: "A practical guide to combining Thailand's best beaches in one trip.", coverImage: img("photo-1528181304800-259b08848526"), body: "Phuket, Krabi, Phi Phi and Phang Nga Bay each offer something different. Learn how to sequence them, when to go, and which tours are worth booking ahead." },
+      { slug: "europe-schengen-visa-guide", destinationId: destBySlug.get("europe"), title: "The Indian traveller's Schengen visa guide", excerpt: "Documents, timelines and tips for a smooth Europe visa application.", coverImage: img("photo-1502602898657-3e91760cbb34"), body: "A Schengen visa opens up most of Europe. This guide walks through the documents you need, realistic timelines, and how ExpertzTrip helps with the paperwork for a multi-country trip." },
+    ],
+  });
+
   console.log("🌱 RBAC roles & permissions…");
   const PERMISSIONS = [
     "dashboard.view", "booking.view", "booking.update", "booking.cancel", "booking.refund",

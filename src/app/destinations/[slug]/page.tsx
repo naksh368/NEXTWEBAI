@@ -4,7 +4,6 @@ import Link from "next/link";
 import { CalendarDays, Info, Plane, ArrowRight } from "lucide-react";
 import { Container, Section, SectionHeading } from "@/components/ui/container";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
-import { SmartImage } from "@/components/ui/smart-image";
 import { Accordion } from "@/components/ui/accordion";
 import { EmptyState } from "@/components/ui/states";
 import { buttonVariants } from "@/components/ui/button";
@@ -38,18 +37,20 @@ export default async function DestinationPage({ params }: { params: Promise<{ sl
 
   return (
     <>
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-brand-navy">
-        <div className="absolute inset-0 opacity-40" aria-hidden>
-          <SmartImage src={d.heroImage} alt={d.name} sizes="100vw" priority />
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-t from-brand-navy via-brand-navy/60 to-brand-navy/30" aria-hidden />
-        <Container className="relative py-16 sm:py-24">
+      {/* Hero — clean light background, no photo */}
+      <section className="relative overflow-hidden dotted-bg border-b border-surface-border">
+        <div className="absolute inset-0 hero-wash" aria-hidden />
+        <Container className="relative py-12 sm:py-16">
           <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Destinations", href: "/destinations" }, { label: d.name }]} />
-          <h1 className="mt-4 text-4xl font-extrabold text-white sm:text-5xl">{d.name}</h1>
-          <p className="mt-1 text-white/70">{d.country}</p>
-          {d.shortSummary && <p className="mt-4 max-w-2xl text-lg text-white/85">{d.shortSummary}</p>}
-          <Link href="/packages" className={buttonVariants({ variant: "orange", className: "mt-6" })}>
+          {d.region && (
+            <p className="mt-5 text-sm font-bold uppercase tracking-[0.16em] text-brand-orange">
+              {d.region} · Holiday packages
+            </p>
+          )}
+          <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-brand-navy sm:text-5xl">{d.name}</h1>
+          <p className="mt-1 text-ink-muted">{d.country}</p>
+          {d.shortSummary && <p className="mt-4 max-w-2xl text-lg text-ink-muted">{d.shortSummary}</p>}
+          <Link href={`/packages?destination=${d.slug}`} className={buttonVariants({ variant: "orange", className: "mt-6" })}>
             See {allPackages.length} packages <ArrowRight className="h-4 w-4" />
           </Link>
         </Container>

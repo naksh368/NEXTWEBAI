@@ -7,8 +7,8 @@
    White foundation · navy/blue type · restrained orange accent.
    ───────────────────────────────────────────────────────────── */
 :root {
-  --font-sans: "Plus Jakarta Sans", "Segoe UI", system-ui, -apple-system,
-    "Helvetica Neue", Arial, sans-serif;
+  /* Overridden by next/font (Poppins) on <html>; this is the fallback stack. */
+  --font-sans: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
   --brand-blue: #2340d9;
   --brand-navy: #0b1b45;
   --brand-orange: #ff6a1a;
@@ -48,6 +48,20 @@
 }
 
 @layer components {
+  /* Light hero background — subtle dot pattern instead of a photo. */
+  .dotted-bg {
+    background-color: #ffffff;
+    background-image: radial-gradient(rgba(35, 64, 217, 0.09) 1.2px, transparent 1.2px);
+    background-size: 22px 22px;
+    background-position: -11px -11px;
+  }
+  /* Soft brand wash used behind light heroes. */
+  .hero-wash {
+    background:
+      radial-gradient(60% 60% at 15% 0%, rgba(35, 64, 217, 0.06), transparent 70%),
+      radial-gradient(50% 50% at 90% 10%, rgba(255, 106, 26, 0.07), transparent 70%);
+  }
+
   /* Reserve space for images to avoid layout shift (Phase 33) */
   .aspect-frame {
     @apply relative overflow-hidden bg-surface-muted;

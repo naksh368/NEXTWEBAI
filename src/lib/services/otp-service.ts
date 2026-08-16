@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual, randomInt } from "node:crypto";
 import { db } from "@/lib/db";
+import { sendOtpSms } from "./sms";
 
 /**
  * OTP service (Phase 13). Codes are stored HASHED, single-use, time-limited,
@@ -24,9 +25,6 @@ export function normalizeMobile(input: string): string | null {
   return null;
 }
 
-// Sender header (max 6 chars for Indian DLT); brand name goes in the body.
-const SENDER_ID = process.env.SMS_SENDER_ID || "EXPRTZ";
-
 /** Branded OTP message text sent to the customer. */
 function otpMessage(code: string): string {
   const mins = Math.max(1, Math.round(TTL / 60));
@@ -34,15 +32,7 @@ function otpMessage(code: string): string {
 }
 
 async function sendSms(mobile: string, code: string) {
-  const message = otpMessage(code);
-  const provider = process.env.SMS_PROVIDER || "console";
-  if (provider === "console") {
-    // Dev only — prints the exact SMS that would be sent.
-    console.log(`\n📱 [SMS:console] to ${mobile} · sender ${SENDER_ID}\n   ${message}\n`);
-    return;
-  }
-  // TODO(prod): send `message` from sender `SENDER_ID` via msg91 / twilio.
-  throw new Error(`SMS provider "${provider}" is not configured.`);
+  await sendOtpSms(mobile, code, otpMessage(code));
 }
 
 export type RequestOtpResult =

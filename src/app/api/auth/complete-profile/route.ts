@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { getSessionCustomerId } from "@/lib/session";
+import { sendTextSms } from "@/lib/services/sms";
 
 export const runtime = "nodejs";
 
@@ -25,10 +26,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "That email is already in use." }, { status: 409 });
   }
 
-  await db.customer.update({
+  // Was this the first time the customer set an email? (i.e. new registration)
+  const before = await db.customer.findUnique({ where: { id: customerId }, select: { email: true } });
+
+  const updated = await db.customer.update({
     where: { id: customerId },
     data: { fullName: parsed.data.fullName, email: parsed.data.email },
+    select: { mobile: true, fullName: true },
   });
+
+  // Welcome SMS only on first account creation (non-blocking).
+  if (!before?.email) {
+    const first = (updated.fullName ?? "traveller").split(" ")[0];
+    await sendTextSms(
+      updated.mobile,
+      `Welcome to ExpertzTrip, ${first}! Your account is ready. Explore holiday packages and book your next trip with us.`,
+      { name: first }
+    );
+  }
 
   return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
 }

@@ -2,6 +2,14 @@
 
 **Your holiday. Your way.** — a production-grade B2C holiday-package platform: real packages, clear server-verified pricing, and a smooth, fast customer experience.
 
+## 🚀 Deploy
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fnaksh368%2FNEXTWEBAI&env=DATABASE_URL,AUTH_SECRET,NEXT_PUBLIC_SITE_URL,SMS_PROVIDER,MSG91_AUTH_KEY,SMS_SENDER_ID,MSG91_OTP_TEMPLATE_ID,EMAIL_PROVIDER,EMAIL_API_KEY,EMAIL_FROM,NEXT_PUBLIC_RAZORPAY_KEY_ID,RAZORPAY_KEY_ID,RAZORPAY_KEY_SECRET&envDescription=ExpertzTrip%20config%20%E2%80%94%20see%20DEPLOYMENT.md&envLink=https%3A%2F%2Fgithub.com%2Fnaksh368%2FNEXTWEBAI%2Fblob%2Fmain%2FDEPLOYMENT.md)
+
+Click the button, connect a **Neon** Postgres database (for `DATABASE_URL`), paste the
+env values, and Vercel builds + seeds the database automatically. Full walkthrough
+(including the custom domain DNS) is in **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
+
 Built with **Next.js 15 (App Router) · TypeScript · Tailwind CSS · Prisma**. Designed for performance from the ground up (server components, pagination, image optimization, code-splitting, skeletons) so the site is fast and never laggy.
 
 ---

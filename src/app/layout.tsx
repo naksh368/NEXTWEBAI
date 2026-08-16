@@ -1,16 +1,17 @@
 import type { Metadata, Viewport } from "next";
-import { Nunito_Sans } from "next/font/google";
+import { Nunito } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { AiFab } from "@/components/layout/ai-fab";
 import { HideOnAdmin } from "@/components/layout/hide-on-admin";
 
-// ExpertzTrip brand font — Nunito Sans, self-hosted at build (no runtime font
-// requests, display:swap to avoid layout shift). Used across the entire app.
-const nunitoSans = Nunito_Sans({
+// ExpertzTrip brand font — Nunito (the rounded wordmark font used in the logo),
+// self-hosted at build (no runtime font requests, display:swap to avoid layout
+// shift). Used across the entire app so all text matches the logo.
+const nunito = Nunito({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700", "800", "900"],
   variable: "--font-sans",
   display: "swap",
 });
@@ -45,7 +46,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={nunitoSans.variable}>
+    <html lang="en" className={nunito.variable}>
       <body className="flex min-h-screen flex-col">
         <a
           href="#main"

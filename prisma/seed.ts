@@ -164,6 +164,24 @@ const BENCHMARKS: Record<string, Benchmark> = {
   goa:       { perPerson: 22000,  baseNights: 4, perNight: 4000,  source: "Market estimate — verify", note: "Comparable 4★ + flights + transfers (estimate)" },
 };
 
+// Extra gallery images per destination (real Unsplash photos) — every package
+// ends up with 4 images (hero + thumb + these two), so a minimum of 3.
+const EXTRA_IMAGES: Record<string, string[]> = {
+  dubai:     ["photo-1580674285054-bed31e145f59", "photo-1493246507139-91e8fad9978e"],
+  bali:      ["photo-1573790387438-4da905039392", "photo-1604999333679-b86d54738315"],
+  maldives:  ["photo-1590523277543-a94d2e4eb00b", "photo-1505881502353-a1986add3762"],
+  thailand:  ["photo-1509233725247-49e657c54213", "photo-1470004914212-05527e49370b"],
+  singapore: ["photo-1496939376851-89342e90adcd", "photo-1508964942454-1a56651d54ac"],
+  europe:    ["photo-1467269204594-9661b134dd2b", "photo-1499856871958-5b9627545d1a"],
+  vietnam:   ["photo-1583417319070-4a69db38a482", "photo-1528127269322-539801943592"],
+  australia: ["photo-1524293581917-878a6d017c71", "photo-1516426122078-c23e76319801"],
+  kashmir:   ["photo-1605649487212-47bdab064df7", "photo-1626621341517-bbf3d9990a23"],
+  andaman:   ["photo-1586500036706-41963de24d8b", "photo-1583212292454-1fe6229603b7"],
+  rajasthan: ["photo-1599661046289-e31897846e41", "photo-1609920658906-8223bd289001"],
+  kerala:    ["photo-1593693397690-362cb9666fc2", "photo-1580137189272-c9379f8864fd"],
+  goa:       ["photo-1560179707-f14e90ef3623", "photo-1571536802807-30451e3955d8"],
+};
+
 type PkgSpec = { code: string; name: string; dest: string; nights: number; category: string; bestFor: string; featured?: boolean };
 const PACKAGES: PkgSpec[] = [
   // Dubai / UAE — 8
@@ -350,9 +368,10 @@ async function main() {
       cancellationPolicy: "Free cancellation up to 21 days before departure. 25% within 21–8 days. 50% within 7–3 days. No refund within 48 hours of departure. Package-specific supplier terms may apply.",
       importantInfo: "Per person on twin-sharing. Final price is confirmed on request after a verified benchmark check. Valid passport with 6 months validity required for international travel.",
       images: { create: [
-        { url: DESTINATIONS.find((d) => d.slug === p.dest)!.hero, isCover: true, sortOrder: 0, alt: p.name },
-        { url: DESTINATIONS.find((d) => d.slug === p.dest)!.thumb, isCover: false, sortOrder: 1, alt: `${dName} 2` },
-      ] },
+        DESTINATIONS.find((d) => d.slug === p.dest)!.hero,
+        DESTINATIONS.find((d) => d.slug === p.dest)!.thumb,
+        ...(EXTRA_IMAGES[p.dest] ?? []).map(img),
+      ].map((url, idx) => ({ url, isCover: idx === 0, sortOrder: idx, alt: `${p.name} ${idx + 1}` })) },
       days: { create: genDays(pool, p.nights).map((day, di) => ({ dayNumber: di + 1, title: day.title, items: { create: day.items.map((it, ii) => ({ timeslot: it.timeslot, kind: it.kind, title: it.title, description: it.description, sortOrder: ii })) } })) },
       options: { create: genOptions(pool).map((o, oi) => ({ category: o.category, groupKey: o.groupKey, label: o.label, description: o.description, meta: o.meta, priceDelta: o.priceDelta, perPerson: true, isDefault: !!o.isDefault, sortOrder: oi })) },
       departures: { create: departures().map((d) => ({ date: d.date, priceDelta: d.priceDelta })) },

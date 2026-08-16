@@ -28,15 +28,15 @@ Copy `.env.example` → `.env` (or set these in your host's dashboard — on Ver
 | `AUTH_SECRET` | ✅ | 32+ random chars. Signs sessions + OTP tokens. |
 | `DATABASE_URL` | ✅ | Your Postgres connection string (see §3). |
 | `NEXT_PUBLIC_SITE_URL` | ✅ | e.g. `https://expertztrip.com`. Used in emails/links/SEO. |
-| `SMS_PROVIDER` | ✅ | Set to `msg91` in prod. |
-| `MSG91_AUTH_KEY` | ✅ | Your MSG91 auth key. |
-| `SMS_SENDER_ID` | ✅ | DLT sender header, max 6 chars. |
-| `MSG91_OTP_TEMPLATE_ID` | ✅ | DLT template for login/registration OTP. |
-| `MSG91_WELCOME_TEMPLATE_ID` | ➖ | Welcome SMS after verification. |
-| `MSG91_TXN_TEMPLATE_ID` | ➖ | Booking/document/itinerary alert SMS. |
-| `EMAIL_PROVIDER` | ✅ | Set to `resend` in prod. |
+| `EMAIL_PROVIDER` | ✅ | `resend`. **Login is email OTP — this must work.** |
 | `EMAIL_API_KEY` | ✅ | Resend API key (`re_…`). |
-| `EMAIL_FROM` | ✅ | `ExpertzTrip <notifications@yourdomain.com>` (verified domain). |
+| `EMAIL_FROM` | ✅ | `ExpertzTrip <login@yourdomain.com>` (verified domain — see §4). |
+| `ADMIN_EMAIL` | ➖ | Super Admin login email (defaults to owner email). Real inbox. |
+| `NEXT_PUBLIC_RAZORPAY_KEY_ID` | ✅ | Public key id (browser-safe). |
+| `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | ✅ | Server keys. |
+| `RAZORPAY_WEBHOOK_SECRET` | ➖ | Enables the payment webhook (recommended). |
+| `SMS_PROVIDER` | ➖ | `console` to launch. `msg91` + templates later for SMS alerts. |
+| `MSG91_AUTH_KEY` / `SMS_SENDER_ID` / `MSG91_*_TEMPLATE_ID` | ➖ | Only for optional SMS alerts. |
 | `NEXT_PUBLIC_RAZORPAY_KEY_ID` | ✅ | Public key id (browser-safe). |
 | `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | ✅ | Server keys. |
 | `RAZORPAY_WEBHOOK_SECRET` | ➖ | Enables the payment webhook (recommended). |
@@ -87,12 +87,17 @@ MSG91 cannot send any SMS without DLT-approved templates. In the MSG91 console:
 Until a template id is present, the matching SMS is **honestly skipped** (logged
 as `SKIPPED` in `MessageLog`) — never faked.
 
-### Resend (email)
-1. Add and **verify your sending domain** in Resend.
-2. Set `EMAIL_FROM` to an address on that domain.
-   > Before the domain is verified, Resend's `onboarding@resend.dev` sender only
-   > delivers to your own account email — real customers won't receive mail.
+### Resend (email) — ⚠️ REQUIRED FOR LOGIN
+Login is **email OTP**, so Resend must be able to deliver to real customer inboxes.
+1. Add and **verify your sending domain** in Resend (add the DNS records it shows —
+   done in minutes). **Until the domain is verified, Resend only delivers to your
+   own account email, so customers cannot receive their login code.**
+2. Set `EMAIL_FROM` to an address on that domain (e.g. `login@yourdomain.com`).
 3. Set `EMAIL_PROVIDER=resend` and `EMAIL_API_KEY`.
+
+### MSG91 (SMS) — optional
+SMS is no longer required to log in. Leave `SMS_PROVIDER=console` to launch, and
+add MSG91 + DLT templates later for SMS booking/document alerts.
 
 ### Razorpay (payments)
 1. Set `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` / `NEXT_PUBLIC_RAZORPAY_KEY_ID`.
@@ -105,11 +110,13 @@ as `SKIPPED` in `MessageLog`) — never faked.
 
 ## 5. Admin access
 
-- Admin login is **phone + OTP** (no password). The seeded Super Admin mobile is
-  **+91 8700650467**.
-- The admin sets their name/email on first login.
-- To add more admins later, use the admin panel (or seed additional
-  `AdminUser` rows with the appropriate role).
+- Admin login is **email + OTP** (no password). The seeded Super Admin email is
+  the owner email (override with the `ADMIN_EMAIL` env var — it must be a real
+  inbox, since the login code is sent there). Mobile `+91 8700650467` is stored
+  for contact.
+- The admin sets their display name on first login.
+- Tip: the admin email can be your Resend account email, so admin login works
+  even before the sending domain is verified.
 
 ---
 

@@ -38,7 +38,7 @@ export function Header() {
   const firstName = me?.fullName?.split(" ")[0];
 
   return (
-    <header className="sticky top-0 z-40 border-b border-surface-border bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+    <header className="sticky top-0 z-40 border-b border-surface-border bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/80 print:hidden">
       <div className="mx-auto flex h-16 w-full max-w-[1200px] items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-6 xl:gap-9">
           <Logo size="md" />

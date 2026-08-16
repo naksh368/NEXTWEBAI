@@ -60,8 +60,6 @@ export function CustomizationPanel(props: CustomizationProps) {
   const [travellers, setTravellers] = useState(Math.max(2, props.minTravellers));
   const [selected, setSelected] = useState<string[]>(initialSelected);
   const [departureId, setDepartureId] = useState<string | null>(props.departures[0]?.id ?? null);
-  const [coupon, setCoupon] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
 
   const [breakdown, setBreakdown] = useState<PriceBreakdown | null>(null);
   const [loading, setLoading] = useState(true);
@@ -95,7 +93,7 @@ export function CustomizationPanel(props: CustomizationProps) {
           travellerCount: travellers,
           selectedOptionIds: selected,
           departureId,
-          couponCode: appliedCoupon,
+          couponCode: null,
         }),
       });
       const data = await res.json();
@@ -110,7 +108,7 @@ export function CustomizationPanel(props: CustomizationProps) {
     } finally {
       if (!ctrl.signal.aborted) setLoading(false);
     }
-  }, [props.versionId, travellers, selected, departureId, appliedCoupon]);
+  }, [props.versionId, travellers, selected, departureId]);
 
   // Debounced reprice on any change
   useEffect(() => {
@@ -135,7 +133,6 @@ export function CustomizationPanel(props: CustomizationProps) {
     params.set("travellers", String(travellers));
     if (selected.length) params.set("options", selected.join(","));
     if (departureId) params.set("departure", departureId);
-    if (appliedCoupon) params.set("coupon", appliedCoupon);
     router.push(`/packages/${props.packageSlug}/checkout?${params.toString()}`);
   }
 
@@ -247,34 +244,12 @@ export function CustomizationPanel(props: CustomizationProps) {
         );
       })}
 
-      {/* Coupon */}
-      <div>
-        <p className="mb-2 text-sm font-semibold text-brand-navy">Have a coupon?</p>
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Tag className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-faint" />
-            <input
-              value={coupon}
-              onChange={(e) => setCoupon(e.target.value.toUpperCase())}
-              placeholder="e.g. WELCOME5"
-              className="h-10 w-full rounded-xl border border-surface-border pl-9 pr-3 text-sm uppercase focus:border-brand-blue focus:outline-none"
-            />
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setAppliedCoupon(coupon.trim() || null);
-            }}
-          >
-            Apply
-          </Button>
+      {/* Offers auto-apply — no code to enter */}
+      {couponMessage && breakdown && breakdown.discount > 0 && (
+        <div className="flex items-center gap-2 rounded-xl bg-[#E7F6EC] px-3 py-2 text-sm font-medium text-success">
+          <Tag className="h-4 w-4" /> {couponMessage}
         </div>
-        {couponMessage && <p className="mt-1.5 text-xs text-warning">{couponMessage}</p>}
-        {appliedCoupon && breakdown && breakdown.discount > 0 && (
-          <p className="mt-1.5 text-xs font-medium text-success">Coupon {appliedCoupon} applied.</p>
-        )}
-      </div>
+      )}
 
       {/* Breakdown */}
       <div className="rounded-xl border border-surface-border bg-surface-muted/50 p-4">

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import {
   Plane, BedDouble, Car, Ticket, Utensils, Clock, MapPin,
-  Check, X, Info, ShieldCheck,
+  Check, X, Info, ShieldCheck, Download,
 } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
@@ -142,6 +142,11 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
               <f.icon className="h-4 w-4 text-brand-blue" /> {f.label}
             </span>
           ))}
+        </div>
+        <div className="mt-3">
+          <Link href={`/packages/${pkg.slug}/itinerary`} className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-blue hover:underline">
+            <Download className="h-4 w-4" /> View &amp; download full itinerary
+          </Link>
         </div>
 
         {/* Body */}

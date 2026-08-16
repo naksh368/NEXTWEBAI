@@ -13,6 +13,7 @@ const STATUS_TONE: Record<string, string> = { PUBLISHED: "success", DRAFT: "neut
 export default async function AdminPackagesPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
   const admin = await requireAdmin("package.view");
   const canEdit = hasPermission(admin, "package.edit") || hasPermission(admin, "package.publish");
+  const canCreate = hasPermission(admin, "package.create");
   const page = Math.max(1, Number((await searchParams).page ?? 1) || 1);
 
   const [total, rows] = await Promise.all([
@@ -26,7 +27,11 @@ export default async function AdminPackagesPage({ searchParams }: { searchParams
 
   return (
     <>
-      <PageHeader title="Packages" subtitle={`${total} package${total === 1 ? "" : "s"} · only PUBLISHED appear on the public site`} />
+      <PageHeader
+        title="Packages"
+        subtitle={`${total} package${total === 1 ? "" : "s"} · only PUBLISHED appear on the public site`}
+        action={canCreate ? <Link href="/admin/packages/new" className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-brand-blue px-4 text-sm font-bold text-white hover:bg-brand-blueDark">+ New package</Link> : null}
+      />
       <Panel>
         <Table head={<><Th>Package</Th><Th>Destination</Th><Th>Duration</Th><Th className="text-right">From</Th><Th>Status</Th><Th></Th></>}>
           {rows.length === 0 ? <EmptyRow colSpan={6} label="No packages yet." /> : rows.map((p) => (
@@ -36,7 +41,12 @@ export default async function AdminPackagesPage({ searchParams }: { searchParams
               <Td className="text-ink-muted">{p.currentVersion ? `${p.currentVersion.durationNights}N` : "—"}</Td>
               <Td className="text-right tabular-nums">{!p.currentVersion ? "—" : p.currentVersion.pricingStatus === "PRICE_REVIEW_REQUIRED" ? <span className="text-xs font-medium text-warning">Price review</span> : formatINR(p.currentVersion.basePrice)}</Td>
               <Td>{canEdit ? <PackageStatusControl packageId={p.id} current={p.status} /> : <Pill tone={STATUS_TONE[p.status] ?? "neutral"}>{p.status}</Pill>}</Td>
-              <Td className="text-right"><Link href={`/packages/${p.slug}`} className="text-sm font-medium text-brand-blue hover:underline">View ↗</Link></Td>
+              <Td className="text-right">
+                <span className="flex items-center justify-end gap-3">
+                  {canEdit && <Link href={`/admin/packages/${p.id}/edit`} className="text-sm font-semibold text-brand-blue hover:underline">Edit</Link>}
+                  <Link href={`/packages/${p.slug}`} className="text-sm font-medium text-ink-muted hover:text-brand-blue">View ↗</Link>
+                </span>
+              </Td>
             </tr>
           ))}
         </Table>

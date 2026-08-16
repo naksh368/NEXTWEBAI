@@ -21,8 +21,8 @@ datasource db {
 
 model Customer {
   id           String   @id @default(cuid())
-  mobile       String   @unique // E.164, e.g. +919876543210
-  email        String?  @unique // mandatory after registration (used for docs/e-tickets)
+  mobile       String?  @unique // optional — added in profile; login is by email
+  email        String?  @unique // login identifier + used for docs/e-tickets
   fullName     String?
   isVerified   Boolean  @default(false)
   status       String   @default("ACTIVE") // ACTIVE | SUSPENDED

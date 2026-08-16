@@ -58,5 +58,19 @@ export function emailLayout(heading: string, bodyHtml: string, cta?: { label: st
   </td></tr></table></body></html>`;
 }
 
+/** One-time login code email (the customer + admin login channel). */
+export async function sendOtpEmail(to: string, code: string, minutes = 5) {
+  return sendEmail({
+    to,
+    subject: `${code} is your ExpertzTrip verification code`,
+    html: emailLayout(
+      "Your verification code",
+      `Enter this code to sign in to ExpertzTrip:
+       <div style="font-size:34px;font-weight:800;letter-spacing:10px;color:#2340D9;margin:18px 0">${code}</div>
+       It's valid for ${minutes} minutes. If you didn't request this, you can safely ignore this email.`
+    ),
+  });
+}
+
 // Per-event email bodies now live in the central notification service
 // (src/lib/services/notifications.ts), which composes them via `emailLayout`.

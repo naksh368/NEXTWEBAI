@@ -18,7 +18,7 @@ export default async function ProfilePage() {
       <h1 className="mt-4 text-2xl font-bold sm:text-3xl">Profile</h1>
       <p className="mt-1 text-ink-muted">Manage your personal details.</p>
       <div className="mt-6">
-        <ProfileForm initial={{ fullName: customer.fullName ?? "", email: customer.email ?? "", mobile: customer.mobile }} />
+        <ProfileForm initial={{ fullName: customer.fullName ?? "", email: customer.email ?? "", mobile: customer.mobile ?? "" }} />
       </div>
     </Container>
   );

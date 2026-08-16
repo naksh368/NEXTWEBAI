@@ -2,19 +2,18 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Phone, ShieldCheck, Mail, ArrowRight, ArrowLeft } from "lucide-react";
+import { Mail, ShieldCheck, User, ArrowRight, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input, Field } from "@/components/ui/input";
 
-type Step = "mobile" | "otp" | "profile";
+type Step = "email" | "otp" | "profile";
 
 export function AdminLoginForm() {
   const router = useRouter();
-  const [step, setStep] = useState<Step>("mobile");
-  const [mobile, setMobile] = useState("");
+  const [step, setStep] = useState<Step>("email");
+  const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -30,31 +29,31 @@ export function AdminLoginForm() {
   }
 
   async function requestOtp() {
-    const data = await post("/api/admin/otp/request", { mobile });
+    const data = await post("/api/admin/otp/request", { email });
     if (!data.ok) return setError(data.error);
     setStep("otp");
-    setNotice(process.env.NODE_ENV === "production" ? "If this number has admin access, we've sent a code." : "Dev mode: your code is printed to the server console.");
+    setNotice(process.env.NODE_ENV === "production" ? "If this email has admin access, we've sent a code." : "Dev mode: your code is printed to the server console.");
   }
   async function verify() {
-    const data = await post("/api/admin/otp/verify", { mobile, code });
+    const data = await post("/api/admin/otp/verify", { email, code });
     if (!data.ok) return setError(data.error);
     if (data.profileComplete) { router.push("/admin"); router.refresh(); }
     else setStep("profile");
   }
   async function completeProfile() {
-    const data = await post("/api/admin/complete-profile", { fullName, email });
+    const data = await post("/api/admin/complete-profile", { fullName });
     if (!data.ok) return setError(data.error);
     router.push("/admin"); router.refresh();
   }
 
   return (
     <>
-      {step === "mobile" && (
+      {step === "email" && (
         <>
-          <Head icon={<Phone className="h-5 w-5" />} title="Admin sign in" subtitle="Enter your admin mobile number to receive a one-time code." />
+          <Head icon={<Mail className="h-5 w-5" />} title="Admin sign in" subtitle="Enter your admin email to receive a one-time code." />
           <form onSubmit={(e) => { e.preventDefault(); requestOtp(); }} className="mt-6 space-y-4">
-            <Field label="Admin mobile number" htmlFor="a-mobile" required hint="Indian numbers default to +91.">
-              <Input id="a-mobile" type="tel" inputMode="tel" autoComplete="tel" placeholder="+91 79827 53767" value={mobile} onChange={(e) => setMobile(e.target.value)} invalid={!!error} autoFocus />
+            <Field label="Admin email" htmlFor="a-email" required>
+              <Input id="a-email" type="email" inputMode="email" autoComplete="email" placeholder="you@expertztrip.com" value={email} onChange={(e) => setEmail(e.target.value)} invalid={!!error} autoFocus />
             </Field>
             {error && <p className="text-sm font-medium text-danger">{error}</p>}
             <Button type="submit" className="w-full" size="lg" loading={loading}>Send OTP <ArrowRight className="h-4 w-4" /></Button>
@@ -64,8 +63,8 @@ export function AdminLoginForm() {
 
       {step === "otp" && (
         <>
-          <button onClick={() => { setStep("mobile"); setError(null); setCode(""); }} className="mb-3 inline-flex items-center gap-1 text-sm text-ink-muted hover:text-ink"><ArrowLeft className="h-4 w-4" /> Change number</button>
-          <Head icon={<ShieldCheck className="h-5 w-5" />} title="Enter the 6-digit code" subtitle={`Sent to ${mobile}`} />
+          <button onClick={() => { setStep("email"); setError(null); setCode(""); }} className="mb-3 inline-flex items-center gap-1 text-sm text-ink-muted hover:text-ink"><ArrowLeft className="h-4 w-4" /> Change email</button>
+          <Head icon={<ShieldCheck className="h-5 w-5" />} title="Enter the OTP sent on email" subtitle={`Sent to ${email}`} />
           {notice && <p className="mt-3 rounded-lg bg-brand-blueLight px-3 py-2 text-xs text-brand-blue">{notice}</p>}
           <form onSubmit={(e) => { e.preventDefault(); verify(); }} className="mt-6 space-y-4">
             <Field label="One-time code" htmlFor="a-otp" required>
@@ -80,14 +79,12 @@ export function AdminLoginForm() {
 
       {step === "profile" && (
         <>
-          <Head icon={<Mail className="h-5 w-5" />} title="Set up your admin profile" subtitle="Add your name and email to finish setting up your admin account." />
+          <Head icon={<User className="h-5 w-5" />} title="Set up your admin profile" subtitle="Add your name to finish setting up your admin account." />
           <form onSubmit={(e) => { e.preventDefault(); completeProfile(); }} className="mt-6 space-y-4">
             <Field label="Full name" htmlFor="a-name" required>
-              <Input id="a-name" autoComplete="name" placeholder="Your name" value={fullName} onChange={(e) => setFullName(e.target.value)} autoFocus />
+              <Input id="a-name" autoComplete="name" placeholder="Your name" value={fullName} onChange={(e) => setFullName(e.target.value)} invalid={!!error} autoFocus />
             </Field>
-            <Field label="Email address" htmlFor="a-email" required error={error ?? undefined}>
-              <Input id="a-email" type="email" autoComplete="email" placeholder="you@expertztrip.com" value={email} onChange={(e) => setEmail(e.target.value)} invalid={!!error} />
-            </Field>
+            {error && <p className="text-sm font-medium text-danger">{error}</p>}
             <Button type="submit" className="w-full" size="lg" loading={loading}>Save &amp; continue</Button>
           </form>
         </>

@@ -39,8 +39,8 @@ export default async function AccountPage() {
         <div>
           <h1 className="text-2xl font-bold sm:text-3xl">Hi{customer.fullName ? `, ${customer.fullName.split(" ")[0]}` : ""} 👋</h1>
           <div className="mt-1 flex items-center gap-2 text-sm text-ink-muted">
-            <span>{customer.mobile}</span>
-            {customer.email && <><span className="text-ink-faint">·</span><span>{customer.email}</span></>}
+            {customer.email && <span>{customer.email}</span>}
+            {customer.mobile && <><span className="text-ink-faint">·</span><span>{customer.mobile}</span></>}
             {customer.isVerified && <Badge tone="success">Verified</Badge>}
           </div>
         </div>

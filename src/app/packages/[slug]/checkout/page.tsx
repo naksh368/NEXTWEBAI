@@ -111,7 +111,7 @@ export default async function CheckoutPage({
           {customer ? (
             <Card><CardBody>
               <h2 className="text-lg font-bold">Traveller details</h2>
-              <p className="mt-1 text-sm text-ink-muted">Signed in as {customer.mobile}{customer.email ? ` · ${customer.email}` : ""}.</p>
+              <p className="mt-1 text-sm text-ink-muted">Signed in as {customer.email ?? customer.mobile}.</p>
               {!customer.email && (
                 <p className="mt-3 rounded-lg bg-[#FDF7EC] px-3 py-2 text-xs text-warning">
                   Add your email in <Link href="/account/profile" className="font-semibold underline">your profile</Link> so we can send tickets and invoices.

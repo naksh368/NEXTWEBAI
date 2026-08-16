@@ -3,19 +3,19 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
-import { Phone, ShieldCheck, Mail, ArrowRight, Loader2, ArrowLeft } from "lucide-react";
+import { Mail, ShieldCheck, User, ArrowRight, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input, Field } from "@/components/ui/input";
 
-type Step = "mobile" | "otp" | "profile";
+type Step = "email" | "otp" | "profile";
 
 export function LoginFlow({ redirectTo = "/account" }: { redirectTo?: string }) {
   const router = useRouter();
-  const [step, setStep] = useState<Step>("mobile");
-  const [mobile, setMobile] = useState("");
+  const [step, setStep] = useState<Step>("email");
+  const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
+  const [mobile, setMobile] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -34,14 +34,14 @@ export function LoginFlow({ redirectTo = "/account" }: { redirectTo?: string }) 
   }
 
   async function requestOtp() {
-    const { data } = await post("/api/auth/request-otp", { mobile });
+    const { data } = await post("/api/auth/request-otp", { email });
     if (!data.ok) return setError(data.error);
     setStep("otp");
-    setNotice(process.env.NODE_ENV === "production" ? "We've sent a code to your mobile." : "Dev mode: your code is printed to the server console.");
+    setNotice(process.env.NODE_ENV === "production" ? "We've sent a code to your email." : "Dev mode: your code is printed to the server console.");
   }
 
   async function verifyOtp() {
-    const { data } = await post("/api/auth/verify-otp", { mobile, code });
+    const { data } = await post("/api/auth/verify-otp", { email, code });
     if (!data.ok) return setError(data.error);
     if (data.profileComplete) {
       router.push(redirectTo);
@@ -52,7 +52,7 @@ export function LoginFlow({ redirectTo = "/account" }: { redirectTo?: string }) 
   }
 
   async function completeProfile() {
-    const { data } = await post("/api/auth/complete-profile", { fullName, email });
+    const { data } = await post("/api/auth/complete-profile", { fullName, mobile });
     if (!data.ok) return setError(data.error);
     router.push(redirectTo);
     router.refresh();
@@ -61,12 +61,12 @@ export function LoginFlow({ redirectTo = "/account" }: { redirectTo?: string }) 
   return (
     <div className="mx-auto max-w-md">
       <div className="rounded-2xl border border-surface-border bg-white p-6 shadow-card sm:p-8">
-        {step === "mobile" && (
+        {step === "email" && (
           <>
-            <StepHeader icon={<Phone className="h-5 w-5" />} title="Sign in or create account" subtitle="We'll send a one-time code to your mobile number." />
+            <StepHeader icon={<Mail className="h-5 w-5" />} title="Sign in or create account" subtitle="We'll email you a one-time code — no password needed." />
             <form onSubmit={(e) => { e.preventDefault(); requestOtp(); }} className="mt-6 space-y-4">
-              <Field label="Mobile number" htmlFor="mobile" required hint="Indian numbers default to +91. Include country code for others.">
-                <Input id="mobile" type="tel" inputMode="tel" autoComplete="tel" placeholder="+91 98765 43210" value={mobile} onChange={(e) => setMobile(e.target.value)} invalid={!!error} autoFocus />
+              <Field label="Email address" htmlFor="email" required hint="Your tickets, invoices and travel documents are sent here.">
+                <Input id="email" type="email" inputMode="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} invalid={!!error} autoFocus />
               </Field>
               {error && <p className="text-sm font-medium text-danger">{error}</p>}
               <Button type="submit" className="w-full" size="lg" loading={loading}>
@@ -78,10 +78,10 @@ export function LoginFlow({ redirectTo = "/account" }: { redirectTo?: string }) 
 
         {step === "otp" && (
           <>
-            <button onClick={() => { setStep("mobile"); setError(null); setCode(""); }} className="mb-3 inline-flex items-center gap-1 text-sm text-ink-muted hover:text-ink">
-              <ArrowLeft className="h-4 w-4" /> Change number
+            <button onClick={() => { setStep("email"); setError(null); setCode(""); }} className="mb-3 inline-flex items-center gap-1 text-sm text-ink-muted hover:text-ink">
+              <ArrowLeft className="h-4 w-4" /> Change email
             </button>
-            <StepHeader icon={<ShieldCheck className="h-5 w-5" />} title="Enter the 6-digit code" subtitle={`Sent to ${mobile}`} />
+            <StepHeader icon={<ShieldCheck className="h-5 w-5" />} title="Enter the OTP sent on email" subtitle={`Sent to ${email}`} />
             {notice && <p className="mt-3 rounded-lg bg-brand-blueLight px-3 py-2 text-xs text-brand-blue">{notice}</p>}
             <form onSubmit={(e) => { e.preventDefault(); verifyOtp(); }} className="mt-6 space-y-4">
               <Field label="One-time code" htmlFor="otp" required>
@@ -102,13 +102,13 @@ export function LoginFlow({ redirectTo = "/account" }: { redirectTo?: string }) 
 
         {step === "profile" && (
           <>
-            <StepHeader icon={<Mail className="h-5 w-5" />} title="Almost there" subtitle="We need your name and email for e-tickets, invoices and booking documents." />
+            <StepHeader icon={<User className="h-5 w-5" />} title="Almost there" subtitle="Tell us your name so we can personalise your tickets and documents." />
             <form onSubmit={(e) => { e.preventDefault(); completeProfile(); }} className="mt-6 space-y-4">
               <Field label="Full name" htmlFor="name" required>
-                <Input id="name" autoComplete="name" placeholder="Your full name" value={fullName} onChange={(e) => setFullName(e.target.value)} autoFocus />
+                <Input id="name" autoComplete="name" placeholder="Your full name" value={fullName} onChange={(e) => setFullName(e.target.value)} invalid={!!error} autoFocus />
               </Field>
-              <Field label="Email address" htmlFor="email" required hint="Your tickets and invoices are sent here.">
-                <Input id="email" type="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} invalid={!!error} />
+              <Field label="Mobile number" htmlFor="mobile" hint="Optional — for booking updates. You can add it later.">
+                <Input id="mobile" type="tel" inputMode="tel" autoComplete="tel" placeholder="+91 98765 43210" value={mobile} onChange={(e) => setMobile(e.target.value)} />
               </Field>
               {error && <p className="text-sm font-medium text-danger">{error}</p>}
               <Button type="submit" className="w-full" size="lg" loading={loading}>

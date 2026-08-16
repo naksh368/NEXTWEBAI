@@ -17,11 +17,7 @@ export default async function AdminLoginPage() {
           <p className="mt-2 text-sm font-semibold uppercase tracking-wide text-brand-orange">Operations Console</p>
         </div>
         <div className="rounded-2xl border border-surface-border bg-white p-6 shadow-card sm:p-8">
-          <h1 className="text-xl font-bold">Sign in</h1>
-          <p className="mt-1 text-sm text-ink-muted">Use your ExpertzTrip admin credentials.</p>
-          <div className="mt-6">
-            <AdminLoginForm />
-          </div>
+          <AdminLoginForm />
         </div>
       </div>
     </div>

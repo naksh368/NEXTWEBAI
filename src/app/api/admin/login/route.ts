@@ -14,7 +14,7 @@ export async function POST(request: Request) {
 
   const admin = await db.adminUser.findUnique({ where: { email: parsed.data.email.toLowerCase() } });
   // Constant-ish response — don't reveal whether the email exists.
-  const valid = admin && admin.status === "ACTIVE" && verifyPassword(parsed.data.password, admin.passwordHash);
+  const valid = admin && admin.status === "ACTIVE" && admin.passwordHash && verifyPassword(parsed.data.password, admin.passwordHash);
   if (!admin || !valid) {
     return NextResponse.json({ ok: false, error: "Invalid email or password." }, { status: 401 });
   }

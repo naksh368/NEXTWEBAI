@@ -84,7 +84,10 @@ export type VerifyOtpResult =
   | { ok: true; customerId: string; profileComplete: boolean; mobile: string }
   | { ok: false; error: string };
 
-export async function verifyOtp(rawMobile: string, code: string): Promise<VerifyOtpResult> {
+export type VerifyCodeResult = { ok: true; mobile: string } | { ok: false; error: string };
+
+/** Validate & consume an OTP for a mobile (no customer creation). Reused by admin login. */
+export async function verifyOtpCode(rawMobile: string, code: string): Promise<VerifyCodeResult> {
   const mobile = normalizeMobile(rawMobile);
   if (!mobile) return { ok: false, error: "Enter a valid mobile number." };
   if (!/^\d{6}$/.test(code)) return { ok: false, error: "Enter the 6-digit code." };
@@ -94,32 +97,26 @@ export async function verifyOtp(rawMobile: string, code: string): Promise<Verify
     orderBy: { createdAt: "desc" },
   });
   if (!session) return { ok: false, error: "Code expired. Please request a new one." };
-
-  if (session.attempts >= session.maxAttempts) {
-    return { ok: false, error: "Too many incorrect attempts. Request a new code." };
-  }
+  if (session.attempts >= session.maxAttempts) return { ok: false, error: "Too many incorrect attempts. Request a new code." };
 
   const provided = Buffer.from(hashCode(code, mobile));
   const expected = Buffer.from(session.codeHash);
   const match = provided.length === expected.length && timingSafeEqual(provided, expected);
-
   if (!match) {
     await db.otpSession.update({ where: { id: session.id }, data: { attempts: { increment: 1 } } });
     return { ok: false, error: "Incorrect code. Please try again." };
   }
-
-  // Success — consume the code and upsert the customer.
   await db.otpSession.update({ where: { id: session.id }, data: { consumedAt: new Date() } });
-  const customer = await db.customer.upsert({
-    where: { mobile },
-    update: { isVerified: true },
-    create: { mobile, isVerified: true },
-  });
+  return { ok: true, mobile };
+}
 
-  return {
-    ok: true,
-    customerId: customer.id,
-    profileComplete: Boolean(customer.fullName && customer.email),
-    mobile,
-  };
+export async function verifyOtp(rawMobile: string, code: string): Promise<VerifyOtpResult> {
+  const res = await verifyOtpCode(rawMobile, code);
+  if (!res.ok) return res;
+  const customer = await db.customer.upsert({
+    where: { mobile: res.mobile },
+    update: { isVerified: true },
+    create: { mobile: res.mobile, isVerified: true },
+  });
+  return { ok: true, customerId: customer.id, profileComplete: Boolean(customer.fullName && customer.email), mobile: res.mobile };
 }

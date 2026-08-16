@@ -5,7 +5,7 @@ import { getAdminSessionId } from "./admin-session";
 
 export type CurrentAdmin = {
   id: string;
-  email: string;
+  email: string | null;
   fullName: string;
   roleKey: string | null;
   roleName: string | null;

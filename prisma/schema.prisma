@@ -675,9 +675,10 @@ model SupplierMapping {
 
 model AdminUser {
   id           String   @id @default(cuid())
-  email        String   @unique
+  email        String?  @unique
+  mobile       String?  @unique // phone-OTP admin login
   fullName     String
-  passwordHash String
+  passwordHash String?
   status       String   @default("ACTIVE")
   roleId       String?
   role         Role?    @relation(fields: [roleId], references: [id])

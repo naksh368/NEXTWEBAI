@@ -12,7 +12,7 @@ const provider = () => process.env.SMS_PROVIDER || "console";
 const apiKey = () => process.env.MSG91_AUTH_KEY || process.env.SMS_API_KEY || "";
 const sender = () => process.env.SMS_SENDER_ID || "EXPRTZ";
 
-const onlyDigits = (e164: string) => e164.replace(/[^\d]/g, ""); // 917982753767
+const onlyDigits = (e164: string) => e164.replace(/[^\d]/g, ""); // 918700650467
 const tenDigit = (e164: string) => onlyDigits(e164).replace(/^91/, "");
 
 async function msg91Flow(mobile: string, templateId: string, vars: Record<string, string>) {

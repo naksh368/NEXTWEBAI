@@ -413,7 +413,7 @@ async function main() {
   const roleId = new Map<string, string>();
   for (const key of ADMIN_ROLES) roleId.set(key, (await db.role.create({ data: { key, name: key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()), permissions: { create: (rolePerms[key] ?? []).map((pk) => ({ permissionId: permId.get(pk)! })) } } })).id);
   // Phone-OTP super admin. Owner sets their name + email on first login.
-  await db.adminUser.create({ data: { mobile: "+917982753767", fullName: "Admin", roleId: roleId.get("SUPER_ADMIN")! } });
+  await db.adminUser.create({ data: { mobile: "+918700650467", fullName: "Admin", roleId: roleId.get("SUPER_ADMIN")! } });
   await db.supplier.createMany({ data: [
     { name: "SkyLink Aviation", type: "FLIGHT", status: "ACTIVE", credentialRef: "secret://suppliers/skylink" },
     { name: "StayWell Hotels DMC", type: "HOTEL", status: "ACTIVE", credentialRef: "secret://suppliers/staywell" },

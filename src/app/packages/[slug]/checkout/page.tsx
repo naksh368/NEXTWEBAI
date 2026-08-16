@@ -27,6 +27,22 @@ export default async function CheckoutPage({
   if (!pkg) notFound();
   const v = pkg.currentVersion!;
 
+  // Price-review packages can't be checked out until a verified price is set.
+  if (v.pricingStatus === "PRICE_REVIEW_REQUIRED") {
+    return (
+      <Container className="py-12">
+        <Card><CardBody className="text-center">
+          <h1 className="text-xl font-bold">Price on request</h1>
+          <p className="mt-2 text-ink-muted">This holiday is confirmed by our travel experts before booking. Enquire and we&apos;ll send you a verified quote.</p>
+          <div className="mt-5 flex justify-center gap-3">
+            <Link href={`/packages/${slug}`} className={buttonVariants({ variant: "outline" })}><ArrowLeft className="h-4 w-4" /> Back to package</Link>
+            <Link href="/support" className={buttonVariants({ variant: "orange" })}>Enquire</Link>
+          </div>
+        </CardBody></Card>
+      </Container>
+    );
+  }
+
   const travellers = Math.max(1, Number(first(sp.travellers) ?? 2) || 2);
   const optionIds = (first(sp.options) ?? "").split(",").filter(Boolean);
   const departureId = first(sp.departure) ?? null;

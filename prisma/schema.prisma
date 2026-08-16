@@ -147,6 +147,7 @@ model DestinationOnCategory {
 /// bookings can pin an immutable version (Phase 11).
 model Package {
   id             String   @id @default(cuid())
+  code           String?  @unique // human package id, e.g. ETX-DXB-001
   slug           String   @unique
   destinationId  String
   destination    Destination @relation(fields: [destinationId], references: [id])
@@ -190,6 +191,26 @@ model PackageVersion {
   exclusions    Json?    // string[]
   cancellationPolicy String?
   importantInfo String?
+
+  // ── 50-package catalogue metadata ──
+  category        String?  // FIRST_ESCAPE | SIGNATURE | HONEYMOON | FAMILY | LUXURY | PREMIUM
+  bestFor         String?  // "Couples, first-time travellers"
+  departureCities Json?    // string[]
+  travelWindows   String?  // "Oct–Mar peak · Apr–Sep value"
+  roomCategory    String?
+  mealPlan        String?
+  flightSector    String?
+  baggage         String?
+  visaInfo        String?
+  insuranceInfo   String?
+  seoTitle        String?
+  seoDescription  String?
+  // Availability (Phase: never show unavailable as confirmed)
+  availabilityStatus String @default("AVAILABLE") // AVAILABLE | LIMITED | ON_REQUEST | UNAVAILABLE
+  // Pricing governance — verified benchmark + ₹550, else PRICE_REVIEW_REQUIRED (never invented)
+  pricingStatus   String   @default("PRICED")     // PRICED | PRICE_REVIEW_REQUIRED
+  benchmark       Json?    // { source, dateChecked, departureCity, config, price }
+  targetPrice     Int?
 
   // Which customizations the admin enabled (Phase 10: only show enabled options)
   allowHotelChange    Boolean @default(true)

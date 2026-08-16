@@ -19,7 +19,7 @@ export default async function AdminPackagesPage({ searchParams }: { searchParams
     db.package.count(),
     db.package.findMany({
       orderBy: { updatedAt: "desc" }, skip: (page - 1) * PAGE_SIZE, take: PAGE_SIZE,
-      include: { destination: { select: { name: true } }, currentVersion: { select: { basePrice: true, durationNights: true } } },
+      include: { destination: { select: { name: true } }, currentVersion: { select: { basePrice: true, durationNights: true, pricingStatus: true } } },
     }),
   ]);
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -34,7 +34,7 @@ export default async function AdminPackagesPage({ searchParams }: { searchParams
               <Td className="font-medium text-brand-navy">{p.name}</Td>
               <Td className="text-ink-muted">{p.destination.name}</Td>
               <Td className="text-ink-muted">{p.currentVersion ? `${p.currentVersion.durationNights}N` : "—"}</Td>
-              <Td className="text-right tabular-nums">{p.currentVersion ? formatINR(p.currentVersion.basePrice) : "—"}</Td>
+              <Td className="text-right tabular-nums">{!p.currentVersion ? "—" : p.currentVersion.pricingStatus === "PRICE_REVIEW_REQUIRED" ? <span className="text-xs font-medium text-warning">Price review</span> : formatINR(p.currentVersion.basePrice)}</Td>
               <Td>{canEdit ? <PackageStatusControl packageId={p.id} current={p.status} /> : <Pill tone={STATUS_TONE[p.status] ?? "neutral"}>{p.status}</Pill>}</Td>
               <Td className="text-right"><Link href={`/packages/${p.slug}`} className="text-sm font-medium text-brand-blue hover:underline">View ↗</Link></Td>
             </tr>

@@ -50,11 +50,20 @@ export function PackageCard({ pkg, priority }: { pkg: PackageListItem; priority?
         )}
         <div className="mt-auto flex items-end justify-between pt-4">
           <div>
-            <p className="text-[11px] uppercase tracking-wide text-ink-faint">Starting from</p>
-            <p className="text-lg font-bold text-brand-navy">
-              {formatINR(pkg.basePrice)}
-              <span className="text-xs font-medium text-ink-muted"> /person</span>
-            </p>
+            {pkg.pricingStatus === "PRICE_REVIEW_REQUIRED" ? (
+              <>
+                <p className="text-[11px] uppercase tracking-wide text-ink-faint">Pricing</p>
+                <p className="text-base font-bold text-brand-navy">Price on request</p>
+              </>
+            ) : (
+              <>
+                <p className="text-[11px] uppercase tracking-wide text-ink-faint">Starting from</p>
+                <p className="text-lg font-bold text-brand-navy">
+                  {formatINR(pkg.basePrice)}
+                  <span className="text-xs font-medium text-ink-muted"> /person</span>
+                </p>
+              </>
+            )}
           </div>
           <span className="inline-flex items-center gap-1 text-sm font-semibold text-brand-blue">
             View <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />

@@ -42,6 +42,7 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
   if (!pkg) notFound();
 
   const v = pkg.currentVersion!;
+  const reviewRequired = v.pricingStatus === "PRICE_REVIEW_REQUIRED";
   const images = v.images;
   const highlights = asStringArray(v.highlights);
   const inclusions = asStringArray(v.inclusions);
@@ -118,9 +119,19 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
             {v.summary && <p className="mt-2 max-w-2xl text-ink-muted">{v.summary}</p>}
           </div>
           <div className="shrink-0 rounded-xl bg-surface-muted px-4 py-3 text-right">
-            <p className="text-xs uppercase tracking-wide text-ink-faint">Starting from</p>
-            <p className="text-2xl font-bold text-brand-navy">{formatINR(v.basePrice)}</p>
-            <p className="text-xs text-ink-muted">per person</p>
+            {reviewRequired ? (
+              <>
+                <p className="text-xs uppercase tracking-wide text-ink-faint">Pricing</p>
+                <p className="text-xl font-bold text-brand-navy">Price on request</p>
+                <p className="text-xs text-ink-muted">confirmed by our team</p>
+              </>
+            ) : (
+              <>
+                <p className="text-xs uppercase tracking-wide text-ink-faint">Starting from</p>
+                <p className="text-2xl font-bold text-brand-navy">{formatINR(v.basePrice)}</p>
+                <p className="text-xs text-ink-muted">per person</p>
+              </>
+            )}
           </div>
         </div>
 
@@ -221,25 +232,47 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
             <div className="lg:sticky lg:top-20">
               <Card>
                 <CardBody>
-                  <div className="mb-4 flex items-center justify-between">
-                    <h2 className="text-lg font-bold">Make this holiday yours</h2>
-                    <Badge tone="info"><ShieldCheck className="h-3 w-3" /> Live price</Badge>
-                  </div>
-                  <CustomizationPanel
-                    versionId={v.id}
-                    packageSlug={pkg.slug}
-                    basePrice={v.basePrice}
-                    currency={v.currency}
-                    minTravellers={v.minTravellers}
-                    maxTravellers={v.maxTravellers}
-                    allow={{
-                      hotel: v.allowHotelChange, flight: v.allowFlightChange,
-                      transfer: v.allowTransferChange, meal: v.allowMealChange,
-                      activity: v.allowActivityChange, addons: v.allowAddons, date: v.allowDateChange,
-                    }}
-                    options={optionsVM}
-                    departures={departuresVM}
-                  />
+                  {reviewRequired ? (
+                    <div>
+                      <div className="mb-3 flex items-center justify-between">
+                        <h2 className="text-lg font-bold">Get your price</h2>
+                        <Badge tone="warning">On request</Badge>
+                      </div>
+                      <p className="text-sm text-ink-muted">
+                        This holiday is priced against a verified market benchmark before we publish a live rate. Tell us your dates and travellers and our experts confirm the best price — usually within a few hours.
+                      </p>
+                      <ul className="mt-4 space-y-2 text-sm text-ink">
+                        <li className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-brand-blue" /> No booking until you approve the price</li>
+                        <li className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-brand-blue" /> Fully customizable itinerary</li>
+                      </ul>
+                      <Link href="/support" className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-xl bg-brand-orange font-semibold text-white transition-colors hover:bg-brand-orangeDark">
+                        Enquire &amp; get a quote
+                      </Link>
+                      <p className="mt-2 text-center text-xs text-ink-muted">Or call our travel experts — see Support.</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="mb-4 flex items-center justify-between">
+                        <h2 className="text-lg font-bold">Make this holiday yours</h2>
+                        <Badge tone="info"><ShieldCheck className="h-3 w-3" /> Live price</Badge>
+                      </div>
+                      <CustomizationPanel
+                        versionId={v.id}
+                        packageSlug={pkg.slug}
+                        basePrice={v.basePrice}
+                        currency={v.currency}
+                        minTravellers={v.minTravellers}
+                        maxTravellers={v.maxTravellers}
+                        allow={{
+                          hotel: v.allowHotelChange, flight: v.allowFlightChange,
+                          transfer: v.allowTransferChange, meal: v.allowMealChange,
+                          activity: v.allowActivityChange, addons: v.allowAddons, date: v.allowDateChange,
+                        }}
+                        options={optionsVM}
+                        departures={departuresVM}
+                      />
+                    </>
+                  )}
                 </CardBody>
               </Card>
             </div>
@@ -251,11 +284,17 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
       <div className="sticky bottom-0 z-30 border-t border-surface-border bg-white/95 p-3 shadow-sticky backdrop-blur lg:hidden">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-xs text-ink-muted">From</p>
-            <p className="text-lg font-bold text-brand-navy">{formatINR(v.basePrice)} <span className="text-xs font-normal text-ink-muted">/person</span></p>
+            {reviewRequired ? (
+              <p className="text-lg font-bold text-brand-navy">Price on request</p>
+            ) : (
+              <>
+                <p className="text-xs text-ink-muted">From</p>
+                <p className="text-lg font-bold text-brand-navy">{formatINR(v.basePrice)} <span className="text-xs font-normal text-ink-muted">/person</span></p>
+              </>
+            )}
           </div>
           <Link href="#customize" className="inline-flex h-11 items-center justify-center rounded-xl bg-brand-orange px-6 font-semibold text-white">
-            Customize & book
+            {reviewRequired ? "Get a quote" : "Customize & book"}
           </Link>
         </div>
       </div>

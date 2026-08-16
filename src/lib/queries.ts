@@ -67,6 +67,8 @@ export type PackageListItem = {
   basePrice: number;
   currency: string;
   summary: string | null;
+  pricingStatus: string;
+  availabilityStatus: string;
 };
 
 function toListItem(p: PackageWithVersion): PackageListItem {
@@ -77,6 +79,7 @@ function toListItem(p: PackageWithVersion): PackageListItem {
     cover: v.images[0]?.url ?? null,
     nights: v.durationNights, days: v.durationDays,
     basePrice: v.basePrice, currency: v.currency, summary: v.summary,
+    pricingStatus: v.pricingStatus, availabilityStatus: v.availabilityStatus,
   };
 }
 

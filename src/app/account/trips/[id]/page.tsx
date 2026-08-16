@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { FileText } from "lucide-react";
+import Link from "next/link";
+import { FileText, Map, Download } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Card, CardBody } from "@/components/ui/card";
@@ -34,6 +35,7 @@ export default async function TripDetailPage({
     where: { id, customerId: customer.id }, // ownership enforced
     include: {
       package: { select: { name: true } },
+      packageVersion: { select: { _count: { select: { days: true } } } },
       items: { orderBy: { sortOrder: "asc" } },
       componentStatuses: true,
       events: { orderBy: { createdAt: "desc" } },
@@ -98,6 +100,24 @@ export default async function TripDetailPage({
         </div>
 
         <div className="space-y-6">
+          <Card><CardBody>
+            <div className="flex items-center gap-2">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-blueLight text-brand-blue"><Map className="h-4 w-4" /></span>
+              <h2 className="text-lg font-bold">Itinerary</h2>
+            </div>
+            <p className="mt-2 text-sm text-ink-muted">
+              {booking.packageVersion._count.days > 0
+                ? "Your personalised day-by-day itinerary, inclusions and price — branded and ready to download."
+                : "Your itinerary with inclusions and price summary — branded and ready to download."}
+            </p>
+            <Link
+              href={`/account/trips/${booking.id}/itinerary`}
+              className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-brand-blue px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-brand-blueDark"
+            >
+              <Download className="h-4 w-4" /> View &amp; download itinerary
+            </Link>
+          </CardBody></Card>
+
           <Card><CardBody>
             <h2 className="text-lg font-bold">Documents</h2>
             {booking.documents.length === 0 ? (

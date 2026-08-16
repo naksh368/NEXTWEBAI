@@ -93,6 +93,19 @@ export async function toggleCouponAction(couponId: string, isActive: boolean): P
   return { ok: true };
 }
 
+export async function deleteBookingDocumentAction(documentId: string): Promise<ActionResult> {
+  const admin = await authorize("booking.update");
+  if (!admin) return { ok: false, error: "Not authorized." };
+  const doc = await db.document.findUnique({ where: { id: documentId }, select: { id: true, bookingId: true, type: true, title: true, storageKey: true } });
+  if (!doc) return { ok: false, error: "Document not found." };
+  const { deleteDocumentFile } = await import("@/lib/storage");
+  await deleteDocumentFile(doc.storageKey).catch(() => {});
+  await db.document.delete({ where: { id: documentId } });
+  await writeAudit({ adminUserId: admin.id, action: "document.delete", resource: `Booking:${doc.bookingId}`, before: { type: doc.type, title: doc.title } });
+  revalidatePath(`/admin/bookings/${doc.bookingId}`);
+  return { ok: true };
+}
+
 export async function toggleOfferAction(offerId: string, isActive: boolean): Promise<ActionResult> {
   const admin = await authorize("offer.manage");
   if (!admin) return { ok: false, error: "Not authorized." };

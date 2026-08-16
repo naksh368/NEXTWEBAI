@@ -1,13 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Poppins } from "next/font/google";
+import { Nunito_Sans } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { AiFab } from "@/components/layout/ai-fab";
 import { HideOnAdmin } from "@/components/layout/hide-on-admin";
 
-// Rounded geometric brand font, self-hosted at build (no runtime font requests).
-const poppins = Poppins({
+// ExpertzTrip brand font — Nunito Sans, self-hosted at build (no runtime font
+// requests, display:swap to avoid layout shift). Used across the entire app.
+const nunitoSans = Nunito_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
   variable: "--font-sans",
@@ -44,7 +45,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={poppins.variable}>
+    <html lang="en" className={nunitoSans.variable}>
       <body className="flex min-h-screen flex-col">
         <a
           href="#main"

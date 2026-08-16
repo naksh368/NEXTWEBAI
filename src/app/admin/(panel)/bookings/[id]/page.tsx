@@ -5,6 +5,7 @@ import { requireAdmin, hasPermission } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 import { PageHeader, Panel, Pill } from "@/components/admin/ui";
 import { BookingStatusControl, ComponentStatusControl, AddNoteForm } from "@/components/admin/booking-actions";
+import { DocumentManager } from "@/components/admin/document-upload";
 import { BOOKING_STATUS_META } from "@/lib/constants";
 import { BOOKING_TRANSITIONS } from "@/lib/booking-states";
 import { formatINR, formatDate } from "@/lib/utils";
@@ -30,6 +31,7 @@ export default async function AdminBookingDetail({ params }: { params: Promise<{
       componentStatuses: { orderBy: { component: "asc" } },
       payments: { orderBy: { createdAt: "desc" } },
       refunds: true,
+      documents: { orderBy: { createdAt: "desc" } },
       events: { orderBy: { createdAt: "desc" } },
     },
   });
@@ -79,6 +81,21 @@ export default async function AdminBookingDetail({ params }: { params: Promise<{
                 </li>
               ))}
             </ul>
+          </Panel>
+
+          <Panel title="Documents" action={<span className="text-xs text-ink-faint">Tickets, vouchers, invoices, passport/PAN</span>}>
+            {canUpdate ? (
+              <DocumentManager bookingId={booking.id} initial={booking.documents.map((d) => ({ id: d.id, type: d.type, title: d.title, createdAt: d.createdAt }))} />
+            ) : (
+              <ul className="divide-y divide-surface-border">
+                {booking.documents.length === 0 ? <li className="px-5 py-4 text-sm text-ink-muted">No documents.</li> : booking.documents.map((d) => (
+                  <li key={d.id} className="flex items-center justify-between px-5 py-3 text-sm">
+                    <span>{d.title}</span>
+                    <a href={`/api/documents/${d.id}`} target="_blank" rel="noreferrer" className="text-brand-blue hover:underline">Open</a>
+                  </li>
+                ))}
+              </ul>
+            )}
           </Panel>
 
           <Panel title="Timeline" action={canUpdate ? null : undefined}>

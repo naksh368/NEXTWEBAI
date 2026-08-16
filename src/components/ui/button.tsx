@@ -5,7 +5,7 @@ type Variant = "primary" | "orange" | "secondary" | "outline" | "ghost" | "dange
 type Size = "sm" | "md" | "lg";
 
 const base =
-  "inline-flex items-center justify-center gap-2 font-semibold rounded-xl transition-all duration-150 " +
+  "inline-flex items-center justify-center gap-2 font-bold rounded-xl transition-all duration-150 " +
   "focus-visible:outline-none disabled:opacity-50 disabled:pointer-events-none select-none " +
   "active:scale-[0.98] whitespace-nowrap";
 

@@ -114,3 +114,32 @@ export const BOOKING_STATUS_META: Record<
 
 export const CURRENCY = "INR";
 export const TAX_RATE = 0.05; // 5% GST on holiday packages (illustrative)
+
+// Document types an admin can attach to a booking (Phase 20).
+export const DOCUMENT_TYPES = [
+  "BOOKING_CONFIRMATION",
+  "E_TICKET",
+  "HOTEL_VOUCHER",
+  "TRANSFER_VOUCHER",
+  "ACTIVITY_VOUCHER",
+  "ITINERARY",
+  "INVOICE",
+  "PASSPORT",
+  "PAN_CARD",
+  "VISA",
+  "OTHER",
+] as const;
+
+export const DOCUMENT_TYPE_LABEL: Record<string, string> = {
+  BOOKING_CONFIRMATION: "Booking confirmation",
+  E_TICKET: "E-ticket",
+  HOTEL_VOUCHER: "Hotel voucher",
+  TRANSFER_VOUCHER: "Transfer voucher",
+  ACTIVITY_VOUCHER: "Activity voucher",
+  ITINERARY: "Final itinerary",
+  INVOICE: "Invoice",
+  PASSPORT: "Passport",
+  PAN_CARD: "PAN card",
+  VISA: "Visa",
+  OTHER: "Document",
+};

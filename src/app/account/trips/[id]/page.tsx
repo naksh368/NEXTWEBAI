@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { FileText } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Card, CardBody } from "@/components/ui/card";
@@ -7,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { LoginFlow } from "@/components/auth/login-flow";
 import { getCurrentCustomer } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { BOOKING_STATUS_META } from "@/lib/constants";
+import { BOOKING_STATUS_META, DOCUMENT_TYPE_LABEL } from "@/lib/constants";
 import { formatINR, formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Trip details", robots: { index: false } };
@@ -97,6 +98,25 @@ export default async function TripDetailPage({
         </div>
 
         <div className="space-y-6">
+          <Card><CardBody>
+            <h2 className="text-lg font-bold">Documents</h2>
+            {booking.documents.length === 0 ? (
+              <p className="mt-2 text-sm text-ink-muted">Your tickets, vouchers and invoice will appear here once your booking is confirmed.</p>
+            ) : (
+              <ul className="mt-3 divide-y divide-surface-border">
+                {booking.documents.map((d) => (
+                  <li key={d.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+                    <span className="flex min-w-0 items-center gap-2">
+                      <FileText className="h-4 w-4 shrink-0 text-brand-blue" />
+                      <span className="min-w-0"><span className="block truncate font-medium">{d.title}</span><span className="text-xs text-ink-muted">{DOCUMENT_TYPE_LABEL[d.type] ?? d.type}</span></span>
+                    </span>
+                    <a href={`/api/documents/${d.id}`} target="_blank" rel="noreferrer" className="shrink-0 font-semibold text-brand-blue hover:underline">Open</a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardBody></Card>
+
           <Card><CardBody>
             <h2 className="text-lg font-bold">Price</h2>
             <ul className="mt-3 space-y-1.5 text-sm">

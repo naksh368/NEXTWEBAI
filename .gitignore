@@ -31,6 +31,9 @@ yarn-error.log*
 *.db-journal
 /prisma/dev.db*
 
+# uploaded documents (local dev storage — use object storage in prod)
+/storage
+
 # typescript
 *.tsbuildinfo
 

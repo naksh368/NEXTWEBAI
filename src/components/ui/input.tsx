@@ -48,7 +48,7 @@ export function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <label htmlFor={htmlFor} className="block text-sm font-medium text-ink">
+      <label htmlFor={htmlFor} className="block text-sm font-semibold text-ink">
         {label}
         {required && <span className="ml-0.5 text-brand-orange">*</span>}
       </label>

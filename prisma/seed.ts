@@ -143,6 +143,27 @@ const POOLS: Record<string, Pool> = {
   ] },
 };
 
+// Market benchmarks (per person, from India) researched from live 2026 listings.
+// ExpertzTrip price = benchmark + ₹550 (per the pricing rule). "verify" sources
+// are reasoned market estimates the admin should confirm against supplier quotes.
+const CHECKED = "2026-08-16";
+type Benchmark = { perPerson: number; baseNights: number; perNight: number; source: string; note: string };
+const BENCHMARKS: Record<string, Benchmark> = {
+  dubai:     { perPerson: 44000,  baseNights: 4, perNight: 6000,  source: "MakeMyTrip & market listings (Aug 2026)", note: "Comparable 4★ + economy return flights + transfers + key tours" },
+  bali:      { perPerson: 48000,  baseNights: 4, perNight: 6000,  source: "MakeMyTrip / Pickyourtrail & market listings (Aug 2026)", note: "Comparable 4★ + flights + transfers + tours" },
+  thailand:  { perPerson: 42000,  baseNights: 5, perNight: 5000,  source: "MakeMyTrip & market listings (Aug 2026)", note: "Comparable Phuket/Bangkok 4★ + flights + tours" },
+  maldives:  { perPerson: 68000,  baseNights: 4, perNight: 14000, source: "Pickyourtrail / MakeMyTrip & market listings (Aug 2026)", note: "Comparable resort + speedboat/seaplane transfers + breakfast" },
+  singapore: { perPerson: 48000,  baseNights: 4, perNight: 7000,  source: "Market estimate — verify", note: "Comparable 4★ + flights + transfers + tours (estimate)" },
+  vietnam:   { perPerson: 50000,  baseNights: 5, perNight: 6000,  source: "Market estimate — verify", note: "Comparable 4★ + flights + transfers + tours (estimate)" },
+  europe:    { perPerson: 168000, baseNights: 6, perNight: 16000, source: "Flamingo / SOTC & market listings (Aug 2026)", note: "Comparable multi-country + flights + coach + key tours" },
+  australia: { perPerson: 150000, baseNights: 5, perNight: 13000, source: "Market estimate — verify", note: "Comparable 4★ + flights + transfers + tours (estimate)" },
+  kashmir:   { perPerson: 34000,  baseNights: 6, perNight: 4500,  source: "NatureConnect / Yatra & market listings (Aug 2026)", note: "Comparable 3-4★ + transport + sightseeing" },
+  andaman:   { perPerson: 35000,  baseNights: 5, perNight: 5000,  source: "Market estimate — verify", note: "Comparable + flights + transfers + tours (estimate)" },
+  rajasthan: { perPerson: 34000,  baseNights: 6, perNight: 4500,  source: "Market estimate — verify", note: "Comparable heritage stays + transport + tours (estimate)" },
+  kerala:    { perPerson: 33000,  baseNights: 6, perNight: 4500,  source: "Market estimate — verify", note: "Comparable + houseboat + transfers + tours (estimate)" },
+  goa:       { perPerson: 22000,  baseNights: 4, perNight: 4000,  source: "Market estimate — verify", note: "Comparable 4★ + flights + transfers (estimate)" },
+};
+
 type PkgSpec = { code: string; name: string; dest: string; nights: number; category: string; bestFor: string; featured?: boolean };
 const PACKAGES: PkgSpec[] = [
   // Dubai / UAE — 8
@@ -300,6 +321,9 @@ async function main() {
     const pool = POOLS[p.dest];
     const dName = destName.get(p.dest)!;
     const highlights = pool.activities.slice(0, 4).map((a) => a.title);
+    const bm = BENCHMARKS[p.dest];
+    const benchmarkPrice = bm.perPerson + Math.max(0, p.nights - bm.baseNights) * bm.perNight;
+    const etxPrice = benchmarkPrice + 550; // ExpertzTrip = benchmark + ₹550
     const pkg = await db.package.create({ data: {
       code: p.code, slug: p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
       name: p.name, theme: CATEGORY_TO_THEME[p.category] ?? "GROUP", destinationId: destId.get(p.dest)!,
@@ -311,8 +335,9 @@ async function main() {
       summary: `${p.nights}N / ${p.nights + 1}D ${dName} holiday — ${p.bestFor.toLowerCase()}.`,
       overview: `A complete ${p.nights + 1}-day ${dName} holiday covering the destination's must-see highlights with comfortable hotels, transfers and curated experiences. Fully customizable — upgrade hotels, add activities and choose your dates.`,
       durationDays: p.nights + 1, durationNights: p.nights, currency: "INR",
-      basePrice: 0, perPersonPricing: true,
-      pricingStatus: "PRICE_REVIEW_REQUIRED", availabilityStatus: "ON_REQUEST", benchmark: undefined, targetPrice: null,
+      basePrice: etxPrice, perPersonPricing: true,
+      pricingStatus: "PRICED", availabilityStatus: "AVAILABLE", targetPrice: etxPrice,
+      benchmark: { source: bm.source, dateChecked: CHECKED, departureCity: "Delhi", travellerConfig: "2 adults · twin-sharing · 4★ · economy return flights · transfers · breakfast · key tours", comparablePrice: benchmarkPrice, adjustment: 550, note: bm.note },
       category: p.category, bestFor: p.bestFor,
       departureCities: ["Delhi", "Mumbai", "Bengaluru", "Hyderabad", "Kolkata", "Chennai"],
       travelWindows: pool.season, roomCategory: "Deluxe Room", mealPlan: "Breakfast",

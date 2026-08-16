@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { getSessionCustomerId } from "@/lib/session";
 import { sendTextSms } from "@/lib/services/sms";
+import { sendWelcomeEmail } from "@/lib/services/email";
 
 export const runtime = "nodejs";
 
@@ -35,7 +36,7 @@ export async function POST(request: Request) {
     select: { mobile: true, fullName: true },
   });
 
-  // Welcome SMS only on first account creation (non-blocking).
+  // Welcome message only on first account creation (non-blocking).
   if (!before?.email) {
     const first = (updated.fullName ?? "traveller").split(" ")[0];
     await sendTextSms(
@@ -43,6 +44,7 @@ export async function POST(request: Request) {
       `Welcome to ExpertzTrip, ${first}! Your account is ready. Explore holiday packages and book your next trip with us.`,
       { name: first }
     );
+    await sendWelcomeEmail(parsed.data.email, updated.fullName ?? undefined);
   }
 
   return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });

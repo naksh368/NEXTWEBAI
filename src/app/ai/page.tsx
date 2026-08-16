@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { Sparkles, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { AssistantChat } from "@/components/ai/assistant-chat";
+import { AiAvatar } from "@/components/ui/ai-avatar";
 
 export const metadata: Metadata = {
   title: "ExpertzTrip AI",
@@ -14,7 +15,7 @@ export default function AiPage() {
     <Container className="py-8">
       <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "ExpertzTrip AI" }]} />
       <div className="mt-4 flex items-center gap-3">
-        <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-blue text-white"><Sparkles className="h-5 w-5" /></span>
+        <span className="flex h-11 w-11 items-center justify-center rounded-xl border border-surface-border bg-white shadow-card"><AiAvatar size={28} /></span>
         <div>
           <h1 className="text-2xl font-bold">ExpertzTrip AI</h1>
           <p className="flex items-center gap-1.5 text-sm text-ink-muted"><ShieldCheck className="h-3.5 w-3.5 text-success" /> Grounded in real packages — no invented prices or availability.</p>

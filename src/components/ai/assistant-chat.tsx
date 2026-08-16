@@ -2,8 +2,9 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
-import { Sparkles, Send, Loader2, ArrowRight } from "lucide-react";
+import { Send, Loader2, ArrowRight } from "lucide-react";
 import { SmartImage } from "@/components/ui/smart-image";
+import { AiAvatar } from "@/components/ui/ai-avatar";
 import { Badge } from "@/components/ui/badge";
 import { formatINR } from "@/lib/utils";
 
@@ -110,7 +111,7 @@ export function AssistantChat() {
       </div>
       <form onSubmit={(e) => { e.preventDefault(); send(input); }} className="flex items-center gap-2 border-t border-surface-border p-3">
         <div className="flex flex-1 items-center gap-2 rounded-xl border border-surface-border px-3">
-          <Sparkles className="h-4 w-4 shrink-0 text-brand-orange" />
+          <AiAvatar size={20} className="shrink-0" />
           <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Describe your trip…" aria-label="Describe your trip"
             className="h-11 w-full bg-transparent text-sm focus:outline-none" />
         </div>

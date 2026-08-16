@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/ui/states";
 import { PackageCard } from "@/components/package/package-card";
 import { SearchBox } from "@/components/home/search-box";
 import { Newsletter } from "@/components/home/newsletter";
+import { AiAvatar } from "@/components/ui/ai-avatar";
 import {
   getPopularDestinations, getFeaturedPackages, getActiveOffers,
   getGlobalFaqs, getPublishedReviews,
@@ -192,8 +193,8 @@ export default async function HomePage() {
           <div className="overflow-hidden rounded-3xl border border-surface-border bg-gradient-to-br from-brand-blue to-brand-blueDark p-8 sm:p-12">
             <div className="grid items-center gap-8 md:grid-cols-2">
               <div>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-sm font-medium text-white">
-                  <Sparkles className="h-4 w-4" /> ExpertzTrip AI
+                <span className="inline-flex items-center gap-2 rounded-full bg-white/15 py-1 pl-1 pr-3.5 text-sm font-medium text-white">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white"><AiAvatar size={18} /></span> ExpertzTrip AI
                 </span>
                 <h2 className="mt-4 text-2xl font-bold text-white sm:text-3xl">Describe your dream trip. We&apos;ll find the real match.</h2>
                 <p className="mt-3 text-white/80">

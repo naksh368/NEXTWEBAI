@@ -3,7 +3,8 @@ import { db } from "@/lib/db";
 import { getCurrentAdmin, hasPermission } from "@/lib/admin-auth";
 import { writeAudit } from "@/lib/services/audit-service";
 import { saveDocument, ALLOWED_DOC_MIME, MAX_DOC_BYTES } from "@/lib/storage";
-import { DOCUMENT_TYPES } from "@/lib/constants";
+import { DOCUMENT_TYPES, DOCUMENT_TYPE_LABEL } from "@/lib/constants";
+import { sendDocumentEmail } from "@/lib/services/email";
 
 export const runtime = "nodejs";
 
@@ -14,7 +15,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ ok: false, error: "Not authorized." }, { status: 403 });
   }
   const { id: bookingId } = await params;
-  const booking = await db.booking.findUnique({ where: { id: bookingId }, select: { id: true } });
+  const booking = await db.booking.findUnique({ where: { id: bookingId }, select: { id: true, reference: true, customer: { select: { email: true, fullName: true } } } });
   if (!booking) return NextResponse.json({ ok: false, error: "Booking not found." }, { status: 404 });
 
   const form = await request.formData().catch(() => null);
@@ -38,6 +39,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     select: { id: true, type: true, title: true, createdAt: true },
   });
   await writeAudit({ adminUserId: admin.id, action: "document.upload", resource: `Booking:${bookingId}`, after: { type, title: doc.title } });
+
+  // Email the customer that a document is ready (non-blocking).
+  if (booking.customer.email) {
+    await sendDocumentEmail(booking.customer.email, booking.customer.fullName ?? undefined, {
+      title: doc.title, typeLabel: DOCUMENT_TYPE_LABEL[type] ?? "document", bookingRef: booking.reference,
+    });
+  }
 
   return NextResponse.json({ ok: true, document: doc }, { headers: { "Cache-Control": "no-store" } });
 }

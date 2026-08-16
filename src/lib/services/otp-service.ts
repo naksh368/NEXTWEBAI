@@ -24,14 +24,24 @@ export function normalizeMobile(input: string): string | null {
   return null;
 }
 
+// Sender header (max 6 chars for Indian DLT); brand name goes in the body.
+const SENDER_ID = process.env.SMS_SENDER_ID || "EXPRTZ";
+
+/** Branded OTP message text sent to the customer. */
+function otpMessage(code: string): string {
+  const mins = Math.max(1, Math.round(TTL / 60));
+  return `Your ExpertzTrip verification code is ${code}. Valid for ${mins} minutes. Do not share this code with anyone.`;
+}
+
 async function sendSms(mobile: string, code: string) {
+  const message = otpMessage(code);
   const provider = process.env.SMS_PROVIDER || "console";
   if (provider === "console") {
-    // Dev only — never do this in production.
-    console.log(`\n📱 [SMS:console] OTP for ${mobile}: ${code} (valid ${TTL}s)\n`);
+    // Dev only — prints the exact SMS that would be sent.
+    console.log(`\n📱 [SMS:console] to ${mobile} · sender ${SENDER_ID}\n   ${message}\n`);
     return;
   }
-  // TODO(prod): integrate a real transactional SMS provider (msg91 / twilio).
+  // TODO(prod): send `message` from sender `SENDER_ID` via msg91 / twilio.
   throw new Error(`SMS provider "${provider}" is not configured.`);
 }
 

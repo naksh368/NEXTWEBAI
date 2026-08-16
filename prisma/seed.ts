@@ -317,6 +317,16 @@ async function reset() {
 }
 
 async function main() {
+  // Production-safe: the Vercel build runs this on every deploy, but it must
+  // only populate an EMPTY database. If the catalogue already exists we skip
+  // entirely so real bookings/customers are never wiped. Force a full
+  // reset + reseed by setting FORCE_SEED=1.
+  const existing = await db.package.count().catch(() => 0);
+  if (existing > 0 && process.env.FORCE_SEED !== "1") {
+    console.log(`✅ Database already seeded (${existing} packages) — skipping.`);
+    return;
+  }
+
   console.log("🌱 Reset…");
   await reset();
 

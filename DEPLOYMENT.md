@@ -3,8 +3,10 @@
 Production checklist for taking ExpertzTrip live. Everything below is real,
 verified against the codebase — no placeholder steps.
 
-> Verified before writing this guide: `tsc --noEmit` clean · `next lint` clean ·
-> `npm test` 8/8 pass · `next build` succeeds (39 routes).
+> Verified: `tsc --noEmit` clean · `next lint` clean · `npm test` 8/8 pass ·
+> `prisma validate` passes for PostgreSQL · Prisma client generates. The full
+> DB-connected `next build` runs on Vercel against your Neon database.
+> Target host: **Vercel + Neon** with a custom domain.
 
 ---
 
@@ -46,26 +48,30 @@ redeploy/restart. No code change needed to rotate keys or swap a provider.
 
 ---
 
-## 3. Database (switch SQLite → PostgreSQL)
+## 3. Database (PostgreSQL — auto-provisioned)
 
-Local dev uses SQLite for zero setup. For production, make two edits and push:
+The schema is already set to `provider = "postgresql"`. **You do not run any
+database commands manually.** The `vercel-build` script runs on every deploy:
 
-1. In `prisma/schema.prisma`, set the datasource provider:
-   ```prisma
-   datasource db {
-     provider = "postgresql"   // was "sqlite"
-     url      = env("DATABASE_URL")
-   }
-   ```
-2. Point `DATABASE_URL` at your Postgres instance.
-3. Create the schema and seed the catalogue + admin:
-   ```bash
-   npx prisma db push        # creates all tables (no migrations dir in use)
-   npm run db:seed           # 50 packages, roles/permissions, Super Admin
-   ```
+```
+prisma generate → prisma db push → seed (only if empty) → next build
+```
 
-All models use only Postgres-portable types (String/Int/Boolean/DateTime/Json),
-so no data-type changes are required.
+- On the **first** deploy it creates all tables and seeds the 50 packages,
+  roles/permissions and the Super Admin.
+- On **later** deploys it syncs the schema and **skips seeding** because data
+  already exists — real bookings/customers are never wiped. (Force a full
+  reseed by setting `FORCE_SEED=1` for one deploy.)
+
+All you provide is `DATABASE_URL` pointing at your Neon database (see §6).
+
+### Create the Neon database
+1. Sign up at neon.tech → **New Project**.
+2. Copy the **connection string** (Dashboard → Connect). Use the **direct**
+   (non-pooled) string — it works for both `db push` and runtime at launch
+   scale. It looks like:
+   `postgresql://USER:PASSWORD@ep-xxxx.region.aws.neon.tech/neondb?sslmode=require`
+3. That whole string is your `DATABASE_URL`.
 
 ---
 
@@ -107,20 +113,37 @@ as `SKIPPED` in `MessageLog`) — never faked.
 
 ---
 
-## 6. Build & run
+## 6. Deploy to Vercel
 
-```bash
-npm ci
-npm run build      # runs `prisma generate && next build`
-npm start          # or deploy to Vercel (build command is automatic)
-```
+1. Go to **vercel.com** → sign in with GitHub → **Add New → Project** →
+   import `naksh368/NEXTWEBAI`.
+2. Select the branch to deploy (your feature branch, or merge it to `main`
+   first and deploy `main`).
+3. **Environment Variables** — add every required var from §2, including
+   `DATABASE_URL` (your Neon string) and `AUTH_SECRET`. Vercel auto-detects
+   Next.js; the `vercel-build` script handles Prisma + DB + seed, so no build
+   settings to change.
+4. Click **Deploy**. First build provisions the DB and seeds the catalogue.
 
-On Vercel: set the env vars, connect the repo, and deploy. The build command
-already generates the Prisma client.
+## 7. Connect your custom domain
+
+1. In the Vercel project → **Settings → Domains** → add your domain
+   (e.g. `expertztrip.com` and `www.expertztrip.com`).
+2. Vercel shows the exact DNS records. At your registrar (GoDaddy/Namecheap/…)
+   add them — typically:
+   | Type | Name | Value |
+   |---|---|---|
+   | `A` | `@` (apex) | `76.76.21.21` |
+   | `CNAME` | `www` | `cname.vercel-dns.com` |
+   > Always use the exact values Vercel displays for your domain.
+3. Wait for DNS to propagate (minutes to a couple of hours). Vercel issues the
+   HTTPS certificate automatically.
+4. Set `NEXT_PUBLIC_SITE_URL=https://your-domain` in Vercel and redeploy so
+   emails, links and SEO use the live domain.
 
 ---
 
-## 7. Post-deploy smoke test
+## 8. Post-deploy smoke test
 
 - [ ] Home, packages, package detail, destinations pages load.
 - [ ] Customer OTP login works (real SMS received).

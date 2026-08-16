@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { LoginFlow } from "@/components/auth/login-flow";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { getCurrentCustomer } from "@/lib/auth";
+import { db } from "@/lib/db";
 
 export const metadata: Metadata = { title: "My account", robots: { index: false } };
 
@@ -29,6 +30,8 @@ export default async function AccountPage() {
       </Container>
     );
   }
+
+  const unread = await db.notification.count({ where: { customerId: customer.id, isRead: false } });
 
   return (
     <Container className="py-8">
@@ -58,8 +61,11 @@ export default async function AccountPage() {
           <Link key={t.href} href={t.href}>
             <Card interactive className="h-full">
               <CardBody>
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-blueLight text-brand-blue">
+                <span className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-brand-blueLight text-brand-blue">
                   <t.icon className="h-5 w-5" />
+                  {t.href === "/account/notifications" && unread > 0 && (
+                    <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-brand-orange px-1 text-xs font-bold text-white">{unread}</span>
+                  )}
                 </span>
                 <h2 className="mt-4 font-semibold text-brand-navy">{t.title}</h2>
                 <p className="mt-0.5 text-sm text-ink-muted">{t.desc}</p>

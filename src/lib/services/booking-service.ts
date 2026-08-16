@@ -1,8 +1,18 @@
 import { db } from "@/lib/db";
 import { reprice } from "@/lib/services/pricing-service";
 import { canTransition } from "@/lib/booking-states";
-import type { BookingStatus } from "@/lib/constants";
+import type { AppEvent, BookingStatus } from "@/lib/constants";
+import { emitEvent } from "@/lib/services/notifications";
 import { makeReference } from "@/lib/utils";
+
+// Which booking statuses notify the customer, and via which event.
+const STATUS_EVENT: Partial<Record<BookingStatus, AppEvent>> = {
+  PAYMENT_RECEIVED: "PAYMENT_RECEIVED",
+  BOOKING_PROCESSING: "BOOKING_PROCESSING",
+  CONFIRMED: "BOOKING_CONFIRMED",
+  CANCELLED: "BOOKING_CANCELLED",
+  REFUNDED: "REFUND_PROCESSED",
+};
 
 /**
  * Booking engine (Phases 15–19).
@@ -147,6 +157,11 @@ export async function transitionBooking(
     db.booking.update({ where: { id: bookingId }, data: { status: toStatus } }),
     db.bookingEvent.create({ data: { bookingId, fromStatus: from, toStatus, actor: opts.actor ?? "system", message: opts.message } }),
   ]);
+
+  // Fan out a customer notification for meaningful transitions (idempotent).
+  const event = STATUS_EVENT[toStatus];
+  if (event) await emitEvent({ event, bookingId, dedupeKey: `${event}:${bookingId}` });
+
   return { ok: true };
 }
 

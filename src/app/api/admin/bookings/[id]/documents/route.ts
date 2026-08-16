@@ -4,7 +4,7 @@ import { getCurrentAdmin, hasPermission } from "@/lib/admin-auth";
 import { writeAudit } from "@/lib/services/audit-service";
 import { saveDocument, ALLOWED_DOC_MIME, MAX_DOC_BYTES } from "@/lib/storage";
 import { DOCUMENT_TYPES, DOCUMENT_TYPE_LABEL } from "@/lib/constants";
-import { sendDocumentEmail } from "@/lib/services/email";
+import { emitEvent } from "@/lib/services/notifications";
 
 export const runtime = "nodejs";
 
@@ -15,7 +15,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ ok: false, error: "Not authorized." }, { status: 403 });
   }
   const { id: bookingId } = await params;
-  const booking = await db.booking.findUnique({ where: { id: bookingId }, select: { id: true, reference: true, customer: { select: { email: true, fullName: true } } } });
+  const booking = await db.booking.findUnique({ where: { id: bookingId }, select: { id: true } });
   if (!booking) return NextResponse.json({ ok: false, error: "Booking not found." }, { status: 404 });
 
   const form = await request.formData().catch(() => null);
@@ -40,12 +40,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   });
   await writeAudit({ adminUserId: admin.id, action: "document.upload", resource: `Booking:${bookingId}`, after: { type, title: doc.title } });
 
-  // Email the customer that a document is ready (non-blocking).
-  if (booking.customer.email) {
-    await sendDocumentEmail(booking.customer.email, booking.customer.fullName ?? undefined, {
-      title: doc.title, typeLabel: DOCUMENT_TYPE_LABEL[type] ?? "document", bookingRef: booking.reference,
-    });
-  }
+  // Notify the customer (in-app + email + SMS), idempotent per document.
+  await emitEvent({
+    event: "DOCUMENT_PUBLISHED",
+    bookingId,
+    dedupeKey: `DOCUMENT_PUBLISHED:${doc.id}`,
+    data: { documentType: DOCUMENT_TYPE_LABEL[type] ?? "travel document", title: doc.title },
+  });
 
   return NextResponse.json({ ok: true, document: doc }, { headers: { "Cache-Control": "no-store" } });
 }

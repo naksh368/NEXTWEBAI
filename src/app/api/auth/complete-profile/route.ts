@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { getSessionCustomerId } from "@/lib/session";
-import { sendTextSms } from "@/lib/services/sms";
-import { sendWelcomeEmail } from "@/lib/services/email";
+import { emitEvent } from "@/lib/services/notifications";
 
 export const runtime = "nodejs";
 
@@ -30,21 +29,15 @@ export async function POST(request: Request) {
   // Was this the first time the customer set an email? (i.e. new registration)
   const before = await db.customer.findUnique({ where: { id: customerId }, select: { email: true } });
 
-  const updated = await db.customer.update({
+  await db.customer.update({
     where: { id: customerId },
     data: { fullName: parsed.data.fullName, email: parsed.data.email },
-    select: { mobile: true, fullName: true },
   });
 
-  // Welcome message only on first account creation (non-blocking).
+  // Welcome (email + SMS + in-app) only on first account creation.
+  // Idempotent + non-blocking via the central event service.
   if (!before?.email) {
-    const first = (updated.fullName ?? "traveller").split(" ")[0];
-    await sendTextSms(
-      updated.mobile,
-      `Welcome to ExpertzTrip, ${first}! Your account is ready. Explore holiday packages and book your next trip with us.`,
-      { name: first }
-    );
-    await sendWelcomeEmail(parsed.data.email, updated.fullName ?? undefined);
+    await emitEvent({ event: "USER_REGISTERED", customerId, dedupeKey: `USER_REGISTERED:${customerId}` });
   }
 
   return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });

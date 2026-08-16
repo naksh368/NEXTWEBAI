@@ -725,12 +725,37 @@ model Notification {
   customer   Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
   channel    String   @default("IN_APP") // IN_APP | EMAIL | SMS
   type       String
+  event      String?  // canonical app event, e.g. BOOKING_CONFIRMED
   title      String
   body       String?
+  href       String?  // deep link, e.g. /account/trips/<id>
+  bookingId  String?
+  dedupeKey  String?  @unique // one in-app record per event — guards duplicates
   isRead     Boolean  @default(false)
   createdAt  DateTime @default(now())
 
   @@index([customerId, isRead])
+}
+
+/// Transactional email/SMS delivery attempts (Phase 20) — real provider
+/// outcomes, never a faked "sent" screen. Scalar refs (no cascade) so it
+/// survives as an audit trail even if a booking is removed.
+model MessageLog {
+  id         String   @id @default(cuid())
+  customerId String?
+  bookingId  String?
+  channel    String   // EMAIL | SMS
+  event      String
+  toAddress  String   // email address or mobile
+  status     String   @default("QUEUED") // QUEUED | SENT | FAILED | SKIPPED
+  providerId String?  // provider message id when returned
+  error      String?
+  dedupeKey  String?
+  createdAt  DateTime @default(now())
+
+  @@index([bookingId])
+  @@index([customerId])
+  @@index([channel, status])
 }
 
 model AuditLog {

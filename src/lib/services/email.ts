@@ -10,7 +10,6 @@
 const provider = () => process.env.EMAIL_PROVIDER || "console";
 const apiKey = () => process.env.EMAIL_API_KEY || "";
 const from = () => process.env.EMAIL_FROM || "ExpertzTrip <onboarding@resend.dev>";
-const siteUrl = () => process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
 export async function sendEmail(opts: { to: string; subject: string; html: string }): Promise<{ ok: boolean; error?: string }> {
   try {
@@ -37,7 +36,7 @@ export async function sendEmail(opts: { to: string; subject: string; html: strin
 }
 
 /** Branded HTML wrapper — inline styles for email-client compatibility. */
-function layout(heading: string, bodyHtml: string, cta?: { label: string; href: string }): string {
+export function emailLayout(heading: string, bodyHtml: string, cta?: { label: string; href: string }): string {
   const button = cta
     ? `<tr><td style="padding:8px 0 4px"><a href="${cta.href}" style="display:inline-block;background:#FF6A1A;color:#fff;text-decoration:none;font-weight:800;font-size:15px;padding:12px 22px;border-radius:12px">${cta.label}</a></td></tr>`
     : "";
@@ -59,28 +58,5 @@ function layout(heading: string, bodyHtml: string, cta?: { label: string; href: 
   </td></tr></table></body></html>`;
 }
 
-export async function sendWelcomeEmail(to: string, name?: string) {
-  const first = (name || "traveller").split(" ")[0];
-  return sendEmail({
-    to,
-    subject: "Welcome to ExpertzTrip 🎉",
-    html: layout(
-      `Welcome, ${first}!`,
-      `Your ExpertzTrip account is ready. Browse handpicked holiday packages, customize any trip to your taste, and book securely — with expert support every step of the way.`,
-      { label: "Explore packages", href: `${siteUrl()}/packages` }
-    ),
-  });
-}
-
-export async function sendDocumentEmail(to: string, name: string | undefined, doc: { title: string; typeLabel: string; bookingRef: string }) {
-  const first = (name || "traveller").split(" ")[0];
-  return sendEmail({
-    to,
-    subject: `Your ${doc.typeLabel} is ready — ${doc.bookingRef}`,
-    html: layout(
-      `Hi ${first}, a new document is ready`,
-      `Your <b>${doc.typeLabel}</b> (“${doc.title}”) for booking <b>${doc.bookingRef}</b> has been added to your trip. It's private to your account — sign in to view or download it.`,
-      { label: "View my documents", href: `${siteUrl()}/account/documents` }
-    ),
-  });
-}
+// Per-event email bodies now live in the central notification service
+// (src/lib/services/notifications.ts), which composes them via `emailLayout`.

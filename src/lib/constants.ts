@@ -143,3 +143,36 @@ export const DOCUMENT_TYPE_LABEL: Record<string, string> = {
   VISA: "Visa",
   OTHER: "Document",
 };
+
+// ── Notification / event system (Phase 20) ──
+// Canonical app events. Each maps to an in-app notification and, per policy,
+// a Resend email + MSG91 SMS. Emitted only from real DB state changes.
+export const APP_EVENTS = [
+  "USER_REGISTERED",
+  "PAYMENT_RECEIVED",
+  "BOOKING_PROCESSING",
+  "BOOKING_CONFIRMED",
+  "DOCUMENT_PUBLISHED",
+  "ITINERARY_READY",
+  "BOOKING_CANCELLED",
+  "REFUND_PROCESSED",
+] as const;
+export type AppEvent = (typeof APP_EVENTS)[number];
+
+// Provider delivery outcomes (never claim DELIVERED on mere acceptance).
+export const MESSAGE_STATUS = ["QUEUED", "SENT", "FAILED", "SKIPPED"] as const;
+
+// Per-document/requirement status vocabulary (progressive document system).
+// "VERIFIED" is only ever set by an authorized action — never auto-implied.
+export const DOCUMENT_STATUS = [
+  "NOT_REQUIRED",
+  "REQUIRED",
+  "MISSING",
+  "UPLOADED",
+  "VALIDATING",
+  "VERIFIED",
+  "REJECTED",
+  "EXPIRED",
+  "EXPIRING_SOON",
+] as const;
+export type DocumentStatus = (typeof DOCUMENT_STATUS)[number];

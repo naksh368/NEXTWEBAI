@@ -46,7 +46,8 @@ export default async function CheckoutPage({
   const travellers = Math.max(1, Number(first(sp.travellers) ?? 2) || 2);
   const optionIds = (first(sp.options) ?? "").split(",").filter(Boolean);
   const departureId = first(sp.departure) ?? null;
-  const couponCode = first(sp.coupon) ?? null;
+  // No coupon codes — the best live offer auto-applies server-side.
+  const couponCode = null;
 
   const result = await reprice({ versionId: v.id, travellerCount: travellers, selectedOptionIds: optionIds, departureId, couponCode });
 
@@ -72,7 +73,6 @@ export default async function CheckoutPage({
     travellers: String(travellers),
     ...(optionIds.length ? { options: optionIds.join(",") } : {}),
     ...(departureId ? { departure: departureId } : {}),
-    ...(couponCode ? { coupon: couponCode } : {}),
   }).toString();
   const redirectTo = `/packages/${slug}/checkout?${queryString}`;
 

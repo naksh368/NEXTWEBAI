@@ -26,7 +26,8 @@ Copy `.env.example` → `.env` (or set these in your host's dashboard — on Ver
 | Variable | Required | Notes |
 |---|---|---|
 | `AUTH_SECRET` | ✅ | 32+ random chars. Signs sessions + OTP tokens. |
-| `DATABASE_URL` | ✅ | Your Postgres connection string (see §3). |
+| `DATABASE_URL` | ✅ | Neon **pooled** string (host has `-pooler`). App runtime. |
+| `DIRECT_URL` | ✅ | Neon **direct** string (same, but remove `-pooler`). Used by the build's schema step. |
 | `NEXT_PUBLIC_SITE_URL` | ✅ | e.g. `https://expertztrip.com`. Used in emails/links/SEO. |
 | `EMAIL_PROVIDER` | ✅ | `resend`. **Login is email OTP — this must work.** |
 | `EMAIL_API_KEY` | ✅ | Resend API key (`re_…`). |

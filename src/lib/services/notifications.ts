@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { sendEmail, emailLayout } from "@/lib/services/email";
 import { sendTransactionalSms } from "@/lib/services/sms";
 import type { AppEvent } from "@/lib/constants";
+import { getSiteUrl } from "@/lib/utils";
 
 /**
  * Central notification / event service (Phase 20, spec §18).
@@ -21,7 +22,7 @@ import type { AppEvent } from "@/lib/constants";
  *   • Non-blocking — never throws; a channel failure never breaks the caller.
  */
 
-const siteUrl = () => process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+const siteUrl = () => getSiteUrl();
 
 export type EmitInput = {
   event: AppEvent;

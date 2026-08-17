@@ -6,6 +6,18 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/**
+ * The site's public base URL, always a valid absolute URL. Tolerates a
+ * NEXT_PUBLIC_SITE_URL set without a protocol (e.g. "expertztrip.com") by
+ * adding https://, and strips any trailing slash — so the build never crashes
+ * on `new URL(...)` from a domain typed without "https://".
+ */
+export function getSiteUrl(): string {
+  let u = (process.env.NEXT_PUBLIC_SITE_URL || "").trim() || "http://localhost:3000";
+  if (!/^https?:\/\//i.test(u)) u = `https://${u}`;
+  return u.replace(/\/+$/, "");
+}
+
 /** Format whole-rupee integers as INR. All money in this app is whole rupees. */
 export function formatINR(amount: number, opts?: { compact?: boolean }): string {
   if (opts?.compact && Math.abs(amount) >= 100000) {

@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { AiFab } from "@/components/layout/ai-fab";
 import { HideOnAdmin } from "@/components/layout/hide-on-admin";
+import { getSiteUrl } from "@/lib/utils";
 
 // ExpertzTrip brand font — Nunito (the rounded wordmark font used in the logo),
 // self-hosted at build (no runtime font requests, display:swap to avoid layout
@@ -16,7 +17,7 @@ const nunito = Nunito({
   display: "swap",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const siteUrl = getSiteUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

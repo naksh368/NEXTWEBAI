@@ -2,15 +2,34 @@
 
 **Your holiday. Your way.** — a production-grade B2C holiday-package platform: real packages, clear server-verified pricing, and a smooth, fast customer experience.
 
-## 🚀 Deploy
+## 🚀 Deploy in 3 steps
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fnaksh368%2FNEXTWEBAI&env=DATABASE_URL,AUTH_SECRET,NEXT_PUBLIC_SITE_URL,SMS_PROVIDER,MSG91_AUTH_KEY,SMS_SENDER_ID,MSG91_OTP_TEMPLATE_ID,EMAIL_PROVIDER,EMAIL_API_KEY,EMAIL_FROM,NEXT_PUBLIC_RAZORPAY_KEY_ID,RAZORPAY_KEY_ID,RAZORPAY_KEY_SECRET&envDescription=ExpertzTrip%20config%20%E2%80%94%20see%20DEPLOYMENT.md&envLink=https%3A%2F%2Fgithub.com%2Fnaksh368%2FNEXTWEBAI%2Fblob%2Fmain%2FDEPLOYMENT.md)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fnaksh368%2FNEXTWEBAI&env=DATABASE_URL,DIRECT_URL,AUTH_SECRET,NEXT_PUBLIC_SITE_URL,EMAIL_PROVIDER,EMAIL_API_KEY,EMAIL_FROM,ADMIN_EMAIL,NEXT_PUBLIC_RAZORPAY_KEY_ID,RAZORPAY_KEY_ID,RAZORPAY_KEY_SECRET&envDescription=ExpertzTrip%20config%20%E2%80%94%20see%20DEPLOYMENT.md&envLink=https%3A%2F%2Fgithub.com%2Fnaksh368%2FNEXTWEBAI%2Fblob%2Fmain%2FDEPLOYMENT.md)
 
-Click the button, connect a **Neon** Postgres database (for `DATABASE_URL`), paste the
-env values, and Vercel builds + seeds the database automatically. Full walkthrough
-(including the custom domain DNS) is in **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
+**1.** Click **Deploy** ☝️ (or Vercel → Add New → import this repo).
 
-Built with **Next.js 15 (App Router) · TypeScript · Tailwind CSS · Prisma**. Designed for performance from the ground up (server components, pagination, image optimization, code-splitting, skeletons) so the site is fast and never laggy.
+**2.** Paste these Environment Variables:
+
+| Variable | Value |
+|---|---|
+| `DATABASE_URL` | Neon **pooled** string (host has `-pooler`) |
+| `DIRECT_URL` | Same string **with `-pooler` removed** |
+| `AUTH_SECRET` | any 32+ random characters |
+| `NEXT_PUBLIC_SITE_URL` | `https://yourdomain.com` |
+| `EMAIL_PROVIDER` | `resend` |
+| `EMAIL_API_KEY` | your Resend key (`re_…`) |
+| `EMAIL_FROM` | `ExpertzTrip <login@yourdomain.com>` |
+| `ADMIN_EMAIL` | your admin login email |
+| `NEXT_PUBLIC_RAZORPAY_KEY_ID` / `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | your Razorpay keys |
+
+**3.** Click **Deploy** → the build creates the tables + seeds 50 packages automatically.
+
+> 🔑 **The #1 gotcha:** `DIRECT_URL` must be the **non-pooled** Neon string (delete `-pooler` from the host). The build's schema step fails on the pooled one.
+> 📧 Login is **email OTP** — verify your domain in **Resend** so customers receive their code. SMS/MSG91 is optional.
+
+Full walkthrough (custom domain DNS included) → **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
+
+Built with **Next.js 15 (App Router) · TypeScript · Tailwind CSS · Prisma** — server components, pagination, image optimization and code-splitting throughout, so it stays fast and never laggy.
 
 ---
 

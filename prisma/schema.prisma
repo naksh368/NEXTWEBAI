@@ -11,10 +11,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  // Single connection string. On Railway this is provided automatically by the
-  // PostgreSQL plugin (a direct connection). On Neon, use the DIRECT (non-pooled)
-  // string — the one WITHOUT `-pooler` in the host.
+  provider = "sqlite"
+  // SQLite database file. In dev this is a local file; on Railway it lives on a
+  // persistent Volume (DATABASE_URL=file:/data/prod.db) so data survives deploys.
   url      = env("DATABASE_URL")
 }
 

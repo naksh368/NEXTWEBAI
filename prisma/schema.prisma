@@ -12,9 +12,12 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  // SQLite database file. In dev this is a local file; on Railway it lives on a
-  // persistent Volume (DATABASE_URL=file:/data/prod.db) so data survives deploys.
-  url      = env("DATABASE_URL")
+  // Build-time DB path (baked + seeded during build). Hardcoded so the Prisma
+  // CLI never needs an env var and can't fail with "DATABASE_URL not found".
+  // At RUNTIME the app connects to the persistent Volume instead — db.ts passes
+  // datasourceUrl from DATABASE_URL (set to file:/data/prod.db by the start
+  // script), which overrides this path.
+  url      = "file:./prod.db"
 }
 
 // ─────────────────────────────────────────────────────────────

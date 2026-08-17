@@ -29,6 +29,23 @@
 
 Full walkthrough (custom domain DNS included) → **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
 
+### Or deploy on Railway (database included, ~$5/mo)
+
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new)
+
+Easiest setup — Railway provisions the database for you:
+
+1. **railway.app** → **New Project** → **Deploy from GitHub repo** → pick `naksh368/NEXTWEBAI`.
+2. In the project → **+ New** → **Database → PostgreSQL** (one click).
+3. On the app service → **Variables**, add:
+   - `DATABASE_URL` = `${{Postgres.DATABASE_URL}}`  *(reference the Postgres you added)*
+   - `DIRECT_URL` = `${{Postgres.DATABASE_URL}}`  *(same value — Railway's DB is direct, no pooler)*
+   - `AUTH_SECRET`, `NEXT_PUBLIC_SITE_URL`, `EMAIL_PROVIDER=resend`, `EMAIL_API_KEY`, `EMAIL_FROM`, `ADMIN_EMAIL`, `NEXT_PUBLIC_RAZORPAY_KEY_ID`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`
+4. **Deploy** — the build creates the tables + seeds 50 packages automatically.
+5. **Custom domain:** service → **Settings → Networking → Custom Domain** → add your domain → Railway shows a **CNAME**; add it at your registrar. HTTPS is automatic.
+
+> Railway's Postgres is a normal direct connection, so `DATABASE_URL` and `DIRECT_URL` are the same value — no `-pooler` gotcha.
+
 Built with **Next.js 15 (App Router) · TypeScript · Tailwind CSS · Prisma** — server components, pagination, image optimization and code-splitting throughout, so it stays fast and never laggy.
 
 ---

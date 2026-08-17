@@ -1,0 +1,30 @@
+# Render Blueprint — one-click deploy with the database included.
+# Render → New → Blueprint → connect this repo → Apply.
+# It creates the Postgres DB, wires DATABASE_URL, generates AUTH_SECRET, then
+# builds + seeds automatically. No connection strings to type.
+databases:
+  - name: expertztrip-db
+    databaseName: expertztrip
+    user: expertztrip
+    plan: free
+
+services:
+  - type: web
+    name: expertztrip
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run vercel-build
+    startCommand: npx next start -p $PORT
+    healthCheckPath: /
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: expertztrip-db
+          property: connectionString
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: NODE_ENV
+        value: production
+      # Optional — add later in the dashboard to turn on email login & payments:
+      # EMAIL_PROVIDER=resend, EMAIL_API_KEY, EMAIL_FROM, ADMIN_EMAIL,
+      # NEXT_PUBLIC_SITE_URL, NEXT_PUBLIC_RAZORPAY_KEY_ID, RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET

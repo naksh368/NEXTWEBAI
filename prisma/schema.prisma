@@ -11,9 +11,11 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL") // pooled connection (app runtime)
-  directUrl = env("DIRECT_URL")   // direct/unpooled connection (prisma db push in build)
+  provider = "postgresql"
+  // Single connection string. On Railway this is provided automatically by the
+  // PostgreSQL plugin (a direct connection). On Neon, use the DIRECT (non-pooled)
+  // string — the one WITHOUT `-pooler` in the host.
+  url      = env("DATABASE_URL")
 }
 
 // ─────────────────────────────────────────────────────────────

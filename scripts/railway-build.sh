@@ -4,6 +4,10 @@
 # Volume on first boot, so there is NO external database to configure.
 set -e
 
+# Railway installs with NODE_ENV=production (skips devDependencies). Force the
+# build tools (prisma, tsx, tailwind, typescript…) to be present.
+npm install --include=dev --no-audit --no-fund
+
 # Build-time DB file (absolute path so it's found regardless of build dir).
 BUILD_DB="$(pwd)/prisma/prod.db"
 export DATABASE_URL="file:$BUILD_DB"

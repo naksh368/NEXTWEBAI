@@ -4,7 +4,7 @@ import { Bell, CheckCheck } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { EmptyState } from "@/components/ui/states";
-import { LoginFlow } from "@/components/auth/login-flow";
+import { redirect } from "next/navigation";
 import { getCurrentCustomer } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { formatDate } from "@/lib/utils";
@@ -14,7 +14,7 @@ export const metadata: Metadata = { title: "Notifications", robots: { index: fal
 
 export default async function NotificationsPage() {
   const customer = await getCurrentCustomer();
-  if (!customer) return <Container className="py-12 sm:py-16"><LoginFlow redirectTo="/account/notifications" /></Container>;
+  if (!customer) redirect("/sign-in?redirect_url=/account/notifications");
 
   const items = await db.notification.findMany({ where: { customerId: customer.id }, orderBy: { createdAt: "desc" }, take: 50 });
   const unread = items.filter((n) => !n.isRead).length;

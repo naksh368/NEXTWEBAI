@@ -4,8 +4,7 @@ import { Plane, BedDouble, Car, MapPin, Clock, Check, X, Info, User } from "luci
 import { Logo } from "@/components/ui/logo";
 import { Itinerary } from "@/components/package/itinerary";
 import { PrintButton } from "@/components/ui/print-button";
-import { LoginFlow } from "@/components/auth/login-flow";
-import { Container } from "@/components/ui/container";
+import { redirect } from "next/navigation";
 import { getCurrentCustomer } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { BOOKING_STATUS_META } from "@/lib/constants";
@@ -44,7 +43,7 @@ function Fact({ label, value }: { label: string; value?: string | null }) {
  */
 export default async function TripItineraryPage({ params }: { params: Promise<{ id: string }> }) {
   const customer = await getCurrentCustomer();
-  if (!customer) return <Container className="py-12 sm:py-16"><LoginFlow /></Container>;
+  if (!customer) redirect("/sign-in");
 
   const { id } = await params;
   const booking = await db.booking.findFirst({

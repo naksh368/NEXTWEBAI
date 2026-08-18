@@ -4,7 +4,7 @@ import { Container } from "@/components/ui/container";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Card, CardBody } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/states";
-import { LoginFlow } from "@/components/auth/login-flow";
+import { redirect } from "next/navigation";
 import { getCurrentCustomer } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { DOCUMENT_TYPE_LABEL } from "@/lib/constants";
@@ -14,7 +14,7 @@ export const metadata: Metadata = { title: "Documents", robots: { index: false }
 
 export default async function DocumentsPage() {
   const customer = await getCurrentCustomer();
-  if (!customer) return <Container className="py-12 sm:py-16"><LoginFlow redirectTo="/account/documents" /></Container>;
+  if (!customer) redirect("/sign-in?redirect_url=/account/documents");
 
   const docs = await db.document.findMany({
     where: { booking: { customerId: customer.id } },

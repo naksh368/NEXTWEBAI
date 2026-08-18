@@ -7,7 +7,7 @@ import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/states";
-import { LoginFlow } from "@/components/auth/login-flow";
+import { redirect } from "next/navigation";
 import { getCurrentCustomer } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { BOOKING_STATUS_META } from "@/lib/constants";
@@ -17,13 +17,7 @@ export const metadata: Metadata = { title: "My Trips", robots: { index: false } 
 
 export default async function MyTripsPage() {
   const customer = await getCurrentCustomer();
-  if (!customer) {
-    return (
-      <Container className="py-12 sm:py-16">
-        <LoginFlow redirectTo="/account/trips" />
-      </Container>
-    );
-  }
+  if (!customer) redirect("/sign-in?redirect_url=/account/trips");
 
   // Real bookings only — no decorative/fake dashboard (Phase 19).
   const bookings = await db.booking.findMany({

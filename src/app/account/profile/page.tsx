@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Container } from "@/components/ui/container";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
-import { LoginFlow } from "@/components/auth/login-flow";
+import { redirect } from "next/navigation";
 import { ProfileForm } from "@/components/auth/profile-form";
 import { getCurrentCustomer } from "@/lib/auth";
 
@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: "Profile", robots: { index: false } }
 export default async function ProfilePage() {
   const customer = await getCurrentCustomer();
   if (!customer) {
-    return <Container className="py-12 sm:py-16"><LoginFlow redirectTo="/account/profile" /></Container>;
+    redirect("/sign-in?redirect_url=/account/profile");
   }
   return (
     <Container className="py-8">

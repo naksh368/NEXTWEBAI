@@ -7,7 +7,7 @@ import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { LoginFlow } from "@/components/auth/login-flow";
+import { redirect } from "next/navigation";
 import { getCurrentCustomer } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { BOOKING_STATUS_META, DOCUMENT_TYPE_LABEL } from "@/lib/constants";
@@ -26,7 +26,7 @@ export default async function TripDetailPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const customer = await getCurrentCustomer();
-  if (!customer) return <Container className="py-12 sm:py-16"><LoginFlow /></Container>;
+  if (!customer) redirect("/sign-in");
 
   const { id } = await params;
   const sp = await searchParams;

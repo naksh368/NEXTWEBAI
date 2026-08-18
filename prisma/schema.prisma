@@ -423,6 +423,17 @@ model BookingTraveller {
   dateOfBirth DateTime?
   passportNo  String?
 
+  // Mandatory traveller details collected at booking (Phase 20)
+  title             String?   // MR | MS | MRS
+  givenName         String?
+  surname           String?
+  passportExpiry    DateTime?
+  passportIssueDate DateTime?
+  passportIssueCity String?
+  passportIssueCountry String?
+  panNumber         String?
+  mealPreference    String   @default("VEG") // VEG | NON_VEG
+
   @@index([bookingId])
 }
 

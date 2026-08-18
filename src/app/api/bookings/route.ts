@@ -5,11 +5,20 @@ import { createBooking } from "@/lib/services/booking-service";
 
 export const runtime = "nodejs";
 
+// Mandatory traveller details collected at booking.
 const travellerSchema = z.object({
-  fullName: z.string().min(2).max(80),
+  title: z.enum(["MR", "MS", "MRS"]),
+  givenName: z.string().min(1).max(60),
+  surname: z.string().min(1).max(60),
+  dateOfBirth: z.string().min(8).max(10),
+  passportNo: z.string().min(4).max(30),
+  passportExpiry: z.string().min(8).max(10),
+  passportIssueDate: z.string().min(8).max(10),
+  passportIssueCity: z.string().min(1).max(60),
+  passportIssueCountry: z.string().min(1).max(60),
+  panNumber: z.string().trim().toUpperCase().regex(/^[A-Z]{5}[0-9]{4}[A-Z]$/, "Enter a valid 10-character PAN."),
+  mealPreference: z.enum(["VEG", "NON_VEG"]),
   type: z.enum(["ADULT", "CHILD", "INFANT"]).optional(),
-  dateOfBirth: z.string().nullable().optional(),
-  passportNo: z.string().max(30).nullable().optional(),
 });
 
 const schema = z.object({
@@ -41,7 +50,10 @@ export async function POST(request: Request) {
     departureId: parsed.data.departureId,
     travelDate: parsed.data.travelDate,
     couponCode: parsed.data.couponCode,
-    travellers: parsed.data.travellers,
+    travellers: parsed.data.travellers.map((t) => ({
+      ...t,
+      fullName: `${t.givenName} ${t.surname}`.trim(),
+    })),
   });
 
   if (!result.ok) return NextResponse.json(result, { status: 409 });

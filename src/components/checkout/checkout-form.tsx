@@ -6,9 +6,24 @@ import { useState } from "react";
 import { Loader2, ShieldCheck, CreditCard, Info, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input, Field } from "@/components/ui/input";
-import { formatINR } from "@/lib/utils";
+import { formatINR, cn } from "@/lib/utils";
 
-type Traveller = { fullName: string; passportNo: string; type: "ADULT" | "CHILD" | "INFANT" };
+type Meal = "VEG" | "NON_VEG";
+type Title = "MR" | "MS" | "MRS";
+type Traveller = {
+  title: Title;
+  givenName: string;
+  surname: string;
+  dateOfBirth: string;
+  passportNo: string;
+  passportExpiry: string;
+  passportIssueDate: string;
+  passportIssueCity: string;
+  passportIssueCountry: string;
+  panNumber: string;
+  mealPreference: Meal;
+  type: "ADULT";
+};
 
 declare global {
   interface Window { Razorpay?: new (opts: unknown) => { open: () => void } }
@@ -25,6 +40,22 @@ function loadRazorpay(): Promise<boolean> {
   });
 }
 
+const PAN_RE = /^[A-Z]{5}[0-9]{4}[A-Z]$/;
+
+function isValid(t: Traveller): boolean {
+  return (
+    t.givenName.trim().length >= 1 &&
+    t.surname.trim().length >= 1 &&
+    !!t.dateOfBirth &&
+    t.passportNo.trim().length >= 4 &&
+    !!t.passportExpiry &&
+    !!t.passportIssueDate &&
+    t.passportIssueCity.trim().length >= 1 &&
+    t.passportIssueCountry.trim().length >= 1 &&
+    PAN_RE.test(t.panNumber.trim().toUpperCase())
+  );
+}
+
 export function CheckoutForm({
   versionId, travellerCount, selectedOptionIds, travelDate, couponCode, total, prefillName,
 }: {
@@ -38,7 +69,12 @@ export function CheckoutForm({
 }) {
   const router = useRouter();
   const [travellers, setTravellers] = useState<Traveller[]>(
-    Array.from({ length: travellerCount }, (_, i) => ({ fullName: i === 0 ? prefillName ?? "" : "", passportNo: "", type: "ADULT" }))
+    Array.from({ length: travellerCount }, (_, i) => ({
+      title: "MR", givenName: i === 0 ? (prefillName ?? "").split(" ")[0] ?? "" : "",
+      surname: i === 0 ? (prefillName ?? "").split(" ").slice(1).join(" ") : "",
+      dateOfBirth: "", passportNo: "", passportExpiry: "", passportIssueDate: "",
+      passportIssueCity: "", passportIssueCountry: "", panNumber: "", mealPreference: "VEG", type: "ADULT",
+    }))
   );
   const [terms, setTerms] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -49,16 +85,15 @@ export function CheckoutForm({
     setTravellers((prev) => prev.map((t, idx) => (idx === i ? { ...t, ...patch } : t)));
   }
 
-  const namesValid = travellers.every((t) => t.fullName.trim().length >= 2);
+  const allValid = travellers.every(isValid);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!namesValid) return setError("Please enter each traveller's full name.");
+    if (!allValid) return setError("Please complete every traveller's details, including a valid 10-character PAN.");
     if (!terms) return setError("Please accept the terms to continue.");
     setError(null);
     setLoading(true);
     try {
-      // 1) Create the booking (server reprices — authoritative).
       setStatus("Creating your booking…");
       const bookRes = await fetch("/api/bookings", {
         method: "POST", headers: { "Content-Type": "application/json" },
@@ -67,7 +102,6 @@ export function CheckoutForm({
       const booking = await bookRes.json();
       if (!booking.ok) { setError(booking.error ?? "Could not create booking."); setLoading(false); setStatus(null); return; }
 
-      // 2) Start payment.
       setStatus("Preparing secure payment…");
       const orderRes = await fetch("/api/payments/razorpay/order", {
         method: "POST", headers: { "Content-Type": "application/json" },
@@ -76,7 +110,6 @@ export function CheckoutForm({
       const order = await orderRes.json();
 
       if (!order.ok && order.configured === false) {
-        // No live payment in this environment — booking is created (payment pending).
         router.push(`/account/trips/${booking.bookingId}?created=1`);
         return;
       }
@@ -85,7 +118,6 @@ export function CheckoutForm({
       const ok = await loadRazorpay();
       if (!ok || !window.Razorpay) { setError("Could not load the payment gateway."); setLoading(false); setStatus(null); return; }
 
-      // 3) Open Razorpay; verify on the server in the success handler.
       const rzp = new window.Razorpay({
         key: order.keyId, order_id: order.orderId, amount: order.amount, currency: order.currency,
         name: "ExpertzTrip", description: `Booking ${booking.reference}`,
@@ -112,18 +144,65 @@ export function CheckoutForm({
 
   return (
     <form onSubmit={submit} className="space-y-5">
+      <p className="text-sm text-ink-muted">These details are required to issue your tickets and process the booking.</p>
+
       <div className="space-y-4">
         {travellers.map((t, i) => (
-          <div key={i} className="rounded-xl border border-surface-border p-4">
-            <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-brand-navy">
-              <User className="h-4 w-4 text-brand-blue" /> Traveller {i + 1}
+          <div key={i} className="rounded-2xl border border-surface-border p-4 sm:p-5">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-sm font-bold text-brand-navy">
+                <User className="h-4 w-4 text-brand-blue" /> Traveller {i + 1}{i === 0 ? " · Primary contact" : ""}
+              </div>
+              {/* Meal preference */}
+              <div className="flex overflow-hidden rounded-lg border border-surface-border text-xs font-semibold">
+                {(["VEG", "NON_VEG"] as const).map((m) => (
+                  <button type="button" key={m} onClick={() => update(i, { mealPreference: m })}
+                    className={cn("px-3 py-1.5 transition-colors", t.mealPreference === m ? "bg-brand-blue text-white" : "text-ink-muted hover:text-ink")}>
+                    {m === "VEG" ? "🟢 Veg" : "🔴 Non-veg"}
+                  </button>
+                ))}
+              </div>
             </div>
+
+            {/* Title */}
+            <div className="mb-3 flex gap-2">
+              {(["MR", "MS", "MRS"] as const).map((tt) => (
+                <button type="button" key={tt} onClick={() => update(i, { title: tt })}
+                  className={cn("rounded-lg border px-4 py-2 text-sm font-semibold transition-colors",
+                    t.title === tt ? "border-brand-blue bg-brand-blueLight text-brand-blue" : "border-surface-border hover:border-brand-blue")}>
+                  {tt === "MR" ? "Mr" : tt === "MS" ? "Ms" : "Mrs"}
+                </button>
+              ))}
+            </div>
+
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <Field label="Full name (as per passport)" htmlFor={`t-name-${i}`} required>
-                <Input id={`t-name-${i}`} value={t.fullName} onChange={(e) => update(i, { fullName: e.target.value })} placeholder="Full name" />
+              <Field label="Given name" htmlFor={`gn-${i}`} required>
+                <Input id={`gn-${i}`} value={t.givenName} onChange={(e) => update(i, { givenName: e.target.value })} placeholder="First name" />
               </Field>
-              <Field label="Passport number" htmlFor={`t-pass-${i}`} hint="Optional now — required before travel.">
-                <Input id={`t-pass-${i}`} value={t.passportNo} onChange={(e) => update(i, { passportNo: e.target.value.toUpperCase() })} placeholder="Optional" />
+              <Field label="Surname" htmlFor={`sn-${i}`} required>
+                <Input id={`sn-${i}`} value={t.surname} onChange={(e) => update(i, { surname: e.target.value })} placeholder="Last name" />
+              </Field>
+              <Field label="Date of birth" htmlFor={`dob-${i}`} required>
+                <Input id={`dob-${i}`} type="date" value={t.dateOfBirth} onChange={(e) => update(i, { dateOfBirth: e.target.value })} />
+              </Field>
+              <Field label="Passport number" htmlFor={`pn-${i}`} required>
+                <Input id={`pn-${i}`} value={t.passportNo} onChange={(e) => update(i, { passportNo: e.target.value.toUpperCase() })} placeholder="e.g. M1234567" />
+              </Field>
+              <Field label="Passport expiry" htmlFor={`pe-${i}`} required>
+                <Input id={`pe-${i}`} type="date" value={t.passportExpiry} onChange={(e) => update(i, { passportExpiry: e.target.value })} />
+              </Field>
+              <Field label="Passport issue date" htmlFor={`pid-${i}`} required>
+                <Input id={`pid-${i}`} type="date" value={t.passportIssueDate} onChange={(e) => update(i, { passportIssueDate: e.target.value })} />
+              </Field>
+              <Field label="Issue city" htmlFor={`pic-${i}`} required>
+                <Input id={`pic-${i}`} value={t.passportIssueCity} onChange={(e) => update(i, { passportIssueCity: e.target.value })} placeholder="City" />
+              </Field>
+              <Field label="Issue country" htmlFor={`pco-${i}`} required>
+                <Input id={`pco-${i}`} value={t.passportIssueCountry} onChange={(e) => update(i, { passportIssueCountry: e.target.value })} placeholder="Country" />
+              </Field>
+              <Field label="PAN number" htmlFor={`pan-${i}`} required hint="Format ABCDE1234F">
+                <Input id={`pan-${i}`} value={t.panNumber} maxLength={10} onChange={(e) => update(i, { panNumber: e.target.value.toUpperCase() })}
+                  invalid={t.panNumber.length > 0 && !PAN_RE.test(t.panNumber)} placeholder="ABCDE1234F" />
               </Field>
             </div>
           </div>

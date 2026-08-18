@@ -33,8 +33,16 @@ export type CreateBookingInput = {
   departureId?: string | null;
   travelDate?: string | null; // free-calendar departure date (YYYY-MM-DD)
   couponCode?: string | null;
-  travellers: { fullName: string; type?: string; dateOfBirth?: string | null; passportNo?: string | null }[];
+  travellers: {
+    fullName: string; type?: string; dateOfBirth?: string | null; passportNo?: string | null;
+    title?: string | null; givenName?: string | null; surname?: string | null;
+    passportExpiry?: string | null; passportIssueDate?: string | null;
+    passportIssueCity?: string | null; passportIssueCountry?: string | null;
+    panNumber?: string | null; mealPreference?: string | null;
+  }[];
 };
+
+const toDate = (s?: string | null) => (s ? new Date(`${s}T00:00:00`) : null);
 
 export type CreateBookingResult =
   | { ok: true; bookingId: string; reference: string; amount: number }
@@ -125,7 +133,11 @@ export async function createBooking(input: CreateBookingInput): Promise<CreateBo
           travellers: {
             create: input.travellers.map((t) => ({
               fullName: t.fullName, type: t.type ?? "ADULT",
-              dateOfBirth: t.dateOfBirth ? new Date(t.dateOfBirth) : null, passportNo: t.passportNo ?? null,
+              dateOfBirth: toDate(t.dateOfBirth), passportNo: t.passportNo ?? null,
+              title: t.title ?? null, givenName: t.givenName ?? null, surname: t.surname ?? null,
+              passportExpiry: toDate(t.passportExpiry), passportIssueDate: toDate(t.passportIssueDate),
+              passportIssueCity: t.passportIssueCity ?? null, passportIssueCountry: t.passportIssueCountry ?? null,
+              panNumber: t.panNumber ?? null, mealPreference: t.mealPreference ?? "VEG",
             })),
           },
           componentStatuses: { create: components.map((c) => ({ component: c, status: "PENDING" })) },

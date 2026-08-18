@@ -11,13 +11,12 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  // Build-time DB path (baked + seeded during build). Hardcoded so the Prisma
-  // CLI never needs an env var and can't fail with "DATABASE_URL not found".
-  // At RUNTIME the app connects to the persistent Volume instead — db.ts passes
-  // datasourceUrl from DATABASE_URL (set to file:/data/prod.db by the start
-  // script), which overrides this path.
-  url      = "file:./prod.db"
+  provider = "postgresql"
+  // Postgres works on every host. Provide DATABASE_URL:
+  //  - Railway: add a PostgreSQL plugin, set DATABASE_URL=${{Postgres.DATABASE_URL}}
+  //  - Vercel:  add Postgres from the Storage tab (auto-provides it)
+  //  - Neon/Supabase: use the DIRECT (non-pooled) connection string
+  url      = env("DATABASE_URL")
 }
 
 // ─────────────────────────────────────────────────────────────

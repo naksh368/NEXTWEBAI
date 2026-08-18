@@ -8,8 +8,10 @@ set -e
 # Railway installs with NODE_ENV=production (skips devDependencies).
 npm install --include=dev --no-audit --no-fund
 
-# Accept the DB connection under any host's variable name.
-: "${DATABASE_URL:=${POSTGRES_URL_NON_POOLING:-${DATABASE_URL_UNPOOLED:-${POSTGRES_URL:-$POSTGRES_PRISMA_URL}}}}"
+# Accept the DB connection under any host's variable name. Prefer a DIRECT
+# (non-pooled) connection first, because `prisma db push` fails over a pooler.
+# (Vercel Storage provides both; Railway/Neon usually just DATABASE_URL.)
+DATABASE_URL="${POSTGRES_URL_NON_POOLING:-${DATABASE_URL_UNPOOLED:-${DATABASE_URL:-${POSTGRES_URL:-$POSTGRES_PRISMA_URL}}}}"
 export DATABASE_URL
 
 if [ -z "$DATABASE_URL" ]; then

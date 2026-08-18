@@ -31,6 +31,7 @@ export type CreateBookingInput = {
   travellerCount: number;
   selectedOptionIds: string[];
   departureId?: string | null;
+  travelDate?: string | null; // free-calendar departure date (YYYY-MM-DD)
   couponCode?: string | null;
   travellers: { fullName: string; type?: string; dateOfBirth?: string | null; passportNo?: string | null }[];
 };
@@ -113,7 +114,7 @@ export async function createBooking(input: CreateBookingInput): Promise<CreateBo
           packageId: version.package.id,
           packageVersionId: version.id,
           status: "PAYMENT_PENDING",
-          travelDate: departure?.date ?? null,
+          travelDate: input.travelDate ? new Date(`${input.travelDate}T00:00:00`) : (departure?.date ?? null),
           travellerCount: b.travellerCount,
           currency: b.currency,
           couponCode: input.couponCode ?? null,

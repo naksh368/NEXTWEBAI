@@ -59,7 +59,17 @@ export function CustomizationPanel(props: CustomizationProps) {
 
   const [travellers, setTravellers] = useState(Math.max(2, props.minTravellers));
   const [selected, setSelected] = useState<string[]>(initialSelected);
-  const [departureId, setDepartureId] = useState<string | null>(props.departures[0]?.id ?? null);
+
+  // Free calendar — the customer picks any day in the next 12 months.
+  const dateBounds = useMemo(() => {
+    const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const min = new Date(); min.setDate(min.getDate() + 3);   // 3-day lead time
+    const max = new Date(); max.setDate(max.getDate() + 365); // up to 1 year out
+    const def = new Date(); def.setDate(def.getDate() + 14);
+    return { min: fmt(min), max: fmt(max), def: fmt(def) };
+  }, []);
+  const [travelDate, setTravelDate] = useState(dateBounds.def);
+  const departureId = null; // fixed departures replaced by the free calendar
 
   const [breakdown, setBreakdown] = useState<PriceBreakdown | null>(null);
   const [loading, setLoading] = useState(true);
@@ -132,7 +142,7 @@ export function CustomizationPanel(props: CustomizationProps) {
     const params = new URLSearchParams();
     params.set("travellers", String(travellers));
     if (selected.length) params.set("options", selected.join(","));
-    if (departureId) params.set("departure", departureId);
+    if (travelDate) params.set("date", travelDate);
     router.push(`/packages/${props.packageSlug}/checkout?${params.toString()}`);
   }
 
@@ -165,29 +175,25 @@ export function CustomizationPanel(props: CustomizationProps) {
         </div>
       </div>
 
-      {/* Departure date */}
-      {props.allow.date && props.departures.length > 0 && (
-        <div>
-          <p className="mb-2 text-sm font-semibold text-brand-navy">Departure date</p>
-          <div className="flex flex-wrap gap-2">
-            {props.departures.map((d) => (
-              <button
-                key={d.id}
-                onClick={() => setDepartureId(d.id)}
-                className={cn(
-                  "rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors",
-                  departureId === d.id
-                    ? "border-brand-blue bg-brand-blueLight text-brand-blue"
-                    : "border-surface-border hover:border-brand-blue"
-                )}
-              >
-                {formatDate(d.date, { day: "numeric", month: "short" })}
-                {d.priceDelta > 0 && <span className="ml-1 text-xs text-ink-muted">+{formatINR(d.priceDelta)}</span>}
-              </button>
-            ))}
-          </div>
+      {/* Departure date — free calendar, any day in the next 12 months */}
+      <div>
+        <p className="mb-2 text-sm font-semibold text-brand-navy">Choose departure date</p>
+        <div className="rounded-xl border border-surface-border bg-white p-1.5 focus-within:border-brand-blue focus-within:ring-2 focus-within:ring-brand-blue/20">
+          <input
+            type="date"
+            value={travelDate}
+            min={dateBounds.min}
+            max={dateBounds.max}
+            onChange={(e) => setTravelDate(e.target.value)}
+            aria-label="Departure date"
+            className="w-full rounded-lg bg-transparent px-3 py-2 text-sm font-semibold text-brand-navy focus:outline-none"
+          />
         </div>
-      )}
+        <p className="mt-1.5 text-xs text-ink-muted">
+          {travelDate ? `Departing ${formatDate(travelDate, { weekday: "short", day: "numeric", month: "short", year: "numeric" })} · ` : ""}
+          pick any day in the next 12 months.
+        </p>
+      </div>
 
       {/* Option groups — one heading per category (exclusive = radios, additive = checkboxes) */}
       {CATEGORY_ORDER.map((category) => {

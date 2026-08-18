@@ -45,11 +45,11 @@ export default async function CheckoutPage({
 
   const travellers = Math.max(1, Number(first(sp.travellers) ?? 2) || 2);
   const optionIds = (first(sp.options) ?? "").split(",").filter(Boolean);
-  const departureId = first(sp.departure) ?? null;
+  const travelDate = first(sp.date) ?? null; // free calendar date (YYYY-MM-DD)
   // No coupon codes — the best live offer auto-applies server-side.
   const couponCode = null;
 
-  const result = await reprice({ versionId: v.id, travellerCount: travellers, selectedOptionIds: optionIds, departureId, couponCode });
+  const result = await reprice({ versionId: v.id, travellerCount: travellers, selectedOptionIds: optionIds, departureId: null, couponCode });
 
   if (!result.ok) {
     return (
@@ -66,13 +66,12 @@ export default async function CheckoutPage({
 
   const b = result.breakdown;
   const selectedOptions = v.options.filter((o) => result.selectedOptionIds.includes(o.id));
-  const departure = v.departures.find((d) => d.id === departureId);
   const customer = await getCurrentCustomer();
 
   const queryString = new URLSearchParams({
     travellers: String(travellers),
     ...(optionIds.length ? { options: optionIds.join(",") } : {}),
-    ...(departureId ? { departure: departureId } : {}),
+    ...(travelDate ? { date: travelDate } : {}),
   }).toString();
   const redirectTo = `/packages/${slug}/checkout?${queryString}`;
 
@@ -95,7 +94,7 @@ export default async function CheckoutPage({
             <h2 className="text-lg font-bold">{pkg.name}</h2>
             <p className="mt-1 text-sm text-ink-muted">
               {pkg.destination.name} · {v.durationNights}N / {v.durationDays}D · {travellers} traveller{travellers > 1 ? "s" : ""}
-              {departure ? ` · Departs ${new Date(departure.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}` : ""}
+              {travelDate ? ` · Departs ${new Date(travelDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}` : ""}
             </p>
             {selectedOptions.length > 0 && (
               <ul className="mt-3 flex flex-wrap gap-2">
@@ -122,7 +121,7 @@ export default async function CheckoutPage({
                   versionId={v.id}
                   travellerCount={travellers}
                   selectedOptionIds={result.selectedOptionIds}
-                  departureId={departureId}
+                  travelDate={travelDate}
                   couponCode={couponCode}
                   total={b.total}
                   prefillName={customer.fullName}

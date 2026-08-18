@@ -26,12 +26,12 @@ function loadRazorpay(): Promise<boolean> {
 }
 
 export function CheckoutForm({
-  versionId, travellerCount, selectedOptionIds, departureId, couponCode, total, prefillName,
+  versionId, travellerCount, selectedOptionIds, travelDate, couponCode, total, prefillName,
 }: {
   versionId: string;
   travellerCount: number;
   selectedOptionIds: string[];
-  departureId: string | null;
+  travelDate: string | null;
   couponCode: string | null;
   total: number;
   prefillName?: string | null;
@@ -62,7 +62,7 @@ export function CheckoutForm({
       setStatus("Creating your booking…");
       const bookRes = await fetch("/api/bookings", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ versionId, travellerCount: travellers.length, selectedOptionIds, departureId, couponCode, travellers, termsAccepted: true }),
+        body: JSON.stringify({ versionId, travellerCount: travellers.length, selectedOptionIds, travelDate, couponCode, travellers, termsAccepted: true }),
       });
       const booking = await bookRes.json();
       if (!booking.ok) { setError(booking.error ?? "Could not create booking."); setLoading(false); setStatus(null); return; }

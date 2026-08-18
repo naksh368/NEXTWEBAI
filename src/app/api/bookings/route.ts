@@ -17,6 +17,7 @@ const schema = z.object({
   travellerCount: z.number().int().min(1).max(99),
   selectedOptionIds: z.array(z.string()).default([]),
   departureId: z.string().nullable().optional(),
+  travelDate: z.string().min(8).max(10).nullable().optional(), // YYYY-MM-DD from the calendar
   couponCode: z.string().max(40).nullable().optional(),
   travellers: z.array(travellerSchema).min(1),
   termsAccepted: z.literal(true, { errorMap: () => ({ message: "You must accept the terms." }) }),
@@ -38,6 +39,7 @@ export async function POST(request: Request) {
     travellerCount: parsed.data.travellers.length,
     selectedOptionIds: parsed.data.selectedOptionIds,
     departureId: parsed.data.departureId,
+    travelDate: parsed.data.travelDate,
     couponCode: parsed.data.couponCode,
     travellers: parsed.data.travellers,
   });

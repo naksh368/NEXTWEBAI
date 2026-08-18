@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { FileText, Map, Download } from "lucide-react";
+import { FileText, Map, Download, AlertCircle, CreditCard } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { LoginFlow } from "@/components/auth/login-flow";
 import { getCurrentCustomer } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -34,7 +35,7 @@ export default async function TripDetailPage({
   const booking = await db.booking.findFirst({
     where: { id, customerId: customer.id }, // ownership enforced
     include: {
-      package: { select: { name: true } },
+      package: { select: { name: true, slug: true } },
       packageVersion: { select: { _count: { select: { days: true } } } },
       items: { orderBy: { sortOrder: "asc" } },
       componentStatuses: true,
@@ -46,6 +47,7 @@ export default async function TripDetailPage({
   if (!booking) notFound();
 
   const meta = BOOKING_STATUS_META[booking.status] ?? { label: booking.status, tone: "neutral" as const };
+  const isPending = booking.status === "PAYMENT_PENDING";
 
   return (
     <Container className="py-8">
@@ -55,6 +57,27 @@ export default async function TripDetailPage({
         <Badge tone={meta.tone}>{meta.label}</Badge>
       </div>
       <p className="mt-1 text-ink-muted">Ref {booking.reference} · {booking.travellerCount} traveller{booking.travellerCount > 1 ? "s" : ""}{booking.travelDate ? ` · ${formatDate(booking.travelDate)}` : ""}</p>
+
+      {isPending && (
+        <Card className="mt-5 border-warning bg-[#FFFBF0]">
+          <CardBody>
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 shrink-0 text-warning" />
+              <div className="flex-1">
+                <h3 className="font-semibold text-warning">Payment pending</h3>
+                <p className="mt-1 text-sm text-warning">Complete the payment to secure your trip. You'll receive confirmation and documents once verified.</p>
+                <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                  <Link href={`/packages/${booking.package.slug}/checkout?edit=${booking.id}`}>
+                    <Button variant="orange" size="sm" className="w-full sm:w-auto">
+                      <CreditCard className="h-4 w-4" /> Pay {formatINR(booking.totalAmount)}
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </CardBody>
+        </Card>
+      )}
 
       {(justPaid || justCreated) && (
         <div className={`mt-5 rounded-xl border p-4 text-sm ${justPaid ? "border-success/30 bg-[#E7F6EC] text-success" : "border-brand-blue/20 bg-brand-blueLight text-brand-blue"}`}>

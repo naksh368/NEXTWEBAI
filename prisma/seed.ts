@@ -425,7 +425,7 @@ async function main() {
   // Phone-OTP super admin. Owner sets their name + email on first login.
   // Admin logs in by email OTP. Defaults to the owner's email; override with
   // ADMIN_EMAIL (must be a real inbox — the login code is sent there).
-  const adminEmail = (process.env.ADMIN_EMAIL || "oponzo.dev@gmail.com").toLowerCase();
+  const adminEmail = (process.env.ADMIN_EMAIL || "expertztripofficial@gmail.com").toLowerCase();
   await db.adminUser.create({ data: { email: adminEmail, mobile: "+918700650467", fullName: "Admin", roleId: roleId.get("SUPER_ADMIN")! } });
   await db.supplier.createMany({ data: [
     { name: "SkyLink Aviation", type: "FLIGHT", status: "ACTIVE", credentialRef: "secret://suppliers/skylink" },
@@ -433,7 +433,7 @@ async function main() {
     { name: "DesertDrive Transfers", type: "TRANSFER", status: "ACTIVE", credentialRef: "secret://suppliers/desertdrive" },
   ] });
   await db.businessSetting.createMany({ data: [
-    { key: "brand", value: { name: "ExpertzTrip", supportEmail: "support@expertztrip.com", supportPhone: "+91 90000 00000" } },
+    { key: "brand", value: { name: "ExpertzTrip", supportEmail: "support@expertztrip.com", supportPhone: "+91 72909 11804" } },
     { key: "checkout", value: { taxRatePct: 5, currency: "INR" } },
     { key: "pricing", value: { rule: "target = verified benchmark + ₹550", policy: "PRICE_REVIEW_REQUIRED until a verified benchmark is set" } },
   ] });

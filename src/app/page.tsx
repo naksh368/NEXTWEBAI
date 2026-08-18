@@ -243,11 +243,11 @@ export default async function HomePage() {
         </Section>
       )}
 
-      {/* REAL REVIEWS (only when available) */}
-      <Section className="bg-surface-muted/60 py-14">
-        <Container>
-          <SectionHeading eyebrow="Traveller stories" title="Real reviews" description="Verified reviews from real ExpertzTrip customers." />
-          {reviews.length ? (
+      {/* REAL REVIEWS — the whole section only shows when genuine reviews exist */}
+      {reviews.length > 0 && (
+        <Section className="bg-surface-muted/60 py-14">
+          <Container>
+            <SectionHeading eyebrow="Traveller stories" title="Real reviews" description="Verified reviews from real ExpertzTrip customers." />
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {reviews.map((r) => (
                 <div key={r.id} className="rounded-2xl border border-surface-border bg-white p-6">
@@ -262,15 +262,9 @@ export default async function HomePage() {
                 </div>
               ))}
             </div>
-          ) : (
-            <EmptyState
-              icon={<Star className="h-5 w-5" />}
-              title="Reviews coming soon"
-              description="We only show genuine reviews from verified travellers — they'll appear here as trips complete."
-            />
-          )}
-        </Container>
-      </Section>
+          </Container>
+        </Section>
+      )}
 
       {/* FAQ */}
       {faqs.length > 0 && (

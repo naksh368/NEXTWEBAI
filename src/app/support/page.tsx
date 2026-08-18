@@ -34,7 +34,7 @@ export default async function SupportPage() {
           <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-blueLight text-brand-blue"><Phone className="h-5 w-5" /></span>
           <div>
             <p className="text-sm font-semibold">Call us</p>
-            <p className="text-sm text-ink-muted">{contact.supportPhone ?? "+91 90000 00000"}</p>
+            <p className="text-sm text-ink-muted">+91 72909 11804</p>
           </div>
         </CardBody></Card>
       </div>

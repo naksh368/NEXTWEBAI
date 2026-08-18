@@ -6,7 +6,7 @@
 set -e
 
 # Railway installs with NODE_ENV=production (skips devDependencies).
-npm install --include=dev --no-audit --no-fund
+npm install --include=dev --no-audit --no-fund --legacy-peer-deps
 
 # Accept the DB connection under any host's variable name. Prefer a DIRECT
 # (non-pooled) connection first, because `prisma db push` fails over a pooler.

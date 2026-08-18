@@ -8,7 +8,7 @@ import { db } from "@/lib/db";
 export const metadata: Metadata = { title: "Support", description: "Get help with your ExpertzTrip booking." };
 
 export default async function SupportPage() {
-  const brand = await db.businessSetting.findUnique({ where: { key: "brand" } });
+  const brand = await db.businessSetting.findUnique({ where: { key: "brand" } }).catch(() => null);
   const contact = (brand?.value ?? {}) as { supportEmail?: string; supportPhone?: string };
 
   return (

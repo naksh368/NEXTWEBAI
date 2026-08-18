@@ -1,0 +1,9 @@
+# Netlify build config. Uses the full build (create tables + seed 50 packages +
+# build) instead of a plain `next build`, so the database is ready before the
+# site is prerendered. Set DATABASE_URL in Netlify → Site settings → Environment.
+[build]
+  command = "sh scripts/build.sh"
+  publish = ".next"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

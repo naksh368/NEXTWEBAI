@@ -18,7 +18,7 @@ export default async function TravelGuidePage() {
     where: { isPublished: true },
     orderBy: { publishedAt: "desc" },
     include: { destination: { select: { name: true } } },
-  });
+  }).catch(() => []);
 
   return (
     <>

@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, LifeBuoy, Luggage, User } from "lucide-react";
+import { Menu, X, LifeBuoy, Luggage } from "lucide-react";
+import { SignedIn, SignedOut, UserButton, SignInButton } from "@clerk/nextjs";
 import { Logo } from "@/components/ui/logo";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -14,28 +15,11 @@ const NAV = [
   { label: "Honeymoon", href: "/packages?theme=HONEYMOON" },
   { label: "Family", href: "/packages?theme=FAMILY" },
   { label: "Offers", href: "/offers" },
-  { label: "Travel Guide", href: "/travel-guide" },
 ];
-
-type Me = { fullName: string | null; mobile: string } | null;
 
 export function Header() {
   const [open, setOpen] = useState(false);
-  const [me, setMe] = useState<Me>(null);
-  const [loaded, setLoaded] = useState(false);
   const pathname = usePathname();
-
-  // Auth-aware header — reflect the signed-in customer if there is one.
-  useEffect(() => {
-    let active = true;
-    fetch("/api/auth/me")
-      .then((r) => r.json())
-      .then((d) => { if (active) { setMe(d.customer ?? null); setLoaded(true); } })
-      .catch(() => active && setLoaded(true));
-    return () => { active = false; };
-  }, [pathname]);
-
-  const firstName = me?.fullName?.split(" ")[0];
 
   return (
     <header className="sticky top-0 z-40 border-b border-surface-border bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/80 print:hidden">
@@ -69,16 +53,16 @@ export function Header() {
             <Luggage className="h-4 w-4" /> My Trips
           </Link>
 
-          {loaded && me ? (
-            <Link href="/account" className="inline-flex items-center gap-2 rounded-full bg-brand-navy px-3.5 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-blueDark">
-              <User className="h-4 w-4" />
-              <span className="max-w-[7rem] truncate">{firstName ?? "Account"}</span>
-            </Link>
-          ) : (
-            <Link href="/account" className={buttonVariants({ variant: "primary", size: "sm", className: "hidden sm:inline-flex" })}>
-              Sign in
-            </Link>
-          )}
+          <SignedIn>
+            <UserButton appearance={{ variables: { colorPrimary: "#2340d9" } }} />
+          </SignedIn>
+          <SignedOut>
+            <SignInButton mode="modal" fallbackRedirectUrl="/account">
+              <button className={buttonVariants({ variant: "primary", size: "sm", className: "hidden sm:inline-flex" })}>
+                Sign in
+              </button>
+            </SignInButton>
+          </SignedOut>
 
           <button
             className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-ink lg:hidden"
@@ -105,9 +89,13 @@ export function Header() {
             <Link href="/account/trips" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-[15px] font-medium text-ink hover:bg-surface-muted">
               <Luggage className="h-4 w-4" /> My Trips
             </Link>
-            <Link href="/account" onClick={() => setOpen(false)} className={buttonVariants({ variant: "primary", size: "sm", className: "mt-2" })}>
-              {me ? `Hi, ${firstName ?? "Account"}` : "Sign in"}
-            </Link>
+            <SignedOut>
+              <SignInButton mode="modal" fallbackRedirectUrl="/account">
+                <button className={buttonVariants({ variant: "primary", size: "sm", className: "mt-2 w-full" })}>
+                  Sign in
+                </button>
+              </SignInButton>
+            </SignedOut>
           </nav>
         </div>
       )}

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Nunito } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
@@ -47,21 +48,23 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={nunito.variable}>
-      <body className="flex min-h-screen flex-col">
-        <a
-          href="#main"
-          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-brand-blue focus:px-4 focus:py-2 focus:text-white"
-        >
-          Skip to content
-        </a>
-        <HideOnAdmin><Header /></HideOnAdmin>
-        <main id="main" className="flex-1">
-          {children}
-        </main>
-        <HideOnAdmin><Footer /></HideOnAdmin>
-        <HideOnAdmin><AiFab /></HideOnAdmin>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en" className={nunito.variable}>
+        <body className="flex min-h-screen flex-col">
+          <a
+            href="#main"
+            className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-brand-blue focus:px-4 focus:py-2 focus:text-white"
+          >
+            Skip to content
+          </a>
+          <HideOnAdmin><Header /></HideOnAdmin>
+          <main id="main" className="flex-1">
+            {children}
+          </main>
+          <HideOnAdmin><Footer /></HideOnAdmin>
+          <HideOnAdmin><AiFab /></HideOnAdmin>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

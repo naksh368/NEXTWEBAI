@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
 import { Luggage, Receipt, FileText, LifeBuoy, Bell, User } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { LoginFlow } from "@/components/auth/login-flow";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { getCurrentCustomer } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -21,15 +22,11 @@ const TILES = [
 ];
 
 export default async function AccountPage() {
-  const customer = await getCurrentCustomer();
+  const { userId } = await auth();
+  if (!userId) redirect("/sign-in?redirect_url=/account");
 
-  if (!customer) {
-    return (
-      <Container className="py-12 sm:py-16">
-        <LoginFlow redirectTo="/account" />
-      </Container>
-    );
-  }
+  const customer = await getCurrentCustomer();
+  if (!customer) redirect("/sign-in?redirect_url=/account");
 
   const unread = await db.notification.count({ where: { customerId: customer.id, isRead: false } });
 

@@ -25,6 +25,7 @@ datasource db {
 
 model Customer {
   id           String   @id @default(cuid())
+  clerkId      String?  @unique // Clerk user ID
   mobile       String?  @unique // optional — added in profile; login is by email
   email        String?  @unique // login identifier + used for docs/e-tickets
   fullName     String?

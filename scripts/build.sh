@@ -21,6 +21,6 @@ if [ -z "$DATABASE_URL" ]; then
 fi
 
 npx prisma generate
-npx prisma db push
+npx prisma db push --accept-data-loss
 npx tsx prisma/seed.ts
 npx next build

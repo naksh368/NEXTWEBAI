@@ -1,35 +1,37 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input, Field } from "@/components/ui/input";
-import { Check } from "lucide-react";
 
 export function ProfileForm({ initial }: { initial: { fullName: string; email: string; mobile: string } }) {
   const router = useRouter();
-  const { user } = useUser();
   const [fullName, setFullName] = useState(initial.fullName);
+  const [email, setEmail] = useState(initial.email);
+  const [mobile, setMobile] = useState(initial.mobile);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
-    if (!user) return;
     setLoading(true);
     setError(null);
     setSaved(false);
     try {
-      const parts = fullName.trim().split(" ");
-      const firstName = parts[0] ?? "";
-      const lastName = parts.slice(1).join(" ");
-      await user.update({ firstName, lastName });
+      const res = await fetch("/api/auth/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fullName: fullName.trim(), email: email.trim() || null, mobile: mobile.trim() || null }),
+      });
+      const data = await res.json();
+      if (!data.ok) { setError(data.error ?? "Could not save. Please try again."); return; }
       setSaved(true);
       router.refresh();
     } catch {
-      setError("Could not save. Please try again.");
+      setError("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -37,11 +39,14 @@ export function ProfileForm({ initial }: { initial: { fullName: string; email: s
 
   return (
     <form onSubmit={save} className="max-w-md space-y-4">
-      <Field label="Email address" htmlFor="p-email" hint="Managed by your Clerk account.">
-        <Input id="p-email" value={initial.email} disabled />
+      <Field label="Full name" htmlFor="p-name">
+        <Input id="p-name" value={fullName} onChange={(e) => setFullName(e.target.value)} autoComplete="name" />
       </Field>
-      <Field label="Full name" htmlFor="p-name" required>
-        <Input id="p-name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+      <Field label="Email address" htmlFor="p-email">
+        <Input id="p-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" placeholder="you@example.com" />
+      </Field>
+      <Field label="Mobile number" htmlFor="p-mobile">
+        <Input id="p-mobile" type="tel" value={mobile} onChange={(e) => setMobile(e.target.value)} autoComplete="tel" placeholder="9876543210" />
       </Field>
       {error && <p className="text-sm font-medium text-danger">{error}</p>}
       <div className="flex items-center gap-3">

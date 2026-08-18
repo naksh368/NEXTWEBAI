@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { auth } from "@clerk/nextjs/server";
 import { Luggage, Receipt, FileText, LifeBuoy, Bell, User } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Card, CardBody } from "@/components/ui/card";
@@ -22,9 +21,6 @@ const TILES = [
 ];
 
 export default async function AccountPage() {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in?redirect_url=/account");
-
   const customer = await getCurrentCustomer();
   if (!customer) redirect("/sign-in?redirect_url=/account");
 

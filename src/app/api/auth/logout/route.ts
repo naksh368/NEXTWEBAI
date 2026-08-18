@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
+import { clearCustomerCookie } from "@/lib/customer-session";
 
 export const runtime = "nodejs";
 
-// Sign-out is handled by Clerk directly — this route is kept for compatibility.
 export async function POST() {
-  return NextResponse.json({ ok: true });
+  await clearCustomerCookie();
+  return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
 }

@@ -25,9 +25,9 @@ datasource db {
 
 model Customer {
   id           String   @id @default(cuid())
-  clerkId      String?  @unique // Clerk user ID
-  mobile       String?  @unique // optional — added in profile; login is by email
+  mobile       String?  @unique // login identifier (email or mobile)
   email        String?  @unique // login identifier + used for docs/e-tickets
+  passwordHash String?           // scrypt hash via lib/password.ts
   fullName     String?
   isVerified   Boolean  @default(false)
   status       String   @default("ACTIVE") // ACTIVE | SUSPENDED

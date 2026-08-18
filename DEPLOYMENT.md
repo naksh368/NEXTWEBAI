@@ -14,7 +14,7 @@ verified against the codebase — no placeholder steps.
 
 - Node.js 18.18+ (Next.js 15 requirement)
 - A PostgreSQL database (Neon, Supabase, RDS, Railway … any managed Postgres)
-- Accounts: **MSG91** (SMS/OTP), **Resend** (email), **Razorpay** (payments)
+- Accounts: **MSG91** (SMS/OTP), an **email service** (SendGrid, Mailgun, AWS SES, etc.), **Razorpay** (payments)
 
 ---
 
@@ -28,9 +28,9 @@ Copy `.env.example` → `.env` (or set these in your host's dashboard — on Ver
 | `AUTH_SECRET` | ✅ | 32+ random chars. Signs sessions + OTP tokens. |
 | `DATABASE_URL` | ✅ | The only DB value. Railway provides it automatically; on Neon use the **direct** string (without `-pooler`). |
 | `NEXT_PUBLIC_SITE_URL` | ✅ | e.g. `https://expertztrip.com`. Used in emails/links/SEO. |
-| `EMAIL_PROVIDER` | ✅ | `resend`. **Login is email OTP — this must work.** |
-| `EMAIL_API_KEY` | ✅ | Resend API key (`re_…`). |
-| `EMAIL_FROM` | ✅ | `ExpertzTrip <login@yourdomain.com>` (verified domain — see §4). |
+| `EMAIL_PROVIDER` | ✅ | Your email service (e.g. `sendgrid`, `mailgun`). **Login is email OTP — this must work.** |
+| `EMAIL_API_KEY` | ✅ | API key for your email provider. |
+| `EMAIL_FROM` | ✅ | `ExpertzTrip <noreply@yourdomain.com>` (from address for your emails). |
 | `ADMIN_EMAIL` | ➖ | Super Admin login email (defaults to owner email). Real inbox. |
 | `NEXT_PUBLIC_RAZORPAY_KEY_ID` | ✅ | Public key id (browser-safe). |
 | `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | ✅ | Server keys. |
@@ -87,16 +87,18 @@ MSG91 cannot send any SMS without DLT-approved templates. In the MSG91 console:
 Until a template id is present, the matching SMS is **honestly skipped** (logged
 as `SKIPPED` in `MessageLog`) — never faked.
 
-### Resend (email) — ⚠️ REQUIRED FOR LOGIN
-Login is **email OTP**, so Resend must be able to deliver to real customer inboxes.
-1. Add and **verify your sending domain** in Resend (add the DNS records it shows —
-   done in minutes). **Until the domain is verified, Resend only delivers to your
-   own account email, so customers cannot receive their login code.**
-2. Set `EMAIL_FROM` to an address on that domain (e.g. `login@yourdomain.com`).
-3. Set `EMAIL_PROVIDER=resend` and `EMAIL_API_KEY`.
+### Email Service — ⚠️ REQUIRED FOR LOGIN
+Login is **email OTP**, so your email service must be able to deliver to real customer inboxes.
+1. Sign up with an email provider (e.g. **SendGrid**, **Mailgun**, **AWS SES**, **Gmail SMTP**, etc.).
+2. Obtain your API key from the provider.
+3. Set `EMAIL_PROVIDER` to your provider name and `EMAIL_API_KEY` to the API key.
+4. Set `EMAIL_FROM` to a valid sender address for your emails.
 
-### MSG91 (SMS) — optional
-SMS is no longer required to log in. Leave `SMS_PROVIDER=console` to launch, and
+You'll need to implement the provider in `src/lib/services/email.ts` if it's not already available.
+See the console provider as an example for how to add a new provider.
+
+### SMS (MSG91) — optional
+SMS is not required to log in. Leave `SMS_PROVIDER=console` to launch, and
 add MSG91 + DLT templates later for SMS booking/document alerts.
 
 ### Razorpay (payments)

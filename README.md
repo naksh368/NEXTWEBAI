@@ -15,16 +15,16 @@
 | `DATABASE_URL` | Neon **direct** string (the one **without** `-pooler`) |
 | `AUTH_SECRET` | any 32+ random characters |
 | `NEXT_PUBLIC_SITE_URL` | `https://yourdomain.com` |
-| `EMAIL_PROVIDER` | `resend` |
-| `EMAIL_API_KEY` | your Resend key (`re_…`) |
-| `EMAIL_FROM` | `ExpertzTrip <login@yourdomain.com>` |
+| `EMAIL_PROVIDER` | your email service (e.g. `sendgrid`, `mailgun`) |
+| `EMAIL_API_KEY` | your email provider API key |
+| `EMAIL_FROM` | `ExpertzTrip <noreply@yourdomain.com>` |
 | `ADMIN_EMAIL` | your admin login email |
 | `NEXT_PUBLIC_RAZORPAY_KEY_ID` / `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | your Razorpay keys |
 
 **3.** Click **Deploy** → the build creates the tables + seeds 50 packages automatically.
 
 > 🔑 **The #1 gotcha:** `DIRECT_URL` must be the **non-pooled** Neon string (delete `-pooler` from the host). The build's schema step fails on the pooled one.
-> 📧 Login is **email OTP** — verify your domain in **Resend** so customers receive their code. SMS/MSG91 is optional.
+> 📧 Login is **email OTP** — configure your email provider (SendGrid, Mailgun, AWS SES, etc.) so customers receive their code. SMS/MSG91 is optional.
 
 Full walkthrough (custom domain DNS included) → **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
 
@@ -38,7 +38,7 @@ Easiest setup — Railway provisions the database for you:
 2. In the project → **+ New** → **Database → PostgreSQL** (one click).
 3. On the app service → **Variables**, add:
    - `DATABASE_URL` = `${{Postgres.DATABASE_URL}}`  *(the only DB value — references the Postgres you added)*
-   - `AUTH_SECRET`, `NEXT_PUBLIC_SITE_URL`, `EMAIL_PROVIDER=resend`, `EMAIL_API_KEY`, `EMAIL_FROM`, `ADMIN_EMAIL`, `NEXT_PUBLIC_RAZORPAY_KEY_ID`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`
+   - `AUTH_SECRET`, `NEXT_PUBLIC_SITE_URL`, `EMAIL_PROVIDER`, `EMAIL_API_KEY`, `EMAIL_FROM`, `ADMIN_EMAIL`, `NEXT_PUBLIC_RAZORPAY_KEY_ID`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`
 4. **Deploy** — the build creates the tables + seeds 50 packages automatically.
 5. **Custom domain:** service → **Settings → Networking → Custom Domain** → add your domain → Railway shows a **CNAME**; add it at your registrar. HTTPS is automatic.
 

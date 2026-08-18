@@ -2,16 +2,20 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Mail, ShieldCheck, User, ArrowRight, ArrowLeft } from "lucide-react";
+import { Mail, Phone, ShieldCheck, User, ArrowRight, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input, Field } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
-type Step = "email" | "otp" | "profile";
+type Step = "method" | "email" | "mobile" | "otp" | "profile";
+type Method = "email" | "mobile";
 
 export function AdminLoginForm() {
   const router = useRouter();
-  const [step, setStep] = useState<Step>("email");
+  const [step, setStep] = useState<Step>("method");
+  const [method, setMethod] = useState<Method>("email");
   const [email, setEmail] = useState("");
+  const [mobile, setMobile] = useState("");
   const [code, setCode] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
@@ -29,13 +33,20 @@ export function AdminLoginForm() {
   }
 
   async function requestOtp() {
-    const data = await post("/api/admin/otp/request", { email });
-    if (!data.ok) return setError(data.error);
-    setStep("otp");
-    setNotice(process.env.NODE_ENV === "production" ? "If this email has admin access, we've sent a code." : "Dev mode: your code is printed to the server console.");
+    if (method === "email") {
+      const data = await post("/api/admin/otp/request", { email });
+      if (!data.ok) return setError(data.error);
+      setStep("otp");
+      setNotice(process.env.NODE_ENV === "production" ? "If this email has admin access, we've sent a code." : "Dev mode: your code is printed to the server console.");
+    } else {
+      const data = await post("/api/admin/otp/request-mobile", { mobile });
+      if (!data.ok) return setError(data.error);
+      setStep("otp");
+      setNotice(process.env.NODE_ENV === "production" ? "If this mobile has admin access, we've sent a code via SMS." : "Dev mode: your code is printed to the server console.");
+    }
   }
   async function verify() {
-    const data = await post("/api/admin/otp/verify", { email, code });
+    const data = await post("/api/admin/otp/verify", method === "email" ? { email, code } : { mobile, code });
     if (!data.ok) return setError(data.error);
     if (data.profileComplete) { router.push("/admin"); router.refresh(); }
     else setStep("profile");
@@ -48,6 +59,44 @@ export function AdminLoginForm() {
 
   return (
     <>
+      {step === "method" && (
+        <>
+          <Head icon={<ShieldCheck className="h-5 w-5" />} title="Admin sign in" subtitle="Choose how you'd like to sign in." />
+          <div className="mt-6 space-y-3">
+            <button
+              onClick={() => { setMethod("email"); setStep("email"); setError(null); }}
+              className={cn(
+                "w-full rounded-lg border-2 p-4 text-left transition-colors",
+                method === "email" ? "border-brand-blue bg-brand-blueLight" : "border-surface-border hover:border-brand-blue"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <Mail className="h-5 w-5 text-brand-blue" />
+                <div>
+                  <div className="font-semibold">Email OTP</div>
+                  <div className="text-xs text-ink-muted">Sign in with your admin email</div>
+                </div>
+              </div>
+            </button>
+            <button
+              onClick={() => { setMethod("mobile"); setStep("mobile"); setError(null); }}
+              className={cn(
+                "w-full rounded-lg border-2 p-4 text-left transition-colors",
+                method === "mobile" ? "border-brand-blue bg-brand-blueLight" : "border-surface-border hover:border-brand-blue"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <Phone className="h-5 w-5 text-brand-blue" />
+                <div>
+                  <div className="font-semibold">Mobile OTP</div>
+                  <div className="text-xs text-ink-muted">Sign in with your admin phone number</div>
+                </div>
+              </div>
+            </button>
+          </div>
+        </>
+      )}
+
       {step === "email" && (
         <>
           <Head icon={<Mail className="h-5 w-5" />} title="Admin sign in" subtitle="Enter your admin email to receive a one-time code." />
@@ -57,14 +106,29 @@ export function AdminLoginForm() {
             </Field>
             {error && <p className="text-sm font-medium text-danger">{error}</p>}
             <Button type="submit" className="w-full" size="lg" loading={loading}>Send OTP <ArrowRight className="h-4 w-4" /></Button>
+            <button type="button" onClick={() => { setStep("method"); setError(null); setEmail(""); }} className="w-full text-center text-sm text-ink-muted hover:text-ink"><ArrowLeft className="h-3 w-3 inline mr-1" /> Back</button>
+          </form>
+        </>
+      )}
+
+      {step === "mobile" && (
+        <>
+          <Head icon={<Phone className="h-5 w-5" />} title="Admin sign in" subtitle="Enter your admin phone number to receive a one-time code." />
+          <form onSubmit={(e) => { e.preventDefault(); requestOtp(); }} className="mt-6 space-y-4">
+            <Field label="Admin phone" htmlFor="a-mobile" required>
+              <Input id="a-mobile" type="tel" inputMode="tel" autoComplete="tel" placeholder="+918700650467" value={mobile} onChange={(e) => setMobile(e.target.value)} invalid={!!error} autoFocus />
+            </Field>
+            {error && <p className="text-sm font-medium text-danger">{error}</p>}
+            <Button type="submit" className="w-full" size="lg" loading={loading}>Send OTP <ArrowRight className="h-4 w-4" /></Button>
+            <button type="button" onClick={() => { setStep("method"); setError(null); setMobile(""); }} className="w-full text-center text-sm text-ink-muted hover:text-ink"><ArrowLeft className="h-3 w-3 inline mr-1" /> Back</button>
           </form>
         </>
       )}
 
       {step === "otp" && (
         <>
-          <button onClick={() => { setStep("email"); setError(null); setCode(""); }} className="mb-3 inline-flex items-center gap-1 text-sm text-ink-muted hover:text-ink"><ArrowLeft className="h-4 w-4" /> Change email</button>
-          <Head icon={<ShieldCheck className="h-5 w-5" />} title="Enter the OTP sent on email" subtitle={`Sent to ${email}`} />
+          <button onClick={() => { setStep(method === "email" ? "email" : "mobile"); setError(null); setCode(""); }} className="mb-3 inline-flex items-center gap-1 text-sm text-ink-muted hover:text-ink"><ArrowLeft className="h-4 w-4" /> Change {method}</button>
+          <Head icon={<ShieldCheck className="h-5 w-5" />} title="Enter the OTP sent" subtitle={`Sent to ${method === "email" ? email : mobile}`} />
           {notice && <p className="mt-3 rounded-lg bg-brand-blueLight px-3 py-2 text-xs text-brand-blue">{notice}</p>}
           <form onSubmit={(e) => { e.preventDefault(); verify(); }} className="mt-6 space-y-4">
             <Field label="One-time code" htmlFor="a-otp" required>

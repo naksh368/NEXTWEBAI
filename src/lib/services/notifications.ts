@@ -11,7 +11,7 @@ import { getSiteUrl } from "@/lib/utils";
  * originates from a real database state change (registration, verified payment,
  * a published document, a confirmed booking …) and fans out to:
  *   • an in-app notification (the notification center),
- *   • a branded Resend email  (per policy),
+ *   • a transactional email (per policy),
  *   • an MSG91 transactional SMS (per policy).
  *
  * Guarantees:

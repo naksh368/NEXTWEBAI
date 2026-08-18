@@ -1,15 +1,12 @@
 /**
- * Transactional email (Phase 20) — Resend by default.
- * - console  : dev, prints the email.
- * - resend   : sends via api.resend.com using EMAIL_API_KEY.
- *
- * From-domain note: Resend requires the sender domain to be verified. Until
- * expertztrip.com is verified in Resend, use EMAIL_FROM="…@resend.dev".
+ * Transactional email service (Phase 20).
+ * - console  : dev, prints the email to console.
+ * - zavu     : sends via Zavu.de using EMAIL_API_KEY.
  * All sends are non-blocking — a failure never breaks the primary action.
  */
 const provider = () => process.env.EMAIL_PROVIDER || "console";
 const apiKey = () => process.env.EMAIL_API_KEY || "";
-const from = () => process.env.EMAIL_FROM || "ExpertzTrip <onboarding@resend.dev>";
+const from = () => process.env.EMAIL_FROM || "ExpertzTrip <noreply@expertztrip.com>";
 
 export async function sendEmail(opts: { to: string; subject: string; html: string }): Promise<{ ok: boolean; error?: string }> {
   try {
@@ -17,19 +14,24 @@ export async function sendEmail(opts: { to: string; subject: string; html: strin
       console.log(`\n📧 [EMAIL:console] to ${opts.to}\n   ${opts.subject}\n`);
       return { ok: true };
     }
-    if (provider() === "resend") {
-      const res = await fetch("https://api.resend.com/emails", {
+    if (provider() === "zavu") {
+      const res = await fetch("https://api.zavu.de/v1/email/send", {
         method: "POST",
         headers: { Authorization: `Bearer ${apiKey()}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ from: from(), to: [opts.to], subject: opts.subject, html: opts.html }),
+        body: JSON.stringify({
+          from: from(),
+          to: opts.to,
+          subject: opts.subject,
+          html: opts.html
+        }),
       });
       if (!res.ok) {
         const t = await res.text().catch(() => "");
-        return { ok: false, error: `Resend ${res.status}: ${t.slice(0, 200)}` };
+        return { ok: false, error: `Zavu ${res.status}: ${t.slice(0, 200)}` };
       }
       return { ok: true };
     }
-    return { ok: false, error: `Unknown email provider "${provider()}"` };
+    return { ok: false, error: `Email provider "${provider()}" not configured. Set EMAIL_PROVIDER and EMAIL_API_KEY.` };
   } catch (e) {
     return { ok: false, error: (e as Error).message };
   }

@@ -8,6 +8,7 @@ import { Card, CardBody } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { LoginFlow } from "@/components/auth/login-flow";
 import { CheckoutForm } from "@/components/checkout/checkout-form";
+import { CheckoutSteps } from "@/components/checkout/checkout-steps";
 import { getPackageBySlug } from "@/lib/queries";
 import { reprice } from "@/lib/services/pricing-service";
 import { getCurrentCustomer } from "@/lib/auth";
@@ -87,6 +88,7 @@ export default async function CheckoutPage({
       />
       <h1 className="mt-4 text-2xl font-bold sm:text-3xl">Review &amp; book</h1>
       <p className="mt-1 text-ink-muted">Everything below is priced and verified on our servers.</p>
+      <CheckoutSteps current={2} />
 
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
@@ -125,6 +127,7 @@ export default async function CheckoutPage({
                   couponCode={couponCode}
                   total={b.total}
                   prefillName={customer.fullName}
+                  isDomestic={pkg.destination.country === "India"}
                 />
               </div>
             </CardBody></Card>

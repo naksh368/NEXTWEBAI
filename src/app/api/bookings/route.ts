@@ -5,17 +5,20 @@ import { createBooking } from "@/lib/services/booking-service";
 
 export const runtime = "nodejs";
 
-// Mandatory traveller details collected at booking.
+// Traveller details collected at booking. Passport fields are optional —
+// they are only required for international trips (enforced in the UI); domestic
+// (India) trips submit them empty.
+const optionalStr = z.string().max(60).optional().default("");
 const travellerSchema = z.object({
   title: z.enum(["MR", "MS", "MRS"]),
   givenName: z.string().min(1).max(60),
   surname: z.string().min(1).max(60),
   dateOfBirth: z.string().min(8).max(10),
-  passportNo: z.string().min(4).max(30),
-  passportExpiry: z.string().min(8).max(10),
-  passportIssueDate: z.string().min(8).max(10),
-  passportIssueCity: z.string().min(1).max(60),
-  passportIssueCountry: z.string().min(1).max(60),
+  passportNo: optionalStr,
+  passportExpiry: optionalStr,
+  passportIssueDate: optionalStr,
+  passportIssueCity: optionalStr,
+  passportIssueCountry: optionalStr,
   panNumber: z.string().trim().toUpperCase().regex(/^[A-Z]{5}[0-9]{4}[A-Z]$/, "Enter a valid 10-character PAN."),
   mealPreference: z.enum(["VEG", "NON_VEG"]),
   type: z.enum(["ADULT", "CHILD", "INFANT"]).optional(),

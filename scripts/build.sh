@@ -23,4 +23,7 @@ fi
 npx prisma generate
 npx prisma db push --accept-data-loss
 npx tsx prisma/seed.ts
+# Idempotent top-up — adds India + international destinations on every deploy
+# without wiping existing data (safe to run repeatedly).
+npx tsx prisma/seed-extra.ts
 npx next build

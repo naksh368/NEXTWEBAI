@@ -42,22 +42,25 @@ function loadRazorpay(): Promise<boolean> {
 
 const PAN_RE = /^[A-Z]{5}[0-9]{4}[A-Z]$/;
 
-function isValid(t: Traveller): boolean {
-  return (
+function isValid(t: Traveller, isDomestic: boolean): boolean {
+  const baseOk =
     t.givenName.trim().length >= 1 &&
     t.surname.trim().length >= 1 &&
     !!t.dateOfBirth &&
+    PAN_RE.test(t.panNumber.trim().toUpperCase());
+  if (isDomestic) return baseOk;
+  return (
+    baseOk &&
     t.passportNo.trim().length >= 4 &&
     !!t.passportExpiry &&
     !!t.passportIssueDate &&
     t.passportIssueCity.trim().length >= 1 &&
-    t.passportIssueCountry.trim().length >= 1 &&
-    PAN_RE.test(t.panNumber.trim().toUpperCase())
+    t.passportIssueCountry.trim().length >= 1
   );
 }
 
 export function CheckoutForm({
-  versionId, travellerCount, selectedOptionIds, travelDate, couponCode, total, prefillName,
+  versionId, travellerCount, selectedOptionIds, travelDate, couponCode, total, prefillName, isDomestic = false,
 }: {
   versionId: string;
   travellerCount: number;
@@ -66,6 +69,7 @@ export function CheckoutForm({
   couponCode: string | null;
   total: number;
   prefillName?: string | null;
+  isDomestic?: boolean;
 }) {
   const router = useRouter();
   const [travellers, setTravellers] = useState<Traveller[]>(
@@ -85,11 +89,15 @@ export function CheckoutForm({
     setTravellers((prev) => prev.map((t, idx) => (idx === i ? { ...t, ...patch } : t)));
   }
 
-  const allValid = travellers.every(isValid);
+  const allValid = travellers.every((t) => isValid(t, isDomestic));
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!allValid) return setError("Please complete every traveller's details, including a valid 10-character PAN.");
+    if (!allValid) return setError(
+      isDomestic
+        ? "Please complete every traveller's name, date of birth and a valid 10-character PAN."
+        : "Please complete every traveller's details, including passport and a valid 10-character PAN."
+    );
     if (!terms) return setError("Please accept the terms to continue.");
     setError(null);
     setLoading(true);
@@ -185,26 +193,33 @@ export function CheckoutForm({
               <Field label="Date of birth" htmlFor={`dob-${i}`} required>
                 <Input id={`dob-${i}`} type="date" value={t.dateOfBirth} onChange={(e) => update(i, { dateOfBirth: e.target.value })} />
               </Field>
-              <Field label="Passport number" htmlFor={`pn-${i}`} required>
-                <Input id={`pn-${i}`} value={t.passportNo} onChange={(e) => update(i, { passportNo: e.target.value.toUpperCase() })} placeholder="e.g. M1234567" />
-              </Field>
-              <Field label="Passport expiry" htmlFor={`pe-${i}`} required>
-                <Input id={`pe-${i}`} type="date" value={t.passportExpiry} onChange={(e) => update(i, { passportExpiry: e.target.value })} />
-              </Field>
-              <Field label="Passport issue date" htmlFor={`pid-${i}`} required>
-                <Input id={`pid-${i}`} type="date" value={t.passportIssueDate} onChange={(e) => update(i, { passportIssueDate: e.target.value })} />
-              </Field>
-              <Field label="Issue city" htmlFor={`pic-${i}`} required>
-                <Input id={`pic-${i}`} value={t.passportIssueCity} onChange={(e) => update(i, { passportIssueCity: e.target.value })} placeholder="City" />
-              </Field>
-              <Field label="Issue country" htmlFor={`pco-${i}`} required>
-                <Input id={`pco-${i}`} value={t.passportIssueCountry} onChange={(e) => update(i, { passportIssueCountry: e.target.value })} placeholder="Country" />
-              </Field>
               <Field label="PAN number" htmlFor={`pan-${i}`} required hint="Format ABCDE1234F">
                 <Input id={`pan-${i}`} value={t.panNumber} maxLength={10} onChange={(e) => update(i, { panNumber: e.target.value.toUpperCase() })}
                   invalid={t.panNumber.length > 0 && !PAN_RE.test(t.panNumber)} placeholder="ABCDE1234F" />
               </Field>
+              {!isDomestic && (
+                <>
+                  <Field label="Passport number" htmlFor={`pn-${i}`} required>
+                    <Input id={`pn-${i}`} value={t.passportNo} onChange={(e) => update(i, { passportNo: e.target.value.toUpperCase() })} placeholder="e.g. M1234567" />
+                  </Field>
+                  <Field label="Passport expiry" htmlFor={`pe-${i}`} required>
+                    <Input id={`pe-${i}`} type="date" value={t.passportExpiry} onChange={(e) => update(i, { passportExpiry: e.target.value })} />
+                  </Field>
+                  <Field label="Passport issue date" htmlFor={`pid-${i}`} required>
+                    <Input id={`pid-${i}`} type="date" value={t.passportIssueDate} onChange={(e) => update(i, { passportIssueDate: e.target.value })} />
+                  </Field>
+                  <Field label="Issue city" htmlFor={`pic-${i}`} required>
+                    <Input id={`pic-${i}`} value={t.passportIssueCity} onChange={(e) => update(i, { passportIssueCity: e.target.value })} placeholder="City" />
+                  </Field>
+                  <Field label="Issue country" htmlFor={`pco-${i}`} required>
+                    <Input id={`pco-${i}`} value={t.passportIssueCountry} onChange={(e) => update(i, { passportIssueCountry: e.target.value })} placeholder="Country" />
+                  </Field>
+                </>
+              )}
             </div>
+            {isDomestic && (
+              <p className="mt-3 text-xs text-ink-muted">Domestic trip — no passport required. PAN is needed for booking as per regulations.</p>
+            )}
           </div>
         ))}
       </div>

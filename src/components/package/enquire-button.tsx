@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MessageCircle, Phone, X, Send, CheckCircle2, Loader2, ArrowLeft, ArrowRight, Clock } from "lucide-react";
+import { MessageCircle, Phone, X, Send, CheckCircle2, Loader2, ArrowLeft, ArrowRight } from "lucide-react";
 import { EXPERT_PHONE, whatsappLink, telLink } from "@/lib/contact";
 import { cn } from "@/lib/utils";
 
@@ -37,7 +37,6 @@ export function EnquireButton({
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [wantsDiscount, setWantsDiscount] = useState(true);
   // Step 2
   const [budget, setBudget] = useState("");
   const [nights, setNights] = useState("");
@@ -86,7 +85,6 @@ export function EnquireButton({
           travelType,
           travellers: travellers ? Number(travellers) : undefined,
           bookingPlan, travelDate,
-          wantsDiscount,
           source: packageSlug ? "PACKAGE" : "WEBSITE",
         }),
       });
@@ -180,19 +178,14 @@ export function EnquireButton({
                   </div>
                 </div>
 
-                <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-surface-border bg-surface-muted/40 p-3.5">
-                  <input type="checkbox" checked={wantsDiscount} onChange={(e) => setWantsDiscount(e.target.checked)} className="h-5 w-5 shrink-0 accent-brand-blue" />
-                  <span className="text-sm font-semibold text-brand-navy">Yes, I want <span className="text-brand-orange">20% off</span></span>
-                </label>
-
                 {error && <p className="text-sm font-medium text-danger">{error}</p>}
 
                 <button type="submit" className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-navy text-base font-bold text-white transition-colors hover:bg-black">
                   Next <ArrowRight className="h-4 w-4" />
                 </button>
 
-                <p className="flex items-center justify-center gap-1.5 rounded-lg bg-brand-orangeLight px-3 py-2 text-xs font-medium text-brand-orangeDark">
-                  <Clock className="h-3.5 w-3.5" /> Limited slots — we&apos;re receiving heavy enquiries. Reserve early.
+                <p className="text-center text-xs text-ink-muted">
+                  Our travel experts will call or WhatsApp you back with real options — usually within a few hours.
                 </p>
               </form>
             ) : (

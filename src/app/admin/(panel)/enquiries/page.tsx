@@ -7,14 +7,17 @@ import { updateEnquiryStatus } from "./actions";
 export const dynamic = "force-dynamic";
 const PAGE_SIZE = 20;
 
-const STATUS_TONE: Record<string, "info" | "warning" | "success" | "neutral" | "brand"> = {
+const STATUS_TONE: Record<string, "info" | "warning" | "success" | "neutral" | "brand" | "danger"> = {
   NEW: "brand",
   CONTACTED: "info",
-  QUOTED: "warning",
-  CONVERTED: "success",
-  CLOSED: "neutral",
+  QUALIFIED: "info",
+  QUOTE_SENT: "warning",
+  FOLLOW_UP: "warning",
+  NEGOTIATION: "warning",
+  WON: "success",
+  LOST: "danger",
 };
-const STATUSES = ["NEW", "CONTACTED", "QUOTED", "CONVERTED", "CLOSED"];
+const STATUSES = ["NEW", "CONTACTED", "QUALIFIED", "QUOTE_SENT", "FOLLOW_UP", "NEGOTIATION", "WON", "LOST"];
 
 export default async function AdminEnquiriesPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
   await requireAdmin("customer.view");
@@ -23,7 +26,7 @@ export default async function AdminEnquiriesPage({ searchParams }: { searchParam
   const [total, newCount, convertedCount, rows] = await Promise.all([
     db.enquiry.count(),
     db.enquiry.count({ where: { status: "NEW" } }),
-    db.enquiry.count({ where: { status: "CONVERTED" } }),
+    db.enquiry.count({ where: { status: "WON" } }),
     db.enquiry.findMany({
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * PAGE_SIZE,
@@ -39,7 +42,7 @@ export default async function AdminEnquiriesPage({ searchParams }: { searchParam
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard label="Total leads" value={total} tone="navy" />
         <StatCard label="New" value={newCount} tone="orange" hint="Needs follow-up" />
-        <StatCard label="Converted" value={convertedCount} tone="green" />
+        <StatCard label="Won" value={convertedCount} tone="green" />
         <StatCard label="Conversion" value={total ? `${Math.round((convertedCount / total) * 100)}%` : "—"} tone="blue" />
       </div>
 
@@ -58,10 +61,7 @@ export default async function AdminEnquiriesPage({ searchParams }: { searchParam
                 {e.email && <div className="text-xs text-ink-muted">{e.email}</div>}
               </Td>
               <Td>
-                <div className="flex items-center gap-1.5 text-sm">
-                  {e.packageName ?? e.destination ?? "—"}
-                  {e.wantsDiscount && <Pill tone="brand">20% off</Pill>}
-                </div>
+                <div className="text-sm">{e.packageName ?? e.destination ?? "—"}</div>
                 <div className="text-xs text-ink-muted">
                   {[
                     e.travellers ? `${e.travellers} pax` : null,

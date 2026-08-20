@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { authorize } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 
-const STATUSES = ["NEW", "CONTACTED", "QUOTED", "CONVERTED", "CLOSED"];
+const STATUSES = ["NEW", "CONTACTED", "QUALIFIED", "QUOTE_SENT", "FOLLOW_UP", "NEGOTIATION", "WON", "LOST"];
 
 export async function updateEnquiryStatus(formData: FormData) {
   const admin = await authorize("customer.view");

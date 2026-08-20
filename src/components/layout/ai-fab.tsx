@@ -4,10 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AiAvatar } from "@/components/ui/ai-avatar";
 
-/** Floating ExpertzTrip AI button, present on every page except /ai itself. */
+/**
+ * Floating ExpertzTrip AI button.
+ * Only shown on the homepage — on package/checkout/enquiry pages it competes
+ * with the primary travel-conversion CTAs (Book/Enquire), so it's hidden there.
+ */
 export function AiFab() {
   const pathname = usePathname();
-  if (pathname?.startsWith("/ai")) return null;
+  if (pathname !== "/") return null;
 
   return (
     <Link

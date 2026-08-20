@@ -37,8 +37,8 @@ export default async function HomePage() {
     getAllDestinations(),
   ]);
 
-  const indiaDestinations = allDestinations.filter((d) => d.country === "India");
-  const worldDestinations = allDestinations.filter((d) => d.country !== "India");
+  const indiaDestinations = allDestinations.filter((d) => d.country === "India" && d._count.packages > 0);
+  const worldDestinations = allDestinations.filter((d) => d.country !== "India" && d._count.packages > 0);
 
   return (
     <>
@@ -47,11 +47,7 @@ export default async function HomePage() {
         <div className="absolute inset-0 hero-wash" aria-hidden />
         <Container className="relative py-16 sm:py-24">
           <div className="mx-auto max-w-3xl text-center">
-            <span className="inline-flex items-center gap-2 rounded-full bg-brand-orangeLight px-4 py-1.5 text-sm font-bold text-brand-orangeDark">
-              <span className="flex h-5 items-center rounded-full bg-brand-orange px-2 text-xs font-extrabold text-white">20% OFF</span>
-              Limited-time savings on handpicked holidays
-            </span>
-            <p className="mt-4 text-sm font-bold uppercase tracking-[0.18em] text-brand-orange">
+            <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand-orange">
               India &amp; the world, handpicked for you
             </p>
             <h1 className="mt-4 text-5xl font-extrabold leading-[1.05] tracking-tight sm:text-7xl">
@@ -93,7 +89,7 @@ export default async function HomePage() {
             action={<Link href="/destinations" className={buttonVariants({ variant: "outline", size: "sm" })}>All destinations</Link>}
           />
           <div className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-2 no-scrollbar sm:mx-0 sm:grid sm:grid-cols-3 sm:px-0 lg:grid-cols-6">
-            {destinations.map((d) => (
+            {destinations.filter((d) => d._count.packages > 0).map((d) => (
               <Link
                 key={d.id}
                 href={`/destinations/${d.slug}`}
@@ -238,8 +234,8 @@ export default async function HomePage() {
             {[
               { icon: Search, step: "01", title: "Discover", body: "Search destinations or browse curated holiday packages." },
               { icon: SlidersHorizontal, step: "02", title: "Customize", body: "Make it yours — upgrade hotels, add activities, pick dates." },
-              { icon: ShieldCheck, step: "03", title: "Sign in & pay", body: "Sign in to your account and pay securely via Razorpay." },
-              { icon: CreditCard, step: "04", title: "Travel", body: "Get e-tickets & vouchers, then enjoy your trip with support on call." },
+              { icon: ShieldCheck, step: "03", title: "Verify & confirm", body: "Prices are confirmed on our servers before payment. Pay securely when you're ready." },
+              { icon: CreditCard, step: "04", title: "Travel with support", body: "Your travel expert stays with you before, during and after your trip." },
             ].map((s) => (
               <div key={s.step} className="relative rounded-2xl border border-surface-border bg-white p-6">
                 <span className="text-sm font-bold text-brand-orange">{s.step}</span>
@@ -375,9 +371,11 @@ function DestinationTile({ d }: { d: DestTile }) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" aria-hidden />
         <div className="absolute inset-x-0 bottom-0 p-3.5">
           <p className="text-base font-extrabold leading-tight text-white drop-shadow">{d.name}</p>
-          <p className="mt-0.5 text-xs font-medium text-white/85">
-            {d._count.packages > 0 ? `${d._count.packages} package${d._count.packages > 1 ? "s" : ""}` : "Coming soon"}
-          </p>
+          {d._count.packages > 0 && (
+            <p className="mt-0.5 text-xs font-medium text-white/85">
+              {d._count.packages} package{d._count.packages > 1 ? "s" : ""}
+            </p>
+          )}
         </div>
       </div>
     </Link>

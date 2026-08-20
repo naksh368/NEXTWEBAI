@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Nunito } from "next/font/google";
 import "./globals.css";
+import { PromoBar } from "@/components/layout/promo-bar";
 import { HeaderWrapper } from "@/components/layout/header-wrapper";
 import { Footer } from "@/components/layout/footer";
 import { AiFab } from "@/components/layout/ai-fab";
@@ -55,6 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           Skip to content
         </a>
+        <PromoBar />
         <HideOnAdmin><HeaderWrapper /></HideOnAdmin>
         <main id="main" className="flex-1">
           {children}

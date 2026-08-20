@@ -93,7 +93,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
                 <Td className="font-medium">{e.fullName}</Td>
                 <Td><a href={`tel:+91${e.phone}`} className="text-brand-blue hover:underline">+91 {e.phone}</a></Td>
                 <Td className="text-ink-muted">{e.packageName ?? e.destination ?? "—"}</Td>
-                <Td><Pill tone={e.status === "NEW" ? "brand" : e.status === "CONVERTED" ? "success" : "neutral"}>{e.status}</Pill></Td>
+                <Td><Pill tone={e.status === "NEW" ? "brand" : e.status === "WON" ? "success" : e.status === "LOST" ? "danger" : "neutral"}>{e.status}</Pill></Td>
                 <Td className="text-ink-muted">{formatDate(e.createdAt)}</Td>
               </tr>
             ))}

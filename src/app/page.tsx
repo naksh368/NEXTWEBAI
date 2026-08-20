@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {
   ShieldCheck, Wallet, Headset, Sparkles, Search, SlidersHorizontal,
-  BadgeCheck, CreditCard, MapPin, ArrowRight, Star, Plane, Building2,
+  CreditCard, MapPin, ArrowRight, Star, Plane, Building2,
 } from "lucide-react";
 import { Container, Section, SectionHeading } from "@/components/ui/container";
 import { buttonVariants } from "@/components/ui/button";
@@ -11,10 +11,11 @@ import { EmptyState } from "@/components/ui/states";
 import { PackageCard } from "@/components/package/package-card";
 import { SearchBox } from "@/components/home/search-box";
 import { Newsletter } from "@/components/home/newsletter";
+import { EnquireButton } from "@/components/package/enquire-button";
 import { AiAvatar } from "@/components/ui/ai-avatar";
 import {
   getPopularDestinations, getFeaturedPackages, getActiveOffers,
-  getGlobalFaqs, getPublishedReviews,
+  getGlobalFaqs, getPublishedReviews, getAllDestinations,
 } from "@/lib/queries";
 import { formatINR } from "@/lib/utils";
 
@@ -27,13 +28,17 @@ const CATEGORIES = [
 ];
 
 export default async function HomePage() {
-  const [destinations, featured, offers, faqs, reviews] = await Promise.all([
+  const [destinations, featured, offers, faqs, reviews, allDestinations] = await Promise.all([
     getPopularDestinations(),
     getFeaturedPackages(6),
     getActiveOffers(),
     getGlobalFaqs(),
     getPublishedReviews(6),
+    getAllDestinations(),
   ]);
+
+  const indiaDestinations = allDestinations.filter((d) => d.country === "India");
+  const worldDestinations = allDestinations.filter((d) => d.country !== "India");
 
   return (
     <>
@@ -55,13 +60,13 @@ export default async function HomePage() {
             <div className="mx-auto mt-9 max-w-2xl">
               <SearchBox />
             </div>
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-              <Link href="/packages" className={buttonVariants({ variant: "orange", size: "lg" })}>
+            <div className="mx-auto mt-6 flex max-w-md flex-col items-stretch justify-center gap-3 sm:max-w-none sm:flex-row sm:items-center">
+              <Link href="/packages" className={buttonVariants({ variant: "orange", size: "lg", className: "sm:w-auto" })}>
                 Explore Holidays <ArrowRight className="h-4 w-4" />
               </Link>
-              <Link href="/support" className={buttonVariants({ variant: "outline", size: "lg" })}>
-                Talk to an Expert
-              </Link>
+              <div className="sm:w-auto">
+                <EnquireButton label="Enquire now" size="lg" className="sm:w-auto sm:px-6" />
+              </div>
             </div>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm font-medium text-ink">
               <span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-brand-blue" /> 100% real packages</span>
@@ -149,21 +154,71 @@ export default async function HomePage() {
         </Container>
       </Section>
 
-      {/* WHY EXPERTZTRIP */}
-      <Section id="why" className="bg-surface-muted/60 py-14">
+      {/* EXPLORE INDIA + THE WORLD */}
+      {(indiaDestinations.length > 0 || worldDestinations.length > 0) && (
+        <Section className="bg-surface-muted/40">
+          <Container>
+            <div className="mx-auto max-w-2xl text-center">
+              <p className="text-sm font-bold uppercase tracking-[0.16em] text-brand-orange">Handpicked for you</p>
+              <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">India and the world, handpicked for you</h2>
+              <p className="mt-3 text-ink-muted">From the backwaters of Kerala to the beaches of Bali — real, complete holidays curated by our experts.</p>
+            </div>
+
+            {indiaDestinations.length > 0 && (
+              <div className="mt-10">
+                <div className="mb-4 flex items-end justify-between">
+                  <h3 className="flex items-center gap-2 text-xl font-bold text-brand-navy">
+                    <span className="text-2xl">🇮🇳</span> Explore India
+                  </h3>
+                  <Link href="/destinations" className="text-sm font-semibold text-brand-blue hover:underline">View all</Link>
+                </div>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                  {indiaDestinations.slice(0, 10).map((d) => (
+                    <DestinationTile key={d.id} d={d} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {worldDestinations.length > 0 && (
+              <div className="mt-12">
+                <div className="mb-4 flex items-end justify-between">
+                  <h3 className="flex items-center gap-2 text-xl font-bold text-brand-navy">
+                    <span className="text-2xl">🌏</span> Explore the World
+                  </h3>
+                  <Link href="/destinations" className="text-sm font-semibold text-brand-blue hover:underline">View all</Link>
+                </div>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                  {worldDestinations.slice(0, 10).map((d) => (
+                    <DestinationTile key={d.id} d={d} />
+                  ))}
+                </div>
+              </div>
+            )}
+          </Container>
+        </Section>
+      )}
+
+      {/* WHY EXPERTZTRIP / TRUST */}
+      <Section id="why" className="py-14">
         <Container>
-          <SectionHeading eyebrow="Why ExpertzTrip" title="Travel with confidence" />
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-bold uppercase tracking-[0.16em] text-brand-orange">Why ExpertzTrip</p>
+            <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Travel with confidence</h2>
+            <p className="mt-3 text-ink-muted">More than a booking — a better way to travel.</p>
+          </div>
+          <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { icon: BadgeCheck, title: "Real, complete packages", body: "Every trip includes flights, hotels, transfers and activities — no hidden surprises." },
-              { icon: Wallet, title: "Clear, server-verified pricing", body: "The price you see is calculated and confirmed on our servers before you ever pay." },
-              { icon: Headset, title: "Expert human support", body: "Real travel experts help before, during and after your holiday." },
+              { icon: Sparkles, title: "Personalized holidays", body: "Tailor every trip — hotels, dates, activities and more, built around you." },
+              { icon: Wallet, title: "Transparent pricing", body: "The price you see is verified on our servers before you ever pay. No surprises." },
+              { icon: Headset, title: "Expert travel support", body: "Real travel experts help you before, during and after your holiday." },
+              { icon: ShieldCheck, title: "Secure online booking", body: "Book and pay securely online, with confirmation and documents in your account." },
             ].map((f) => (
-              <div key={f.title} className="rounded-2xl border border-surface-border bg-white p-6">
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-orangeLight text-brand-orange">
+              <div key={f.title} className="rounded-2xl border border-surface-border bg-white p-6 transition-shadow hover:shadow-card">
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-blueLight text-brand-blue">
                   <f.icon className="h-5 w-5" />
                 </span>
-                <h3 className="mt-4 text-lg font-semibold">{f.title}</h3>
+                <h3 className="mt-4 text-base font-bold">{f.title}</h3>
                 <p className="mt-1.5 text-sm text-ink-muted">{f.body}</p>
               </div>
             ))}
@@ -179,7 +234,7 @@ export default async function HomePage() {
             {[
               { icon: Search, step: "01", title: "Discover", body: "Search destinations or browse curated holiday packages." },
               { icon: SlidersHorizontal, step: "02", title: "Customize", body: "Make it yours — upgrade hotels, add activities, pick dates." },
-              { icon: ShieldCheck, step: "03", title: "Verify & pay", body: "Confirm with a mobile OTP and pay securely via Razorpay." },
+              { icon: ShieldCheck, step: "03", title: "Sign in & pay", body: "Sign in to your account and pay securely via Razorpay." },
               { icon: CreditCard, step: "04", title: "Travel", body: "Get e-tickets & vouchers, then enjoy your trip with support on call." },
             ].map((s) => (
               <div key={s.step} className="relative rounded-2xl border border-surface-border bg-white p-6">
@@ -291,5 +346,36 @@ export default async function HomePage() {
         </Container>
       </Section>
     </>
+  );
+}
+
+type DestTile = {
+  id: string; slug: string; name: string; country: string;
+  region?: string | null; thumbnail: string | null; shortSummary?: string | null;
+  _count: { packages: number };
+};
+
+function DestinationTile({ d }: { d: DestTile }) {
+  return (
+    <Link
+      href={`/destinations/${d.slug}`}
+      className="group relative block overflow-hidden rounded-2xl shadow-card transition-shadow hover:shadow-cardHover"
+    >
+      <div className="relative aspect-[4/5]">
+        <SmartImage
+          src={d.thumbnail}
+          alt={`${d.name} holiday packages`}
+          sizes="(max-width:640px) 45vw, (max-width:1024px) 30vw, 18vw"
+          imgClassName="transition-transform duration-500 group-hover:scale-110"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" aria-hidden />
+        <div className="absolute inset-x-0 bottom-0 p-3.5">
+          <p className="text-base font-extrabold leading-tight text-white drop-shadow">{d.name}</p>
+          <p className="mt-0.5 text-xs font-medium text-white/85">
+            {d._count.packages > 0 ? `${d._count.packages} package${d._count.packages > 1 ? "s" : ""}` : "Coming soon"}
+          </p>
+        </div>
+      </div>
+    </Link>
   );
 }

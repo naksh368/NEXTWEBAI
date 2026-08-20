@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Menu, X, LifeBuoy, Luggage, User } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import { buttonVariants } from "@/components/ui/button";
+import { EnquireButton } from "@/components/package/enquire-button";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -49,12 +50,13 @@ export function Header({ isSignedIn }: HeaderProps) {
         </div>
 
         <div className="flex items-center gap-1 sm:gap-2">
-          <Link href="/support" className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-ink-muted hover:bg-surface-muted hover:text-brand-navy sm:inline-flex">
-            <LifeBuoy className="h-4 w-4" /> Help
-          </Link>
-          <Link href="/account/trips" className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-ink-muted hover:bg-surface-muted hover:text-brand-navy sm:inline-flex">
+          <Link href="/account/trips" className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-ink-muted hover:bg-surface-muted hover:text-brand-navy lg:inline-flex">
             <Luggage className="h-4 w-4" /> My Trips
           </Link>
+
+          <div className="hidden sm:block">
+            <EnquireButton label="Enquire" className="w-auto border-brand-orange text-brand-orange hover:bg-brand-orangeLight" />
+          </div>
 
           {isSignedIn ? (
             <Link
@@ -94,6 +96,9 @@ export function Header({ isSignedIn }: HeaderProps) {
             <Link href="/account/trips" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-[15px] font-medium text-ink hover:bg-surface-muted">
               <Luggage className="h-4 w-4" /> My Trips
             </Link>
+            <div className="mt-1" onClick={() => setOpen(false)}>
+              <EnquireButton label="Enquire now" className="border-brand-orange text-brand-orange hover:bg-brand-orangeLight" />
+            </div>
             {isSignedIn ? (
               <Link href="/account" onClick={() => setOpen(false)} className={buttonVariants({ variant: "primary", size: "sm", className: "mt-2 w-full" })}>
                 My Account

@@ -58,21 +58,22 @@ export default async function AdminEnquiriesPage({ searchParams }: { searchParam
                 {e.email && <div className="text-xs text-ink-muted">{e.email}</div>}
               </Td>
               <Td>
-                <div className="text-sm">{e.packageName ?? e.destination ?? "—"}</div>
+                <div className="flex items-center gap-1.5 text-sm">
+                  {e.packageName ?? e.destination ?? "—"}
+                  {e.wantsDiscount && <Pill tone="brand">20% off</Pill>}
+                </div>
                 <div className="text-xs text-ink-muted">
                   {[
-                    e.adults != null ? `${e.adults} adult${e.adults === 1 ? "" : "s"}` : (e.travellers ? `${e.travellers} pax` : null),
-                    e.children ? `${e.children} child${e.children === 1 ? "" : "ren"}` : null,
+                    e.travellers ? `${e.travellers} pax` : null,
+                    e.nights ? `${e.nights} nights` : null,
                     e.travelDate || null,
                   ].filter(Boolean).join(" · ") || "—"}
                 </div>
               </Td>
               <Td className="text-xs text-ink-muted">
                 {[
-                  e.roomType || null,
-                  e.flightType && e.flightType !== "Not required" ? `${e.flightType} flights` : null,
-                  e.hotelCategory && e.hotelCategory !== "Any" ? e.hotelCategory : null,
-                  e.preferredTime && e.preferredTime !== "Anytime" ? `Call ${e.preferredTime}` : null,
+                  e.budget || null,
+                  e.bookingPlan ? `Books: ${e.bookingPlan}` : null,
                 ].filter(Boolean).join(" · ") || "—"}
                 {e.message && <div className="mt-1 max-w-[220px] truncate italic text-ink-faint">“{e.message}”</div>}
               </Td>

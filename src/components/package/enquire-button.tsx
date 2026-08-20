@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MessageCircle, Phone, X, Send, CheckCircle2, Loader2, Minus, Plus } from "lucide-react";
+import { MessageCircle, Phone, X, Send, CheckCircle2, Loader2, ArrowLeft, ArrowRight, Clock } from "lucide-react";
 import { EXPERT_PHONE, whatsappLink, telLink } from "@/lib/contact";
 import { cn } from "@/lib/utils";
 
@@ -14,35 +14,10 @@ interface EnquireButtonProps {
   size?: "md" | "lg";
 }
 
-function Stepper({ label, hint, value, min, onChange }: { label: string; hint: string; value: number; min: number; onChange: (v: number) => void }) {
-  return (
-    <div className="rounded-xl border border-surface-border p-2.5">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-semibold text-brand-navy">{label}</p>
-          <p className="text-[11px] text-ink-faint">{hint}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button type="button" onClick={() => onChange(Math.max(min, value - 1))} disabled={value <= min}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-surface-border disabled:opacity-40" aria-label={`Decrease ${label}`}>
-            <Minus className="h-3.5 w-3.5" />
-          </button>
-          <span className="w-5 text-center text-sm font-bold tabular-nums">{value}</span>
-          <button type="button" onClick={() => onChange(Math.min(99, value + 1))}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-surface-border" aria-label={`Increase ${label}`}>
-            <Plus className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
+const BUDGETS = ["Under ₹25,000", "₹25,000 – ₹50,000", "₹50,000 – ₹1,00,000", "₹1,00,000 – ₹2,00,000", "Above ₹2,00,000"];
+const NIGHTS = ["2 – 3 nights", "4 – 5 nights", "6 – 7 nights", "8 – 10 nights", "More than 10 nights"];
 const TRAVEL_TYPES = ["Family", "Couple", "Honeymoon", "Friends", "Solo", "Luxury", "Adventure"];
-const HOTEL_CATEGORIES = ["Any", "3 Star", "4 Star", "5 Star"];
-const ROOM_TYPES = ["Twin Sharing", "Triple Sharing", "Single Room"];
-const FLIGHT_TYPES = ["Domestic", "International", "Not required"];
-const CALL_TIMES = ["Anytime", "10 AM – 12 PM", "12 – 2 PM", "2 – 4 PM", "4 – 6 PM", "After 6 PM"];
+const BOOKING_PLANS = ["This week", "This month", "In 1 – 3 months", "Just exploring"];
 
 export function EnquireButton({
   packageName,
@@ -53,24 +28,23 @@ export function EnquireButton({
   size = "md",
 }: EnquireButtonProps) {
   const [open, setOpen] = useState(false);
+  const [step, setStep] = useState<1 | 2>(1);
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // form state
+  // Step 1
   const [fullName, setFullName] = useState("");
-  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [destination, setDestination] = useState(packageName ?? "");
+  const [phone, setPhone] = useState("");
+  const [wantsDiscount, setWantsDiscount] = useState(true);
+  // Step 2
+  const [budget, setBudget] = useState("");
+  const [nights, setNights] = useState("");
+  const [travelType, setTravelType] = useState("");
+  const [travellers, setTravellers] = useState("");
+  const [bookingPlan, setBookingPlan] = useState("");
   const [travelDate, setTravelDate] = useState("");
-  const [adults, setAdults] = useState(2);
-  const [children, setChildren] = useState(0);
-  const [roomType, setRoomType] = useState<string>("Twin Sharing");
-  const [flightType, setFlightType] = useState<string>("Domestic");
-  const [travelType, setTravelType] = useState<string>("");
-  const [hotelCategory, setHotelCategory] = useState<string>("Any");
-  const [preferredTime, setPreferredTime] = useState<string>("Anytime");
-  const [message, setMessage] = useState("");
 
   const waMessage = packageName
     ? `Hi ExpertzTrip 👋\n\nI'm interested in the "${packageName}" holiday. Please help me with dates, pricing and what's included.`
@@ -78,9 +52,22 @@ export function EnquireButton({
 
   function close() {
     setOpen(false);
-    // reset success after close so re-open shows the form again
-    setTimeout(() => { setSent(false); setError(null); }, 300);
+    setTimeout(() => { setSent(false); setError(null); setStep(1); }, 300);
   }
+
+  function goNext(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (!fullName.trim()) return setError("Please enter your full name.");
+    if (!email.trim()) return setError("Please enter your email.");
+    if (phone.trim().length < 6) return setError("Please enter a valid phone number.");
+    setStep(2);
+  }
+
+  const nightsToInt = (s: string) => {
+    const m = s.match(/\d+/);
+    return m ? Number(m[0]) : undefined;
+  };
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -91,12 +78,15 @@ export function EnquireButton({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          fullName, phone, email, destination,
+          fullName, email, phone,
           packageSlug: packageSlug ?? undefined,
           packageName: packageName ?? undefined,
-          travelDate, travellers: adults + children, adults, children,
-          roomType, flightType,
-          travelType, hotelCategory, preferredTime, message,
+          destination: packageName ?? undefined,
+          budget, nights: nightsToInt(nights),
+          travelType,
+          travellers: travellers ? Number(travellers) : undefined,
+          bookingPlan, travelDate,
+          wantsDiscount,
           source: packageSlug ? "PACKAGE" : "WEBSITE",
         }),
       });
@@ -119,11 +109,8 @@ export function EnquireButton({
         ? "border-2 border-white/70 bg-white/10 text-white backdrop-blur hover:bg-white/20"
         : "border-2 border-brand-blue bg-white text-brand-blue hover:bg-brand-blueLight";
 
-  const chip = (active: boolean) =>
-    cn(
-      "rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
-      active ? "border-brand-blue bg-brand-blue text-white" : "border-surface-border bg-white text-ink hover:border-brand-blue/50"
-    );
+  const inputCls = "h-11 w-full rounded-xl border border-surface-border bg-surface-muted/40 px-3.5 text-sm focus:border-brand-blue focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-blue/10";
+  const labelCls = "mb-1 block text-sm font-semibold text-brand-navy";
 
   return (
     <>
@@ -139,20 +126,21 @@ export function EnquireButton({
           aria-modal="true"
         >
           <div
-            className="my-0 w-full max-w-lg rounded-t-3xl bg-white shadow-2xl animate-fade-in sm:my-8 sm:rounded-3xl"
+            className="my-0 w-full max-w-md rounded-t-3xl bg-white shadow-2xl animate-fade-in sm:my-8 sm:rounded-3xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-start justify-between gap-4 border-b border-surface-border p-5 sm:p-6">
-              <div>
-                <h3 className="text-xl font-extrabold text-brand-navy">Create my holiday</h3>
-                <p className="mt-1 text-sm text-ink-muted">
-                  {packageName ? `Enquiring about "${packageName}".` : "Tell us your plan"} — our experts reply fast. No login needed.
-                </p>
-              </div>
-              <button onClick={close} aria-label="Close" className="-mr-1 -mt-1 rounded-lg p-1 text-ink-muted hover:bg-surface-muted hover:text-ink">
+            <div className="relative px-6 pt-6">
+              <button onClick={close} aria-label="Close" className="absolute right-4 top-4 rounded-lg p-1 text-ink-muted hover:bg-surface-muted hover:text-ink">
                 <X className="h-5 w-5" />
               </button>
+              <h3 className="text-center text-2xl font-extrabold text-brand-navy">Please submit your info</h3>
+              {!sent && <p className="mt-1 text-center text-sm text-ink-muted">Step {step} of 2</p>}
+              {!sent && (
+                <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-surface-muted">
+                  <div className="h-full rounded-full bg-brand-blue transition-all duration-300" style={{ width: step === 1 ? "50%" : "100%" }} />
+                </div>
+              )}
             </div>
 
             {sent ? (
@@ -174,87 +162,92 @@ export function EnquireButton({
                 </a>
                 <button onClick={close} className="mt-3 text-sm font-semibold text-ink-muted hover:text-ink">Close</button>
               </div>
-            ) : (
-              <form onSubmit={submit} className="max-h-[70vh] space-y-4 overflow-y-auto p-5 sm:p-6">
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <input required value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Full name *" className="h-11 rounded-xl border border-surface-border px-3.5 text-sm focus:border-brand-blue focus:outline-none focus:ring-4 focus:ring-brand-blue/10" />
-                  <div className="flex items-center gap-2 rounded-xl border border-surface-border px-3.5 focus-within:border-brand-blue focus-within:ring-4 focus-within:ring-brand-blue/10">
-                    <span className="text-sm font-semibold text-ink-muted">+91</span>
-                    <input required type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value.replace(/[^\d]/g, ""))} placeholder="Mobile *" className="h-11 w-full bg-transparent text-sm focus:outline-none" />
+            ) : step === 1 ? (
+              <form onSubmit={goNext} className="space-y-4 p-6">
+                <div>
+                  <label className={labelCls}>Full name *</label>
+                  <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Your full name" className={inputCls} autoFocus />
+                </div>
+                <div>
+                  <label className={labelCls}>Email *</label>
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className={inputCls} />
+                </div>
+                <div>
+                  <label className={labelCls}>Phone *</label>
+                  <div className="flex items-center gap-2 rounded-xl border border-surface-border bg-surface-muted/40 px-3.5 focus-within:border-brand-blue focus-within:bg-white focus-within:ring-4 focus-within:ring-brand-blue/10">
+                    <span className="text-sm font-semibold text-ink-muted">🇮🇳 +91</span>
+                    <input type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value.replace(/[^\d]/g, ""))} placeholder="10 digit number" className="h-11 w-full bg-transparent text-sm focus:outline-none" />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email address" className="h-11 rounded-xl border border-surface-border px-3.5 text-sm focus:border-brand-blue focus:outline-none focus:ring-4 focus:ring-brand-blue/10" />
-                  <input value={destination} onChange={(e) => setDestination(e.target.value)} placeholder="Destination" className="h-11 rounded-xl border border-surface-border px-3.5 text-sm focus:border-brand-blue focus:outline-none focus:ring-4 focus:ring-brand-blue/10" />
-                </div>
-
-                <div>
-                  <label className="mb-1 block text-xs font-semibold text-ink-muted">Travel date</label>
-                  <input type="date" value={travelDate} onChange={(e) => setTravelDate(e.target.value)} className="h-11 w-full rounded-xl border border-surface-border px-3.5 text-sm focus:border-brand-blue focus:outline-none focus:ring-4 focus:ring-brand-blue/10" />
-                </div>
-
-                {/* Travellers — adults & children */}
-                <div className="grid grid-cols-2 gap-3">
-                  <Stepper label="Adults" hint="12+ yrs" value={adults} min={1} onChange={setAdults} />
-                  <Stepper label="Children" hint="2–11 yrs" value={children} min={0} onChange={setChildren} />
-                </div>
-
-                <div>
-                  <label className="mb-1.5 block text-xs font-semibold text-ink-muted">Room type</label>
-                  <div className="flex flex-wrap gap-2">
-                    {ROOM_TYPES.map((r) => (
-                      <button type="button" key={r} onClick={() => setRoomType(r)} className={chip(roomType === r)}>{r}</button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="mb-1.5 block text-xs font-semibold text-ink-muted">Flights</label>
-                  <div className="flex flex-wrap gap-2">
-                    {FLIGHT_TYPES.map((f) => (
-                      <button type="button" key={f} onClick={() => setFlightType(f)} className={chip(flightType === f)}>{f}</button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="mb-1.5 block text-xs font-semibold text-ink-muted">Type of holiday</label>
-                  <div className="flex flex-wrap gap-2">
-                    {TRAVEL_TYPES.map((t) => (
-                      <button type="button" key={t} onClick={() => setTravelType(travelType === t ? "" : t)} className={chip(travelType === t)}>{t}</button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="mb-1.5 block text-xs font-semibold text-ink-muted">Preferred hotel category</label>
-                  <div className="flex flex-wrap gap-2">
-                    {HOTEL_CATEGORIES.map((h) => (
-                      <button type="button" key={h} onClick={() => setHotelCategory(h)} className={chip(hotelCategory === h)}>{h}</button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="mb-1.5 block text-xs font-semibold text-ink-muted">Preferred time to call</label>
-                  <div className="flex flex-wrap gap-2">
-                    {CALL_TIMES.map((t) => (
-                      <button type="button" key={t} onClick={() => setPreferredTime(t)} className={chip(preferredTime === t)}>{t}</button>
-                    ))}
-                  </div>
-                </div>
-
-                <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={3} placeholder="Anything specific? (optional)" className="w-full rounded-xl border border-surface-border px-3.5 py-2.5 text-sm focus:border-brand-blue focus:outline-none focus:ring-4 focus:ring-brand-blue/10" />
+                <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-surface-border bg-surface-muted/40 p-3.5">
+                  <input type="checkbox" checked={wantsDiscount} onChange={(e) => setWantsDiscount(e.target.checked)} className="h-5 w-5 shrink-0 accent-brand-blue" />
+                  <span className="text-sm font-semibold text-brand-navy">Yes, I want <span className="text-brand-orange">20% off</span></span>
+                </label>
 
                 {error && <p className="text-sm font-medium text-danger">{error}</p>}
 
-                <button type="submit" disabled={loading} className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-orange text-base font-bold text-white transition-colors hover:bg-brand-orangeDark disabled:opacity-60">
-                  {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</> : "Create My Holiday"}
+                <button type="submit" className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-navy text-base font-bold text-white transition-colors hover:bg-black">
+                  Next <ArrowRight className="h-4 w-4" />
                 </button>
 
-                {/* Quick contact */}
-                <div className="flex items-center gap-3 pt-1">
+                <p className="flex items-center justify-center gap-1.5 rounded-lg bg-brand-orangeLight px-3 py-2 text-xs font-medium text-brand-orangeDark">
+                  <Clock className="h-3.5 w-3.5" /> Limited slots — we&apos;re receiving heavy enquiries. Reserve early.
+                </p>
+              </form>
+            ) : (
+              <form onSubmit={submit} className="space-y-4 p-6">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className={labelCls}>What&apos;s your budget? *</label>
+                    <select required value={budget} onChange={(e) => setBudget(e.target.value)} className={inputCls}>
+                      <option value="">Select budget</option>
+                      {BUDGETS.map((b) => <option key={b} value={b}>{b}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelCls}>How many nights? *</label>
+                    <select required value={nights} onChange={(e) => setNights(e.target.value)} className={inputCls}>
+                      <option value="">Select nights</option>
+                      {NIGHTS.map((n) => <option key={n} value={n}>{n}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelCls}>Purpose of travel? *</label>
+                    <select required value={travelType} onChange={(e) => setTravelType(e.target.value)} className={inputCls}>
+                      <option value="">Select travel type</option>
+                      {TRAVEL_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelCls}>How many travellers? *</label>
+                    <input required type="number" min={1} max={99} value={travellers} onChange={(e) => setTravellers(e.target.value)} placeholder="e.g. 4" className={inputCls} />
+                  </div>
+                </div>
+                <div>
+                  <label className={labelCls}>How soon are you planning to book? *</label>
+                  <select required value={bookingPlan} onChange={(e) => setBookingPlan(e.target.value)} className={inputCls}>
+                    <option value="">Select booking plan</option>
+                    {BOOKING_PLANS.map((b) => <option key={b} value={b}>{b}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className={labelCls}>When do you plan to travel? *</label>
+                  <input required type="date" value={travelDate} onChange={(e) => setTravelDate(e.target.value)} className={inputCls} />
+                </div>
+
+                {error && <p className="text-sm font-medium text-danger">{error}</p>}
+
+                <div className="flex items-center gap-3">
+                  <button type="button" onClick={() => { setStep(1); setError(null); }} className="inline-flex h-12 flex-1 items-center justify-center gap-1.5 rounded-xl border-2 border-surface-border font-semibold text-ink transition-colors hover:bg-surface-muted">
+                    <ArrowLeft className="h-4 w-4" /> Back
+                  </button>
+                  <button type="submit" disabled={loading} className="inline-flex h-12 flex-[1.5] items-center justify-center gap-2 rounded-xl bg-brand-blue font-bold text-white transition-colors hover:bg-brand-blueDark disabled:opacity-60">
+                    {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</> : "Submit Enquiry"}
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-3 border-t border-surface-border pt-3">
                   <a href={whatsappLink(waMessage)} target="_blank" rel="noopener noreferrer" className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border-2 border-[#25D366]/50 text-sm font-semibold text-[#128C4B] transition-colors hover:bg-[#25D366]/10">
                     <Send className="h-4 w-4" /> WhatsApp
                   </a>

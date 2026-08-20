@@ -812,12 +812,15 @@ model Enquiry {
   travellers    Int?
   adults        Int?
   children      Int?
+  nights        Int?     // number of nights wanted
   roomType      String?  // Twin Sharing | Triple Sharing | Single Room
   flightType    String?  // Domestic | International | Not required
   budget        String?  // budget band label
+  bookingPlan   String?  // how soon: This week | This month | 1-3 months | Just exploring
   travelType    String?  // Family | Couple | Honeymoon | Friends | Solo | Luxury | Adventure
   hotelCategory String?  // Any | 3 Star | 4 Star | 5 Star
   preferredTime String?  // Anytime | 10 AM - 12 PM | ...
+  wantsDiscount Boolean  @default(false) // opted into the 20% off offer
   message       String?
   status        String   @default("NEW") // NEW | CONTACTED | QUOTED | CONVERTED | CLOSED
   source        String   @default("WEBSITE") // WEBSITE | PACKAGE | WHATSAPP

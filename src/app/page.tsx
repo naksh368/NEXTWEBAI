@@ -47,7 +47,11 @@ export default async function HomePage() {
         <div className="absolute inset-0 hero-wash" aria-hidden />
         <Container className="relative py-16 sm:py-24">
           <div className="mx-auto max-w-3xl text-center">
-            <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand-orange">
+            <span className="inline-flex items-center gap-2 rounded-full bg-brand-orangeLight px-4 py-1.5 text-sm font-bold text-brand-orangeDark">
+              <span className="flex h-5 items-center rounded-full bg-brand-orange px-2 text-xs font-extrabold text-white">20% OFF</span>
+              Limited-time savings on handpicked holidays
+            </span>
+            <p className="mt-4 text-sm font-bold uppercase tracking-[0.18em] text-brand-orange">
               India &amp; the world, handpicked for you
             </p>
             <h1 className="mt-4 text-5xl font-extrabold leading-[1.05] tracking-tight sm:text-7xl">

@@ -12,7 +12,6 @@ import { Card, CardBody } from "@/components/ui/card";
 import { Accordion } from "@/components/ui/accordion";
 import { SmartImage } from "@/components/ui/smart-image";
 import { Itinerary } from "@/components/package/itinerary";
-import { CustomizationPanel, type OptionVM } from "@/components/package/customization-panel";
 import { EnquireButton } from "@/components/package/enquire-button";
 import { getPackageBySlug } from "@/lib/queries";
 import { formatINR } from "@/lib/utils";
@@ -58,12 +57,6 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
     { icon: Ticket, label: "Activities", on: kinds.has("ACTIVITY") || cats.has("ACTIVITY") },
     { icon: Utensils, label: "Daily breakfast", on: kinds.has("MEAL") || cats.has("MEAL") },
   ];
-
-  const optionsVM: OptionVM[] = v.options.map((o) => ({
-    id: o.id, category: o.category, groupKey: o.groupKey, label: o.label,
-    description: o.description, priceDelta: o.priceDelta, perPerson: o.perPerson, isDefault: o.isDefault,
-  }));
-  const departuresVM = v.departures.map((d) => ({ id: d.id, date: d.date.toISOString(), priceDelta: d.priceDelta }));
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -239,56 +232,42 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
             )}
           </div>
 
-          {/* Right sticky panel */}
-          <div className="lg:col-span-1" id="customize">
+          {/* Right sticky panel — enquiry led */}
+          <div className="lg:col-span-1" id="enquire">
             <div className="lg:sticky lg:top-20">
               <Card>
                 <CardBody>
-                  {reviewRequired ? (
-                    <div>
-                      <div className="mb-3 flex items-center justify-between">
-                        <h2 className="text-lg font-bold">Get your price</h2>
-                        <Badge tone="warning">On request</Badge>
+                  <div className="flex items-center justify-between">
+                    {reviewRequired ? (
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-ink-faint">Pricing</p>
+                        <p className="text-2xl font-extrabold text-brand-navy">Price on request</p>
                       </div>
-                      <p className="text-sm text-ink-muted">
-                        This holiday is priced against a verified market benchmark before we publish a live rate. Tell us your dates and travellers and our experts confirm the best price — usually within a few hours.
-                      </p>
-                      <ul className="mt-4 space-y-2 text-sm text-ink">
-                        <li className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-brand-blue" /> No booking until you approve the price</li>
-                        <li className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-brand-blue" /> Fully customizable itinerary</li>
-                      </ul>
-                      <div className="mt-5">
-                        <EnquireButton packageName={pkg.name} packageSlug={pkg.slug} variant="solid" label="Enquire & get a quote" className="!bg-brand-orange hover:!bg-brand-orangeDark" />
+                    ) : (
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-ink-faint">Starting from</p>
+                        <p className="text-3xl font-extrabold text-brand-navy">{formatINR(v.basePrice)}</p>
+                        <p className="text-xs text-ink-muted">per person</p>
                       </div>
-                      <p className="mt-2 text-center text-xs text-ink-muted">No login needed — talk to us directly.</p>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="mb-4 flex items-center justify-between">
-                        <h2 className="text-lg font-bold">Make this holiday yours</h2>
-                        <Badge tone="info"><ShieldCheck className="h-3 w-3" /> Live price</Badge>
-                      </div>
-                      <CustomizationPanel
-                        versionId={v.id}
-                        packageSlug={pkg.slug}
-                        basePrice={v.basePrice}
-                        currency={v.currency}
-                        minTravellers={v.minTravellers}
-                        maxTravellers={v.maxTravellers}
-                        allow={{
-                          hotel: v.allowHotelChange, flight: v.allowFlightChange,
-                          transfer: v.allowTransferChange, meal: v.allowMealChange,
-                          activity: v.allowActivityChange, addons: v.allowAddons, date: v.allowDateChange,
-                        }}
-                        options={optionsVM}
-                        departures={departuresVM}
-                      />
-                      <div className="mt-4 border-t border-surface-border pt-4">
-                        <p className="mb-2 text-center text-xs text-ink-muted">Prefer to plan with an expert?</p>
-                        <EnquireButton packageName={pkg.name} packageSlug={pkg.slug} />
-                      </div>
-                    </>
-                  )}
+                    )}
+                    <Badge tone="brand">20% OFF</Badge>
+                  </div>
+
+                  <div className="mt-4 rounded-xl bg-brand-blueLight/50 p-3 text-sm text-brand-blue">
+                    <p className="font-semibold">Enquire now &amp; save up to 20%</p>
+                    <p className="mt-0.5 text-xs text-brand-blue/80">Share your details and our experts craft your best-price holiday — usually within a few hours.</p>
+                  </div>
+
+                  <ul className="mt-4 space-y-2 text-sm text-ink">
+                    <li className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-brand-blue" /> Fully customizable itinerary</li>
+                    <li className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-brand-blue" /> Transparent pricing — no hidden costs</li>
+                    <li className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-brand-blue" /> Expert support, no obligation</li>
+                  </ul>
+
+                  <div className="mt-5">
+                    <EnquireButton packageName={pkg.name} packageSlug={pkg.slug} variant="solid" size="lg" label="Enquire now" className="!bg-brand-orange hover:!bg-brand-orangeDark" />
+                  </div>
+                  <p className="mt-2 text-center text-xs text-ink-muted">No login needed — talk to us directly.</p>
                 </CardBody>
               </Card>
             </div>
@@ -309,13 +288,8 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
               </>
             )}
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-[130px]">
-              <EnquireButton packageName={pkg.name} packageSlug={pkg.slug} label="Enquire" />
-            </div>
-            <Link href="#customize" className="inline-flex h-11 items-center justify-center rounded-xl bg-brand-orange px-5 font-semibold text-white">
-              {reviewRequired ? "Get a quote" : "Book now"}
-            </Link>
+          <div className="w-[190px]">
+            <EnquireButton packageName={pkg.name} packageSlug={pkg.slug} variant="solid" label="Enquire now" className="!bg-brand-orange hover:!bg-brand-orangeDark" />
           </div>
         </div>
       </div>

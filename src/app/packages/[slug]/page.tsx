@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import {
-  Plane, BedDouble, Car, Ticket, Utensils, Clock, MapPin,
-  Check, X, Info, ShieldCheck, Download,
+  Plane, BedDouble, Ticket, Utensils, Clock, MapPin,
+  Check, X, Info, ShieldCheck, Download, Star, Users, Luggage, Sparkles,
 } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
@@ -14,11 +14,27 @@ import { SmartImage } from "@/components/ui/smart-image";
 import { Itinerary } from "@/components/package/itinerary";
 import { CustomizationPanel, type OptionVM } from "@/components/package/customization-panel";
 import { EnquireButton } from "@/components/package/enquire-button";
-import { getPackageBySlug } from "@/lib/queries";
+import { PackageCard } from "@/components/package/package-card";
+import { getPackageBySlug, getSimilarPackages } from "@/lib/queries";
 import { formatINR } from "@/lib/utils";
+
+const CATEGORY_LABEL: Record<string, string> = {
+  PREMIUM: "Premium", LUXURY: "Luxury", SIGNATURE: "Most Popular",
+  HONEYMOON: "Best for Couples", FAMILY: "Best for Families", FIRST_ESCAPE: "Best Value",
+};
+const AVAILABILITY_META: Record<string, { label: string; tone: "success" | "warning" | "info" | "danger" }> = {
+  AVAILABLE: { label: "Available", tone: "success" },
+  LIMITED: { label: "Limited availability", tone: "warning" },
+  ON_REQUEST: { label: "On request", tone: "info" },
+  UNAVAILABLE: { label: "Currently unavailable", tone: "danger" },
+};
 
 function asStringArray(v: unknown): string[] {
   return Array.isArray(v) ? (v.filter((x) => typeof x === "string") as string[]) : [];
+}
+
+function quickFactsOn(kind: string, kinds: Set<string>, cats: Set<string>): boolean {
+  return kinds.has(kind) || cats.has(kind);
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -51,19 +67,30 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
 
   const kinds = new Set(v.days.flatMap((d) => d.items.map((i) => i.kind)));
   const cats = new Set(v.options.map((o) => o.category));
-  const quickFacts = [
-    { icon: Plane, label: "Return flights", on: kinds.has("FLIGHT") || cats.has("FLIGHT") },
-    { icon: BedDouble, label: `${v.durationNights} nights hotel`, on: true },
-    { icon: Car, label: "Airport transfers", on: kinds.has("TRANSFER") || cats.has("TRANSFER") },
-    { icon: Ticket, label: "Activities", on: kinds.has("ACTIVITY") || cats.has("ACTIVITY") },
-    { icon: Utensils, label: "Daily breakfast", on: kinds.has("MEAL") || cats.has("MEAL") },
-  ];
 
   const optionsVM: OptionVM[] = v.options.map((o) => ({
     id: o.id, category: o.category, groupKey: o.groupKey, label: o.label,
     description: o.description, priceDelta: o.priceDelta, perPerson: o.perPerson, isDefault: o.isDefault,
   }));
   const departuresVM = v.departures.map((d) => ({ id: d.id, date: d.date.toISOString(), priceDelta: d.priceDelta }));
+
+  // Real, data-backed only — never fabricated.
+  const reviews = pkg.reviews ?? [];
+  const reviewCount = reviews.length;
+  const avgRating = reviewCount ? Math.round((reviews.reduce((s, r) => s + r.rating, 0) / reviewCount) * 10) / 10 : null;
+  const bestFor = (v.bestFor ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+  const categoryLabel = v.category ? CATEGORY_LABEL[v.category] : null;
+  const availability = AVAILABILITY_META[v.availabilityStatus] ?? null;
+  const similar = await getSimilarPackages(pkg.destinationId, pkg.theme, pkg.id, 3);
+
+  const glance = [
+    { icon: Clock, label: "Duration", value: `${v.durationNights}N / ${v.durationDays}D` },
+    { icon: Plane, label: "Flights", value: v.flightSector || (quickFactsOn("FLIGHT", kinds, cats) ? "Included" : "Not published") },
+    { icon: BedDouble, label: "Hotel", value: v.roomCategory || `${v.durationNights} nights` },
+    { icon: Utensils, label: "Meals", value: v.mealPlan || (quickFactsOn("MEAL", kinds, cats) ? "Breakfast included" : "Not published") },
+    { icon: Ticket, label: "Sightseeing", value: quickFactsOn("ACTIVITY", kinds, cats) ? "Included" : "Not published" },
+    { icon: Luggage, label: "Baggage", value: v.baggage || "As per airline" },
+  ];
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -72,6 +99,9 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
     description: v.summary,
     image: images.map((i) => i.url),
     brand: { "@type": "Brand", name: "ExpertzTrip" },
+    ...(avgRating !== null && reviewCount > 0
+      ? { aggregateRating: { "@type": "AggregateRating", ratingValue: avgRating, reviewCount } }
+      : {}),
     offers: {
       "@type": "Offer",
       priceCurrency: v.currency,
@@ -111,15 +141,45 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
         {/* Header */}
         <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <div className="flex items-center gap-2 text-sm text-ink-muted">
-              <MapPin className="h-4 w-4 text-brand-orange" /> {pkg.destination.name}, {pkg.destination.country}
+            <div className="flex flex-wrap items-center gap-2 text-sm text-ink-muted">
+              <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4 text-brand-orange" /> {pkg.destination.name}, {pkg.destination.country}</span>
               <span className="text-ink-faint">·</span>
-              <Clock className="h-4 w-4" /> {v.durationNights}N / {v.durationDays}D
+              <span className="inline-flex items-center gap-1"><Clock className="h-4 w-4" /> {v.durationNights}N / {v.durationDays}D</span>
+              {categoryLabel && (
+                <Badge tone="brand"><Sparkles className="h-3 w-3" /> {categoryLabel}</Badge>
+              )}
+              {availability && (availability.tone === "warning" || availability.tone === "info") && (
+                <Badge tone={availability.tone}>{availability.label}</Badge>
+              )}
             </div>
             <h1 className="mt-2 text-2xl font-bold sm:text-3xl">{pkg.name}</h1>
-            {v.summary && <p className="mt-2 max-w-2xl text-ink-muted">{v.summary}</p>}
+
+            {/* Real rating — only when genuine published reviews exist */}
+            {avgRating !== null && (
+              <div className="mt-2 flex items-center gap-2 text-sm">
+                <span className="flex items-center gap-0.5 text-brand-orange">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star key={i} className={i < Math.round(avgRating) ? "h-4 w-4 fill-current" : "h-4 w-4 text-surface-border"} />
+                  ))}
+                </span>
+                <span className="font-bold text-brand-navy">{avgRating.toFixed(1)}</span>
+                <span className="text-ink-muted">· {reviewCount} review{reviewCount > 1 ? "s" : ""}</span>
+              </div>
+            )}
+
+            {/* Best for — only when the package specifies it */}
+            {bestFor.length > 0 && (
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1 text-sm font-semibold text-ink-muted"><Users className="h-4 w-4 text-brand-blue" /> Best for:</span>
+                {bestFor.map((b) => (
+                  <span key={b} className="rounded-full bg-brand-blueLight px-2.5 py-0.5 text-xs font-semibold text-brand-blue">{b}</span>
+                ))}
+              </div>
+            )}
+
+            {v.summary && <p className="mt-3 max-w-2xl text-ink-muted">{v.summary}</p>}
           </div>
-          <div className="shrink-0 rounded-xl bg-surface-muted px-4 py-3 text-right">
+          <div className="shrink-0 rounded-xl bg-surface-muted px-4 py-3 sm:text-right">
             {reviewRequired ? (
               <>
                 <p className="text-xs uppercase tracking-wide text-ink-faint">Pricing</p>
@@ -129,21 +189,35 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
             ) : (
               <>
                 <p className="text-xs uppercase tracking-wide text-ink-faint">Starting from</p>
-                <p className="text-2xl font-bold text-brand-navy">{formatINR(v.basePrice)}</p>
-                <p className="text-xs text-ink-muted">per person</p>
+                <p className="text-3xl font-extrabold text-brand-navy">{formatINR(v.basePrice)}</p>
+                <p className="text-xs text-ink-muted">per person · {v.perPersonPricing ? "twin sharing" : "per package"}</p>
               </>
             )}
           </div>
         </div>
 
-        {/* Quick facts */}
-        <div className="mt-5 flex flex-wrap gap-2">
-          {quickFacts.filter((f) => f.on).map((f) => (
-            <span key={f.label} className="inline-flex items-center gap-1.5 rounded-full border border-surface-border bg-white px-3 py-1.5 text-sm font-medium text-ink">
-              <f.icon className="h-4 w-4 text-brand-blue" /> {f.label}
-            </span>
+        {/* At a glance */}
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          {glance.map((g) => (
+            <div key={g.label} className="rounded-xl border border-surface-border bg-white p-3">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-blueLight text-brand-blue"><g.icon className="h-4 w-4" /></span>
+              <p className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-ink-faint">{g.label}</p>
+              <p className="text-sm font-semibold text-brand-navy">{g.value}</p>
+            </div>
           ))}
         </div>
+
+        {/* Not sure yet? Talk to an expert — high-intent enquiry, right on the package page */}
+        <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-brand-blue/20 bg-brand-blueLight/40 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="font-bold text-brand-navy">Not sure yet?</p>
+            <p className="text-sm text-ink-muted">Talk to an ExpertzTrip travel expert about dates, hotels, upgrades and special requests.</p>
+          </div>
+          <div className="shrink-0 sm:w-56">
+            <EnquireButton packageName={pkg.name} packageSlug={pkg.slug} label="Talk to an expert" />
+          </div>
+        </div>
+
         <div className="mt-3">
           <Link href={`/packages/${pkg.slug}/itinerary`} className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-blue hover:underline">
             <Download className="h-4 w-4" /> View &amp; download full itinerary
@@ -181,6 +255,39 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
                 <Itinerary days={v.days} />
               </div>
             </section>
+
+            {/* Hotel & flight details — real data only */}
+            {(v.roomCategory || v.mealPlan || v.flightSector || v.baggage) && (
+              <section>
+                <h2 className="text-xl font-bold">Hotel &amp; flight details</h2>
+                <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {v.roomCategory && (
+                    <div className="flex items-start gap-3 rounded-xl border border-surface-border p-4">
+                      <BedDouble className="mt-0.5 h-5 w-5 shrink-0 text-brand-blue" />
+                      <div><p className="text-xs font-semibold uppercase tracking-wide text-ink-faint">Room</p><p className="font-semibold text-brand-navy">{v.roomCategory}</p></div>
+                    </div>
+                  )}
+                  {v.mealPlan && (
+                    <div className="flex items-start gap-3 rounded-xl border border-surface-border p-4">
+                      <Utensils className="mt-0.5 h-5 w-5 shrink-0 text-brand-blue" />
+                      <div><p className="text-xs font-semibold uppercase tracking-wide text-ink-faint">Meal plan</p><p className="font-semibold text-brand-navy">{v.mealPlan}</p></div>
+                    </div>
+                  )}
+                  {v.flightSector && (
+                    <div className="flex items-start gap-3 rounded-xl border border-surface-border p-4">
+                      <Plane className="mt-0.5 h-5 w-5 shrink-0 text-brand-blue" />
+                      <div><p className="text-xs font-semibold uppercase tracking-wide text-ink-faint">Flight sector</p><p className="font-semibold text-brand-navy">{v.flightSector}</p></div>
+                    </div>
+                  )}
+                  {v.baggage && (
+                    <div className="flex items-start gap-3 rounded-xl border border-surface-border p-4">
+                      <Luggage className="mt-0.5 h-5 w-5 shrink-0 text-brand-blue" />
+                      <div><p className="text-xs font-semibold uppercase tracking-wide text-ink-faint">Baggage</p><p className="font-semibold text-brand-navy">{v.baggage}</p></div>
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
 
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
               {inclusions.length > 0 && (
@@ -226,6 +333,34 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
               <section className="rounded-xl border border-surface-border bg-surface-muted/60 p-5">
                 <h2 className="flex items-center gap-2 text-base font-bold"><Info className="h-4 w-4 text-brand-blue" /> Important information</h2>
                 <p className="mt-2 text-sm leading-relaxed text-ink-muted">{v.importantInfo}</p>
+              </section>
+            )}
+
+            {/* Guest reviews — only real, published reviews */}
+            {reviewCount > 0 && (
+              <section>
+                <div className="flex items-center gap-3">
+                  <h2 className="text-xl font-bold">Guest reviews</h2>
+                  {avgRating !== null && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-brand-orangeLight px-2.5 py-1 text-sm font-bold text-brand-orangeDark">
+                      <Star className="h-3.5 w-3.5 fill-current" /> {avgRating.toFixed(1)} · {reviewCount}
+                    </span>
+                  )}
+                </div>
+                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  {reviews.slice(0, 4).map((r) => (
+                    <div key={r.id} className="rounded-2xl border border-surface-border bg-white p-5">
+                      <div className="flex gap-0.5 text-brand-orange">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star key={i} className={i < r.rating ? "h-4 w-4 fill-current" : "h-4 w-4 text-surface-border"} />
+                        ))}
+                      </div>
+                      {r.title && <h3 className="mt-2 font-semibold text-brand-navy">{r.title}</h3>}
+                      {r.body && <p className="mt-1 text-sm text-ink-muted">{r.body}</p>}
+                      <p className="mt-3 text-sm font-medium text-brand-navy">{r.customer.fullName ?? "Verified traveller"}</p>
+                    </div>
+                  ))}
+                </div>
               </section>
             )}
 
@@ -295,6 +430,17 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
             </div>
           </div>
         </div>
+
+        {/* Similar holidays */}
+        {similar.length > 0 && (
+          <section className="mt-14">
+            <h2 className="text-xl font-bold sm:text-2xl">Similar holidays</h2>
+            <p className="mt-1 text-sm text-ink-muted">More handpicked trips you may love.</p>
+            <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {similar.map((p) => <PackageCard key={p.id} pkg={p} />)}
+            </div>
+          </section>
+        )}
       </Container>
 
       {/* Mobile sticky CTA */}

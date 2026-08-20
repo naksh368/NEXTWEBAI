@@ -197,6 +197,11 @@ export const getPackageBySlug = cache(async (slug: string) =>
       include: {
         destination: { select: { name: true, slug: true, country: true } },
         faqs: { orderBy: { sortOrder: "asc" } },
+        reviews: {
+          where: { status: "PUBLISHED" },
+          orderBy: { createdAt: "desc" },
+          include: { customer: { select: { fullName: true } } },
+        },
         currentVersion: {
           include: {
             images: { orderBy: { sortOrder: "asc" } },
@@ -211,6 +216,39 @@ export const getPackageBySlug = cache(async (slug: string) =>
     return pkg;
   }, null)
 );
+
+/** Similar published packages — same destination first, then same theme. Never fabricated. */
+export async function getSimilarPackages(destinationId: string, theme: string | null, excludePackageId: string, limit = 3): Promise<PackageListItem[]> {
+  return safe(async () => {
+    const rows = await db.package.findMany({
+      where: {
+        status: "PUBLISHED",
+        id: { not: excludePackageId },
+        OR: [{ destinationId }, ...(theme ? [{ theme }] : [])],
+      },
+      orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }],
+      take: limit,
+      include: {
+        destination: { select: { name: true, slug: true } },
+        currentVersion: { select: { basePrice: true, currency: true, summary: true, durationNights: true, durationDays: true, pricingStatus: true, availabilityStatus: true, images: { take: 1, orderBy: { sortOrder: "asc" }, select: { url: true } } } },
+      },
+    });
+    return rows
+      .filter((p) => p.currentVersion)
+      .map((p) => ({
+        id: p.id, slug: p.slug, name: p.name, theme: p.theme,
+        destination: { name: p.destination.name, slug: p.destination.slug },
+        cover: p.currentVersion!.images[0]?.url ?? null,
+        nights: p.currentVersion!.durationNights,
+        days: p.currentVersion!.durationDays,
+        basePrice: p.currentVersion!.basePrice,
+        currency: p.currentVersion!.currency,
+        summary: p.currentVersion!.summary,
+        pricingStatus: p.currentVersion!.pricingStatus,
+        availabilityStatus: p.currentVersion!.availabilityStatus,
+      }));
+  }, []);
+}
 
 export type PackageDetail = NonNullable<Awaited<ReturnType<typeof getPackageBySlug>>>;
 

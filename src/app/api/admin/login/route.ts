@@ -32,7 +32,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Invalid credentials." }, { status: 401 });
   }
 
-  // Ensure admin row exists in DB (auto-provision on first login)
+  // Ensure the SUPER_ADMIN role exists (create it with all permissions if the
+  // database was never seeded), so the auto-provisioned admin has full access.
+  let superRole = await db.role.findUnique({ where: { key: "SUPER_ADMIN" }, select: { id: true } });
+  if (!superRole) {
+    superRole = await db.role.create({
+      data: { key: "SUPER_ADMIN", name: "Super Admin", description: "Full access to every section." },
+      select: { id: true },
+    });
+  }
+
+  // Ensure admin row exists in DB (auto-provision on first login) and always
+  // carries the SUPER_ADMIN role — SUPER_ADMIN implicitly has every permission.
   const admin = await db.adminUser.upsert({
     where: { email: ADMIN_EMAIL },
     create: {
@@ -41,8 +52,9 @@ export async function POST(request: Request) {
       fullName: "Admin",
       passwordHash: hashPassword(ADMIN_PASSWORD),
       status: "ACTIVE",
+      roleId: superRole.id,
     },
-    update: { lastLoginAt: new Date() },
+    update: { lastLoginAt: new Date(), status: "ACTIVE", roleId: superRole.id },
     select: { id: true },
   });
 

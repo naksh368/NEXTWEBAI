@@ -94,17 +94,17 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
         />
 
         {/* Gallery */}
-        <div className="mt-4 grid grid-cols-4 gap-2 overflow-hidden rounded-2xl sm:h-[420px]">
-          <div className="relative col-span-4 aspect-[16/10] sm:col-span-2 sm:aspect-auto sm:row-span-2">
-            <SmartImage src={images[0]?.url} alt={pkg.name} sizes="(max-width:640px) 100vw, 50vw" priority className="h-full rounded-2xl sm:rounded-none" />
+        <div className="mt-4 grid grid-cols-4 gap-2.5 overflow-hidden rounded-3xl sm:h-[480px]">
+          <div className="relative col-span-4 aspect-[16/10] overflow-hidden rounded-3xl sm:col-span-2 sm:aspect-auto sm:row-span-2 sm:rounded-2xl">
+            <SmartImage src={images[0]?.url} alt={pkg.name} sizes="(max-width:640px) 100vw, 50vw" priority className="h-full" imgClassName="transition-transform duration-700 hover:scale-105" />
           </div>
           {images.slice(1, 5).map((im, i) => (
-            <div key={im.id} className={`relative hidden aspect-[4/3] sm:block ${i >= 2 ? "" : ""}`}>
-              <SmartImage src={im.url} alt={`${pkg.name} ${i + 2}`} sizes="25vw" />
+            <div key={im.id} className="relative hidden overflow-hidden rounded-2xl sm:block">
+              <SmartImage src={im.url} alt={`${pkg.name} — photo ${i + 2}`} sizes="25vw" imgClassName="transition-transform duration-700 hover:scale-105" />
             </div>
           ))}
           {images.length < 3 && (
-            <div className="relative hidden bg-gradient-to-br from-brand-blueLight to-brand-orangeLight sm:block" aria-hidden />
+            <div className="relative hidden rounded-2xl bg-gradient-to-br from-brand-blueLight to-brand-orangeLight sm:block" aria-hidden />
           )}
         </div>
 
@@ -182,13 +182,16 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
               </div>
             </section>
 
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
               {inclusions.length > 0 && (
-                <section>
-                  <h2 className="text-lg font-bold">What&apos;s included</h2>
-                  <ul className="mt-3 space-y-2">
+                <section className="rounded-2xl border border-success/20 bg-success/[0.04] p-5">
+                  <h2 className="flex items-center gap-2 text-lg font-bold text-brand-navy">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-success/15 text-success"><Check className="h-4 w-4" /></span>
+                    What&apos;s included
+                  </h2>
+                  <ul className="mt-4 space-y-2.5">
                     {inclusions.map((inc, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm text-ink">
+                      <li key={i} className="flex items-start gap-2.5 text-sm text-ink">
                         <Check className="mt-0.5 h-4 w-4 shrink-0 text-success" /> {inc}
                       </li>
                     ))}
@@ -196,12 +199,15 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
                 </section>
               )}
               {exclusions.length > 0 && (
-                <section>
-                  <h2 className="text-lg font-bold">Not included</h2>
-                  <ul className="mt-3 space-y-2">
+                <section className="rounded-2xl border border-surface-border bg-surface-muted/40 p-5">
+                  <h2 className="flex items-center gap-2 text-lg font-bold text-brand-navy">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-danger/10 text-danger"><X className="h-4 w-4" /></span>
+                    Not included
+                  </h2>
+                  <ul className="mt-4 space-y-2.5">
                     {exclusions.map((exc, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm text-ink-muted">
-                        <X className="mt-0.5 h-4 w-4 shrink-0 text-danger" /> {exc}
+                      <li key={i} className="flex items-start gap-2.5 text-sm text-ink-muted">
+                        <X className="mt-0.5 h-4 w-4 shrink-0 text-danger/70" /> {exc}
                       </li>
                     ))}
                   </ul>
@@ -252,7 +258,7 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
                         <li className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-brand-blue" /> Fully customizable itinerary</li>
                       </ul>
                       <div className="mt-5">
-                        <EnquireButton packageName={pkg.name} variant="solid" label="Enquire & get a quote" className="!bg-brand-orange hover:!bg-brand-orangeDark" />
+                        <EnquireButton packageName={pkg.name} packageSlug={pkg.slug} variant="solid" label="Enquire & get a quote" className="!bg-brand-orange hover:!bg-brand-orangeDark" />
                       </div>
                       <p className="mt-2 text-center text-xs text-ink-muted">No login needed — talk to us directly.</p>
                     </div>
@@ -279,7 +285,7 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
                       />
                       <div className="mt-4 border-t border-surface-border pt-4">
                         <p className="mb-2 text-center text-xs text-ink-muted">Prefer to plan with an expert?</p>
-                        <EnquireButton packageName={pkg.name} />
+                        <EnquireButton packageName={pkg.name} packageSlug={pkg.slug} />
                       </div>
                     </>
                   )}
@@ -305,7 +311,7 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
           </div>
           <div className="flex items-center gap-2">
             <div className="w-[130px]">
-              <EnquireButton packageName={pkg.name} label="Enquire" />
+              <EnquireButton packageName={pkg.name} packageSlug={pkg.slug} label="Enquire" />
             </div>
             <Link href="#customize" className="inline-flex h-11 items-center justify-center rounded-xl bg-brand-orange px-5 font-semibold text-white">
               {reviewRequired ? "Get a quote" : "Book now"}

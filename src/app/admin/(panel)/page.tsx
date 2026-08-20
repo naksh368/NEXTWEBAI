@@ -17,6 +17,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
   const [
     totalBookings, confirmed, processing, paymentReceived, customers,
     publishedPackages, openTickets, upcoming, paidAgg, refundAgg, recent,
+    newEnquiries, recentEnquiries,
   ] = await Promise.all([
     db.booking.count(),
     db.booking.count({ where: { status: "CONFIRMED" } }),
@@ -29,6 +30,8 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
     db.payment.aggregate({ _sum: { amount: true }, where: { status: "PAID" } }),
     db.refund.aggregate({ _sum: { amount: true }, where: { status: "PROCESSED" } }),
     db.booking.findMany({ orderBy: { createdAt: "desc" }, take: 8, include: { customer: { select: { fullName: true, mobile: true } }, package: { select: { name: true } } } }),
+    db.enquiry.count({ where: { status: "NEW" } }),
+    db.enquiry.findMany({ orderBy: { createdAt: "desc" }, take: 6 }),
   ]);
 
   const revenue = paidAgg._sum.amount ?? 0;
@@ -55,6 +58,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
         <StatCard label="Published packages" value={publishedPackages} tone="navy" />
         <StatCard label="Upcoming trips" value={upcoming} tone="orange" />
         <StatCard label="Open tickets" value={openTickets} tone="blue" />
+        <StatCard label="New enquiries" value={newEnquiries} tone="orange" hint="Leads to follow up" />
       </div>
 
       <div className="mt-6">
@@ -75,6 +79,24 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
                 </tr>
               );
             })}
+          </Table>
+        </Panel>
+      </div>
+
+      <div className="mt-6">
+        <Panel title="Latest enquiries" action={<Link href="/admin/enquiries" className="text-sm font-semibold text-brand-blue hover:underline">View all</Link>}>
+          <Table head={<><Th>Name</Th><Th>Phone</Th><Th>Interest</Th><Th>Status</Th><Th>Received</Th></>}>
+            {recentEnquiries.length === 0 ? (
+              <EmptyRow colSpan={5} label="No enquiries yet — website leads will appear here." />
+            ) : recentEnquiries.map((e) => (
+              <tr key={e.id} className="hover:bg-surface-muted/40">
+                <Td className="font-medium">{e.fullName}</Td>
+                <Td><a href={`tel:+91${e.phone}`} className="text-brand-blue hover:underline">+91 {e.phone}</a></Td>
+                <Td className="text-ink-muted">{e.packageName ?? e.destination ?? "—"}</Td>
+                <Td><Pill tone={e.status === "NEW" ? "brand" : e.status === "CONVERTED" ? "success" : "neutral"}>{e.status}</Pill></Td>
+                <Td className="text-ink-muted">{formatDate(e.createdAt)}</Td>
+              </tr>
+            ))}
           </Table>
         </Panel>
       </div>

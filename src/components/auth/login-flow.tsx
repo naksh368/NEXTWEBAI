@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -78,9 +79,9 @@ export function LoginFlow({ redirectTo = "/account" }: { redirectTo?: string }) 
 
       <p className="text-center text-sm text-ink-muted">
         New here?{" "}
-        <a href={`/sign-up?redirect_url=${encodeURIComponent(redirectTo)}`} className="font-semibold text-brand-blue hover:underline">
+        <Link href={`/sign-up?redirect_url=${encodeURIComponent(redirectTo)}`} className="font-semibold text-brand-blue hover:underline">
           Create account
-        </a>
+        </Link>
       </p>
     </form>
   );

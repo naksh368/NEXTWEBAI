@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { Container } from "@/components/ui/container";
@@ -68,7 +69,7 @@ export default function SignUpPage() {
 
         <p className="text-center text-sm text-ink-muted">
           Already have an account?{" "}
-          <a href="/sign-in" className="font-semibold text-brand-blue hover:underline">Sign in</a>
+          <Link href="/sign-in" className="font-semibold text-brand-blue hover:underline">Sign in</Link>
         </p>
       </form>
     </Container>

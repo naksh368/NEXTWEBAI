@@ -13,6 +13,7 @@ import { Accordion } from "@/components/ui/accordion";
 import { SmartImage } from "@/components/ui/smart-image";
 import { Itinerary } from "@/components/package/itinerary";
 import { CustomizationPanel, type OptionVM } from "@/components/package/customization-panel";
+import { EnquireButton } from "@/components/package/enquire-button";
 import { getPackageBySlug } from "@/lib/queries";
 import { formatINR } from "@/lib/utils";
 
@@ -250,10 +251,10 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
                         <li className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-brand-blue" /> No booking until you approve the price</li>
                         <li className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-brand-blue" /> Fully customizable itinerary</li>
                       </ul>
-                      <Link href="/support" className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-xl bg-brand-orange font-semibold text-white transition-colors hover:bg-brand-orangeDark">
-                        Enquire &amp; get a quote
-                      </Link>
-                      <p className="mt-2 text-center text-xs text-ink-muted">Or call our travel experts — see Support.</p>
+                      <div className="mt-5">
+                        <EnquireButton packageName={pkg.name} variant="solid" label="Enquire & get a quote" className="!bg-brand-orange hover:!bg-brand-orangeDark" />
+                      </div>
+                      <p className="mt-2 text-center text-xs text-ink-muted">No login needed — talk to us directly.</p>
                     </div>
                   ) : (
                     <>
@@ -276,6 +277,10 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
                         options={optionsVM}
                         departures={departuresVM}
                       />
+                      <div className="mt-4 border-t border-surface-border pt-4">
+                        <p className="mb-2 text-center text-xs text-ink-muted">Prefer to plan with an expert?</p>
+                        <EnquireButton packageName={pkg.name} />
+                      </div>
                     </>
                   )}
                 </CardBody>
@@ -298,9 +303,14 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
               </>
             )}
           </div>
-          <Link href="#customize" className="inline-flex h-11 items-center justify-center rounded-xl bg-brand-orange px-6 font-semibold text-white">
-            {reviewRequired ? "Get a quote" : "Customize & book"}
-          </Link>
+          <div className="flex items-center gap-2">
+            <div className="w-[130px]">
+              <EnquireButton packageName={pkg.name} label="Enquire" />
+            </div>
+            <Link href="#customize" className="inline-flex h-11 items-center justify-center rounded-xl bg-brand-orange px-5 font-semibold text-white">
+              {reviewRequired ? "Get a quote" : "Book now"}
+            </Link>
+          </div>
         </div>
       </div>
     </>

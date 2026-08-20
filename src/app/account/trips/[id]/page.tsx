@@ -65,7 +65,7 @@ export default async function TripDetailPage({
               <AlertCircle className="h-5 w-5 shrink-0 text-warning" />
               <div className="flex-1">
                 <h3 className="font-semibold text-warning">Payment pending</h3>
-                <p className="mt-1 text-sm text-warning">Complete the payment to secure your trip. You'll receive confirmation and documents once verified.</p>
+                <p className="mt-1 text-sm text-warning">Complete the payment to secure your trip. You&apos;ll receive confirmation and documents once verified.</p>
                 <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                   <Link href={`/packages/${booking.package.slug}/checkout?edit=${booking.id}`}>
                     <Button variant="orange" size="sm" className="w-full sm:w-auto">

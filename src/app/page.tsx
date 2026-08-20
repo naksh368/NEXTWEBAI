@@ -43,17 +43,25 @@ export default async function HomePage() {
         <Container className="relative py-16 sm:py-24">
           <div className="mx-auto max-w-3xl text-center">
             <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand-orange">
-              Complete holiday packages
+              India &amp; the world, handpicked for you
             </p>
             <h1 className="mt-4 text-5xl font-extrabold leading-[1.05] tracking-tight sm:text-7xl">
-              <span className="text-brand-blue">Your holiday.</span>{" "}
-              <span className="text-brand-orange">Your way.</span>
+              <span className="text-brand-blue">Your next holiday</span>{" "}
+              <span className="text-brand-orange">starts here.</span>
             </h1>
             <p className="mx-auto mt-5 max-w-xl text-lg text-ink-muted">
-              Real holiday packages. Clear pricing. Expert support.
+              Handpicked holidays, transparent pricing and expert support — from India to the world.
             </p>
             <div className="mx-auto mt-9 max-w-2xl">
               <SearchBox />
+            </div>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+              <Link href="/packages" className={buttonVariants({ variant: "orange", size: "lg" })}>
+                Explore Holidays <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link href="/support" className={buttonVariants({ variant: "outline", size: "lg" })}>
+                Talk to an Expert
+              </Link>
             </div>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm font-medium text-ink">
               <span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-brand-blue" /> 100% real packages</span>

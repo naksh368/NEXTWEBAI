@@ -160,6 +160,11 @@ model Package {
   theme          String?  // HONEYMOON | FAMILY | LUXURY | GROUP | ...
   status         String   @default("DRAFT") // DRAFT|IN_REVIEW|PUBLISHED|PAUSED|ARCHIVED
   isFeatured     Boolean  @default(false)
+  // Internal-only supplier import tracking (never exposed to customers)
+  sourceUrl      String?
+  sourceName     String?
+  importedById   String?
+  scannedAt      DateTime?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 

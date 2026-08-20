@@ -11,7 +11,6 @@ import { EmptyState } from "@/components/ui/states";
 import { PackageCard } from "@/components/package/package-card";
 import { SearchBox } from "@/components/home/search-box";
 import { Newsletter } from "@/components/home/newsletter";
-import { EnquireButton } from "@/components/package/enquire-button";
 import { AiAvatar } from "@/components/ui/ai-avatar";
 import {
   getPopularDestinations, getFeaturedPackages, getActiveOffers,
@@ -60,13 +59,10 @@ export default async function HomePage() {
             <div className="mx-auto mt-9 max-w-2xl">
               <SearchBox />
             </div>
-            <div className="mx-auto mt-6 flex max-w-md flex-col items-stretch justify-center gap-3 sm:max-w-none sm:flex-row sm:items-center">
-              <Link href="/packages" className={buttonVariants({ variant: "orange", size: "lg", className: "sm:w-auto" })}>
+            <div className="mt-6 flex justify-center">
+              <Link href="/packages" className={buttonVariants({ variant: "orange", size: "lg" })}>
                 Explore Holidays <ArrowRight className="h-4 w-4" />
               </Link>
-              <div className="sm:w-auto">
-                <EnquireButton label="Enquire now" size="lg" className="sm:w-auto sm:px-6" />
-              </div>
             </div>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm font-medium text-ink">
               <span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-brand-blue" /> 100% real packages</span>

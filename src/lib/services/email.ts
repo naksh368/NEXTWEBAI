@@ -16,10 +16,12 @@ function parseFrom(v: string): { email: string; name?: string } {
   return { email: v.trim() };
 }
 
-export async function sendEmail(opts: { to: string; subject: string; html: string }): Promise<{ ok: boolean; error?: string }> {
+export type EmailAttachment = { filename: string; content: string /* base64 */; type: string };
+
+export async function sendEmail(opts: { to: string; subject: string; html: string; attachments?: EmailAttachment[] }): Promise<{ ok: boolean; error?: string }> {
   try {
     if (provider() === "console") {
-      console.log(`\n📧 [EMAIL:console] to ${opts.to}\n   ${opts.subject}\n`);
+      console.log(`\n📧 [EMAIL:console] to ${opts.to}\n   ${opts.subject}${opts.attachments?.length ? `\n   + ${opts.attachments.length} attachment(s)` : ""}\n`);
       return { ok: true };
     }
     if (provider() === "sendgrid") {
@@ -32,6 +34,9 @@ export async function sendEmail(opts: { to: string; subject: string; html: strin
           from: sender,
           subject: opts.subject,
           content: [{ type: "text/html", value: opts.html }],
+          ...(opts.attachments?.length
+            ? { attachments: opts.attachments.map((a) => ({ content: a.content, filename: a.filename, type: a.type, disposition: "attachment" })) }
+            : {}),
         }),
       });
       if (!res.ok) {

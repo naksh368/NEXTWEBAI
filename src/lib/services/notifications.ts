@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { sendEmail, emailLayout } from "@/lib/services/email";
+import { sendEmail, emailLayout, type EmailAttachment } from "@/lib/services/email";
 import { sendTransactionalSms } from "@/lib/services/sms";
 import type { AppEvent } from "@/lib/constants";
 import { getSiteUrl } from "@/lib/utils";
@@ -32,6 +32,8 @@ export type EmitInput = {
   dedupeKey: string;
   /** Extra template variables (documentType, title, amount …). */
   data?: Record<string, string>;
+  /** Optional file attachments (e.g. the uploaded ticket PDF). */
+  attachments?: EmailAttachment[];
 };
 
 type Ctx = {
@@ -173,8 +175,8 @@ function buildContent(event: AppEvent, ctx: Ctx, data: Record<string, string>): 
         href: ctx.tripHref,
         email: {
           subject: `Your ExpertzTrip ${docType} is ready`,
-          heading: `Hi ${ctx.firstName}, a document is ready`,
-          bodyHtml: `Your <b>${docType}</b>${data.title ? ` (“${data.title}”)` : ""} for booking <b>${ref}</b> is now available. It's private to your account — sign in to view or download it securely in My Trips.`,
+          heading: `Hi ${ctx.firstName}, your ${docType} is ready`,
+          bodyHtml: `Your <b>${docType}</b>${data.title ? ` (“${data.title}”)` : ""} for booking <b>${ref}</b> is attached to this email.<br><br>You can also view or download it any time — signed in and secure — in <b>My Trips</b>.`,
           cta: viewTrip,
         },
         sms: `ExpertzTrip: Your ${docType} for booking ${ref} is now available in My Trips.`,
@@ -271,6 +273,7 @@ export async function emitEvent(input: EmitInput): Promise<boolean> {
         to: ctx.email,
         subject: content.email.subject,
         html: emailLayout(content.email.heading, content.email.bodyHtml, content.email.cta),
+        attachments: input.attachments,
       });
       await logMessage({
         customerId: ctx.customerId, bookingId: ctx.bookingId, channel: "EMAIL", event: input.event,

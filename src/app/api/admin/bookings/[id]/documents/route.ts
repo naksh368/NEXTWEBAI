@@ -42,11 +42,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   await writeAudit({ adminUserId: admin.id, action: "document.upload", resource: `Booking:${bookingId}`, after: { type, title: doc.title } });
 
   // Notify the customer (in-app + email + SMS), idempotent per document.
+  // The email also carries the file itself as an attachment, plus the secure
+  // My Trips link. Filename gets the correct extension for the file type.
+  const attachmentName = `${(doc.title || DOCUMENT_TYPE_LABEL[type] || "document").replace(/[^\w.\- ]/g, "_")}${doc.title?.toLowerCase().endsWith(ext) ? "" : ext}`;
   await emitEvent({
     event: "DOCUMENT_PUBLISHED",
     bookingId,
     dedupeKey: `DOCUMENT_PUBLISHED:${doc.id}`,
     data: { documentType: DOCUMENT_TYPE_LABEL[type] ?? "travel document", title: doc.title },
+    attachments: [{ filename: attachmentName, content: bytes.toString("base64"), type: file.type }],
   });
 
   return NextResponse.json({ ok: true, document: doc }, { headers: { "Cache-Control": "no-store" } });

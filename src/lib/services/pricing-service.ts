@@ -3,6 +3,7 @@ import {
   computePricing, resolveSelectedOptions,
   type PricingInputs, type PricingSelection, type PriceBreakdown, type PricingCoupon,
 } from "@/lib/pricing";
+import { isVersionSellable } from "@/lib/package-availability";
 
 export type RepriceRequest = {
   versionId: string;
@@ -33,9 +34,15 @@ export async function reprice(req: RepriceRequest): Promise<RepriceResult> {
     include: {
       options: { where: { isEnabled: true } },
       departures: { where: { isEnabled: true } },
+      package: { select: { status: true, currentVersionId: true } },
     },
   });
-  if (!version || !version.isPublished) {
+  if (!version || !isVersionSellable({
+    isPublished: version.isPublished,
+    packageStatus: version.package?.status,
+    packageCurrentVersionId: version.package?.currentVersionId,
+    versionId: version.id,
+  })) {
     return { ok: false, error: "This package is no longer available." };
   }
 

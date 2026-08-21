@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { reprice } from "@/lib/services/pricing-service";
 import { canTransition } from "@/lib/booking-states";
+import { isVersionSellable } from "@/lib/package-availability";
 import type { AppEvent, BookingStatus } from "@/lib/constants";
 import { emitEvent } from "@/lib/services/notifications";
 import { makeReference } from "@/lib/utils";
@@ -52,14 +53,19 @@ export async function createBooking(input: CreateBookingInput): Promise<CreateBo
   const version = await db.packageVersion.findUnique({
     where: { id: input.versionId },
     include: {
-      package: { select: { id: true, slug: true, name: true, destination: { select: { name: true, slug: true } } } },
+      package: { select: { id: true, slug: true, name: true, status: true, currentVersionId: true, destination: { select: { name: true, slug: true } } } },
       images: { where: { isCover: true }, take: 1 },
       days: { orderBy: { dayNumber: "asc" }, include: { items: { orderBy: { sortOrder: "asc" } } } },
       options: { where: { isEnabled: true } },
       departures: { where: { isEnabled: true } },
     },
   });
-  if (!version || !version.isPublished) return { ok: false, error: "This package is no longer available." };
+  if (!version || !isVersionSellable({
+    isPublished: version.isPublished,
+    packageStatus: version.package?.status,
+    packageCurrentVersionId: version.package?.currentVersionId,
+    versionId: version.id,
+  })) return { ok: false, error: "This package is no longer available." };
 
   // Authoritative server-side reprice — never trust a client total.
   const priced = await reprice({

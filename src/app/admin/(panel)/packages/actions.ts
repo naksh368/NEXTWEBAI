@@ -73,12 +73,17 @@ export async function updatePackageMetaAction(packageId: string, input: unknown)
   if (!admin) return { ok: false, error: "Not authorized." };
   const p = metaSchema.safeParse(input);
   if (!p.success) return { ok: false, error: p.error.issues[0]?.message ?? "Invalid data." };
-  const before = await db.package.findUnique({ where: { id: packageId }, select: { status: true, slug: true } });
+  const before = await db.package.findUnique({ where: { id: packageId }, select: { status: true, slug: true, currentVersionId: true } });
   if (!before) return { ok: false, error: "Package not found." };
   if (p.data.status === "PUBLISHED" && !(await authorize("package.publish"))) {
     return { ok: false, error: "You don't have permission to publish." };
   }
   await db.package.update({ where: { id: packageId }, data: { name: p.data.name, code: p.data.code || null, destinationId: p.data.destinationId, theme: p.data.theme || null, isFeatured: p.data.isFeatured, status: p.data.status } });
+  // Keep the current version's publish flag in sync so pricing/booking treat it
+  // as sellable (published) or not, consistently with the package status.
+  if (before.currentVersionId) {
+    await db.packageVersion.update({ where: { id: before.currentVersionId }, data: { isPublished: p.data.status === "PUBLISHED" } });
+  }
   await writeAudit({ adminUserId: admin.id, action: "package.meta.update", resource: `Package:${packageId}`, before, after: p.data });
   revalidateAll(packageId, before.slug);
   return { ok: true };

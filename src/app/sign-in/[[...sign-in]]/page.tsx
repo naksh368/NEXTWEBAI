@@ -4,12 +4,15 @@ import { LoginFlow } from "@/components/auth/login-flow";
 
 export const metadata: Metadata = { title: "Sign in", robots: { index: false } };
 
-export default function SignInPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
-  void searchParams; // redirect_url handled client-side by LoginFlow
+export default async function SignInPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
+  const sp = await searchParams;
+  const raw = sp.redirect_url;
+  // Only honour internal redirects.
+  const redirectTo = raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : "/account";
   return (
     <Container className="flex min-h-[70vh] items-center justify-center py-12">
       <div className="w-full max-w-sm">
-        <LoginFlow />
+        <LoginFlow redirectTo={redirectTo} />
       </div>
     </Container>
   );

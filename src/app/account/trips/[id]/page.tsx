@@ -13,6 +13,7 @@ import { db } from "@/lib/db";
 import { BOOKING_STATUS_META, DOCUMENT_TYPE_LABEL } from "@/lib/constants";
 import { formatINR, formatDate } from "@/lib/utils";
 import { BookingStatusWatcher } from "@/components/account/booking-status-watcher";
+import { TripProgress } from "@/components/account/trip-progress";
 import { isRazorpayTestMode } from "@/lib/services/razorpay-service";
 
 export const metadata: Metadata = { title: "Trip details", robots: { index: false } };
@@ -112,6 +113,8 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
           </div>
         </div>
       </div>
+
+      <TripProgress status={booking.status} documentCount={booking.documents.length} />
 
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">

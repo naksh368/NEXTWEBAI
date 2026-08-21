@@ -23,11 +23,12 @@ export function LoginFlow({ redirectTo = "/account" }: { redirectTo?: string }) 
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier: identifier.trim(), password }),
+        body: JSON.stringify({ identifier: identifier.trim(), password, redirect: redirectTo }),
       });
       const data = await res.json();
       if (!data.ok) { setError(data.error ?? "Login failed. Please try again."); return; }
-      router.push(redirectTo);
+      // Backend decides the destination by role: admin → dashboard, customer → account.
+      router.push(data.redirect ?? redirectTo);
       router.refresh();
     } catch {
       setError("Network error. Please try again.");

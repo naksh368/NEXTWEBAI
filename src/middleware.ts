@@ -7,10 +7,11 @@ const ADMIN_COOKIE = "etx_admin";
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Admin routes — protect everything except the login page itself
+  // Admin routes — one login page. Unauthenticated admins are sent to /sign-in
+  // (the /admin/login path is kept only as a self-redirect to /sign-in).
   if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login")) {
     if (!req.cookies.has(ADMIN_COOKIE)) {
-      return NextResponse.redirect(new URL("/admin/login", req.url));
+      return NextResponse.redirect(new URL("/sign-in?redirect_url=/admin", req.url));
     }
     return NextResponse.next();
   }

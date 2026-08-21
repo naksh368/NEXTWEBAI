@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Lock } from "lucide-react";
+import { ArrowLeft, Lock, Check } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Card, CardBody } from "@/components/ui/card";
@@ -12,7 +12,7 @@ import { CheckoutSteps } from "@/components/checkout/checkout-steps";
 import { getPackageBySlug } from "@/lib/queries";
 import { reprice } from "@/lib/services/pricing-service";
 import { getCurrentCustomer } from "@/lib/auth";
-import { formatINR, formatDelta } from "@/lib/utils";
+import { formatINR, formatDelta, formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Review & checkout", robots: { index: false } };
 
@@ -160,6 +160,18 @@ export default async function CheckoutPage({
                 <span className="text-2xl font-bold text-brand-navy">{formatINR(b.total)}</span>
               </div>
               <p className="mt-2 text-xs text-ink-muted">Per person on twin-sharing · incl. taxes &amp; fees.</p>
+
+              {/* Booking check — reassurance before payment. Every item is verified server-side. */}
+              <div className="mt-4 rounded-xl border border-success/25 bg-success/[0.04] p-3">
+                <p className="mb-2 text-xs font-bold uppercase tracking-wide text-success">Booking check</p>
+                <ul className="space-y-1.5 text-sm">
+                  <li className="flex items-center gap-2 text-ink"><Check className="h-4 w-4 shrink-0 text-success" /> Travel date{travelDate ? `: ${formatDate(travelDate)}` : " selected"}</li>
+                  <li className="flex items-center gap-2 text-ink"><Check className="h-4 w-4 shrink-0 text-success" /> {travellers} traveller{travellers > 1 ? "s" : ""}</li>
+                  <li className="flex items-center gap-2 text-ink"><Check className="h-4 w-4 shrink-0 text-success" /> Package available</li>
+                  <li className="flex items-center gap-2 text-ink"><Check className="h-4 w-4 shrink-0 text-success" /> Price verified on our servers</li>
+                  <li className="flex items-center gap-2 text-ink-muted"><span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-ink-faint text-[9px]">5</span> Enter passenger details, then pay</li>
+                </ul>
+              </div>
             </CardBody></Card>
           </div>
         </div>

@@ -43,7 +43,7 @@ export function hasPermission(admin: CurrentAdmin, permission: string): boolean 
  */
 export async function requireAdmin(permission?: string): Promise<CurrentAdmin> {
   const admin = await getCurrentAdmin();
-  if (!admin) redirect("/admin/login");
+  if (!admin) redirect("/sign-in?redirect_url=/admin");
   if (permission && !hasPermission(admin, permission)) redirect("/admin?denied=1");
   return admin;
 }

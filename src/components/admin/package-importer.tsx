@@ -43,6 +43,7 @@ function SingleImport({ destinations }: { destinations: Destination[] }) {
   const [notice, setNotice] = useState<string | null>(null);
   const [source, setSource] = useState<{ host: string; sourceUrl: string } | null>(null);
   const [ai, setAi] = useState<AiPackage | null>(null);
+  const [verbatim, setVerbatim] = useState(false);
 
   // editable fields
   const [f, setF] = useState({
@@ -69,7 +70,9 @@ function SingleImport({ destinations }: { destinations: Destination[] }) {
         nights: String(a?.durationNights ?? res.facts.durationNights ?? ""),
         basePrice: String(a?.startingPrice ?? res.facts.priceCandidates[0] ?? ""),
         category: a?.category ?? "", bestFor: a?.bestFor ?? "",
-        summary: a?.summary ?? res.facts.summary ?? "", overview: a?.overview ?? "",
+        // Verbatim mode keeps the source's own copy; otherwise use AI-rewritten original copy.
+        summary: verbatim ? (res.facts.summary ?? a?.summary ?? "") : (a?.summary ?? res.facts.summary ?? ""),
+        overview: verbatim ? (res.facts.summary ?? "") : (a?.overview ?? ""),
         roomCategory: a?.roomCategory ?? "", mealPlan: a?.mealPlan ?? "",
         flightSector: a?.flightSector ?? "", baggage: a?.baggage ?? "", travelWindows: a?.travelWindow ?? "",
         highlights: (a?.highlights ?? res.facts.headings.slice(0, 6)).join("\n"),
@@ -106,6 +109,13 @@ function SingleImport({ destinations }: { destinations: Destination[] }) {
   return (
     <div className="space-y-5">
       <ScanBar url={url} setUrl={setUrl} onScan={onScan} scanning={scanning} placeholder="https://supplier.com/andaman-5-nights-6-days" />
+      <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-surface-border bg-white p-3">
+        <input type="checkbox" checked={verbatim} onChange={(e) => setVerbatim(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-brand-blue" />
+        <span className="text-sm">
+          <span className="font-semibold text-brand-navy">Keep source copy verbatim</span>
+          <span className="mt-0.5 block text-xs text-warning">Uses the source&apos;s own wording &amp; images instead of AI-rewritten copy. Only enable if you have the rights to reproduce that content — you are responsible for licensing. Set this before scanning.</span>
+        </span>
+      </label>
       <Alerts error={error} notice={notice} />
 
       {source && (

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { verifyOtp } from "@/lib/otp";
 import { setCustomerCookie } from "@/lib/customer-session";
+import { emitEvent } from "@/lib/services/notifications";
 
 export const runtime = "nodejs";
 
@@ -43,6 +44,9 @@ export async function POST(request: Request) {
   });
   await db.emailOtp.update({ where: { id: otp.id }, data: { consumedAt: new Date() } });
   await setCustomerCookie(customer.id);
+
+  // Welcome email (idempotent, non-blocking).
+  await emitEvent({ event: "USER_REGISTERED", customerId: customer.id, dedupeKey: `USER_REGISTERED:${customer.id}` });
 
   return NextResponse.json({ ok: true, redirect: "/account" }, { headers: { "Cache-Control": "no-store" } });
 }

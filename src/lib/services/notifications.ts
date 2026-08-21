@@ -105,15 +105,28 @@ function buildContent(event: AppEvent, ctx: Ctx, data: Record<string, string>): 
     case "USER_REGISTERED":
       return {
         title: "Your ExpertzTrip account is ready",
-        body: "Welcome! Your mobile number is verified and your account is set up.",
+        body: "Welcome! Your email is verified and your account is set up.",
         href: "/account",
         email: {
-          subject: "Welcome to ExpertzTrip",
+          subject: "Welcome to ExpertzTrip ✈️",
           heading: `Welcome, ${ctx.firstName}!`,
-          bodyHtml: `Your account has been created using your verified mobile number. You can now explore holiday packages, customize trips, manage bookings and access your documents in <b>My Trips</b>.`,
-          cta: { label: "Explore packages", href: `${siteUrl()}/packages` },
+          bodyHtml: `We're here to make planning and booking your next holiday simple. You can explore our holiday packages, customize your trip and manage your bookings online — all from <b>My Trips</b>.`,
+          cta: { label: "Explore Holidays", href: `${siteUrl()}/packages` },
         },
-        sms: "ExpertzTrip: Welcome! Your mobile number has been verified and your account is now ready.",
+        sms: "ExpertzTrip: Welcome! Your account is ready. Explore holidays at expertztrip.com",
+      };
+
+    case "BOOKING_CREATED":
+      return {
+        title: `Booking received — ${ref}`,
+        body: `We've received your booking request for ${trip}. It's now being processed.`,
+        href: ctx.tripHref,
+        email: {
+          subject: `We've received your ExpertzTrip booking — ${ref}`,
+          heading: "Booking received",
+          bodyHtml: `Hi ${ctx.firstName}, we've received your booking request for <b>${ctx.packageName ?? trip}</b>.<br><br>Booking ID: <b>${ref}</b><br>Status: <b>Booking received</b><br><br>Your booking is now being processed. You can follow its status any time in My Trips.`,
+          cta: viewTrip,
+        },
       };
 
     case "PAYMENT_RECEIVED":
@@ -122,12 +135,12 @@ function buildContent(event: AppEvent, ctx: Ctx, data: Record<string, string>): 
         body: `We've received your payment for ${trip}. Your booking is now being processed.`,
         href: ctx.tripHref,
         email: {
-          subject: `ExpertzTrip booking received — ${ref}`,
+          subject: `Payment received — ExpertzTrip ${ref}`,
           heading: "Payment received",
-          bodyHtml: `Hi ${ctx.firstName}, we've received your payment for <b>${ctx.packageName ?? trip}</b> (booking <b>${ref}</b>). Your holiday is now being processed — we'll notify you at each step and share your documents in My Trips. We don't mark a trip “confirmed” until the supplier confirms it.`,
+          bodyHtml: `Hi ${ctx.firstName}, we've successfully received your payment for <b>${ctx.packageName ?? trip}</b> (booking <b>${ref}</b>).<br><br>Payment status: <b>PAID</b><br><br>Your holiday is now being processed. Please note: payment received does not automatically mean every travel component is confirmed — our team now confirms the required components and we'll share your documents in My Trips.`,
           cta: viewTrip,
         },
-        sms: `ExpertzTrip: Your booking ${ref} has been received and is being processed. We'll notify you when it's confirmed.`,
+        sms: `ExpertzTrip: Payment received for booking ${ref}. Your holiday is now being processed.`,
       };
 
     case "BOOKING_PROCESSING":

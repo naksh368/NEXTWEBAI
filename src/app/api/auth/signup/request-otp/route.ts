@@ -43,7 +43,9 @@ export async function POST(request: Request) {
     html: emailLayout(
       "Verify your email",
       `<p>Welcome to ExpertzTrip! Use this code to finish creating your account:</p>
-       <p style="font-size:30px;font-weight:800;letter-spacing:8px;color:#2340D9;margin:14px 0">${code}</p>
+       <div style="margin:16px 0;text-align:center">
+         <span style="display:inline-block;background:#EEF1FE;border:1px solid #2340D9;border-radius:12px;padding:12px 22px;font-size:30px;font-weight:800;letter-spacing:8px;color:#2340D9">${code}</span>
+       </div>
        <p>This code expires in ${OTP_TTL_MIN} minutes. If you didn't request it, you can ignore this email.</p>`,
     ),
   });

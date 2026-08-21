@@ -149,6 +149,7 @@ export const DOCUMENT_TYPE_LABEL: Record<string, string> = {
 // a Resend email + MSG91 SMS. Emitted only from real DB state changes.
 export const APP_EVENTS = [
   "USER_REGISTERED",
+  "BOOKING_CREATED",
   "PAYMENT_RECEIVED",
   "BOOKING_PROCESSING",
   "BOOKING_CONFIRMED",

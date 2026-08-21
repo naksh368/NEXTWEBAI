@@ -154,6 +154,9 @@ export async function createBooking(input: CreateBookingInput): Promise<CreateBo
       return created;
     });
 
+    // "Booking received" email (idempotent, non-blocking).
+    await emitEvent({ event: "BOOKING_CREATED", bookingId: booking.id, dedupeKey: `BOOKING_CREATED:${booking.id}` });
+
     return { ok: true, bookingId: booking.id, reference: booking.reference, amount: booking.totalAmount };
   } catch {
     return { ok: false, error: "We couldn't create your booking. Please try again." };

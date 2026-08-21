@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { sendEmail, emailLayout } from "@/lib/services/email";
+import { getSiteUrl } from "@/lib/utils";
 
 export const runtime = "nodejs";
 
@@ -63,6 +65,26 @@ export async function POST(request: Request) {
     });
   } catch {
     return NextResponse.json({ ok: false, error: "Could not submit right now. Please try WhatsApp or call us." }, { status: 500 });
+  }
+
+  // Enquiry-received email (non-blocking; only when an email was provided).
+  if (d.email) {
+    const first = d.fullName.split(" ")[0] || "traveller";
+    const site = getSiteUrl();
+    const rows = [
+      d.packageName ? `Holiday: <b>${d.packageName}</b>` : d.destination ? `Destination: <b>${d.destination}</b>` : "",
+      d.travelDate ? `Travel date: <b>${d.travelDate}</b>` : "",
+      d.travellers ? `Travellers: <b>${d.travellers}</b>` : "",
+    ].filter(Boolean).join("<br>");
+    void sendEmail({
+      to: d.email,
+      subject: "We've received your ExpertzTrip enquiry",
+      html: emailLayout(
+        "Enquiry received",
+        `Hi ${first}, thanks for your interest${d.packageName ? ` in <b>${d.packageName}</b>` : ""}.<br><br>${rows}${rows ? "<br><br>" : ""}Your enquiry has been received. Our team will review your request and contact you using the details you provided.`,
+        d.packageSlug ? { label: "View holiday", href: `${site}/packages/${d.packageSlug}` } : { label: "Explore holidays", href: `${site}/packages` },
+      ),
+    }).catch(() => {});
   }
 
   return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });

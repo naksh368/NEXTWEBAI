@@ -80,6 +80,7 @@ export function DocumentManager({ bookingId, initial }: { bookingId: string; ini
           {loading ? "Uploading…" : <><Upload className="h-4 w-4" /> Upload document</>}
         </Button>
         <p className="text-xs text-ink-faint">PDF, JPG, PNG or WEBP · up to 10 MB. Only the customer and admins can access it.</p>
+        <p className="text-xs font-medium text-brand-blue">✓ On upload, the customer is automatically emailed a secure link to view it in My Trips.</p>
       </form>
     </div>
   );

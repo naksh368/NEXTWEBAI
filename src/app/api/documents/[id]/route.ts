@@ -24,16 +24,27 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   if (!allowed) return NextResponse.json({ ok: false, error: "Forbidden." }, { status: 403 });
 
   let bytes: Buffer;
-  try {
-    bytes = await readDocument(doc.storageKey);
-  } catch {
+  let contentType: string;
+  if (doc.data) {
+    // Stored in the DB (serverless-safe).
+    bytes = Buffer.from(doc.data);
+    contentType = doc.contentType ?? "application/octet-stream";
+  } else if (doc.storageKey) {
+    // Legacy on-disk file (dev).
+    try {
+      bytes = await readDocument(doc.storageKey);
+      contentType = contentTypeForKey(doc.storageKey);
+    } catch {
+      return NextResponse.json({ ok: false, error: "File unavailable." }, { status: 410 });
+    }
+  } else {
     return NextResponse.json({ ok: false, error: "File unavailable." }, { status: 410 });
   }
 
   const filename = `${doc.title}`.replace(/[^\w.\- ]/g, "_");
   return new NextResponse(new Uint8Array(bytes), {
     headers: {
-      "Content-Type": contentTypeForKey(doc.storageKey),
+      "Content-Type": contentType,
       "Content-Disposition": `inline; filename="${filename}"`,
       "Cache-Control": "private, no-store",
     },

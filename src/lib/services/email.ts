@@ -1,6 +1,7 @@
 /**
  * Transactional email service (Phase 20).
  * - console  : dev, prints the email to console.
+ * - sendgrid : sends via SendGrid using EMAIL_API_KEY (SG.* key).
  * - zavu     : sends via Zavu.de using EMAIL_API_KEY.
  * All sends are non-blocking — a failure never breaks the primary action.
  */
@@ -8,10 +9,35 @@ const provider = () => process.env.EMAIL_PROVIDER || "console";
 const apiKey = () => process.env.EMAIL_API_KEY || "";
 const from = () => process.env.EMAIL_FROM || "ExpertzTrip <noreply@expertztrip.com>";
 
+/** Parse "Name <email>" or a bare email into { email, name }. */
+function parseFrom(v: string): { email: string; name?: string } {
+  const m = v.match(/^\s*(.*?)\s*<\s*([^>]+)\s*>\s*$/);
+  if (m) return { name: m[1] || undefined, email: m[2] };
+  return { email: v.trim() };
+}
+
 export async function sendEmail(opts: { to: string; subject: string; html: string }): Promise<{ ok: boolean; error?: string }> {
   try {
     if (provider() === "console") {
       console.log(`\n📧 [EMAIL:console] to ${opts.to}\n   ${opts.subject}\n`);
+      return { ok: true };
+    }
+    if (provider() === "sendgrid") {
+      const sender = parseFrom(from());
+      const res = await fetch("https://api.sendgrid.com/v3/mail/send", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${apiKey()}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          personalizations: [{ to: [{ email: opts.to }] }],
+          from: sender,
+          subject: opts.subject,
+          content: [{ type: "text/html", value: opts.html }],
+        }),
+      });
+      if (!res.ok) {
+        const t = await res.text().catch(() => "");
+        return { ok: false, error: `SendGrid ${res.status}: ${t.slice(0, 200)}` };
+      }
       return { ok: true };
     }
     if (provider() === "zavu") {

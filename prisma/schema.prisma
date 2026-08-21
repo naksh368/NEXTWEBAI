@@ -61,6 +61,23 @@ model CustomerProfile {
 }
 
 /// OTP sessions — code is stored hashed, never plaintext (Phase 13).
+// Email OTP for customer sign-up verification. Holds the pending account until
+// the emailed code is verified; then a Customer row is created.
+model EmailOtp {
+  id           String   @id @default(cuid())
+  email        String
+  codeHash     String
+  fullName     String
+  passwordHash String
+  attempts     Int      @default(0)
+  expiresAt    DateTime
+  consumedAt   DateTime?
+  createdAt    DateTime @default(now())
+
+  @@index([email])
+  @@index([expiresAt])
+}
+
 model OtpSession {
   id           String   @id @default(cuid())
   mobile       String
@@ -511,13 +528,15 @@ model Invoice {
 
 /// Access-controlled documents (Phase 20 + Phase 30 document access control).
 model Document {
-  id         String   @id @default(cuid())
-  bookingId  String
-  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  type       String   // INVOICE | CONFIRMATION | E_TICKET | HOTEL_VOUCHER | TRANSFER_VOUCHER | ACTIVITY_VOUCHER | ITINERARY
-  title      String
-  storageKey String   // private storage reference, never a public URL
-  createdAt  DateTime @default(now())
+  id          String   @id @default(cuid())
+  bookingId   String
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  type        String   // INVOICE | CONFIRMATION | E_TICKET | HOTEL_VOUCHER | TRANSFER_VOUCHER | ACTIVITY_VOUCHER | ITINERARY
+  title       String
+  storageKey  String?  // legacy on-disk reference (dev only); null when stored in DB
+  data        Bytes?   // file bytes stored in the DB — works on serverless (read-only FS)
+  contentType String?  // e.g. application/pdf
+  createdAt   DateTime @default(now())
 
   @@index([bookingId, type])
 }

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentAdmin, hasPermission } from "@/lib/admin-auth";
 import { writeAudit } from "@/lib/services/audit-service";
-import { saveDocument, ALLOWED_DOC_MIME, MAX_DOC_BYTES } from "@/lib/storage";
+import { ALLOWED_DOC_MIME, MAX_DOC_BYTES } from "@/lib/storage";
 import { DOCUMENT_TYPES, DOCUMENT_TYPE_LABEL } from "@/lib/constants";
 import { emitEvent } from "@/lib/services/notifications";
 
@@ -32,10 +32,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   if (file.size > MAX_DOC_BYTES) return NextResponse.json({ ok: false, error: "File is larger than 10 MB." }, { status: 413 });
 
   const bytes = Buffer.from(await file.arrayBuffer());
-  const storageKey = await saveDocument(bytes, ext);
 
+  // Store the file in the database so it works on serverless (read-only FS) and
+  // is served only through the access-controlled /api/documents/[id] route.
   const doc = await db.document.create({
-    data: { bookingId, type, title: title || file.name, storageKey },
+    data: { bookingId, type, title: title || file.name, data: bytes, contentType: file.type, storageKey: null },
     select: { id: true, type: true, title: true, createdAt: true },
   });
   await writeAudit({ adminUserId: admin.id, action: "document.upload", resource: `Booking:${bookingId}`, after: { type, title: doc.title } });

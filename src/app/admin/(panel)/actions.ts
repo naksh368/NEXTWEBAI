@@ -98,8 +98,12 @@ export async function deleteBookingDocumentAction(documentId: string): Promise<A
   if (!admin) return { ok: false, error: "Not authorized." };
   const doc = await db.document.findUnique({ where: { id: documentId }, select: { id: true, bookingId: true, type: true, title: true, storageKey: true } });
   if (!doc) return { ok: false, error: "Document not found." };
-  const { deleteDocumentFile } = await import("@/lib/storage");
-  await deleteDocumentFile(doc.storageKey).catch(() => {});
+  // Only legacy on-disk documents have a storageKey; DB-stored ones are removed
+  // with the row itself.
+  if (doc.storageKey) {
+    const { deleteDocumentFile } = await import("@/lib/storage");
+    await deleteDocumentFile(doc.storageKey).catch(() => {});
+  }
   await db.document.delete({ where: { id: documentId } });
   await writeAudit({ adminUserId: admin.id, action: "document.delete", resource: `Booking:${doc.bookingId}`, before: { type: doc.type, title: doc.title } });
   revalidatePath(`/admin/bookings/${doc.bookingId}`);

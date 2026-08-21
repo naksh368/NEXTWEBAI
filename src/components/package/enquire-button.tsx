@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { MessageCircle, Phone, X, Send, CheckCircle2, Loader2, ArrowLeft, ArrowRight } from "lucide-react";
 import { EXPERT_PHONE, whatsappLink, telLink } from "@/lib/contact";
 import { cn } from "@/lib/utils";
@@ -29,6 +30,10 @@ export function EnquireButton({
 }: EnquireButtonProps) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
+  const [mounted, setMounted] = useState(false);
+
+  // Portal target only exists on the client.
+  useEffect(() => { setMounted(true); }, []);
 
   // Lock background scroll while the modal is open (mobile fix).
   useEffect(() => {
@@ -125,9 +130,9 @@ export function EnquireButton({
         <MessageCircle className="h-4 w-4" /> {label}
       </button>
 
-      {open && (
+      {open && mounted && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-black/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+          className="fixed inset-0 z-[100] flex items-end justify-center overflow-y-auto bg-black/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
           onClick={close}
           role="dialog"
           aria-modal="true"
@@ -260,7 +265,8 @@ export function EnquireButton({
               </form>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

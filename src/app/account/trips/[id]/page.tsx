@@ -19,19 +19,43 @@ const COMPONENT_TONE: Record<string, "success" | "warning" | "danger"> = {
   CONFIRMED: "success", PENDING: "warning", FAILED: "danger",
 };
 
-export default async function TripDetailPage({
-  params, searchParams,
-}: {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
+/**
+ * Single source of truth for the customer-facing status banner. Everything is
+ * derived from the backend booking.status — never from URL params — so the page
+ * can never show two contradictory statuses at once.
+ */
+type BannerTone = "warning" | "info" | "success" | "danger" | "neutral";
+const STATUS_VIEW: Record<string, { tone: BannerTone; title: string; body: string; needsPayment?: boolean }> = {
+  DRAFT: { tone: "warning", title: "Payment pending", body: "Complete the payment to secure your trip.", needsPayment: true },
+  PAYMENT_PENDING: { tone: "warning", title: "Payment pending", body: "Complete the payment to secure your trip. You'll receive confirmation and documents once verified.", needsPayment: true },
+  PAYMENT_PROCESSING: { tone: "info", title: "Payment received", body: "We're verifying your payment — this only takes a moment." },
+  PAYMENT_RECEIVED: { tone: "info", title: "Payment received", body: "Payment verified. We're now confirming your travel components." },
+  BOOKING_PROCESSING: { tone: "info", title: "Booking in progress", body: "Your booking is being confirmed. We'll email your documents as each component is secured." },
+  SUPPLIER_CONFIRMATION_PENDING: { tone: "info", title: "Booking in progress", body: "Your booking is being confirmed with our travel partners." },
+  CONFIRMED: { tone: "success", title: "Your holiday is confirmed 🎉", body: "Everything is booked. Your tickets, vouchers and invoice appear under Documents." },
+  MODIFICATION_REQUESTED: { tone: "info", title: "Update in progress", body: "We're updating your booking as requested." },
+  CANCELLATION_REQUESTED: { tone: "warning", title: "Cancellation requested", body: "Your cancellation request is being reviewed by our team." },
+  CANCELLED: { tone: "neutral", title: "Booking cancelled", body: "This booking has been cancelled." },
+  REFUND_PENDING: { tone: "info", title: "Refund in progress", body: "Your refund is being processed as per the cancellation policy." },
+  PARTIAL_REFUND: { tone: "neutral", title: "Partial refund processed", body: "A partial refund has been processed to your original payment method." },
+  REFUNDED: { tone: "neutral", title: "Refunded", body: "This booking has been refunded to your original payment method." },
+  FAILED: { tone: "danger", title: "We're reviewing your booking", body: "We couldn't confirm one or more components. Our team is reviewing your booking and will be in touch — no action needed from you." },
+  COMPLETED: { tone: "success", title: "Trip completed", body: "We hope you had a wonderful holiday. We'd love a review!" },
+};
+
+const BANNER_STYLE: Record<BannerTone, string> = {
+  warning: "border-warning/40 bg-[#FFFBF0] text-warning",
+  info: "border-brand-blue/20 bg-brand-blueLight text-brand-blue",
+  success: "border-success/30 bg-[#E7F6EC] text-success",
+  danger: "border-danger/30 bg-[#FCE9E9] text-danger",
+  neutral: "border-surface-border bg-surface-muted/60 text-ink",
+};
+
+export default async function TripDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const customer = await getCurrentCustomer();
   if (!customer) redirect("/sign-in");
 
   const { id } = await params;
-  const sp = await searchParams;
-  const justPaid = sp.paid === "1";
-  const justCreated = sp.created === "1";
   const booking = await db.booking.findFirst({
     where: { id, customerId: customer.id }, // ownership enforced
     include: {
@@ -42,12 +66,17 @@ export default async function TripDetailPage({
       events: { orderBy: { createdAt: "desc" } },
       documents: true,
       travellers: true,
+      payments: { orderBy: { createdAt: "desc" }, take: 1, select: { status: true } },
     },
   });
   if (!booking) notFound();
 
   const meta = BOOKING_STATUS_META[booking.status] ?? { label: booking.status, tone: "neutral" as const };
-  const isPending = booking.status === "PAYMENT_PENDING";
+  let view = STATUS_VIEW[booking.status] ?? { tone: "neutral" as BannerTone, title: meta.label, body: "" };
+  // Payment awaiting + last attempt failed → show a retry-focused payment-failed state.
+  if (booking.status === "PAYMENT_PENDING" && booking.payments[0]?.status === "FAILED") {
+    view = { tone: "danger", title: "Payment didn't go through", body: "Your last payment attempt failed or was cancelled. Please try again to secure your trip.", needsPayment: true };
+  }
 
   return (
     <Container className="py-8">
@@ -58,34 +87,25 @@ export default async function TripDetailPage({
       </div>
       <p className="mt-1 text-ink-muted">Ref {booking.reference} · {booking.travellerCount} traveller{booking.travellerCount > 1 ? "s" : ""}{booking.travelDate ? ` · ${formatDate(booking.travelDate)}` : ""}</p>
 
-      {isPending && (
-        <Card className="mt-5 border-warning bg-[#FFFBF0]">
-          <CardBody>
-            <div className="flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 shrink-0 text-warning" />
-              <div className="flex-1">
-                <h3 className="font-semibold text-warning">Payment pending</h3>
-                <p className="mt-1 text-sm text-warning">Complete the payment to secure your trip. You&apos;ll receive confirmation and documents once verified.</p>
-                <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-                  <Link href={`/packages/${booking.package.slug}/checkout?edit=${booking.id}`}>
-                    <Button variant="orange" size="sm" className="w-full sm:w-auto">
-                      <CreditCard className="h-4 w-4" /> Pay {formatINR(booking.totalAmount)}
-                    </Button>
-                  </Link>
-                </div>
+      {/* One canonical status banner — always derived from backend booking.status */}
+      <div className={`mt-5 rounded-xl border p-4 ${BANNER_STYLE[view.tone]}`}>
+        <div className="flex items-start gap-3">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+          <div className="flex-1">
+            <h3 className="font-semibold">{view.title}</h3>
+            {view.body && <p className="mt-1 text-sm opacity-90">{view.body}</p>}
+            {view.needsPayment && (
+              <div className="mt-4">
+                <Link href={`/packages/${booking.package.slug}/checkout?edit=${booking.id}`}>
+                  <Button variant="orange" size="sm" className="w-full sm:w-auto">
+                    <CreditCard className="h-4 w-4" /> Pay {formatINR(booking.totalAmount)}
+                  </Button>
+                </Link>
               </div>
-            </div>
-          </CardBody>
-        </Card>
-      )}
-
-      {(justPaid || justCreated) && (
-        <div className={`mt-5 rounded-xl border p-4 text-sm ${justPaid ? "border-success/30 bg-[#E7F6EC] text-success" : "border-brand-blue/20 bg-brand-blueLight text-brand-blue"}`}>
-          {justPaid
-            ? "Payment verified — your booking is now being processed. We'll confirm each component and email your documents."
-            : "Booking created. Payment isn't enabled in this environment, so it's held as payment pending — add Razorpay keys to complete the charge."}
+            )}
+          </div>
         </div>
-      )}
+      </div>
 
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">

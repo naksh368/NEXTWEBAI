@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { verifyWebhookSignature } from "@/lib/services/razorpay-service";
-import { markPaymentReceivedAndProcess, transitionBooking } from "@/lib/services/booking-service";
+import { markPaymentReceivedAndProcess } from "@/lib/services/booking-service";
 
 export const runtime = "nodejs";
 
@@ -39,8 +39,12 @@ export async function POST(request: Request) {
       await markPaymentReceivedAndProcess(payment.bookingId, "webhook");
     }
   } else if (event.event === "payment.failed") {
-    await db.payment.update({ where: { id: payment.id }, data: { status: "FAILED", errorReason: entity?.error_description ?? "Payment failed" } });
-    await transitionBooking(payment.bookingId, "FAILED", { actor: "webhook", message: "Payment failed." });
+    // Payment failure marks the PAYMENT record failed but leaves the booking at
+    // PAYMENT_PENDING so the customer can retry. Booking-level FAILED is reserved
+    // for component/supplier failure after a successful payment.
+    if (payment.status !== "PAID") {
+      await db.payment.update({ where: { id: payment.id }, data: { status: "FAILED", errorReason: entity?.error_description ?? "Payment failed" } });
+    }
   }
 
   return NextResponse.json({ ok: true });

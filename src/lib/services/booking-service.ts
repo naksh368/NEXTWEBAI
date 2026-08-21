@@ -178,8 +178,28 @@ export async function transitionBooking(
   return { ok: true };
 }
 
-/** After a verified payment: record it and move PAYMENT_RECEIVED → BOOKING_PROCESSING. */
+/**
+ * After a verified payment: walk the legal path PAYMENT_PENDING → PAYMENT_PROCESSING
+ * → PAYMENT_RECEIVED → BOOKING_PROCESSING, adding a timeline event at each step.
+ *
+ * Idempotent: safe to call from BOTH the client callback and the Razorpay
+ * webhook. If the booking is already at/after PAYMENT_RECEIVED it does nothing,
+ * so duplicate/late webhook deliveries never double-process or duplicate events.
+ */
+const POST_PAYMENT_STATUSES = new Set<BookingStatus>([
+  "PAYMENT_RECEIVED", "BOOKING_PROCESSING", "SUPPLIER_CONFIRMATION_PENDING", "CONFIRMED", "COMPLETED",
+]);
+
 export async function markPaymentReceivedAndProcess(bookingId: string, actor = "system") {
+  const b = await db.booking.findUnique({ where: { id: bookingId }, select: { status: true } });
+  if (!b) return;
+  const status = b.status as BookingStatus;
+  if (POST_PAYMENT_STATUSES.has(status)) return; // already processed — idempotent no-op
+
+  // From PAYMENT_PENDING (or FAILED→PENDING retry) we must pass through PROCESSING.
+  if (status === "PAYMENT_PENDING") {
+    await transitionBooking(bookingId, "PAYMENT_PROCESSING", { actor, message: "Payment received — verifying." });
+  }
   await transitionBooking(bookingId, "PAYMENT_RECEIVED", { actor, message: "Payment verified." });
   await transitionBooking(bookingId, "BOOKING_PROCESSING", { actor, message: "Securing your travel components." });
 }

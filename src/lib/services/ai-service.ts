@@ -18,6 +18,31 @@ export function isAiConfigured(): boolean {
   return Boolean(API_KEY);
 }
 
+/**
+ * Generic single-shot completion (no tools) for internal admin tooling such as
+ * the Package Importer. Returns the model's text, or null when AI isn't
+ * configured or the call fails. Never throws.
+ */
+export async function aiComplete(prompt: string, opts?: { system?: string; maxTokens?: number; temperature?: number }): Promise<string | null> {
+  if (!API_KEY) return null;
+  try {
+    const messages = [
+      ...(opts?.system ? [{ role: "system", content: opts.system }] : []),
+      { role: "user", content: prompt },
+    ];
+    const res = await fetch(`${BASE}/chat/completions`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: MODEL, messages, temperature: opts?.temperature ?? 0.2, max_tokens: opts?.maxTokens ?? 1600 }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data?.choices?.[0]?.message?.content ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export type ChatMessage = { role: "user" | "assistant"; content: string };
 export type AssistantReply = { reply: string; results: { label: string; pkg: GroundedPackage }[] };
 

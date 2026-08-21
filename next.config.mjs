@@ -9,6 +9,8 @@ const nextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "images.pexels.com" },
+      // Allow admin-imported package images from any HTTPS host (Package Importer).
+      { protocol: "https", hostname: "**" },
     ],
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 60 * 60 * 24,

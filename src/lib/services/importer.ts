@@ -227,3 +227,41 @@ export function extractFacts(html: string): ExtractedFacts {
 }
 
 export const NOT_ON_SOURCE = NA;
+
+/** Cleaned, readable page text for AI extraction (scripts/styles/tags removed, capped). */
+export function extractMainText(html: string, cap = 14000): string {
+  const cleaned = html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
+    .replace(/<!--[\s\S]*?-->/g, " ");
+  return decodeEntities(stripTags(cleaned)).slice(0, cap);
+}
+
+/**
+ * Discover candidate package/tour detail links from a listing/index page.
+ * Heuristic + same-registrable-site only. Returns absolute HTTPS URLs.
+ */
+export function discoverPackageLinks(html: string, baseUrl: string, limit = 40): string[] {
+  let base: URL;
+  try { base = new URL(baseUrl); } catch { return []; }
+  const KEYWORDS = /(package|holiday|tour|itinerary|trip|nights?-?\d|\d-?nights?|\d-?days?)/i;
+  const out = new Set<string>();
+  for (const m of html.matchAll(/<a\b[^>]*href=["']([^"'#]+)["'][^>]*>/gi)) {
+    let href = m[1].trim();
+    if (!href || href.startsWith("mailto:") || href.startsWith("tel:") || href.startsWith("javascript:")) continue;
+    let abs: URL;
+    try { abs = new URL(href, base); } catch { continue; }
+    if (abs.protocol !== "https:") continue;
+    // same site only (compare registrable-ish: hostname endsWith base host or vice-versa)
+    if (abs.hostname !== base.hostname) continue;
+    const path = abs.pathname.toLowerCase();
+    if (!KEYWORDS.test(path)) continue;
+    // skip obvious non-detail paths
+    if (/\/(category|tag|blog|about|contact|privacy|terms|login|cart|wp-|feed)\b/.test(path)) continue;
+    abs.hash = "";
+    out.add(abs.toString());
+    if (out.size >= limit) break;
+  }
+  return [...out];
+}

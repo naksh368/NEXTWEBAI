@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { getSessionCustomerId } from "@/lib/session";
@@ -41,5 +42,11 @@ export async function POST(request: Request) {
   });
   await markPaymentReceivedAndProcess(bookingId, "customer");
 
-  return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
+  // Bust any server cache for the trip pages so the fresh status renders.
+  revalidatePath("/account/trips/[id]", "page");
+  revalidatePath("/account/trips");
+
+  // Return the canonical status so the client can react without guessing.
+  const updated = await db.booking.findUnique({ where: { id: bookingId }, select: { status: true } });
+  return NextResponse.json({ ok: true, bookingStatus: updated?.status ?? "BOOKING_PROCESSING" }, { headers: { "Cache-Control": "no-store" } });
 }

@@ -118,7 +118,8 @@ export function CheckoutForm({
       const order = await orderRes.json();
 
       if (!order.ok && order.configured === false) {
-        router.push(`/account/trips/${booking.bookingId}?created=1`);
+        router.push(`/account/trips/${booking.bookingId}`);
+        router.refresh();
         return;
       }
       if (!order.ok) { setError(order.error ?? "Could not start payment."); setLoading(false); setStatus(null); return; }
@@ -136,8 +137,15 @@ export function CheckoutForm({
             body: JSON.stringify({ bookingId: booking.bookingId, ...resp }),
           });
           const v = await verify.json();
-          if (v.ok) router.push(`/account/trips/${booking.bookingId}?paid=1`);
-          else { setError("Payment could not be verified. If you were charged, contact support."); setLoading(false); setStatus(null); }
+          if (v.ok) {
+            // Navigate to the trip page and bust the client router cache so the
+            // fresh (post-payment) server render is shown, not a stale one.
+            router.push(`/account/trips/${booking.bookingId}`);
+            router.refresh();
+          } else {
+            setError("Payment could not be verified. If you were charged, contact support.");
+            setLoading(false); setStatus(null);
+          }
         },
         modal: { ondismiss: () => { setLoading(false); setStatus(null); } },
         theme: { color: "#2340d9" },

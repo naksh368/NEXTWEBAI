@@ -13,6 +13,12 @@ const KEY_ID = process.env.RAZORPAY_KEY_ID;
 const KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
 const WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET;
 
+/** True when Razorpay is running against TEST keys (rzp_test_*), not live. */
+export function isRazorpayTestMode(): boolean {
+  const k = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? KEY_ID ?? "";
+  return k.startsWith("rzp_test_");
+}
+
 export function isRazorpayConfigured(): boolean {
   return Boolean(KEY_ID && KEY_SECRET);
 }

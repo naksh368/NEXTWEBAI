@@ -172,8 +172,16 @@ export async function transitionBooking(
   ]);
 
   // Fan out a customer notification for meaningful transitions (idempotent).
+  // A notification failure must NEVER halt the state machine — the status change
+  // is already committed above; only the side-effect is best-effort.
   const event = STATUS_EVENT[toStatus];
-  if (event) await emitEvent({ event, bookingId, dedupeKey: `${event}:${bookingId}` });
+  if (event) {
+    try {
+      await emitEvent({ event, bookingId, dedupeKey: `${event}:${bookingId}` });
+    } catch (e) {
+      console.error(`[booking] notification for ${toStatus} failed (non-blocking):`, e);
+    }
+  }
 
   return { ok: true };
 }

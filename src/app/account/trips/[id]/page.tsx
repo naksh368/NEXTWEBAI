@@ -12,8 +12,12 @@ import { getCurrentCustomer } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { BOOKING_STATUS_META, DOCUMENT_TYPE_LABEL } from "@/lib/constants";
 import { formatINR, formatDate } from "@/lib/utils";
+import { BookingStatusWatcher } from "@/components/account/booking-status-watcher";
+import { isRazorpayTestMode } from "@/lib/services/razorpay-service";
 
 export const metadata: Metadata = { title: "Trip details", robots: { index: false } };
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const COMPONENT_TONE: Record<string, "success" | "warning" | "danger"> = {
   CONFIRMED: "success", PENDING: "warning", FAILED: "danger",
@@ -80,10 +84,12 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
 
   return (
     <Container className="py-8">
+      <BookingStatusWatcher bookingId={booking.id} currentStatus={booking.status} />
       <Breadcrumbs items={[{ label: "Account", href: "/account" }, { label: "My Trips", href: "/account/trips" }, { label: booking.reference }]} />
-      <div className="mt-4 flex items-center gap-3">
+      <div className="mt-4 flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-bold sm:text-3xl">{booking.package.name}</h1>
         <Badge tone={meta.tone}>{meta.label}</Badge>
+        {isRazorpayTestMode() && <Badge tone="warning">TEST MODE</Badge>}
       </div>
       <p className="mt-1 text-ink-muted">Ref {booking.reference} · {booking.travellerCount} traveller{booking.travellerCount > 1 ? "s" : ""}{booking.travelDate ? ` · ${formatDate(booking.travelDate)}` : ""}</p>
 

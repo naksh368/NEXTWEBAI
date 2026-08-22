@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { sendEmail, emailLayout, businessNotifyEmail, type EmailAttachment } from "@/lib/services/email";
 import { sendTransactionalSms } from "@/lib/services/sms";
+import { sendWhatsApp, isWhatsAppConfigured } from "@/lib/services/whatsapp";
 import type { AppEvent } from "@/lib/constants";
 import { getSiteUrl, formatINR, formatDate } from "@/lib/utils";
 
@@ -244,7 +245,7 @@ function buildContent(event: AppEvent, ctx: Ctx, data: Record<string, string>): 
 }
 
 async function logMessage(entry: {
-  customerId: string | null; bookingId: string | null; channel: "EMAIL" | "SMS";
+  customerId: string | null; bookingId: string | null; channel: "EMAIL" | "SMS" | "WHATSAPP";
   event: string; toAddress: string; status: string; providerId?: string; error?: string; dedupeKey: string;
 }) {
   try {
@@ -342,6 +343,15 @@ export async function emitEvent(input: EmitInput): Promise<boolean> {
       const r = await sendTransactionalSms(ctx.mobile, content.sms);
       await logMessage({
         customerId: ctx.customerId, bookingId: ctx.bookingId, channel: "SMS", event: input.event,
+        toAddress: ctx.mobile, status: r.status, providerId: r.providerId, error: r.error, dedupeKey: input.dedupeKey,
+      });
+    }
+
+    // 4) WhatsApp — only when a provider is configured; otherwise logged SKIPPED.
+    if (content.sms && ctx.mobile && isWhatsAppConfigured()) {
+      const r = await sendWhatsApp(ctx.mobile, content.sms);
+      await logMessage({
+        customerId: ctx.customerId, bookingId: ctx.bookingId, channel: "WHATSAPP", event: input.event,
         toAddress: ctx.mobile, status: r.status, providerId: r.providerId, error: r.error, dedupeKey: input.dedupeKey,
       });
     }

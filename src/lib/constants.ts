@@ -177,3 +177,29 @@ export const DOCUMENT_STATUS = [
   "EXPIRING_SOON",
 ] as const;
 export type DocumentStatus = (typeof DOCUMENT_STATUS)[number];
+
+/**
+ * Popular Indian departure cities offered in the booking wizard. Kept short and
+ * real — the wizard's search lets travellers type any city, and our team can
+ * confirm departures from anywhere. These are just the common quick-picks.
+ */
+export const DEPARTURE_CITIES = [
+  "New Delhi",
+  "Mumbai",
+  "Bengaluru",
+  "Chennai",
+  "Hyderabad",
+  "Kolkata",
+  "Pune",
+  "Ahmedabad",
+  "Kochi",
+  "Goa",
+  "Jaipur",
+  "Lucknow",
+  "Chandigarh",
+  "Trivandrum",
+  "Coimbatore",
+  "Indore",
+  "Nagpur",
+  "Guwahati",
+] as const;

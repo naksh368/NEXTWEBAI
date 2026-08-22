@@ -57,6 +57,7 @@ export default async function AdminBookingDetail({ params }: { params: Promise<{
               <div><p className="text-ink-faint">Mobile</p><p className="font-medium">{booking.customer.mobile}</p></div>
               <div><p className="text-ink-faint">Email</p><p className="font-medium">{booking.customer.email ?? "—"}</p></div>
               <div><p className="text-ink-faint">Travel date</p><p className="font-medium">{booking.travelDate ? formatDate(booking.travelDate) : "—"}</p></div>
+              <div><p className="text-ink-faint">Departure city</p><p className="font-medium">{booking.departureCity ?? "—"}</p></div>
             </div>
           </Panel>
 

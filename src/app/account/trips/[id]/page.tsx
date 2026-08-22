@@ -93,7 +93,7 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
         <Badge tone={meta.tone}>{meta.label}</Badge>
         {isRazorpayTestMode() && <Badge tone="warning">TEST MODE</Badge>}
       </div>
-      <p className="mt-1 text-ink-muted">Ref {booking.reference} · {booking.travellerCount} traveller{booking.travellerCount > 1 ? "s" : ""}{booking.travelDate ? ` · ${formatDate(booking.travelDate)}` : ""}</p>
+      <p className="mt-1 text-ink-muted">Ref {booking.reference} · {booking.travellerCount} traveller{booking.travellerCount > 1 ? "s" : ""}{booking.departureCity ? ` · From ${booking.departureCity}` : ""}{booking.travelDate ? ` · ${formatDate(booking.travelDate)}` : ""}</p>
 
       {/* One canonical status banner — always derived from backend booking.status */}
       <div className={`mt-5 rounded-xl border p-4 ${BANNER_STYLE[view.tone]}`}>

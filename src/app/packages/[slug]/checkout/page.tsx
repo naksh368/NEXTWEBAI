@@ -47,6 +47,7 @@ export default async function CheckoutPage({
   const travellers = Math.max(1, Number(first(sp.travellers) ?? 2) || 2);
   const optionIds = (first(sp.options) ?? "").split(",").filter(Boolean);
   const travelDate = first(sp.date) ?? null; // free calendar date (YYYY-MM-DD)
+  const departureCity = first(sp.city) ?? null;
 
   // Structured traveller composition (from the Travellers selector).
   const adults = Math.max(1, Number(first(sp.adults) ?? travellers) || travellers);
@@ -81,6 +82,11 @@ export default async function CheckoutPage({
     travellers: String(travellers),
     ...(optionIds.length ? { options: optionIds.join(",") } : {}),
     ...(travelDate ? { date: travelDate } : {}),
+    ...(departureCity ? { city: departureCity } : {}),
+    adults: String(adults),
+    ...(childrenN > 0 ? { children: String(childrenN), childrenAges: childrenAges.join(",") } : {}),
+    ...(infants > 0 ? { infants: String(infants) } : {}),
+    ...(rooms > 1 ? { rooms: String(rooms) } : {}),
   }).toString();
   const redirectTo = `/packages/${slug}/checkout?${queryString}`;
 
@@ -104,6 +110,7 @@ export default async function CheckoutPage({
             <h2 className="text-lg font-bold">{pkg.name}</h2>
             <p className="mt-1 text-sm text-ink-muted">
               {pkg.destination.name} · {v.durationNights}N / {v.durationDays}D · {travellers} traveller{travellers > 1 ? "s" : ""}
+              {departureCity ? ` · From ${departureCity}` : ""}
               {travelDate ? ` · Departs ${new Date(travelDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}` : ""}
             </p>
             {selectedOptions.length > 0 && (
@@ -132,6 +139,7 @@ export default async function CheckoutPage({
                   travellerCount={travellers}
                   selectedOptionIds={result.selectedOptionIds}
                   travelDate={travelDate}
+                  departureCity={departureCity}
                   couponCode={couponCode}
                   total={b.total}
                   prefillName={customer.fullName}
@@ -175,6 +183,7 @@ export default async function CheckoutPage({
                 <p className="mb-2 text-xs font-bold uppercase tracking-wide text-success">Booking check</p>
                 <ul className="space-y-1.5 text-sm">
                   <li className="flex items-center gap-2 text-ink"><Check className="h-4 w-4 shrink-0 text-success" /> Travel date{travelDate ? `: ${formatDate(travelDate)}` : " selected"}</li>
+                  {departureCity && <li className="flex items-center gap-2 text-ink"><Check className="h-4 w-4 shrink-0 text-success" /> Departing from {departureCity}</li>}
                   <li className="flex items-center gap-2 text-ink"><Check className="h-4 w-4 shrink-0 text-success" /> {travellers} traveller{travellers > 1 ? "s" : ""}</li>
                   <li className="flex items-center gap-2 text-ink"><Check className="h-4 w-4 shrink-0 text-success" /> Package available</li>
                   <li className="flex items-center gap-2 text-ink"><Check className="h-4 w-4 shrink-0 text-success" /> Price verified on our servers</li>

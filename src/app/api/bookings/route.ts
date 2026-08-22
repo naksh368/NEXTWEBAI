@@ -30,6 +30,7 @@ const schema = z.object({
   selectedOptionIds: z.array(z.string()).default([]),
   departureId: z.string().nullable().optional(),
   travelDate: z.string().min(8).max(10).nullable().optional(), // YYYY-MM-DD from the calendar
+  departureCity: z.string().max(80).nullable().optional(),
   couponCode: z.string().max(40).nullable().optional(),
   travellers: z.array(travellerSchema).min(1),
   travellerBreakdown: z.object({
@@ -59,6 +60,7 @@ export async function POST(request: Request) {
     selectedOptionIds: parsed.data.selectedOptionIds,
     departureId: parsed.data.departureId,
     travelDate: parsed.data.travelDate,
+    departureCity: parsed.data.departureCity ?? null,
     couponCode: parsed.data.couponCode,
     travellers: parsed.data.travellers.map((t) => ({
       ...t,

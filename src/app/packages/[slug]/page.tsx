@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import {
   Plane, BedDouble, Ticket, Utensils, Clock, MapPin,
-  Check, X, Info, ShieldCheck, Download, Star, Users, Luggage, Sparkles,
+  Check, X, Info, ShieldCheck, Download, Star, Users, Luggage, Sparkles, ChevronDown,
 } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
@@ -13,6 +13,7 @@ import { Accordion } from "@/components/ui/accordion";
 import { SmartImage } from "@/components/ui/smart-image";
 import { Itinerary } from "@/components/package/itinerary";
 import { CustomizationPanel, type OptionVM } from "@/components/package/customization-panel";
+import { BookNowButton } from "@/components/package/booking-wizard";
 import { EnquireButton } from "@/components/package/enquire-button";
 import { PackageCard } from "@/components/package/package-card";
 import { getPackageBySlug, getSimilarPackages } from "@/lib/queries";
@@ -73,6 +74,8 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
     description: o.description, priceDelta: o.priceDelta, perPerson: o.perPerson, isDefault: o.isDefault,
   }));
   const departuresVM = v.departures.map((d) => ({ id: d.id, date: d.date.toISOString(), priceDelta: d.priceDelta }));
+  const departureCities = asStringArray(v.departureCities);
+  const wizardDepartures = v.departures.map((d) => ({ date: d.date.toISOString(), seatsLeft: d.seatsLeft }));
 
   // Real, data-backed only — never fabricated.
   const reviews = pkg.reviews ?? [];
@@ -252,7 +255,7 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
               <h2 className="text-xl font-bold">Day-by-day itinerary</h2>
               <p className="mt-1 text-sm text-ink-muted">{v.days.length} days of curated experiences.</p>
               <div className="mt-5">
-                <Itinerary days={v.days} />
+                <Itinerary days={v.days} images={images.map((i) => i.url)} />
               </div>
             </section>
 
@@ -400,25 +403,51 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
                     </div>
                   ) : (
                     <>
-                      <div className="mb-4 flex items-center justify-between">
-                        <h2 className="text-lg font-bold">Make this holiday yours</h2>
+                      <div className="mb-1 flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-ink-faint">Starting from</p>
+                          <p className="text-2xl font-extrabold text-brand-navy">
+                            {formatINR(v.basePrice)} <span className="text-sm font-normal text-ink-muted">/ person</span>
+                          </p>
+                        </div>
                         <Badge tone="info"><ShieldCheck className="h-3 w-3" /> Live price</Badge>
                       </div>
-                      <CustomizationPanel
-                        versionId={v.id}
+                      <p className="mb-4 text-xs text-ink-muted">Pick your city, dates &amp; travellers in a few taps.</p>
+                      <BookNowButton
                         packageSlug={pkg.slug}
+                        packageName={pkg.name}
+                        versionId={v.id}
                         basePrice={v.basePrice}
-                        currency={v.currency}
                         minTravellers={v.minTravellers}
                         maxTravellers={v.maxTravellers}
-                        allow={{
-                          hotel: v.allowHotelChange, flight: v.allowFlightChange,
-                          transfer: v.allowTransferChange, meal: v.allowMealChange,
-                          activity: v.allowActivityChange, addons: v.allowAddons, date: v.allowDateChange,
-                        }}
-                        options={optionsVM}
-                        departures={departuresVM}
+                        departureCities={departureCities}
+                        departures={wizardDepartures}
+                        nights={v.durationNights}
+                        days={v.durationDays}
                       />
+                      <details className="group mt-4 border-t border-surface-border pt-4">
+                        <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-semibold text-brand-navy">
+                          Customise &amp; get a live price
+                          <ChevronDown className="h-4 w-4 text-ink-muted transition-transform group-open:rotate-180" />
+                        </summary>
+                        <div className="mt-4">
+                          <CustomizationPanel
+                            versionId={v.id}
+                            packageSlug={pkg.slug}
+                            basePrice={v.basePrice}
+                            currency={v.currency}
+                            minTravellers={v.minTravellers}
+                            maxTravellers={v.maxTravellers}
+                            allow={{
+                              hotel: v.allowHotelChange, flight: v.allowFlightChange,
+                              transfer: v.allowTransferChange, meal: v.allowMealChange,
+                              activity: v.allowActivityChange, addons: v.allowAddons, date: v.allowDateChange,
+                            }}
+                            options={optionsVM}
+                            departures={departuresVM}
+                          />
+                        </div>
+                      </details>
                       <div className="mt-4 border-t border-surface-border pt-4">
                         <p className="mb-2 text-center text-xs text-ink-muted">Prefer to speak to an expert first?</p>
                         <EnquireButton packageName={pkg.name} packageSlug={pkg.slug} label="Enquire on WhatsApp" />
@@ -457,12 +486,29 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
             )}
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-[130px]">
+            <div className="w-[128px]">
               <EnquireButton packageName={pkg.name} packageSlug={pkg.slug} label="Enquire" />
             </div>
-            <Link href="#customize" className="inline-flex h-11 items-center justify-center rounded-xl bg-brand-orange px-5 font-semibold text-white transition-colors hover:bg-brand-orangeDark">
-              {reviewRequired ? "Get a quote" : "Book now"}
-            </Link>
+            {reviewRequired ? (
+              <Link href="#customize" className="inline-flex h-11 items-center justify-center rounded-xl bg-brand-orange px-5 font-semibold text-white transition-colors hover:bg-brand-orangeDark">
+                Get a quote
+              </Link>
+            ) : (
+              <div className="w-[150px]">
+                <BookNowButton
+                  packageSlug={pkg.slug}
+                  packageName={pkg.name}
+                  versionId={v.id}
+                  basePrice={v.basePrice}
+                  minTravellers={v.minTravellers}
+                  maxTravellers={v.maxTravellers}
+                  departureCities={departureCities}
+                  departures={wizardDepartures}
+                  nights={v.durationNights}
+                  days={v.durationDays}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>

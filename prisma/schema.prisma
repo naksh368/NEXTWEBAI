@@ -383,6 +383,7 @@ model Booking {
 
   status         String   @default("DRAFT") // see BOOKING_STATUS in constants
   travelDate     DateTime?
+  departureCity  String?  // chosen departure city (booking wizard)
   travellerCount Int      @default(1)
   // Structured traveller composition { adults, children, childrenAges[], infants, rooms }
   travellerBreakdown Json?

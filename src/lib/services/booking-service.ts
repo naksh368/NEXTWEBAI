@@ -33,6 +33,7 @@ export type CreateBookingInput = {
   selectedOptionIds: string[];
   departureId?: string | null;
   travelDate?: string | null; // free-calendar departure date (YYYY-MM-DD)
+  departureCity?: string | null; // chosen departure city (booking wizard)
   couponCode?: string | null;
   travellers: {
     fullName: string; type?: string; dateOfBirth?: string | null; passportNo?: string | null;
@@ -115,6 +116,7 @@ export async function createBooking(input: CreateBookingInput): Promise<CreateBo
       travellerCount: b.travellerCount,
       options: selectedOptions.map((o) => ({ category: o.category, label: o.label, priceDelta: o.priceDelta, perPerson: o.perPerson })),
       departure: departure ? { date: departure.date.toISOString(), priceDelta: departure.priceDelta } : null,
+      departureCity: input.departureCity ?? null,
       coupon: input.couponCode ?? null,
     },
     pricing: b,
@@ -130,6 +132,7 @@ export async function createBooking(input: CreateBookingInput): Promise<CreateBo
           packageVersionId: version.id,
           status: "PAYMENT_PENDING",
           travelDate: input.travelDate ? new Date(`${input.travelDate}T00:00:00`) : (departure?.date ?? null),
+          departureCity: input.departureCity ?? null,
           travellerCount: b.travellerCount,
           travellerBreakdown: input.travellerBreakdown ?? undefined,
           currency: b.currency,

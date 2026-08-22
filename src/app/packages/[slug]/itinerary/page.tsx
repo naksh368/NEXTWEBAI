@@ -127,7 +127,7 @@ export default async function ItineraryDocPage({ params }: { params: Promise<{ s
       </Section>
 
       <Section title="Day-by-day itinerary">
-        <Itinerary days={v.days} />
+        <Itinerary days={v.days} images={v.images.map((i) => i.url)} />
       </Section>
 
       <Section title="Pricing">

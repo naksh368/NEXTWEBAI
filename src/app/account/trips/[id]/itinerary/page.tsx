@@ -51,7 +51,10 @@ export default async function TripItineraryPage({ params }: { params: Promise<{ 
     include: {
       package: { select: { name: true, code: true, slug: true, destination: { select: { name: true, country: true } } } },
       packageVersion: {
-        include: { days: { orderBy: { dayNumber: "asc" }, include: { items: { orderBy: { sortOrder: "asc" } } } } },
+        include: {
+          days: { orderBy: { dayNumber: "asc" }, include: { items: { orderBy: { sortOrder: "asc" } } } },
+          images: { orderBy: { sortOrder: "asc" }, select: { url: true } },
+        },
       },
       items: { orderBy: { sortOrder: "asc" } },
       travellers: true,
@@ -135,7 +138,7 @@ export default async function TripItineraryPage({ params }: { params: Promise<{ 
 
       {v.days.length > 0 && (
         <Section title="Day-by-day itinerary">
-          <Itinerary days={v.days} />
+          <Itinerary days={v.days} images={v.images.map((i) => i.url)} />
         </Section>
       )}
 

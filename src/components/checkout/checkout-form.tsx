@@ -60,12 +60,13 @@ function isValid(t: Traveller, isDomestic: boolean): boolean {
 }
 
 export function CheckoutForm({
-  versionId, travellerCount, selectedOptionIds, travelDate, couponCode, total, prefillName, isDomestic = false, travellerBreakdown,
+  versionId, travellerCount, selectedOptionIds, travelDate, departureCity = null, couponCode, total, prefillName, isDomestic = false, travellerBreakdown,
 }: {
   versionId: string;
   travellerCount: number;
   selectedOptionIds: string[];
   travelDate: string | null;
+  departureCity?: string | null;
   couponCode: string | null;
   total: number;
   prefillName?: string | null;
@@ -106,7 +107,7 @@ export function CheckoutForm({
       setStatus("Creating your booking…");
       const bookRes = await fetch("/api/bookings", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ versionId, travellerCount: travellers.length, selectedOptionIds, travelDate, couponCode, travellers, travellerBreakdown, termsAccepted: true }),
+        body: JSON.stringify({ versionId, travellerCount: travellers.length, selectedOptionIds, travelDate, departureCity, couponCode, travellers, travellerBreakdown, termsAccepted: true }),
       });
       const booking = await bookRes.json();
       if (!booking.ok) { setError(booking.error ?? "Could not create booking."); setLoading(false); setStatus(null); return; }

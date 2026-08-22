@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { MessageCircle, Phone, X, Send, CheckCircle2, Loader2, ArrowLeft, ArrowRight } from "lucide-react";
+import Link from "next/link";
+import { MessageCircle, Phone, X, Send, CheckCircle2, Loader2, ArrowLeft, ArrowRight, User } from "lucide-react";
 import { EXPERT_PHONE, whatsappLink, telLink } from "@/lib/contact";
 import { cn } from "@/lib/utils";
 
@@ -13,6 +14,10 @@ interface EnquireButtonProps {
   variant?: "solid" | "outline" | "ghostWhite";
   label?: string;
   size?: "md" | "lg";
+  /** Prefill for signed-in customers — we never re-ask their name/email. */
+  defaultName?: string | null;
+  defaultEmail?: string | null;
+  defaultPhone?: string | null;
 }
 
 const BUDGETS = ["Under ₹25,000", "₹25,000 – ₹50,000", "₹50,000 – ₹1,00,000", "₹1,00,000 – ₹2,00,000", "Above ₹2,00,000"];
@@ -27,9 +32,13 @@ export function EnquireButton({
   variant = "outline",
   label = "Enquire now",
   size = "md",
+  defaultName,
+  defaultEmail,
+  defaultPhone,
 }: EnquireButtonProps) {
+  const known = Boolean(defaultName && defaultPhone);
   const [open, setOpen] = useState(false);
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2>(known ? 2 : 1);
   const [mounted, setMounted] = useState(false);
 
   // Portal target only exists on the client.
@@ -44,13 +53,14 @@ export function EnquireButton({
   }, [open]);
 
   const [sent, setSent] = useState(false);
+  const [reference, setReference] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Step 1
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  // Step 1 — prefilled for signed-in customers (we never re-ask them).
+  const [fullName, setFullName] = useState(defaultName ?? "");
+  const [email, setEmail] = useState(defaultEmail ?? "");
+  const [phone, setPhone] = useState((defaultPhone ?? "").replace(/^\+?91/, ""));
   // Step 2
   const [budget, setBudget] = useState("");
   const [nights, setNights] = useState("");
@@ -65,7 +75,7 @@ export function EnquireButton({
 
   function close() {
     setOpen(false);
-    setTimeout(() => { setSent(false); setError(null); setStep(1); }, 300);
+    setTimeout(() => { setSent(false); setError(null); setStep(known ? 2 : 1); setReference(null); }, 300);
   }
 
   function goNext(e: React.FormEvent) {
@@ -104,6 +114,7 @@ export function EnquireButton({
       });
       const data = await res.json();
       if (!data.ok) { setError(data.error ?? "Could not submit. Please try again."); return; }
+      setReference(data.reference ?? null);
       setSent(true);
     } catch {
       setError("Network error. Please try WhatsApp or call us.");
@@ -156,19 +167,38 @@ export function EnquireButton({
             </div>
 
             {sent ? (
-              <div className="flex flex-col items-center px-6 py-12 text-center">
+              <div className="flex flex-col items-center px-6 py-10 text-center">
                 <span className="flex h-16 w-16 items-center justify-center rounded-full bg-success/10 text-success">
                   <CheckCircle2 className="h-9 w-9" />
                 </span>
-                <h4 className="mt-5 text-xl font-bold text-brand-navy">Enquiry received!</h4>
+                <h4 className="mt-5 text-xl font-bold text-brand-navy">💬 Enquiry received!</h4>
                 <p className="mt-2 max-w-sm text-sm text-ink-muted">
-                  Thank you, {fullName.split(" ")[0] || "traveller"}. Our travel expert will reach out to you shortly on {phone}.
+                  Thanks, {fullName.split(" ")[0] || "traveller"}. We&apos;ve received your request{packageName ? ` for ${packageName}` : ""}.
                 </p>
+                {reference && (
+                  <div className="mt-4 rounded-xl bg-brand-blueLight/60 px-4 py-2.5">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-brand-blue">Enquiry ID</span>
+                    <p className="text-lg font-extrabold tracking-wide text-brand-navy">{reference}</p>
+                  </div>
+                )}
+                <p className="mt-3 max-w-sm text-sm text-ink-muted">
+                  An ExpertzTrip travel specialist will review your request and contact you on {phone}{email ? ` and ${email}` : ""}.
+                </p>
+
+                {packageSlug && (
+                  <div className="mt-5 w-full rounded-2xl border border-brand-orange/25 bg-brand-orangeLight/40 p-3.5">
+                    <p className="text-sm font-semibold text-brand-navy">Want to book instead?</p>
+                    <Link href={`/packages/${packageSlug}`} onClick={close} className="mt-2 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-brand-orange px-5 text-sm font-bold text-white transition-colors hover:bg-brand-orangeDark">
+                      Book this holiday <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </div>
+                )}
+
                 <a
                   href={whatsappLink(waMessage)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#25D366] px-6 font-semibold text-white transition-colors hover:brightness-95"
+                  className="mt-4 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#25D366] px-6 font-semibold text-white transition-colors hover:brightness-95"
                 >
                   <Send className="h-4 w-4" /> Chat now on WhatsApp
                 </a>
@@ -204,6 +234,16 @@ export function EnquireButton({
               </form>
             ) : (
               <form onSubmit={submit} className="space-y-4 p-6">
+                {known && (
+                  <div className="flex items-center gap-2.5 rounded-xl bg-surface-muted/60 px-3.5 py-2.5 text-sm">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-blueLight text-brand-blue"><User className="h-4 w-4" /></span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-semibold text-brand-navy">{fullName}</span>
+                      <span className="block truncate text-xs text-ink-muted">{email || `+91 ${phone}`}</span>
+                    </span>
+                    <button type="button" onClick={() => { setStep(1); setError(null); }} className="shrink-0 text-xs font-semibold text-brand-blue hover:underline">Edit</button>
+                  </div>
+                )}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <label className={labelCls}>What&apos;s your budget? *</label>

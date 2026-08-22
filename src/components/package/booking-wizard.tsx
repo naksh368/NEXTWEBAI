@@ -96,11 +96,13 @@ function Wizard({ onClose, ...props }: Props & { onClose: () => void }) {
 
   const travellers = pax.adults + pax.children;
 
-  // Date bounds: 3-day lead time, up to 12 months out.
+  // Date bounds — computed dynamically from *today* (never hard-coded). Selection
+  // starts at today; the calendar still shows the whole month with past dates
+  // greyed out, and browses up to 12 months ahead.
   const bounds = useMemo(() => {
-    const min = new Date(); min.setHours(0, 0, 0, 0); min.setDate(min.getDate() + 3);
-    const max = new Date(); max.setHours(0, 0, 0, 0); max.setDate(max.getDate() + 365);
-    return { min, max };
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const max = new Date(today); max.setDate(max.getDate() + 365);
+    return { min: today, max, todayKey: fmtKey(today) };
   }, []);
   const [viewMonth, setViewMonth] = useState<Date>(startOfMonth(bounds.min));
 
@@ -258,19 +260,24 @@ function Wizard({ onClose, ...props }: Props & { onClose: () => void }) {
                   {monthCells.map((cell, i) => {
                     if (!cell) return <div key={i} />;
                     const key = fmtKey(cell);
+                    const isPast = cell < bounds.min;
                     const inRange = cell >= bounds.min && cell <= bounds.max;
+                    const isToday = key === bounds.todayKey;
                     const seats = seatsByDate.get(key);
                     const selected = date === key;
                     return (
-                      <button key={i} type="button" disabled={!inRange} onClick={() => chooseDate(key)}
+                      <button key={i} type="button" disabled={!inRange} aria-current={isToday ? "date" : undefined} onClick={() => chooseDate(key)}
                         className={cn(
                           "flex min-h-[46px] flex-col items-center justify-center rounded-lg border text-sm transition-colors",
-                          !inRange ? "cursor-not-allowed border-transparent text-ink-faint/50" :
+                          isPast ? "cursor-not-allowed border-transparent text-ink-faint/40 line-through" :
+                          !inRange ? "cursor-not-allowed border-transparent text-ink-faint/40" :
                           selected ? "border-brand-blue bg-brand-blueLight text-brand-blue" :
+                          isToday ? "border-brand-blue/60 font-bold text-brand-blue hover:bg-brand-blueLight/60" :
                           "border-transparent text-ink hover:border-brand-blue/40 hover:bg-surface-muted/60"
                         )}>
                         <span className="font-semibold">{cell.getDate()}</span>
-                        {inRange && seats != null && seats > 0 && (
+                        {isToday && !selected && <span className="text-[9px] font-bold uppercase text-brand-blue">Today</span>}
+                        {inRange && !isToday && seats != null && seats > 0 && (
                           <span className="text-[9px] font-bold uppercase text-success">{seats} left</span>
                         )}
                       </button>

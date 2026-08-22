@@ -1,8 +1,11 @@
 import { db } from "@/lib/db";
-import { sendEmail, emailLayout, type EmailAttachment } from "@/lib/services/email";
+import { sendEmail, emailLayout, businessNotifyEmail, type EmailAttachment } from "@/lib/services/email";
 import { sendTransactionalSms } from "@/lib/services/sms";
 import type { AppEvent } from "@/lib/constants";
-import { getSiteUrl } from "@/lib/utils";
+import { getSiteUrl, formatINR, formatDate } from "@/lib/utils";
+
+// Events that also alert the company's business inbox (separate from the customer).
+const ADMIN_ALERT_EVENTS = new Set<AppEvent>(["BOOKING_CREATED", "PAYMENT_RECEIVED"]);
 
 /**
  * Central notification / event service (Phase 20, spec §18).
@@ -279,6 +282,45 @@ export async function emitEvent(input: EmitInput): Promise<boolean> {
         customerId: ctx.customerId, bookingId: ctx.bookingId, channel: "EMAIL", event: input.event,
         toAddress: ctx.email, status: r.ok ? "SENT" : "FAILED", error: r.error, dedupeKey: input.dedupeKey,
       });
+    }
+
+    // 2b) Business alert — the company inbox is notified of new bookings and
+    // verified payments, with the customer's address as Reply-To. Sent to the
+    // official business mailbox only; never to an unrelated recipient.
+    if (ADMIN_ALERT_EVENTS.has(input.event) && ctx.bookingId) {
+      try {
+        const b = await db.booking.findUnique({
+          where: { id: ctx.bookingId },
+          select: {
+            totalAmount: true, travellerCount: true, travelDate: true, departureCity: true,
+            customer: { select: { fullName: true, email: true, mobile: true } },
+          },
+        });
+        if (b) {
+          const paid = input.event === "PAYMENT_RECEIVED";
+          await sendEmail({
+            to: businessNotifyEmail(),
+            replyTo: b.customer.email || undefined,
+            subject: `${paid ? "💳 Payment received" : "🔔 New booking"} — ${ctx.reference} — ${ctx.packageName ?? "ExpertzTrip"}`,
+            html: emailLayout(
+              paid ? "Payment received" : "New booking received",
+              `Booking ID: <b>${ctx.reference}</b><br>
+               Customer: <b>${b.customer.fullName ?? "—"}</b><br>
+               Email: <b>${b.customer.email ?? "—"}</b><br>
+               Phone: <b>${b.customer.mobile ?? "—"}</b><br>
+               Package: <b>${ctx.packageName ?? "—"}</b><br>
+               ${b.departureCity ? `From: <b>${b.departureCity}</b><br>` : ""}
+               ${b.travelDate ? `Travel date: <b>${formatDate(b.travelDate)}</b><br>` : ""}
+               Travellers: <b>${b.travellerCount}</b><br>
+               Amount: <b>${formatINR(b.totalAmount)}</b><br>
+               Payment: <b>${paid ? "SUCCESSFUL" : "Pending"}</b>`,
+              { label: "Open booking", href: `${siteUrl()}/admin/bookings/${ctx.bookingId}` },
+            ),
+          });
+        }
+      } catch (e) {
+        console.error("business alert failed (non-blocking):", (e as Error).message);
+      }
     }
 
     // 3) SMS (MSG91) — per policy.

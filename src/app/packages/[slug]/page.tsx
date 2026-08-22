@@ -17,6 +17,7 @@ import { BookNowButton } from "@/components/package/booking-wizard";
 import { EnquireButton } from "@/components/package/enquire-button";
 import { PackageCard } from "@/components/package/package-card";
 import { getPackageBySlug, getSimilarPackages } from "@/lib/queries";
+import { getCurrentCustomer } from "@/lib/auth";
 import { formatINR } from "@/lib/utils";
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -85,6 +86,12 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
   const categoryLabel = v.category ? CATEGORY_LABEL[v.category] : null;
   const availability = AVAILABILITY_META[v.availabilityStatus] ?? null;
   const similar = await getSimilarPackages(pkg.destinationId, pkg.theme, pkg.id, 3);
+
+  // Prefill the enquiry form for signed-in customers — never re-ask their details.
+  const customer = await getCurrentCustomer();
+  const enquiryDefaults = customer
+    ? { defaultName: customer.fullName, defaultEmail: customer.email, defaultPhone: customer.mobile }
+    : {};
 
   const glance = [
     { icon: Clock, label: "Duration", value: `${v.durationNights}N / ${v.durationDays}D` },
@@ -217,7 +224,7 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
             <p className="text-sm text-ink-muted">Talk to an ExpertzTrip travel expert about dates, hotels, upgrades and special requests.</p>
           </div>
           <div className="shrink-0 sm:w-56">
-            <EnquireButton packageName={pkg.name} packageSlug={pkg.slug} label="Talk to an expert" />
+            <EnquireButton packageName={pkg.name} packageSlug={pkg.slug} {...enquiryDefaults} label="Talk to an expert" />
           </div>
         </div>
 
@@ -397,7 +404,7 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
                         <li className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-brand-blue" /> Expert support, no obligation</li>
                       </ul>
                       <div className="mt-5">
-                        <EnquireButton packageName={pkg.name} packageSlug={pkg.slug} variant="solid" size="lg" label="Enquire now" className="!bg-brand-orange hover:!bg-brand-orangeDark" />
+                        <EnquireButton packageName={pkg.name} packageSlug={pkg.slug} {...enquiryDefaults} variant="solid" size="lg" label="Enquire now" className="!bg-brand-orange hover:!bg-brand-orangeDark" />
                       </div>
                       <p className="mt-2 text-center text-xs text-ink-muted">No login needed — talk to us directly.</p>
                     </div>
@@ -450,7 +457,7 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
                       </details>
                       <div className="mt-4 border-t border-surface-border pt-4">
                         <p className="mb-2 text-center text-xs text-ink-muted">Prefer to speak to an expert first?</p>
-                        <EnquireButton packageName={pkg.name} packageSlug={pkg.slug} label="Enquire on WhatsApp" />
+                        <EnquireButton packageName={pkg.name} packageSlug={pkg.slug} {...enquiryDefaults} label="Enquire on WhatsApp" />
                       </div>
                     </>
                   )}
@@ -487,7 +494,7 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
           </div>
           <div className="flex items-center gap-2">
             <div className="w-[128px]">
-              <EnquireButton packageName={pkg.name} packageSlug={pkg.slug} label="Enquire" />
+              <EnquireButton packageName={pkg.name} packageSlug={pkg.slug} {...enquiryDefaults} label="Enquire" />
             </div>
             {reviewRequired ? (
               <Link href="#customize" className="inline-flex h-11 items-center justify-center rounded-xl bg-brand-orange px-5 font-semibold text-white transition-colors hover:bg-brand-orangeDark">

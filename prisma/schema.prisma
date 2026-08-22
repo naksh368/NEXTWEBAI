@@ -847,6 +847,7 @@ model BusinessSetting {
 
 model Enquiry {
   id            String   @id @default(cuid())
+  reference     String?  @unique // human-friendly, e.g. ENQ-2K7QF3
   fullName      String
   email         String?
   phone         String

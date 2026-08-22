@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { sendEmail, emailLayout } from "@/lib/services/email";
-import { getSiteUrl } from "@/lib/utils";
+import { sendEmail, emailLayout, businessNotifyEmail } from "@/lib/services/email";
+import { getSiteUrl, makeReference } from "@/lib/utils";
 
 export const runtime = "nodejs";
 
@@ -37,9 +37,11 @@ export async function POST(request: Request) {
   }
 
   const d = parsed.data;
+  const reference = makeReference("ENQ");
   try {
     await db.enquiry.create({
       data: {
+        reference,
         fullName: d.fullName,
         phone: d.phone,
         email: d.email ?? null,
@@ -67,25 +69,54 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Could not submit right now. Please try WhatsApp or call us." }, { status: 500 });
   }
 
-  // Enquiry-received email (non-blocking; only when an email was provided).
+  const first = d.fullName.split(" ")[0] || "traveller";
+  const site = getSiteUrl();
+  const travellersLine =
+    d.adults || d.children
+      ? [d.adults ? `${d.adults} Adult${d.adults > 1 ? "s" : ""}` : "", d.children ? `${d.children} Child${d.children > 1 ? "ren" : ""}` : ""].filter(Boolean).join(", ")
+      : d.travellers ? `${d.travellers}` : "";
+  const detailRows = [
+    d.packageName ? `Holiday: <b>${d.packageName}</b>` : d.destination ? `Destination: <b>${d.destination}</b>` : "",
+    d.travelDate ? `Travel date: <b>${d.travelDate}</b>` : "",
+    travellersLine ? `Travellers: <b>${travellersLine}</b>` : "",
+  ].filter(Boolean).join("<br>");
+
+  // Customer enquiry-received email (non-blocking; only when an email was provided).
   if (d.email) {
-    const first = d.fullName.split(" ")[0] || "traveller";
-    const site = getSiteUrl();
-    const rows = [
-      d.packageName ? `Holiday: <b>${d.packageName}</b>` : d.destination ? `Destination: <b>${d.destination}</b>` : "",
-      d.travelDate ? `Travel date: <b>${d.travelDate}</b>` : "",
-      d.travellers ? `Travellers: <b>${d.travellers}</b>` : "",
-    ].filter(Boolean).join("<br>");
     void sendEmail({
       to: d.email,
-      subject: "We've received your ExpertzTrip enquiry",
+      subject: `We've received your ExpertzTrip enquiry — ${reference}`,
       html: emailLayout(
         "Enquiry received",
-        `Hi ${first}, thanks for your interest${d.packageName ? ` in <b>${d.packageName}</b>` : ""}.<br><br>${rows}${rows ? "<br><br>" : ""}Your enquiry has been received. Our team will review your request and contact you using the details you provided.`,
+        `Hi ${first}, thanks for your interest${d.packageName ? ` in <b>${d.packageName}</b>` : ""}.<br><br>Enquiry ID: <b>${reference}</b><br>${detailRows}${detailRows ? "<br>" : ""}<br>Your enquiry has been received. An ExpertzTrip travel specialist will review your request and contact you using the details you provided.`,
         d.packageSlug ? { label: "View holiday", href: `${site}/packages/${d.packageSlug}` } : { label: "Explore holidays", href: `${site}/packages` },
       ),
     }).catch(() => {});
   }
 
-  return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
+  // Internal business alert — goes to the company inbox only, with the customer's
+  // address as Reply-To so the team can respond in one click. Never sends the
+  // customer's details to an unrelated recipient.
+  void sendEmail({
+    to: businessNotifyEmail(),
+    replyTo: d.email || undefined,
+    subject: `🔔 New enquiry — ${d.packageName ?? d.destination ?? "ExpertzTrip"} — ${reference}`,
+    html: emailLayout(
+      "New enquiry received",
+      `Enquiry ID: <b>${reference}</b><br>
+       Customer: <b>${d.fullName}</b><br>
+       Email: <b>${d.email ?? "—"}</b><br>
+       Phone: <b>+91 ${d.phone}</b><br>
+       ${d.packageName ? `Package: <b>${d.packageName}</b><br>` : d.destination ? `Destination: <b>${d.destination}</b><br>` : ""}
+       ${d.travelDate ? `Travel date: <b>${d.travelDate}</b><br>` : ""}
+       ${travellersLine ? `Travellers: <b>${travellersLine}</b><br>` : ""}
+       ${d.budget ? `Budget: <b>${d.budget}</b><br>` : ""}
+       ${d.bookingPlan ? `Plan: <b>${d.bookingPlan}</b><br>` : ""}
+       ${d.message ? `<br>Message:<br>${d.message}` : ""}
+       <br><br>Source: ${d.source ?? (d.packageSlug ? "PACKAGE" : "WEBSITE")}`,
+      d.packageSlug ? { label: "Open the package", href: `${site}/packages/${d.packageSlug}` } : { label: "Open admin", href: `${site}/admin/enquiries` },
+    ),
+  }).catch(() => {});
+
+  return NextResponse.json({ ok: true, reference }, { headers: { "Cache-Control": "no-store" } });
 }

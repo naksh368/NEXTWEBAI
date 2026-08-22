@@ -15,6 +15,18 @@ export function isEmailConfigured(): boolean {
   return (p === "sendgrid" || p === "zavu") && Boolean(apiKey());
 }
 
+/**
+ * The company's business/support inbox that receives operational alerts (new
+ * booking, payment, enquiry). Never mixed with the customer's own mail.
+ */
+export function businessNotifyEmail(): string {
+  return (
+    process.env.ADMIN_NOTIFY_EMAIL ||
+    process.env.ADMIN_EMAIL ||
+    "expertztripofficial@gmail.com"
+  ).trim().toLowerCase();
+}
+
 /** Parse "Name <email>" or a bare email into { email, name }. */
 function parseFrom(v: string): { email: string; name?: string } {
   const m = v.match(/^\s*(.*?)\s*<\s*([^>]+)\s*>\s*$/);
@@ -24,10 +36,10 @@ function parseFrom(v: string): { email: string; name?: string } {
 
 export type EmailAttachment = { filename: string; content: string /* base64 */; type: string };
 
-export async function sendEmail(opts: { to: string; subject: string; html: string; attachments?: EmailAttachment[] }): Promise<{ ok: boolean; error?: string }> {
+export async function sendEmail(opts: { to: string; subject: string; html: string; attachments?: EmailAttachment[]; replyTo?: string }): Promise<{ ok: boolean; error?: string }> {
   try {
     if (provider() === "console") {
-      console.log(`\n📧 [EMAIL:console] to ${opts.to}\n   ${opts.subject}${opts.attachments?.length ? `\n   + ${opts.attachments.length} attachment(s)` : ""}\n`);
+      console.log(`\n📧 [EMAIL:console] to ${opts.to}${opts.replyTo ? ` (reply-to ${opts.replyTo})` : ""}\n   ${opts.subject}${opts.attachments?.length ? `\n   + ${opts.attachments.length} attachment(s)` : ""}\n`);
       return { ok: true };
     }
     if (provider() === "sendgrid") {
@@ -38,6 +50,7 @@ export async function sendEmail(opts: { to: string; subject: string; html: strin
         body: JSON.stringify({
           personalizations: [{ to: [{ email: opts.to }] }],
           from: sender,
+          ...(opts.replyTo ? { reply_to: { email: opts.replyTo } } : {}),
           subject: opts.subject,
           content: [{ type: "text/html", value: opts.html }],
           ...(opts.attachments?.length

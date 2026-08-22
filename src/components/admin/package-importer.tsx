@@ -206,41 +206,64 @@ function BatchImport({ destinations }: { destinations: Destination[] }) {
   const [url, setUrl] = useState("");
   const [destinationId, setDestinationId] = useState("");
   const [scanning, startScan] = useTransition();
-  const [importing, startImport] = useTransition();
+  const [importing, setImporting] = useState(false);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [verbatim, setVerbatim] = useState(false);
   const [links, setLinks] = useState<{ url: string; use: boolean }[]>([]);
   const [result, setResult] = useState<{ created: { name: string; slug: string }[]; failed: { url: string; error: string }[] } | null>(null);
 
   function onScanListing() {
-    setError(null); setResult(null);
+    setError(null); setResult(null); setProgress(null);
     startScan(async () => {
       const res = await scanListing(url);
       if (!res.ok) { setError(res.error); return; }
       setLinks(res.links.map((u) => ({ url: u, use: true })));
     });
   }
-  function onImport() {
+
+  // Import the whole listing in small sequential chunks so no single serverless
+  // request runs too long, with live progress + results.
+  async function onImport() {
     setError(null);
     const chosen = links.filter((l) => l.use).map((l) => l.url);
     if (!chosen.length) { setError("Select at least one package link."); return; }
     if (!destinationId) { setError("Choose a destination for the drafts."); return; }
-    startImport(async () => {
-      const res = await batchImport(chosen, destinationId, verbatim);
-      if (!res.ok) { setError(res.error); return; }
-      setResult(res);
-    });
+
+    setImporting(true);
+    setProgress({ done: 0, total: chosen.length });
+    const created: { name: string; slug: string }[] = [];
+    const failed: { url: string; error: string }[] = [];
+    const CHUNK = 3;
+    try {
+      for (let i = 0; i < chosen.length; i += CHUNK) {
+        const slice = chosen.slice(i, i + CHUNK);
+        const res = await batchImport(slice, destinationId, verbatim);
+        if (res.ok) {
+          created.push(...res.created.map((c) => ({ name: c.name, slug: c.slug })));
+          failed.push(...res.failed);
+        } else {
+          failed.push(...slice.map((u) => ({ url: u, error: res.error })));
+        }
+        setProgress({ done: Math.min(i + CHUNK, chosen.length), total: chosen.length });
+        setResult({ created: [...created], failed: [...failed] });
+      }
+    } catch {
+      setError("Import was interrupted — some drafts may still have been created. Check Packages.");
+    } finally {
+      setImporting(false);
+    }
   }
 
   return (
     <div className="space-y-5">
       <div className="rounded-xl border border-warning/30 bg-[#FDF7EC] px-4 py-3 text-sm text-warning">
-        Paste a supplier <strong>listing / category</strong> page. We find the <strong>holiday-package</strong> links only — flights, hotel-only, visa &amp; other non-package pages are skipped — then extract each into a <strong>draft</strong> (never published). Up to 12 per run. Review every draft before publishing.
+        Paste a supplier <strong>listing / category</strong> page. We find the <strong>holiday-package</strong> links only — flights, hotel-only, visa &amp; other non-package pages are skipped — then extract each into a <strong>draft</strong> (never published). The whole listing imports in small batches, so it won&apos;t time out. Review every draft before publishing.
       </div>
       <ScanBar url={url} setUrl={setUrl} onScan={onScanListing} scanning={scanning} placeholder="https://supplier.com/andaman-packages" label="Find packages" />
       <Alerts error={error} notice={null} />
 
-      {links.length > 0 && !result && (
+      {links.length > 0 && (!result || importing) && (
         <div className="rounded-2xl border border-surface-border bg-white p-4">
           <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -263,10 +286,18 @@ function BatchImport({ destinations }: { destinations: Destination[] }) {
                 </select>
               </div>
               <button onClick={onImport} disabled={importing} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-brand-blue px-5 font-semibold text-white hover:bg-brand-blueDark disabled:opacity-60">
-                {importing ? <><Loader2 className="h-4 w-4 animate-spin" /> Importing…</> : "Import selected as drafts"}
+                {importing ? <><Loader2 className="h-4 w-4 animate-spin" /> Importing {progress ? `${progress.done}/${progress.total}` : ""}…</> : "Import selected as drafts"}
               </button>
             </div>
           </div>
+          {importing && progress && (
+            <div className="mb-3">
+              <div className="h-2 overflow-hidden rounded-full bg-surface-muted">
+                <div className="h-full rounded-full bg-brand-blue transition-all" style={{ width: `${Math.round((progress.done / Math.max(1, progress.total)) * 100)}%` }} />
+              </div>
+              <p className="mt-1 text-xs text-ink-muted">Importing in batches — you can leave this open. {progress.done} of {progress.total} processed.</p>
+            </div>
+          )}
           <div className="max-h-80 space-y-1 overflow-y-auto">
             {links.map((l, i) => (
               <label key={i} className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs hover:bg-surface-muted/50">
@@ -278,7 +309,7 @@ function BatchImport({ destinations }: { destinations: Destination[] }) {
         </div>
       )}
 
-      {result && (
+      {result && !importing && (
         <div className="rounded-2xl border border-surface-border bg-white p-4">
           <p className="flex items-center gap-2 font-semibold text-success"><CheckCircle2 className="h-5 w-5" /> {result.created.length} draft{result.created.length === 1 ? "" : "s"} created</p>
           <div className="mt-3 space-y-1">

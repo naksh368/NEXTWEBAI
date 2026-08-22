@@ -242,7 +242,7 @@ export function extractMainText(html: string, cap = 14000): string {
  * Discover candidate package/tour detail links from a listing/index page.
  * Heuristic + same-registrable-site only. Returns absolute HTTPS URLs.
  */
-export function discoverPackageLinks(html: string, baseUrl: string, limit = 40): string[] {
+export function discoverPackageLinks(html: string, baseUrl: string, limit = 80): string[] {
   let base: URL;
   try { base = new URL(baseUrl); } catch { return []; }
   const KEYWORDS = /(package|holiday|tour|itinerary|trip|nights?-?\d|\d-?nights?|\d-?days?)/i;

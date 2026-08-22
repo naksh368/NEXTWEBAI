@@ -270,7 +270,9 @@ export async function batchImport(urls: string[], destinationId: string, verbati
   if (!destinationId) return { ok: false, error: "Choose a destination for the imported drafts." };
   if (!isAiConfigured()) return { ok: false, error: "Batch import needs AI extraction — configure AI_API_KEY first." };
 
-  const list = (urls ?? []).slice(0, 12); // cap per run
+  // Small per-request cap so a single serverless call never times out — the
+  // client drives the whole listing in sequential chunks.
+  const list = (urls ?? []).slice(0, 6);
   const created: { url: string; name: string; slug: string }[] = [];
   const failed: { url: string; error: string }[] = [];
 

@@ -8,7 +8,6 @@ import {
   Users, Plus, Minus, Loader2, ShieldCheck, CalendarDays,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DEPARTURE_CITIES } from "@/lib/constants";
 import { formatINR, formatDate, cn } from "@/lib/utils";
 import type { Pax } from "@/components/package/travellers-selector";
 import { paxSummary } from "@/components/package/travellers-selector";
@@ -77,14 +76,13 @@ function Wizard({ onClose, ...props }: Props & { onClose: () => void }) {
   const router = useRouter();
   const [step, setStep] = useState(0);
 
-  const cities = useMemo(() => {
-    const base = (props.departureCities ?? []).filter(Boolean);
-    const merged = [...new Set([...base, ...DEPARTURE_CITIES])];
-    return merged;
-  }, [props.departureCities]);
+  const packageCities = useMemo(() => (props.departureCities ?? []).filter(Boolean), [props.departureCities]);
 
   const [city, setCity] = useState<string>("");
   const [cityQuery, setCityQuery] = useState("");
+  const [cityResults, setCityResults] = useState<{ city: string; label: string; state: string }[]>([]);
+  const [cityLoading, setCityLoading] = useState(false);
+  const [recentCities, setRecentCities] = useState<string[]>([]);
   const [date, setDate] = useState<string>("");
   const [pax, setPax] = useState<Pax>({ adults: Math.max(2, props.minTravellers), children: 0, childrenAges: [], infants: 0, rooms: 1 });
   const [custom, setCustom] = useState(false);
@@ -116,11 +114,26 @@ function Wizard({ onClose, ...props }: Props & { onClose: () => void }) {
     return m;
   }, [props.departures]);
 
-  const filteredCities = useMemo(() => {
-    const q = cityQuery.trim().toLowerCase();
-    if (!q) return cities;
-    return cities.filter((c) => c.toLowerCase().includes(q));
-  }, [cities, cityQuery]);
+  // Load recent city selections (per-viewer convenience).
+  useEffect(() => {
+    try { const r = JSON.parse(localStorage.getItem("etx_recent_cities") || "[]"); if (Array.isArray(r)) setRecentCities(r.slice(0, 4)); } catch { /* ignore */ }
+  }, []);
+
+  // Debounced departure-city search against the server dataset.
+  useEffect(() => {
+    const q = cityQuery.trim();
+    let alive = true;
+    setCityLoading(true);
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/cities?q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+        if (alive && data.ok) setCityResults(data.cities);
+      } catch { /* keep previous */ }
+      finally { if (alive) setCityLoading(false); }
+    }, 250);
+    return () => { alive = false; clearTimeout(t); };
+  }, [cityQuery]);
 
   const fetchPrice = useCallback(async () => {
     setPriceLoading(true); setPriceError(null);
@@ -147,7 +160,14 @@ function Wizard({ onClose, ...props }: Props & { onClose: () => void }) {
   function next() { setStep((s) => Math.min(STEPS.length - 1, s + 1)); }
   function back() { if (step === 0) onClose(); else setStep((s) => s - 1); }
 
-  function chooseCity(c: string) { setCity(c); setStep(1); }
+  function chooseCity(c: string) {
+    setCity(c);
+    try {
+      const next = [c, ...recentCities.filter((r) => r !== c)].slice(0, 4);
+      localStorage.setItem("etx_recent_cities", JSON.stringify(next));
+    } catch { /* ignore */ }
+    setStep(1);
+  }
   function chooseDate(key: string) { setDate(key); setStep(2); }
   function choosePreset(p: Pax) { setPax(p); setCustom(false); }
 
@@ -214,19 +234,45 @@ function Wizard({ onClose, ...props }: Props & { onClose: () => void }) {
                   autoFocus
                   value={cityQuery}
                   onChange={(e) => setCityQuery(e.target.value)}
-                  placeholder="Search your city"
+                  placeholder="Search city or airport (3000+ locations)"
                   className="w-full rounded-xl border-2 border-brand-blue/40 bg-white py-3 pl-10 pr-3 text-sm font-medium focus:border-brand-blue focus:outline-none"
                 />
+                {cityLoading && <Loader2 className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-ink-faint" />}
               </div>
-              <div className="mt-3 max-h-[46vh] space-y-1 overflow-y-auto sm:max-h-72">
-                {filteredCities.map((c) => (
-                  <button key={c} type="button" onClick={() => chooseCity(c)}
+
+              {/* Package-specific departures + recents (only before a search) */}
+              {!cityQuery.trim() && (packageCities.length > 0 || recentCities.length > 0) && (
+                <div className="mt-3 space-y-2">
+                  {packageCities.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {packageCities.map((c) => (
+                        <button key={c} type="button" onClick={() => chooseCity(c)} className="rounded-full border border-brand-blue/30 bg-brand-blueLight/50 px-3 py-1 text-xs font-semibold text-brand-blue hover:bg-brand-blueLight">{c}</button>
+                      ))}
+                    </div>
+                  )}
+                  {recentCities.length > 0 && (
+                    <div>
+                      <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-ink-faint">Recent</p>
+                      <div className="flex flex-wrap gap-2">
+                        {recentCities.map((c) => (
+                          <button key={c} type="button" onClick={() => chooseCity(c)} className="rounded-full border border-surface-border px-3 py-1 text-xs font-medium text-ink-muted hover:border-brand-blue hover:text-brand-blue">{c}</button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="mt-3 max-h-[42vh] space-y-1 overflow-y-auto sm:max-h-64">
+                {cityResults.map((c) => (
+                  <button key={`${c.city}-${c.state}`} type="button" onClick={() => chooseCity(c.city)}
                     className={cn("flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm font-medium transition-colors",
-                      city === c ? "border-brand-blue bg-brand-blueLight/60 text-brand-blue" : "border-transparent hover:border-surface-border hover:bg-surface-muted/60")}>
-                    <MapPin className="h-4 w-4 shrink-0 text-brand-orange" /> {c}, IN
+                      city === c.city ? "border-brand-blue bg-brand-blueLight/60 text-brand-blue" : "border-transparent hover:border-surface-border hover:bg-surface-muted/60")}>
+                    <MapPin className="h-4 w-4 shrink-0 text-brand-orange" />
+                    <span className="min-w-0"><span className="font-semibold">{c.label}</span><span className="ml-1 text-xs text-ink-muted">{c.state}</span></span>
                   </button>
                 ))}
-                {cityQuery.trim() && !filteredCities.some((c) => c.toLowerCase() === cityQuery.trim().toLowerCase()) && (
+                {!cityLoading && cityQuery.trim() && !cityResults.some((c) => c.city.toLowerCase() === cityQuery.trim().toLowerCase()) && (
                   <button type="button" onClick={() => chooseCity(cityQuery.trim())}
                     className="flex w-full items-center gap-3 rounded-xl border border-dashed border-surface-border px-4 py-3 text-left text-sm font-medium text-ink-muted hover:border-brand-blue hover:text-brand-blue">
                     <MapPin className="h-4 w-4 shrink-0" /> Use &ldquo;{cityQuery.trim()}&rdquo;

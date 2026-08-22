@@ -1,10 +1,21 @@
 import Link from "next/link";
-import { MapPin, Clock, ArrowRight } from "lucide-react";
+import { MapPin, Clock, ArrowRight, Check } from "lucide-react";
 import { SmartImage } from "@/components/ui/smart-image";
 import { Badge } from "@/components/ui/badge";
 import { EnquireButton } from "@/components/package/enquire-button";
 import { formatINR } from "@/lib/utils";
 import type { PackageListItem } from "@/lib/queries";
+
+/** Honest inclusion chips — only shown when the package actually has the data. */
+function inclusionChips(pkg: PackageListItem): string[] {
+  const chips: string[] = [];
+  if (pkg.roomCategory) chips.push(pkg.roomCategory.replace(/hotel/i, "").trim() ? `${pkg.roomCategory}` : "Hotel");
+  else chips.push(`${pkg.nights} nights stay`);
+  if (pkg.flightSector) chips.push("Flights");
+  if (pkg.mealPlan) chips.push(pkg.mealPlan);
+  chips.push("24×7 support");
+  return chips.slice(0, 4);
+}
 
 const THEME_LABEL: Record<string, string> = {
   HONEYMOON: "Honeymoon",
@@ -51,6 +62,15 @@ export function PackageCard({ pkg, priority, matchPct }: { pkg: PackageListItem;
         {pkg.summary && (
           <p className="mt-1 line-clamp-2 text-sm text-ink-muted">{pkg.summary}</p>
         )}
+
+        <ul className="mt-2.5 flex flex-wrap gap-x-3 gap-y-1">
+          {inclusionChips(pkg).map((c) => (
+            <li key={c} className="inline-flex items-center gap-1 text-xs font-medium text-ink">
+              <Check className="h-3.5 w-3.5 shrink-0 text-success" /> {c}
+            </li>
+          ))}
+        </ul>
+
         <div className="mt-auto pt-4">
           <div className="flex items-end justify-between">
             {pkg.pricingStatus === "PRICE_REVIEW_REQUIRED" ? (

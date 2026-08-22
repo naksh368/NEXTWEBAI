@@ -92,6 +92,9 @@ export type PackageListItem = {
   summary: string | null;
   pricingStatus: string;
   availabilityStatus: string;
+  roomCategory?: string | null;
+  mealPlan?: string | null;
+  flightSector?: string | null;
 };
 
 function toListItem(p: PackageWithVersion): PackageListItem {
@@ -103,6 +106,7 @@ function toListItem(p: PackageWithVersion): PackageListItem {
     nights: v.durationNights, days: v.durationDays,
     basePrice: v.basePrice, currency: v.currency, summary: v.summary,
     pricingStatus: v.pricingStatus, availabilityStatus: v.availabilityStatus,
+    roomCategory: v.roomCategory, mealPlan: v.mealPlan, flightSector: v.flightSector,
   };
 }
 

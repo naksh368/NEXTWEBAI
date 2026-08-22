@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, LifeBuoy, Luggage, User } from "lucide-react";
+import { Menu, X, LifeBuoy, Luggage, User, Bell } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -18,9 +18,10 @@ const NAV = [
 
 interface HeaderProps {
   isSignedIn: boolean;
+  unreadCount?: number;
 }
 
-export function Header({ isSignedIn }: HeaderProps) {
+export function Header({ isSignedIn, unreadCount = 0 }: HeaderProps) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -55,6 +56,18 @@ export function Header({ isSignedIn }: HeaderProps) {
           <Link href="/account/trips" className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-ink-muted hover:bg-surface-muted hover:text-brand-navy sm:inline-flex">
             <Luggage className="h-4 w-4" /> My Trips
           </Link>
+
+          {isSignedIn && (
+            <Link href="/account/notifications" aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
+              className="relative hidden h-10 w-10 items-center justify-center rounded-lg text-ink-muted hover:bg-surface-muted hover:text-brand-navy sm:inline-flex">
+              <Bell className="h-5 w-5" />
+              {unreadCount > 0 && (
+                <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-orange px-1 text-[10px] font-bold text-white">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+            </Link>
+          )}
 
           {isSignedIn ? (
             <Link
@@ -94,6 +107,12 @@ export function Header({ isSignedIn }: HeaderProps) {
             <Link href="/account/trips" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-[15px] font-medium text-ink hover:bg-surface-muted">
               <Luggage className="h-4 w-4" /> My Trips
             </Link>
+            {isSignedIn && (
+              <Link href="/account/notifications" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-[15px] font-medium text-ink hover:bg-surface-muted">
+                <Bell className="h-4 w-4" /> Notifications
+                {unreadCount > 0 && <span className="ml-auto rounded-full bg-brand-orange px-2 text-xs font-bold text-white">{unreadCount}</span>}
+              </Link>
+            )}
             {isSignedIn ? (
               <Link href="/account" onClick={() => setOpen(false)} className={buttonVariants({ variant: "primary", size: "sm", className: "mt-2 w-full" })}>
                 My Account

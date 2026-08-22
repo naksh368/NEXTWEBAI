@@ -20,16 +20,41 @@ export default async function MyTripsPage() {
   if (!customer) redirect("/sign-in?redirect_url=/account/trips");
 
   // Real bookings only — no decorative/fake dashboard (Phase 19).
-  const bookings = await db.booking.findMany({
-    where: { customerId: customer.id },
-    orderBy: { createdAt: "desc" },
-    include: { package: { select: { name: true, slug: true } } },
-  });
+  const [bookings, recentNotifications] = await Promise.all([
+    db.booking.findMany({
+      where: { customerId: customer.id },
+      orderBy: { createdAt: "desc" },
+      include: { package: { select: { name: true, slug: true } } },
+    }),
+    db.notification.findMany({ where: { customerId: customer.id }, orderBy: { createdAt: "desc" }, take: 3 }),
+  ]);
+  const unreadCount = recentNotifications.filter((n) => !n.isRead).length;
 
   return (
     <Container className="py-8">
       <Breadcrumbs items={[{ label: "Account", href: "/account" }, { label: "My Trips" }]} />
-      <h1 className="mt-4 text-2xl font-bold sm:text-3xl">My Trips</h1>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold sm:text-3xl">My Trips</h1>
+        <Link href="/account/notifications" className="inline-flex items-center gap-1.5 rounded-lg border border-surface-border px-3 py-2 text-sm font-semibold text-ink-muted transition-colors hover:border-brand-blue hover:text-brand-blue">
+          <AlertCircle className="h-4 w-4" /> Notifications
+          {unreadCount > 0 && <span className="rounded-full bg-brand-orange px-2 text-xs font-bold text-white">{unreadCount}</span>}
+        </Link>
+      </div>
+
+      {recentNotifications.length > 0 && (
+        <Link href="/account/notifications" className="mt-4 block rounded-2xl border border-brand-blue/20 bg-brand-blueLight/40 p-4 transition-colors hover:border-brand-blue/40">
+          <p className="text-xs font-bold uppercase tracking-wide text-brand-blue">Latest updates</p>
+          <ul className="mt-2 space-y-1">
+            {recentNotifications.map((n) => (
+              <li key={n.id} className="flex items-center gap-2 text-sm text-ink">
+                {!n.isRead && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-orange" />}
+                <span className="min-w-0 truncate font-medium text-brand-navy">{n.title}</span>
+                <span className="ml-auto shrink-0 text-xs text-ink-faint">{formatDate(n.createdAt)}</span>
+              </li>
+            ))}
+          </ul>
+        </Link>
+      )}
 
       {bookings.length === 0 ? (
         <EmptyState

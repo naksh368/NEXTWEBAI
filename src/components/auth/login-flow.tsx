@@ -120,6 +120,10 @@ export function LoginFlow({ redirectTo = "/account" }: { redirectTo?: string }) 
       )}
       {error && !noAccount && <p className="rounded-lg bg-[#FCE9E9] px-3 py-2 text-sm font-medium text-danger">{error}</p>}
 
+      <div className="flex justify-end -mt-1">
+        <Link href="/forgot-password" className="text-sm font-semibold text-brand-blue hover:underline">Forgot password?</Link>
+      </div>
+
       <Button type="submit" className="w-full" size="lg" loading={loading}>Continue</Button>
 
       <p className="text-center text-sm text-ink-muted">

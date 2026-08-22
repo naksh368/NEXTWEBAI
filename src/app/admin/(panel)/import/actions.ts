@@ -86,13 +86,14 @@ async function aiExtractPackage(text: string, verbatim = false): Promise<AiPacka
 {"name":string|null,"destinationName":string|null,"country":string|null,"durationNights":number|null,"durationDays":number|null,"category":string|null,"bestFor":string|null,"startingPrice":number|null,"travelWindow":string|null,"flightSector":string|null,"roomCategory":string|null,"mealPlan":string|null,"baggage":string|null,"summary":string|null,"overview":string|null,"highlights":string[],"inclusions":string[],"exclusions":string[],"itinerary":[{"day":number,"title":string,"description":string,"items":[{"timeslot":"MORNING"|"AFTERNOON"|"EVENING","kind":"FLIGHT"|"TRANSFER"|"HOTEL"|"ACTIVITY"|"MEAL"|"FREE_TIME"|"NOTE","title":string,"description":string}]}],"cancellationPolicy":string|null,"importantTerms":string|null}
 category must be one of FIRST_ESCAPE, SIGNATURE, HONEYMOON, FAMILY, LUXURY, PREMIUM or null.
 For EACH itinerary day, break the day into 2-4 time-slotted items (morning/afternoon/evening) with the right kind — this powers the day-by-day view. Only use activities actually mentioned on the page; if a slot is genuinely free, use kind FREE_TIME.
+For any FLIGHT item, include the route and any flight times stated on the page in its description (e.g. "Delhi → Oslo, dep 02:15 arr 07:40"). Put the overall flight route in flightSector.
 ${copyRule}
 If this is not a holiday/tour package (e.g. a flight, hotel-only, visa or insurance page), return {"name":null}.
 Return ONLY the JSON object, no prose.
 
 PAGE CONTENT:
 ${text}`;
-  const out = await aiComplete(prompt, { system: verbatim ? VERBATIM_SYSTEM : EXTRACT_SYSTEM, maxTokens: 3200, temperature: verbatim ? 0 : 0.25 });
+  const out = await aiComplete(prompt, { system: verbatim ? VERBATIM_SYSTEM : EXTRACT_SYSTEM, maxTokens: 2200, temperature: verbatim ? 0 : 0.25, timeoutMs: 22_000 });
   return parseAiPackage(out);
 }
 
@@ -182,7 +183,10 @@ const daySchema = z.object({
 });
 const draftSchema = z.object({
   name: z.string().min(3, "Package name is required.").max(120),
-  destinationId: z.string().min(1, "Choose a destination."),
+  // Optional — if blank we auto-detect/create the destination from the scanned page.
+  destinationId: z.string().optional().default(""),
+  destinationName: z.string().max(120).optional().nullable(),
+  country: z.string().max(80).optional().nullable(),
   nights: z.coerce.number().int().min(1).max(30),
   basePrice: z.coerce.number().int().min(0).max(5_000_000),
   category: z.string().max(40).optional().nullable(),
@@ -205,7 +209,27 @@ const draftSchema = z.object({
   sourceName: z.string().max(120).optional().nullable(),
 });
 
-async function createDraft(admin: { id: string }, d: z.infer<typeof draftSchema>): Promise<{ packageId: string; slug: string }> {
+/**
+ * Find a destination by slug/name, or create it (published) so imported packages
+ * always get a real destination without the admin picking from a limited list.
+ */
+async function resolveDestinationId(name?: string | null, country?: string | null): Promise<string | null> {
+  const n = (name ?? "").trim();
+  if (!n) return null;
+  const slug = slugify(n);
+  const existing = await db.destination.findFirst({
+    where: { OR: [{ slug }, { name: { equals: n, mode: "insensitive" } }] },
+    select: { id: true },
+  });
+  if (existing) return existing.id;
+  const created = await db.destination.create({
+    data: { slug, name: n, country: (country ?? "").trim() || "—", isPublished: true },
+    select: { id: true },
+  });
+  return created.id;
+}
+
+async function createDraft(admin: { id: string }, d: z.infer<typeof draftSchema> & { destinationId: string }): Promise<{ packageId: string; slug: string }> {
   let slug = slugify(d.name);
   if (await db.package.findUnique({ where: { slug } })) slug = `${slug}-${Date.now().toString(36).slice(-4)}`;
 
@@ -260,14 +284,18 @@ export async function createDraftFromImport(input: unknown): Promise<R<{ package
   if (!admin) return { ok: false, error: "You don't have permission to import packages." };
   const p = draftSchema.safeParse(input);
   if (!p.success) return { ok: false, error: p.error.issues[0]?.message ?? "Please review the fields." };
-  return { ok: true, ...(await createDraft(admin, p.data)) };
+
+  // Use the chosen destination, else auto-detect/create it from the scanned page.
+  const destinationId = p.data.destinationId || (await resolveDestinationId(p.data.destinationName, p.data.country));
+  if (!destinationId) return { ok: false, error: "Couldn't determine a destination — pick one, or add a destination name." };
+
+  return { ok: true, ...(await createDraft(admin, { ...p.data, destinationId })) };
 }
 
 // ── Batch import: scan + AI-extract + create DRAFT for several URLs ──
-export async function batchImport(urls: string[], destinationId: string, verbatim = false): Promise<R<{ created: { url: string; name: string; slug: string }[]; failed: { url: string; error: string }[] }>> {
+export async function batchImport(urls: string[], destinationId = "", verbatim = false): Promise<R<{ created: { url: string; name: string; slug: string }[]; failed: { url: string; error: string }[] }>> {
   const admin = await authorize("package.create");
   if (!admin) return { ok: false, error: "You don't have permission to import packages." };
-  if (!destinationId) return { ok: false, error: "Choose a destination for the imported drafts." };
   if (!isAiConfigured()) return { ok: false, error: "Batch import needs AI extraction — configure AI_API_KEY first." };
 
   // Small per-request cap so a single serverless call never times out — the
@@ -292,8 +320,11 @@ export async function batchImport(urls: string[], destinationId: string, verbati
       if (/\b(flight|flights|air\s?fare|air\s?ticket|one[-\s]?way|round[-\s]?trip)\b/i.test(name) && !(ai?.itinerary?.length)) {
         failed.push({ url, error: "looks like a flight, not a package — skipped" }); continue;
       }
+      // Auto-detect the destination from the page; fall back to the chosen one.
+      const destId = (await resolveDestinationId(ai?.destinationName, ai?.country)) ?? destinationId;
+      if (!destId) { failed.push({ url, error: "couldn't detect a destination — pick one for the batch" }); continue; }
       const res = await createDraft(admin, {
-        name, destinationId, nights, basePrice: ai?.startingPrice ?? facts.priceCandidates[0] ?? 0,
+        name, destinationId: destId, nights, basePrice: ai?.startingPrice ?? facts.priceCandidates[0] ?? 0,
         category: ai?.category ?? null, bestFor: ai?.bestFor ?? null,
         summary: ai?.summary ?? facts.summary ?? null, overview: ai?.overview ?? null,
         roomCategory: ai?.roomCategory ?? null, mealPlan: ai?.mealPlan ?? null,

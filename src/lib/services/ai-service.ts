@@ -23,8 +23,12 @@ export function isAiConfigured(): boolean {
  * the Package Importer. Returns the model's text, or null when AI isn't
  * configured or the call fails. Never throws.
  */
-export async function aiComplete(prompt: string, opts?: { system?: string; maxTokens?: number; temperature?: number }): Promise<string | null> {
+export async function aiComplete(prompt: string, opts?: { system?: string; maxTokens?: number; temperature?: number; timeoutMs?: number }): Promise<string | null> {
   if (!API_KEY) return null;
+  // Never hang past the serverless function limit — abort and let the caller
+  // fall back to facts-only extraction instead of returning a timeout page.
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), opts?.timeoutMs ?? 22_000);
   try {
     const messages = [
       ...(opts?.system ? [{ role: "system", content: opts.system }] : []),
@@ -32,6 +36,7 @@ export async function aiComplete(prompt: string, opts?: { system?: string; maxTo
     ];
     const res = await fetch(`${BASE}/chat/completions`, {
       method: "POST",
+      signal: controller.signal,
       headers: { Authorization: `Bearer ${API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({ model: MODEL, messages, temperature: opts?.temperature ?? 0.2, max_tokens: opts?.maxTokens ?? 1600 }),
     });
@@ -40,6 +45,8 @@ export async function aiComplete(prompt: string, opts?: { system?: string; maxTo
     return data?.choices?.[0]?.message?.content ?? null;
   } catch {
     return null;
+  } finally {
+    clearTimeout(timer);
   }
 }
 

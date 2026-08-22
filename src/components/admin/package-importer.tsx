@@ -96,7 +96,9 @@ function SingleImport({ destinations }: { destinations: Destination[] }) {
     setError(null);
     startSave(async () => {
       const res = await createDraftFromImport({
-        name: f.name, destinationId: f.destinationId, nights: f.nights, basePrice: f.basePrice,
+        name: f.name, destinationId: f.destinationId,
+        destinationName: ai?.destinationName ?? null, country: ai?.country ?? null,
+        nights: f.nights, basePrice: f.basePrice,
         category: f.category || null, bestFor: f.bestFor || null, summary: f.summary || null, overview: f.overview || null,
         roomCategory: f.roomCategory || null, mealPlan: f.mealPlan || null, flightSector: f.flightSector || null,
         baggage: f.baggage || null, travelWindows: f.travelWindows || null,
@@ -129,9 +131,9 @@ function SingleImport({ destinations }: { destinations: Destination[] }) {
           <SourceBar host={source.host} sourceUrl={source.sourceUrl} />
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <Field label="Package name *"><input value={f.name} onChange={(e) => set("name", e.target.value)} className={inp} /></Field>
-            <Field label="Destination *">
+            <Field label="Destination">
               <select value={f.destinationId} onChange={(e) => set("destinationId", e.target.value)} className={inp}>
-                <option value="">Select…</option>
+                <option value="">Auto-detect{ai?.destinationName ? `: ${ai.destinationName}` : " from page"}</option>
                 {destinations.map((d) => <option key={d.id} value={d.id}>{d.name} · {d.country}</option>)}
               </select>
             </Field>
@@ -228,7 +230,6 @@ function BatchImport({ destinations }: { destinations: Destination[] }) {
     setError(null);
     const chosen = links.filter((l) => l.use).map((l) => l.url);
     if (!chosen.length) { setError("Select at least one package link."); return; }
-    if (!destinationId) { setError("Choose a destination for the drafts."); return; }
 
     setImporting(true);
     setProgress({ done: 0, total: chosen.length });
@@ -279,9 +280,9 @@ function BatchImport({ destinations }: { destinations: Destination[] }) {
             </div>
             <div className="flex items-end gap-2">
               <div>
-                <label className="mb-1 block text-xs font-semibold text-ink-muted">Destination for drafts *</label>
+                <label className="mb-1 block text-xs font-semibold text-ink-muted">Destination (optional — auto-detected)</label>
                 <select value={destinationId} onChange={(e) => setDestinationId(e.target.value)} className={inp}>
-                  <option value="">Select…</option>
+                  <option value="">Auto-detect per package</option>
                   {destinations.map((d) => <option key={d.id} value={d.id}>{d.name} · {d.country}</option>)}
                 </select>
               </div>

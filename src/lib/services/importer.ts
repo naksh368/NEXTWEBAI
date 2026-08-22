@@ -229,7 +229,7 @@ export function extractFacts(html: string): ExtractedFacts {
 export const NOT_ON_SOURCE = NA;
 
 /** Cleaned, readable page text for AI extraction (scripts/styles/tags removed, capped). */
-export function extractMainText(html: string, cap = 14000): string {
+export function extractMainText(html: string, cap = 9000): string {
   const cleaned = html
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")

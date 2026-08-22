@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BOOKING_STATUS_META } from "@/lib/constants";
-import { updateBookingStatusAction, updateComponentStatusAction, addBookingNoteAction } from "@/app/admin/(panel)/actions";
+import { updateBookingStatusAction, updateComponentStatusAction, addBookingNoteAction, assignBookingAction } from "@/app/admin/(panel)/actions";
 
 export function BookingStatusControl({ bookingId, current, allowed }: { bookingId: string; current: string; allowed: string[] }) {
   const router = useRouter();
@@ -56,6 +56,32 @@ export function ComponentStatusControl({ bookingId, component, status }: { booki
       </select>
       {pending && <Loader2 className="h-4 w-4 animate-spin text-ink-faint" />}
       {saved && <Check className="h-4 w-4 text-success" />}
+    </div>
+  );
+}
+
+export function AssignSpecialistControl({ bookingId, current, staff }: { bookingId: string; current: string | null; staff: { id: string; name: string }[] }) {
+  const router = useRouter();
+  const [pending, start] = useTransition();
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <select defaultValue={current ?? ""} disabled={pending}
+          onChange={(e) => { setError(null); start(async () => {
+            const r = await assignBookingAction(bookingId, e.target.value);
+            if (!r.ok) setError(r.error); else { setSaved(true); router.refresh(); setTimeout(() => setSaved(false), 1500); }
+          }); }}
+          className="h-10 flex-1 rounded-xl border border-surface-border bg-white px-3 text-sm">
+          <option value="">Unassigned</option>
+          {staff.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+        </select>
+        {pending && <Loader2 className="h-4 w-4 animate-spin text-ink-faint" />}
+        {saved && <Check className="h-4 w-4 text-success" />}
+      </div>
+      {error && <p className="text-sm font-medium text-danger">{error}</p>}
     </div>
   );
 }

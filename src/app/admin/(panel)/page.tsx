@@ -17,7 +17,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
   const [
     totalBookings, confirmed, processing, paymentReceived, customers,
     publishedPackages, openTickets, upcoming, paidAgg, refundAgg, recent,
-    newEnquiries, recentEnquiries,
+    newEnquiries, recentEnquiries, paidNoDocs, unassigned,
   ] = await Promise.all([
     db.booking.count(),
     db.booking.count({ where: { status: "CONFIRMED" } }),
@@ -32,10 +32,22 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
     db.booking.findMany({ orderBy: { createdAt: "desc" }, take: 8, include: { customer: { select: { fullName: true, mobile: true } }, package: { select: { name: true } } } }),
     db.enquiry.count({ where: { status: "NEW" } }),
     db.enquiry.findMany({ orderBy: { createdAt: "desc" }, take: 6 }),
+    db.booking.count({ where: { status: { in: ["PAYMENT_RECEIVED", "BOOKING_PROCESSING", "SUPPLIER_CONFIRMATION_PENDING", "CONFIRMED"] }, documents: { none: {} } } }),
+    db.booking.count({ where: { status: { in: ACTIVE_BOOKING_STATUSES }, assignedToId: null } }),
   ]);
 
   const revenue = paidAgg._sum.amount ?? 0;
   const refunds = refundAgg._sum.amount ?? 0;
+
+  // "Action Required" — real operational signals, most useful to staff.
+  const actions = [
+    { n: paymentReceived, label: "payments to start processing", href: "/admin/bookings?status=PAYMENT_RECEIVED", tone: "orange" as const },
+    { n: processing, label: "bookings awaiting supplier confirmation", href: "/admin/bookings", tone: "blue" as const },
+    { n: paidNoDocs, label: "paid bookings with no documents uploaded", href: "/admin/bookings", tone: "orange" as const },
+    { n: unassigned, label: "active bookings not assigned to a specialist", href: "/admin/bookings", tone: "navy" as const },
+    { n: newEnquiries, label: "new enquiries to follow up", href: "/admin/enquiries", tone: "orange" as const },
+  ].filter((a) => a.n > 0);
+  const actionTotal = actions.reduce((s, a) => s + a.n, 0);
 
   return (
     <>
@@ -44,6 +56,25 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
       {denied && (
         <div className="mb-6 flex items-center gap-2 rounded-xl border border-warning/30 bg-[#FDF7EC] px-4 py-3 text-sm text-warning">
           <AlertTriangle className="h-4 w-4" /> You don&apos;t have permission to view that section.
+        </div>
+      )}
+
+      {actionTotal > 0 && (
+        <div className="mb-6 rounded-2xl border border-brand-orange/30 bg-brand-orangeLight/40 p-5">
+          <div className="flex items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-orange text-white"><AlertTriangle className="h-4 w-4" /></span>
+            <h2 className="text-lg font-bold text-brand-navy">Action required — {actionTotal}</h2>
+          </div>
+          <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {actions.map((a) => (
+              <li key={a.label}>
+                <Link href={a.href} className="flex items-center gap-3 rounded-xl border border-surface-border bg-white px-3.5 py-2.5 text-sm transition-colors hover:border-brand-orange">
+                  <span className="flex h-7 min-w-7 items-center justify-center rounded-lg bg-brand-orange/10 px-2 font-bold text-brand-orange">{a.n}</span>
+                  <span className="text-ink">{a.label}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 

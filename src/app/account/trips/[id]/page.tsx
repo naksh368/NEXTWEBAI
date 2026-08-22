@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { FileText, Map, Download, AlertCircle, CreditCard } from "lucide-react";
+import { FileText, Map, Download, AlertCircle, CreditCard, Phone, MessageCircle, CheckCircle2, Circle, Headset } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Card, CardBody } from "@/components/ui/card";
@@ -66,6 +66,7 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
     where: { id, customerId: customer.id }, // ownership enforced
     include: {
       package: { select: { name: true, slug: true } },
+      assignedTo: { select: { fullName: true, mobile: true } },
       packageVersion: { select: { _count: { select: { days: true } } } },
       items: { orderBy: { sortOrder: "asc" } },
       componentStatuses: true,
@@ -83,6 +84,25 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
   if (booking.status === "PAYMENT_PENDING" && booking.payments[0]?.status === "FAILED") {
     view = { tone: "danger", title: "Payment didn't go through", body: "Your last payment attempt failed or was cancelled. Please try again to secure your trip.", needsPayment: true };
   }
+
+  // Trip-ready checklist — real backend signals only (never a fake %).
+  const paid = ["PAYMENT_RECEIVED", "BOOKING_PROCESSING", "SUPPLIER_CONFIRMATION_PENDING", "CONFIRMED", "COMPLETED"].includes(booking.status) || booking.payments[0]?.status === "PAID";
+  const comps = booking.componentStatuses;
+  const readySteps = [
+    { label: "Payment received", done: paid },
+    { label: "Traveller details", done: booking.travellers.length > 0 },
+    { label: "Travel components confirmed", done: comps.length > 0 && comps.every((c) => c.status === "CONFIRMED") },
+    { label: "Documents ready", done: booking.documents.length > 0 },
+  ];
+  const readyDone = readySteps.filter((s) => s.done).length;
+  const readyPct = Math.round((readyDone / readySteps.length) * 100);
+  const readyRemaining = readySteps.length - readyDone;
+  const showTripReady = paid && booking.status !== "CANCELLED" && booking.status !== "REFUNDED";
+
+  // Assigned specialist WhatsApp/call links (their own number).
+  const expert = booking.assignedTo;
+  const expertDigits = (expert?.mobile ?? "").replace(/[^\d]/g, "");
+  const expertWa = expertDigits ? `https://wa.me/${expertDigits.length === 10 ? `91${expertDigits}` : expertDigits}?text=${encodeURIComponent(`Hi, I'm ${customer.fullName ?? "a customer"} — regarding my booking ${booking.reference}.`)}` : null;
 
   return (
     <Container className="py-8">
@@ -154,6 +174,50 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
         </div>
 
         <div className="space-y-6">
+          {showTripReady && (
+            <Card><CardBody>
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold">Trip ready</h2>
+                <span className="text-lg font-extrabold text-brand-blue">{readyPct}%</span>
+              </div>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-muted">
+                <div className="h-full rounded-full bg-brand-blue transition-all" style={{ width: `${readyPct}%` }} />
+              </div>
+              <ul className="mt-3 space-y-1.5">
+                {readySteps.map((s) => (
+                  <li key={s.label} className="flex items-center gap-2 text-sm">
+                    {s.done ? <CheckCircle2 className="h-4 w-4 shrink-0 text-success" /> : <Circle className="h-4 w-4 shrink-0 text-ink-faint" />}
+                    <span className={s.done ? "text-ink" : "text-ink-muted"}>{s.label}</span>
+                  </li>
+                ))}
+              </ul>
+              {readyRemaining > 0 && <p className="mt-3 text-xs font-semibold text-ink-muted">{readyRemaining} thing{readyRemaining > 1 ? "s" : ""} remaining — we&apos;ll keep you posted.</p>}
+            </CardBody></Card>
+          )}
+
+          {expert && (
+            <Card><CardBody>
+              <div className="flex items-center gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-orangeLight text-brand-orange"><Headset className="h-4 w-4" /></span>
+                <h2 className="text-lg font-bold">Your ExpertzTrip specialist</h2>
+              </div>
+              <p className="mt-3 text-base font-bold text-brand-navy">{expert.fullName}</p>
+              <p className="text-sm text-ink-muted">Looking after your booking — reach out any time.</p>
+              {expert.mobile && (
+                <div className="mt-3 flex gap-2">
+                  {expertWa && (
+                    <a href={expertWa} target="_blank" rel="noreferrer" className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#25D366] text-sm font-semibold text-white transition-colors hover:brightness-95">
+                      <MessageCircle className="h-4 w-4" /> WhatsApp
+                    </a>
+                  )}
+                  <a href={`tel:+${expertDigits.length === 10 ? `91${expertDigits}` : expertDigits}`} className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border-2 border-brand-blue/30 text-sm font-semibold text-brand-blue transition-colors hover:bg-brand-blueLight">
+                    <Phone className="h-4 w-4" /> Call
+                  </a>
+                </div>
+              )}
+            </CardBody></Card>
+          )}
+
           <Card><CardBody>
             <div className="flex items-center gap-2">
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-blueLight text-brand-blue"><Map className="h-4 w-4" /></span>

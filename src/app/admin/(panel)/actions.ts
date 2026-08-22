@@ -40,6 +40,31 @@ export async function updateComponentStatusAction(bookingId: string, component: 
   return { ok: true };
 }
 
+/** Assign (or unassign) a travel specialist to a booking. */
+export async function assignBookingAction(bookingId: string, adminUserId: string): Promise<ActionResult> {
+  const admin = await authorize("booking.update");
+  if (!admin) return { ok: false, error: "Not authorized." };
+
+  const booking = await db.booking.findUnique({ where: { id: bookingId }, select: { assignedToId: true, status: true } });
+  if (!booking) return { ok: false, error: "Booking not found." };
+
+  let assignedToId: string | null = null;
+  let assignedName = "Unassigned";
+  if (adminUserId) {
+    const staff = await db.adminUser.findUnique({ where: { id: adminUserId }, select: { id: true, fullName: true } });
+    if (!staff) return { ok: false, error: "That staff member no longer exists." };
+    assignedToId = staff.id;
+    assignedName = staff.fullName;
+  }
+
+  await db.booking.update({ where: { id: bookingId }, data: { assignedToId } });
+  await db.bookingEvent.create({ data: { bookingId, toStatus: booking.status, actor: admin.id, message: `Assigned to ${assignedName}.` } });
+  await writeAudit({ adminUserId: admin.id, action: "booking.assign", resource: `Booking:${bookingId}`, before: { assignedToId: booking.assignedToId }, after: { assignedToId } });
+  revalidatePath(`/admin/bookings/${bookingId}`);
+  revalidatePath("/admin/bookings");
+  return { ok: true };
+}
+
 /** Add an internal timeline note to a booking. */
 export async function addBookingNoteAction(bookingId: string, note: string): Promise<ActionResult> {
   const admin = await authorize("booking.update");

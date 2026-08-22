@@ -381,6 +381,10 @@ model Booking {
   packageVersionId String
   packageVersion PackageVersion @relation(fields: [packageVersionId], references: [id])
 
+  // Assigned travel specialist (admin staff) — the customer's point of contact.
+  assignedToId   String?
+  assignedTo     AdminUser? @relation("AssignedBookings", fields: [assignedToId], references: [id])
+
   status         String   @default("DRAFT") // see BOOKING_STATUS in constants
   travelDate     DateTime?
   departureCity  String?  // chosen departure city (booking wizard)
@@ -747,6 +751,7 @@ model AdminUser {
   createdAt    DateTime @default(now())
 
   auditLogs    AuditLog[]
+  assignedBookings Booking[] @relation("AssignedBookings")
 
   @@index([roleId])
 }

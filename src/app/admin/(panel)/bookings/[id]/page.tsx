@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { requireAdmin, hasPermission } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 import { PageHeader, Panel, Pill } from "@/components/admin/ui";
-import { BookingStatusControl, ComponentStatusControl, AddNoteForm } from "@/components/admin/booking-actions";
+import { BookingStatusControl, ComponentStatusControl, AddNoteForm, AssignSpecialistControl } from "@/components/admin/booking-actions";
 import { DocumentManager } from "@/components/admin/document-upload";
 import { BOOKING_STATUS_META } from "@/lib/constants";
 import { BOOKING_TRANSITIONS } from "@/lib/booking-states";
@@ -24,6 +24,7 @@ export default async function AdminBookingDetail({ params }: { params: Promise<{
     where: { id },
     include: {
       customer: { select: { fullName: true, mobile: true, email: true } },
+      assignedTo: { select: { id: true, fullName: true } },
       package: { select: { name: true, slug: true } },
       packageVersion: { select: { versionNumber: true } },
       items: { orderBy: { sortOrder: "asc" } },
@@ -37,6 +38,12 @@ export default async function AdminBookingDetail({ params }: { params: Promise<{
   });
   if (!booking) notFound();
 
+  // Staff list for assignment + the email/communication log for this booking.
+  const [staff, messages] = await Promise.all([
+    db.adminUser.findMany({ where: { status: "ACTIVE" }, select: { id: true, fullName: true }, orderBy: { fullName: "asc" } }),
+    db.messageLog.findMany({ where: { bookingId: id }, orderBy: { createdAt: "desc" }, take: 25 }),
+  ]);
+
   const meta = BOOKING_STATUS_META[booking.status] ?? { label: booking.status, tone: "neutral" as const };
   const allowed = BOOKING_TRANSITIONS[booking.status as BookingStatus] ?? [];
 
@@ -45,7 +52,7 @@ export default async function AdminBookingDetail({ params }: { params: Promise<{
       <Link href="/admin/bookings" className="mb-3 inline-flex items-center gap-1 text-sm text-ink-muted hover:text-brand-blue"><ArrowLeft className="h-4 w-4" /> Bookings</Link>
       <PageHeader
         title={booking.package.name}
-        subtitle={`Ref ${booking.reference} · v${booking.packageVersion.versionNumber} · ${booking.travellerCount} traveller${booking.travellerCount > 1 ? "s" : ""}`}
+        subtitle={`Ref ${booking.reference} · v${booking.packageVersion.versionNumber} · ${booking.travellerCount} traveller${booking.travellerCount > 1 ? "s" : ""} · ${formatINR(booking.totalAmount)} · ${booking.assignedTo ? `Assigned to ${booking.assignedTo.fullName}` : "Unassigned"}`}
         action={<Pill tone={meta.tone}>{meta.label}</Pill>}
       />
 
@@ -110,6 +117,24 @@ export default async function AdminBookingDetail({ params }: { params: Promise<{
             )}
           </Panel>
 
+          <Panel title="Communication" action={<span className="text-xs text-ink-faint">Emails sent for this booking</span>}>
+            {messages.length === 0 ? (
+              <p className="px-5 py-4 text-sm text-ink-muted">No emails logged yet.</p>
+            ) : (
+              <ul className="divide-y divide-surface-border">
+                {messages.map((m) => (
+                  <li key={m.id} className="flex items-center justify-between gap-3 px-5 py-3 text-sm">
+                    <span className="min-w-0">
+                      <span className="block truncate font-medium">{m.event}</span>
+                      <span className="text-xs text-ink-muted">{m.channel} · {m.toAddress} · {formatDate(m.createdAt, { hour: "2-digit", minute: "2-digit" })}</span>
+                    </span>
+                    <Pill tone={m.status === "SENT" ? "success" : m.status === "FAILED" ? "danger" : "neutral"}>{m.status}</Pill>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Panel>
+
           <Panel title="Timeline" action={canUpdate ? null : undefined}>
             <div className="space-y-4 p-5">
               {canUpdate && <AddNoteForm bookingId={booking.id} />}
@@ -130,6 +155,12 @@ export default async function AdminBookingDetail({ params }: { params: Promise<{
         </div>
 
         <div className="space-y-6">
+          {canUpdate && (
+            <Panel title="Assigned specialist" action={<span className="text-xs text-ink-faint">Customer&apos;s point of contact</span>}>
+              <div className="p-5"><AssignSpecialistControl bookingId={booking.id} current={booking.assignedTo?.id ?? null} staff={staff.map((s) => ({ id: s.id, name: s.fullName }))} /></div>
+            </Panel>
+          )}
+
           {canUpdate && (
             <Panel title="Update status">
               <div className="p-5"><BookingStatusControl bookingId={booking.id} current={booking.status} allowed={allowed} /></div>

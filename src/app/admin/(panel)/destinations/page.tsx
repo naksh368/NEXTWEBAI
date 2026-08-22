@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 import { PageHeader, Panel, Table, Th, Td, EmptyRow, Pill } from "@/components/admin/ui";
+import { SeedDestinationsButton } from "@/components/admin/seed-destinations-button";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,11 @@ export default async function AdminDestinationsPage() {
 
   return (
     <>
-      <PageHeader title="Destinations" subtitle="Destination pages are generated from these records." />
+      <PageHeader
+        title="Destinations"
+        subtitle="Destination pages are generated from these records. Add the curated India + India-friendly world list in one click."
+        action={<SeedDestinationsButton />}
+      />
       <Panel>
         <Table head={<><Th>Name</Th><Th>Country</Th><Th>Region</Th><Th>Packages</Th><Th>Flags</Th><Th></Th></>}>
           {rows.length === 0 ? <EmptyRow colSpan={6} label="No destinations yet." /> : rows.map((d) => (

@@ -11,7 +11,7 @@ const travellerSchema = z.object({
   title: z.enum(["MR", "MS", "MRS"]),
   givenName: z.string().min(1).max(60),
   surname: z.string().min(1).max(60),
-  dateOfBirth: z.string().min(8).max(10),
+  dateOfBirth: z.string().min(8).max(10).refine((s) => { const d = new Date(s); return !Number.isNaN(d.getTime()) && d <= new Date(); }, "Date of birth cannot be in the future."),
   passportNo: optionalStr,
   passportExpiry: optionalStr,
   passportIssueDate: optionalStr,

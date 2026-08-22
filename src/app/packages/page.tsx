@@ -7,7 +7,6 @@ import { EmptyState } from "@/components/ui/states";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PackageCard } from "@/components/package/package-card";
 import { PackageFilters } from "@/components/package/package-filters";
-import { BuildMyHoliday } from "@/components/package/build-my-holiday";
 import { listPackages, type PackageFilters as Filters, type PackageListItem } from "@/lib/queries";
 import { SearchX } from "lucide-react";
 
@@ -72,10 +71,6 @@ export default async function PackagesPage({ searchParams }: { searchParams: Sea
       <div className="mt-4">
         <h1 className="text-3xl font-bold">Holiday packages</h1>
         <p className="mt-1.5 text-ink-muted">Complete holidays you can tailor to your taste — priced transparently.</p>
-      </div>
-
-      <div className="mt-5">
-        <BuildMyHoliday />
       </div>
 
       <div className="mt-6">

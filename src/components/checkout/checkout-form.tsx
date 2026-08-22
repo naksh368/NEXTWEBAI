@@ -76,6 +76,8 @@ export function CheckoutForm({
   quoteId?: string;
 }) {
   const router = useRouter();
+  // Local YYYY-MM-DD (not UTC) so IST users never see an off-by-one bound.
+  const todayStr = new Date().toLocaleDateString("en-CA");
   const [travellers, setTravellers] = useState<Traveller[]>(
     Array.from({ length: travellerCount }, (_, i) => ({
       title: "MR", givenName: i === 0 ? (prefillName ?? "").split(" ")[0] ?? "" : "",
@@ -207,8 +209,9 @@ export function CheckoutForm({
               <Field label="Surname" htmlFor={`sn-${i}`} required>
                 <Input id={`sn-${i}`} value={t.surname} onChange={(e) => update(i, { surname: e.target.value })} placeholder="Last name" />
               </Field>
-              <Field label="Date of birth" htmlFor={`dob-${i}`} required>
-                <Input id={`dob-${i}`} type="date" value={t.dateOfBirth} onChange={(e) => update(i, { dateOfBirth: e.target.value })} />
+              <Field label="Date of birth" htmlFor={`dob-${i}`} required hint="Cannot be a future date">
+                <Input id={`dob-${i}`} type="date" max={todayStr} value={t.dateOfBirth} onChange={(e) => update(i, { dateOfBirth: e.target.value })}
+                  invalid={!!t.dateOfBirth && t.dateOfBirth > todayStr} />
               </Field>
               <Field label="PAN number" htmlFor={`pan-${i}`} required hint="Format ABCDE1234F">
                 <Input id={`pan-${i}`} value={t.panNumber} maxLength={10} onChange={(e) => update(i, { panNumber: e.target.value.toUpperCase() })}
@@ -219,11 +222,11 @@ export function CheckoutForm({
                   <Field label="Passport number" htmlFor={`pn-${i}`} required>
                     <Input id={`pn-${i}`} value={t.passportNo} onChange={(e) => update(i, { passportNo: e.target.value.toUpperCase() })} placeholder="e.g. M1234567" />
                   </Field>
-                  <Field label="Passport expiry" htmlFor={`pe-${i}`} required>
-                    <Input id={`pe-${i}`} type="date" value={t.passportExpiry} onChange={(e) => update(i, { passportExpiry: e.target.value })} />
+                  <Field label="Passport expiry" htmlFor={`pe-${i}`} required hint="Must be a future date">
+                    <Input id={`pe-${i}`} type="date" min={todayStr} value={t.passportExpiry} onChange={(e) => update(i, { passportExpiry: e.target.value })} />
                   </Field>
                   <Field label="Passport issue date" htmlFor={`pid-${i}`} required>
-                    <Input id={`pid-${i}`} type="date" value={t.passportIssueDate} onChange={(e) => update(i, { passportIssueDate: e.target.value })} />
+                    <Input id={`pid-${i}`} type="date" max={todayStr} value={t.passportIssueDate} onChange={(e) => update(i, { passportIssueDate: e.target.value })} />
                   </Field>
                   <Field label="Issue city" htmlFor={`pic-${i}`} required>
                     <Input id={`pic-${i}`} value={t.passportIssueCity} onChange={(e) => update(i, { passportIssueCity: e.target.value })} placeholder="City" />

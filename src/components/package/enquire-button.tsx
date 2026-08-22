@@ -280,7 +280,7 @@ export function EnquireButton({
                 </div>
                 <div>
                   <label className={labelCls}>When do you plan to travel? *</label>
-                  <input required type="date" value={travelDate} onChange={(e) => setTravelDate(e.target.value)} className={inputCls} />
+                  <input required type="date" min={new Date().toLocaleDateString("en-CA")} value={travelDate} onChange={(e) => setTravelDate(e.target.value)} className={inputCls} />
                 </div>
 
                 {error && <p className="text-sm font-medium text-danger">{error}</p>}

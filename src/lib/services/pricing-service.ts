@@ -105,7 +105,16 @@ export async function reprice(req: RepriceRequest): Promise<RepriceResult> {
 
   const selection: PricingSelection = { ...baseSelection, coupon };
 
-  const breakdown = computePricing(inputs, selection);
+  // Tax rate is admin-configurable (Business settings → Checkout); falls back to
+  // the built-in default when unset or invalid.
+  let taxRate: number | undefined;
+  try {
+    const s = await db.businessSetting.findUnique({ where: { key: "checkout" }, select: { value: true } });
+    const pct = (s?.value as { taxRatePct?: number } | null)?.taxRatePct;
+    if (typeof pct === "number" && pct >= 0 && pct <= 100) taxRate = pct / 100;
+  } catch { /* fall back to default */ }
+
+  const breakdown = computePricing(inputs, selection, taxRate);
   const resolved = resolveSelectedOptions(inputs.options, selection.selectedOptionIds).map((o) => o.id);
 
   // Was a coupon actually discounting?

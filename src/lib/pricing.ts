@@ -105,8 +105,10 @@ export function resolveSelectedOptions(
 
 export function computePricing(
   inputs: PricingInputs,
-  selection: PricingSelection
+  selection: PricingSelection,
+  taxRate: number = TAX_RATE
 ): PriceBreakdown {
+  const rate = Number.isFinite(taxRate) && taxRate >= 0 && taxRate <= 1 ? taxRate : TAX_RATE;
   const travellers = clampTravellers(selection.travellerCount);
   const items: PriceLineItem[] = [];
 
@@ -164,8 +166,8 @@ export function computePricing(
 
   // 5) Tax on the discounted subtotal
   const taxable = subtotal - discount;
-  const tax = Math.round(taxable * TAX_RATE);
-  items.push({ kind: "TAX", label: `Taxes & fees (${Math.round(TAX_RATE * 100)}%)`, amount: tax });
+  const tax = Math.round(taxable * rate);
+  items.push({ kind: "TAX", label: `Taxes & fees (${Math.round(rate * 100)}%)`, amount: tax });
 
   const total = taxable + tax;
 

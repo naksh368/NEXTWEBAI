@@ -8,6 +8,7 @@ import { BookingStatusControl, ComponentStatusControl, AddNoteForm, AssignSpecia
 import { DocumentManager } from "@/components/admin/document-upload";
 import { BOOKING_STATUS_META } from "@/lib/constants";
 import { BOOKING_TRANSITIONS } from "@/lib/booking-states";
+import { computeBookingChecks } from "@/lib/booking-checks";
 import { formatINR, formatDate } from "@/lib/utils";
 import type { BookingStatus } from "@/lib/constants";
 
@@ -26,7 +27,7 @@ export default async function AdminBookingDetail({ params }: { params: Promise<{
     include: {
       customer: { select: { fullName: true, mobile: true, email: true } },
       assignedTo: { select: { id: true, fullName: true } },
-      package: { select: { name: true, slug: true } },
+      package: { select: { name: true, slug: true, destination: { select: { country: true } } } },
       packageVersion: { select: { versionNumber: true } },
       items: { orderBy: { sortOrder: "asc" } },
       travellers: true,
@@ -48,6 +49,19 @@ export default async function AdminBookingDetail({ params }: { params: Promise<{
   const meta = BOOKING_STATUS_META[booking.status] ?? { label: booking.status, tone: "neutral" as const };
   const allowed = BOOKING_TRANSITIONS[booking.status as BookingStatus] ?? [];
 
+  // AI booking check — deterministic flags (never auto-acts on the booking).
+  const tb = booking.travellerBreakdown as { adults?: number; children?: number; infants?: number; rooms?: number } | null;
+  const checks = computeBookingChecks({
+    status: booking.status,
+    isInternational: booking.package.destination.country !== "India",
+    travelDate: booking.travelDate,
+    travellers: booking.travellers.map((t) => ({ name: t.fullName, passportNo: t.passportNo, passportExpiry: t.passportExpiry, dateOfBirth: t.dateOfBirth, panNumber: t.panNumber })),
+    components: booking.componentStatuses.map((c) => ({ component: c.component, status: c.status })),
+    documentsCount: booking.documents.length,
+    pax: tb ? { adults: tb.adults ?? 0, children: tb.children ?? 0, infants: tb.infants ?? 0, rooms: tb.rooms ?? 1 } : null,
+  });
+  const CHECK_TONE: Record<string, string> = { danger: "text-danger", warning: "text-warning", info: "text-ink-muted" };
+
   return (
     <>
       <Link href="/admin/bookings" className="mb-3 inline-flex items-center gap-1 text-sm text-ink-muted hover:text-brand-blue"><ArrowLeft className="h-4 w-4" /> Bookings</Link>
@@ -59,6 +73,23 @@ export default async function AdminBookingDetail({ params }: { params: Promise<{
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
+          <Panel title="AI booking check" action={<span className="text-xs text-ink-faint">Flags issues — never changes the booking</span>}>
+            <div className="p-5">
+              {checks.length === 0 ? (
+                <p className="text-sm font-medium text-success">✓ No issues found — traveller details, components and documents look consistent.</p>
+              ) : (
+                <ul className="space-y-2">
+                  {checks.map((c, i) => (
+                    <li key={i} className={`flex gap-2 text-sm ${CHECK_TONE[c.level]}`}>
+                      <span className="mt-0.5 shrink-0">{c.level === "danger" ? "🔴" : c.level === "warning" ? "🟠" : "🔵"}</span>
+                      <span>{c.message}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </Panel>
+
           <Panel title="Customer">
             <div className="grid grid-cols-2 gap-4 p-5 text-sm">
               <div><p className="text-ink-faint">Name</p><p className="font-medium">{booking.customer.fullName ?? "—"}</p></div>

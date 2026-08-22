@@ -253,14 +253,14 @@ export default async function HomePage() {
             <div className="grid items-center gap-8 md:grid-cols-2">
               <div>
                 <span className="inline-flex items-center gap-2 rounded-full bg-white/15 py-1 pl-1 pr-3.5 text-sm font-medium text-white">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white"><AiAvatar size={18} /></span> ExpertzTrip AI
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white"><AiAvatar size={18} /></span> Need help choosing?
                 </span>
                 <h2 className="mt-4 text-2xl font-bold text-white sm:text-3xl">Describe your dream trip. We&apos;ll find the real match.</h2>
                 <p className="mt-3 text-white/80">
-                  &ldquo;A 6-day Dubai holiday for 2 under ₹1.5 lakh&rdquo; — our assistant searches only real, published packages and shows you the best match, best value and premium options. No made-up prices, ever.
+                  &ldquo;A 6-day Dubai holiday for 2 under ₹1.5 lakh&rdquo; — we search only real, published packages and show you the best match, best value and premium options. No made-up prices, ever.
                 </p>
                 <Link href="/ai" className={buttonVariants({ variant: "orange", className: "mt-6" })}>
-                  Try ExpertzTrip AI <ArrowRight className="h-4 w-4" />
+                  Get recommendations <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
               <div className="rounded-2xl bg-white/10 p-5 backdrop-blur">

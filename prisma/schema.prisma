@@ -299,6 +299,7 @@ model PackageVersion {
   category        String?  // FIRST_ESCAPE | SIGNATURE | HONEYMOON | FAMILY | LUXURY | PREMIUM
   bestFor         String?  // "Couples, first-time travellers"
   departureCities Json?    // string[]
+  cityBreakdown   Json?    // [{ city, nights }] — the route shown on cards
   travelWindows   String?  // "Oct–Mar peak · Apr–Sep value"
   roomCategory    String?
   mealPlan        String?

@@ -105,6 +105,7 @@ function SingleImport({ destinations }: { destinations: Destination[] }) {
         cancellationPolicy: f.cancellationPolicy || null, importantInfo: f.importantInfo || null,
         highlights: lines(f.highlights), inclusions: lines(f.inclusions), exclusions: lines(f.exclusions),
         itinerary: itinerary.map((d, i) => ({ day: d.day || i + 1, title: d.title, description: d.description, items: d.items ?? [] })),
+        cityBreakdown: ai?.cityBreakdown ?? [],
         imageUrls: images.filter((im) => im.use).map((im) => im.url),
         sourceUrl: source?.sourceUrl ?? null, sourceName: source?.host ?? null,
       });

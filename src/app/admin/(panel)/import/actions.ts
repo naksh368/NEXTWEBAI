@@ -31,9 +31,18 @@ export type AiPackage = {
   inclusions: string[];
   exclusions: string[];
   itinerary: { day: number; title: string; description: string; items: AiDayItem[] }[];
+  cityBreakdown: { city: string; nights: number }[];
   cancellationPolicy: string | null;
   importantTerms: string | null;
 };
+
+function normCityBreakdown(v: unknown): { city: string; nights: number }[] {
+  if (!Array.isArray(v)) return [];
+  return v
+    .map((it: Record<string, unknown>) => ({ city: (str(it.city) ?? "").slice(0, 60), nights: Math.max(0, Math.min(60, num(it.nights) ?? 0)) }))
+    .filter((c) => c.city)
+    .slice(0, 12);
+}
 
 // A single time-slotted itinerary item (powers the rich day-by-day layout).
 type Timeslot = "MORNING" | "AFTERNOON" | "EVENING";
@@ -83,8 +92,9 @@ async function aiExtractPackage(text: string, verbatim = false): Promise<AiPacka
     ? "Copy the page's EXACT wording: summary and overview must reproduce the page's own sentences verbatim, and each itinerary description must be the page's exact text. Do NOT paraphrase or rewrite anything."
     : "summary <= 280 chars; overview 2-3 short original paragraphs. Rewrite descriptions in original words.";
   const prompt = `Extract this travel package page into STRICT JSON with exactly these keys:
-{"name":string|null,"destinationName":string|null,"country":string|null,"durationNights":number|null,"durationDays":number|null,"category":string|null,"bestFor":string|null,"startingPrice":number|null,"travelWindow":string|null,"flightSector":string|null,"roomCategory":string|null,"mealPlan":string|null,"baggage":string|null,"summary":string|null,"overview":string|null,"highlights":string[],"inclusions":string[],"exclusions":string[],"itinerary":[{"day":number,"title":string,"description":string,"items":[{"timeslot":"MORNING"|"AFTERNOON"|"EVENING","kind":"FLIGHT"|"TRANSFER"|"HOTEL"|"ACTIVITY"|"MEAL"|"FREE_TIME"|"NOTE","title":string,"description":string}]}],"cancellationPolicy":string|null,"importantTerms":string|null}
+{"name":string|null,"destinationName":string|null,"country":string|null,"durationNights":number|null,"durationDays":number|null,"category":string|null,"bestFor":string|null,"startingPrice":number|null,"travelWindow":string|null,"flightSector":string|null,"roomCategory":string|null,"mealPlan":string|null,"baggage":string|null,"summary":string|null,"overview":string|null,"highlights":string[],"inclusions":string[],"exclusions":string[],"cityBreakdown":[{"city":string,"nights":number}],"itinerary":[{"day":number,"title":string,"description":string,"items":[{"timeslot":"MORNING"|"AFTERNOON"|"EVENING","kind":"FLIGHT"|"TRANSFER"|"HOTEL"|"ACTIVITY"|"MEAL"|"FREE_TIME"|"NOTE","title":string,"description":string}]}],"cancellationPolicy":string|null,"importantTerms":string|null}
 category must be one of FIRST_ESCAPE, SIGNATURE, HONEYMOON, FAMILY, LUXURY, PREMIUM or null.
+In cityBreakdown, list each city/place stayed with its number of nights, in travel order (e.g. [{"city":"Tromsø","nights":2},{"city":"Bergen","nights":2}]).
 For EACH itinerary day, break the day into 2-4 time-slotted items (morning/afternoon/evening) with the right kind — this powers the day-by-day view. Only use activities actually mentioned on the page; if a slot is genuinely free, use kind FREE_TIME.
 For any FLIGHT item, include the route and any flight times stated on the page in its description (e.g. "Delhi → Oslo, dep 02:15 arr 07:40"). Put the overall flight route in flightSector.
 ${copyRule}
@@ -118,6 +128,7 @@ function parseAiPackage(out: string | null): AiPackage | null {
             items: normItems(d.items),
           }))
         : [],
+      cityBreakdown: normCityBreakdown(p.cityBreakdown),
       cancellationPolicy: str(p.cancellationPolicy), importantTerms: str(p.importantTerms),
     };
   } catch {
@@ -204,6 +215,7 @@ const draftSchema = z.object({
   inclusions: z.array(z.string().max(200)).max(40).default([]),
   exclusions: z.array(z.string().max(200)).max(40).default([]),
   itinerary: z.array(daySchema).max(30).default([]),
+  cityBreakdown: z.array(z.object({ city: z.string().max(60), nights: z.coerce.number().int().min(0).max(60) })).max(12).optional().default([]),
   imageUrls: z.array(z.string().url().max(1024)).max(12).default([]),
   sourceUrl: z.string().url().max(2048).optional().nullable(),
   sourceName: z.string().max(120).optional().nullable(),
@@ -254,6 +266,7 @@ async function createDraft(admin: { id: string }, d: z.infer<typeof draftSchema>
           availabilityStatus: "AVAILABLE",
           highlights: d.highlights, inclusions: d.inclusions, exclusions: d.exclusions,
           departureCities: ["Delhi", "Mumbai", "Bengaluru"],
+          cityBreakdown: d.cityBreakdown?.length ? d.cityBreakdown : undefined,
           images: d.imageUrls.length
             ? { create: d.imageUrls.map((url, i) => ({ url, alt: d.name, isCover: i === 0, sortOrder: i })) }
             : undefined,
@@ -332,7 +345,7 @@ export async function batchImport(urls: string[], destinationId = "", verbatim =
         travelWindows: ai?.travelWindow ?? null,
         cancellationPolicy: ai?.cancellationPolicy ?? null, importantInfo: ai?.importantTerms ?? null,
         highlights: ai?.highlights ?? [], inclusions: ai?.inclusions ?? [], exclusions: ai?.exclusions ?? [],
-        itinerary: ai?.itinerary ?? [], imageUrls: facts.imageUrls.slice(0, 6),
+        itinerary: ai?.itinerary ?? [], cityBreakdown: ai?.cityBreakdown ?? [], imageUrls: facts.imageUrls.slice(0, 6),
         sourceUrl: fetched.finalUrl, sourceName: fetched.host,
       });
       created.push({ url, name, slug: res.slug });
@@ -378,8 +391,9 @@ export async function buildPackage(input: unknown): Promise<R<{ packageId: strin
   const prompt = `Design a ${b.nights}-night (${days}-day) holiday package for ${b.destinationName || "the chosen destination"}${b.country ? `, ${b.country}` : ""}.
 ${b.category ? `Theme / category: ${b.category}.` : ""}${b.departureCity ? ` Departing from: ${b.departureCity}.` : ""}${b.style ? ` Traveller style / must-haves: ${b.style}.` : ""}
 Return STRICT JSON with exactly these keys:
-{"name":string,"destinationName":string|null,"country":string|null,"durationNights":${b.nights},"durationDays":${days},"category":string|null,"bestFor":string|null,"startingPrice":null,"travelWindow":string|null,"flightSector":string|null,"roomCategory":string|null,"mealPlan":string|null,"baggage":string|null,"summary":string,"overview":string,"highlights":string[],"inclusions":string[],"exclusions":string[],"itinerary":[{"day":number,"title":string,"description":string,"items":[{"timeslot":"MORNING"|"AFTERNOON"|"EVENING","kind":"FLIGHT"|"TRANSFER"|"HOTEL"|"ACTIVITY"|"MEAL"|"FREE_TIME"|"NOTE","title":string,"description":string}]}],"cancellationPolicy":string|null,"importantTerms":string|null}
+{"name":string,"destinationName":string|null,"country":string|null,"durationNights":${b.nights},"durationDays":${days},"category":string|null,"bestFor":string|null,"startingPrice":null,"travelWindow":string|null,"flightSector":string|null,"roomCategory":string|null,"mealPlan":string|null,"baggage":string|null,"summary":string,"overview":string,"highlights":string[],"inclusions":string[],"exclusions":string[],"cityBreakdown":[{"city":string,"nights":number}],"itinerary":[{"day":number,"title":string,"description":string,"items":[{"timeslot":"MORNING"|"AFTERNOON"|"EVENING","kind":"FLIGHT"|"TRANSFER"|"HOTEL"|"ACTIVITY"|"MEAL"|"FREE_TIME"|"NOTE","title":string,"description":string}]}],"cancellationPolicy":string|null,"importantTerms":string|null}
 category must be one of FIRST_ESCAPE, SIGNATURE, HONEYMOON, FAMILY, LUXURY, PREMIUM or null.
+cityBreakdown lists each city stayed with its nights, in order (summing to ${b.nights}).
 The itinerary MUST have exactly ${days} days, each with 2-4 time-slotted items. startingPrice MUST be null.
 Return ONLY the JSON object, no prose.`;
 
@@ -394,7 +408,7 @@ Return ONLY the JSON object, no prose.`;
     flightSector: ai.flightSector ?? null, baggage: ai.baggage ?? null, travelWindows: ai.travelWindow ?? null,
     cancellationPolicy: ai.cancellationPolicy ?? null, importantInfo: ai.importantTerms ?? null,
     highlights: ai.highlights, inclusions: ai.inclusions, exclusions: ai.exclusions,
-    itinerary: ai.itinerary, imageUrls: [],
+    itinerary: ai.itinerary, cityBreakdown: ai.cityBreakdown ?? [], imageUrls: [],
     sourceUrl: null, sourceName: "AI Builder",
   });
   await writeAudit({ adminUserId: admin.id, action: "package.build.ai", resource: `Package:${res.packageId}`, after: { name: ai.name, nights: b.nights, days: ai.itinerary.length } });

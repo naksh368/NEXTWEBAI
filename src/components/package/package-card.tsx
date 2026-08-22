@@ -63,9 +63,17 @@ export function PackageCard({ pkg, priority, matchPct }: { pkg: PackageListItem;
             {pkg.name}
           </h3>
         </Link>
-        {pkg.summary && (
+        {pkg.cityBreakdown && pkg.cityBreakdown.length > 0 ? (
+          <p className="mt-1 line-clamp-1 text-xs font-medium text-ink-muted">
+            {pkg.nights} nights:{" "}
+            {pkg.cityBreakdown.slice(0, 2).map((c, i) => (
+              <span key={c.city}>{i > 0 ? " › " : " "}{c.city} <span className="text-ink-faint">({c.nights}N)</span></span>
+            ))}
+            {pkg.cityBreakdown.length > 2 && <span className="text-brand-blue"> +{pkg.cityBreakdown.length - 2} more</span>}
+          </p>
+        ) : pkg.summary ? (
           <p className="mt-1 line-clamp-2 text-sm text-ink-muted">{pkg.summary}</p>
-        )}
+        ) : null}
 
         <ul className="mt-2.5 flex flex-wrap gap-x-3 gap-y-1">
           {inclusionChips(pkg).map((c) => (

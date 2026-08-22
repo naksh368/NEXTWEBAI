@@ -95,6 +95,7 @@ export type PackageListItem = {
   roomCategory?: string | null;
   mealPlan?: string | null;
   flightSector?: string | null;
+  cityBreakdown?: { city: string; nights: number }[];
 };
 
 function toListItem(p: PackageWithVersion): PackageListItem {
@@ -107,6 +108,9 @@ function toListItem(p: PackageWithVersion): PackageListItem {
     basePrice: v.basePrice, currency: v.currency, summary: v.summary,
     pricingStatus: v.pricingStatus, availabilityStatus: v.availabilityStatus,
     roomCategory: v.roomCategory, mealPlan: v.mealPlan, flightSector: v.flightSector,
+    cityBreakdown: Array.isArray(v.cityBreakdown)
+      ? (v.cityBreakdown as unknown[]).map((c) => c as { city: string; nights: number }).filter((c) => c && typeof c.city === "string").slice(0, 8)
+      : undefined,
   };
 }
 

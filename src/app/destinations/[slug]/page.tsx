@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { CalendarDays, Info, Plane, ArrowRight } from "lucide-react";
+import { CalendarDays, Info, Plane, ArrowRight, Clock, Wallet } from "lucide-react";
 import { Container, Section, SectionHeading } from "@/components/ui/container";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Accordion } from "@/components/ui/accordion";
 import { EmptyState } from "@/components/ui/states";
 import { buttonVariants } from "@/components/ui/button";
+import { SmartImage } from "@/components/ui/smart-image";
 import { PackageCard } from "@/components/package/package-card";
 import { getDestinationBySlug, getPackagesForDestination } from "@/lib/queries";
+import { formatINR } from "@/lib/utils";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -35,26 +37,48 @@ export default async function DestinationPage({ params }: { params: Promise<{ sl
   const allPackages = await getPackagesForDestination(slug);
   const travelInfo = (d.travelInfo ?? {}) as Record<string, string>;
 
+  // Real, derived "plan your trip" facts (never fabricated).
+  const priced = allPackages.filter((p) => p.pricingStatus !== "PRICE_REVIEW_REQUIRED");
+  const fromPrice = priced.length ? Math.min(...priced.map((p) => p.basePrice)) : null;
+  const nightsList = allPackages.map((p) => p.nights).filter((n) => n > 0);
+  const nightRange = nightsList.length ? { min: Math.min(...nightsList), max: Math.max(...nightsList) } : null;
+
+  const breadcrumbs = [{ label: "Home", href: "/" }, { label: "Destinations", href: "/destinations" }, { label: d.name }];
+
   return (
     <>
-      {/* Hero — clean light background, no photo */}
-      <section className="relative overflow-hidden dotted-bg border-b border-surface-border">
-        <div className="absolute inset-0 hero-wash" aria-hidden />
-        <Container className="relative py-12 sm:py-16">
-          <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Destinations", href: "/destinations" }, { label: d.name }]} />
-          {d.region && (
-            <p className="mt-5 text-sm font-bold uppercase tracking-[0.16em] text-brand-orange">
-              {d.region} · Holiday packages
-            </p>
-          )}
-          <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-brand-navy sm:text-5xl">{d.name}</h1>
-          <p className="mt-1 text-ink-muted">{d.country}</p>
-          {d.shortSummary && <p className="mt-4 max-w-2xl text-lg text-ink-muted">{d.shortSummary}</p>}
-          <Link href={`/packages?destination=${d.slug}`} className={buttonVariants({ variant: "orange", className: "mt-6" })}>
-            See {allPackages.length} packages <ArrowRight className="h-4 w-4" />
-          </Link>
-        </Container>
-      </section>
+      {d.heroImage ? (
+        <>
+          <div className="border-b border-surface-border bg-white"><Container className="py-3"><Breadcrumbs items={breadcrumbs} /></Container></div>
+          <section className="relative overflow-hidden">
+            <div className="absolute inset-0"><SmartImage src={d.heroImage} alt={d.name} sizes="100vw" priority className="h-full" /></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/45 to-black/25" aria-hidden />
+            <Container className="relative py-20 sm:py-28">
+              {d.region && <p className="text-sm font-bold uppercase tracking-[0.16em] text-white/85">{d.region} · Holiday packages</p>}
+              <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-white sm:text-5xl">{d.name}</h1>
+              <p className="mt-1 text-white/85">{d.country}</p>
+              {d.shortSummary && <p className="mt-4 max-w-2xl text-lg text-white/90">{d.shortSummary}</p>}
+              <Link href={`/packages?destination=${d.slug}`} className={buttonVariants({ variant: "orange", className: "mt-6" })}>
+                See {allPackages.length} packages <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Container>
+          </section>
+        </>
+      ) : (
+        <section className="relative overflow-hidden dotted-bg border-b border-surface-border">
+          <div className="absolute inset-0 hero-wash" aria-hidden />
+          <Container className="relative py-12 sm:py-16">
+            <Breadcrumbs items={breadcrumbs} />
+            {d.region && <p className="mt-5 text-sm font-bold uppercase tracking-[0.16em] text-brand-orange">{d.region} · Holiday packages</p>}
+            <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-brand-navy sm:text-5xl">{d.name}</h1>
+            <p className="mt-1 text-ink-muted">{d.country}</p>
+            {d.shortSummary && <p className="mt-4 max-w-2xl text-lg text-ink-muted">{d.shortSummary}</p>}
+            <Link href={`/packages?destination=${d.slug}`} className={buttonVariants({ variant: "orange", className: "mt-6" })}>
+              See {allPackages.length} packages <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Container>
+        </section>
+      )}
 
       <Container className="py-10">
         {/* Overview + travel info */}
@@ -68,6 +92,25 @@ export default async function DestinationPage({ params }: { params: Promise<{ sl
             )}
           </div>
           <aside className="space-y-4">
+            {(fromPrice !== null || nightRange) && (
+              <div className="rounded-2xl border border-brand-blue/20 bg-brand-blueLight/40 p-5">
+                <h3 className="text-sm font-bold text-brand-navy">Plan your {d.name} trip</h3>
+                <dl className="mt-2.5 space-y-2 text-sm">
+                  {nightRange && (
+                    <div className="flex items-center gap-2 text-ink">
+                      <Clock className="h-4 w-4 shrink-0 text-brand-blue" />
+                      <span>Recommended stay: <b>{nightRange.min === nightRange.max ? `${nightRange.min} nights` : `${nightRange.min}–${nightRange.max} nights`}</b></span>
+                    </div>
+                  )}
+                  {fromPrice !== null && (
+                    <div className="flex items-center gap-2 text-ink">
+                      <Wallet className="h-4 w-4 shrink-0 text-brand-blue" />
+                      <span>Packages from <b>{formatINR(fromPrice)}</b> / person</span>
+                    </div>
+                  )}
+                </dl>
+              </div>
+            )}
             {d.bestTimeToVisit && (
               <div className="rounded-2xl border border-surface-border bg-white p-5">
                 <h3 className="flex items-center gap-2 text-sm font-bold"><CalendarDays className="h-4 w-4 text-brand-orange" /> Best time to visit</h3>

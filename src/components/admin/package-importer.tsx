@@ -3,21 +3,24 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Loader2, AlertTriangle, ExternalLink, ShieldCheck, Sparkles, CheckCircle2, ImageIcon, ListChecks } from "lucide-react";
-import { scanSource, scanListing, batchImport, createDraftFromImport, type AiPackage } from "@/app/admin/(panel)/import/actions";
+import { scanSource, scanListing, batchImport, createDraftFromImport, buildPackage, type AiPackage } from "@/app/admin/(panel)/import/actions";
 
 type Destination = { id: string; name: string; country: string };
 const CATEGORIES = ["", "FIRST_ESCAPE", "SIGNATURE", "HONEYMOON", "FAMILY", "LUXURY", "PREMIUM"];
 const inp = "w-full rounded-lg border border-surface-border px-3 py-2 text-sm focus:border-brand-blue focus:outline-none focus:ring-2 focus:ring-brand-blue/15";
 
 export function PackageImporter({ destinations }: { destinations: Destination[] }) {
-  const [mode, setMode] = useState<"single" | "batch">("single");
+  const [mode, setMode] = useState<"single" | "batch" | "build">("single");
   return (
     <div className="space-y-5">
-      <div className="inline-flex rounded-xl border border-surface-border bg-white p-1">
+      <div className="inline-flex flex-wrap rounded-xl border border-surface-border bg-white p-1">
         <button onClick={() => setMode("single")} className={tab(mode === "single")}>Single package</button>
         <button onClick={() => setMode("batch")} className={tab(mode === "batch")}>Import whole site</button>
+        <button onClick={() => setMode("build")} className={tab(mode === "build")}>Build with AI</button>
       </div>
-      {mode === "single" ? <SingleImport destinations={destinations} /> : <BatchImport destinations={destinations} />}
+      {mode === "single" ? <SingleImport destinations={destinations} />
+        : mode === "batch" ? <BatchImport destinations={destinations} />
+        : <BuildWithAI destinations={destinations} />}
     </div>
   );
 }
@@ -52,7 +55,7 @@ function SingleImport({ destinations }: { destinations: Destination[] }) {
     highlights: "", inclusions: "", exclusions: "", cancellationPolicy: "", importantInfo: "",
   });
   const set = (k: keyof typeof f, v: string) => setF((p) => ({ ...p, [k]: v }));
-  const [itinerary, setItinerary] = useState<{ day: number; title: string; description: string }[]>([]);
+  const [itinerary, setItinerary] = useState<{ day: number; title: string; description: string; items?: { timeslot: string; kind: string; title: string; description: string }[] }[]>([]);
   const [images, setImages] = useState<{ url: string; use: boolean }[]>([]);
 
   function onScan() {
@@ -99,7 +102,7 @@ function SingleImport({ destinations }: { destinations: Destination[] }) {
         baggage: f.baggage || null, travelWindows: f.travelWindows || null,
         cancellationPolicy: f.cancellationPolicy || null, importantInfo: f.importantInfo || null,
         highlights: lines(f.highlights), inclusions: lines(f.inclusions), exclusions: lines(f.exclusions),
-        itinerary: itinerary.map((d, i) => ({ day: d.day || i + 1, title: d.title, description: d.description })),
+        itinerary: itinerary.map((d, i) => ({ day: d.day || i + 1, title: d.title, description: d.description, items: d.items ?? [] })),
         imageUrls: images.filter((im) => im.use).map((im) => im.url),
         sourceUrl: source?.sourceUrl ?? null, sourceName: source?.host ?? null,
       });
@@ -292,6 +295,60 @@ function BatchImport({ destinations }: { destinations: Destination[] }) {
           <a href="/admin/packages" className="mt-4 inline-flex h-10 items-center justify-center rounded-xl bg-brand-blue px-5 text-sm font-semibold text-white hover:bg-brand-blueDark">Open Packages to review &amp; publish</a>
         </div>
       )}
+    </div>
+  );
+}
+
+// ── BUILD WITH AI ──────────────────────────────────────────
+function BuildWithAI({ destinations }: { destinations: Destination[] }) {
+  const router = useRouter();
+  const [building, startBuild] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  const [f, setF] = useState({ destinationId: "", nights: "5", category: "", departureCity: "", style: "", basePrice: "" });
+  const set = (k: keyof typeof f, v: string) => setF((p) => ({ ...p, [k]: v }));
+
+  function onBuild() {
+    setError(null);
+    if (!f.destinationId) { setError("Choose a destination."); return; }
+    const dest = destinations.find((d) => d.id === f.destinationId);
+    startBuild(async () => {
+      const res = await buildPackage({
+        destinationId: f.destinationId, destinationName: dest?.name ?? "", country: dest?.country ?? "",
+        nights: f.nights, category: f.category || null, departureCity: f.departureCity, style: f.style, basePrice: f.basePrice || 0,
+      });
+      if (!res.ok) { setError(res.error); return; }
+      router.push(`/admin/packages/${res.packageId}/edit`);
+      router.refresh();
+    });
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="rounded-xl border border-brand-blue/25 bg-brand-blueLight/40 px-4 py-3 text-sm text-brand-navy">
+        Describe the trip and AI drafts a full package — summary, highlights, inclusions and a day-by-day itinerary. It saves as a <strong>DRAFT</strong> with <strong>price on request</strong> (no invented price). Review &amp; verify every detail before publishing.
+      </div>
+      <div className="space-y-4 rounded-2xl border border-surface-border bg-white p-4 sm:p-5">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="Destination *">
+            <select value={f.destinationId} onChange={(e) => set("destinationId", e.target.value)} className={inp}>
+              <option value="">Select…</option>
+              {destinations.map((d) => <option key={d.id} value={d.id}>{d.name} · {d.country}</option>)}
+            </select>
+          </Field>
+          <Field label="Nights *"><input type="number" min={1} max={30} value={f.nights} onChange={(e) => set("nights", e.target.value)} className={inp} /></Field>
+          <Field label="Category"><select value={f.category} onChange={(e) => set("category", e.target.value)} className={inp}>{CATEGORIES.map((c) => <option key={c} value={c}>{c || "—"}</option>)}</select></Field>
+          <Field label="Departure city"><input value={f.departureCity} onChange={(e) => set("departureCity", e.target.value)} placeholder="e.g. New Delhi" className={inp} /></Field>
+          <Field label="Starting price (₹/person, optional)"><input type="number" min={0} value={f.basePrice} onChange={(e) => set("basePrice", e.target.value)} placeholder="blank → price on request" className={inp} /></Field>
+        </div>
+        <Field label="Style & must-haves">
+          <textarea value={f.style} onChange={(e) => set("style", e.target.value)} rows={3} placeholder="e.g. honeymoon, beachfront resort, private candlelight dinner, island-hopping, relaxed pace" className={inp} />
+        </Field>
+        <Alerts error={error} notice={null} />
+        <button onClick={onBuild} disabled={building} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-brand-orange px-6 font-semibold text-white hover:bg-brand-orangeDark disabled:opacity-60">
+          {building ? <><Loader2 className="h-4 w-4 animate-spin" /> Building your draft…</> : <><Sparkles className="h-4 w-4" /> Generate draft package</>}
+        </button>
+        <p className="text-xs text-ink-muted">AI-generated content is a starting point — verify hotels, inclusions and facts, then set a confirmed price before publishing.</p>
+      </div>
     </div>
   );
 }

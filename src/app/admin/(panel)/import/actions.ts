@@ -30,10 +30,35 @@ export type AiPackage = {
   highlights: string[];
   inclusions: string[];
   exclusions: string[];
-  itinerary: { day: number; title: string; description: string }[];
+  itinerary: { day: number; title: string; description: string; items: AiDayItem[] }[];
   cancellationPolicy: string | null;
   importantTerms: string | null;
 };
+
+// A single time-slotted itinerary item (powers the rich day-by-day layout).
+type Timeslot = "MORNING" | "AFTERNOON" | "EVENING";
+type ItemKind = "FLIGHT" | "TRANSFER" | "HOTEL" | "ACTIVITY" | "MEAL" | "FREE_TIME" | "NOTE";
+export type AiDayItem = { timeslot: Timeslot; kind: ItemKind; title: string; description: string };
+
+const TIMESLOTS = new Set<Timeslot>(["MORNING", "AFTERNOON", "EVENING"]);
+const ITEM_KINDS = new Set<ItemKind>(["FLIGHT", "TRANSFER", "HOTEL", "ACTIVITY", "MEAL", "FREE_TIME", "NOTE"]);
+
+function normItems(v: unknown): AiDayItem[] {
+  if (!Array.isArray(v)) return [];
+  return v
+    .map((it: Record<string, unknown>) => {
+      const timeslot = String(it.timeslot ?? "").toUpperCase() as Timeslot;
+      const kind = String(it.kind ?? "").toUpperCase() as ItemKind;
+      return {
+        timeslot: TIMESLOTS.has(timeslot) ? timeslot : "MORNING",
+        kind: ITEM_KINDS.has(kind) ? kind : "ACTIVITY",
+        title: (str(it.title) ?? "").slice(0, 160),
+        description: (str(it.description) ?? "").slice(0, 600),
+      } as AiDayItem;
+    })
+    .filter((it) => it.title)
+    .slice(0, 8);
+}
 
 const EXTRACT_SYSTEM =
   "You are a data-extraction and copywriting assistant for ExpertzTrip, a premium Indian holiday brand. " +
@@ -58,15 +83,21 @@ async function aiExtractPackage(text: string, verbatim = false): Promise<AiPacka
     ? "Copy the page's EXACT wording: summary and overview must reproduce the page's own sentences verbatim, and each itinerary description must be the page's exact text. Do NOT paraphrase or rewrite anything."
     : "summary <= 280 chars; overview 2-3 short original paragraphs. Rewrite descriptions in original words.";
   const prompt = `Extract this travel package page into STRICT JSON with exactly these keys:
-{"name":string|null,"destinationName":string|null,"country":string|null,"durationNights":number|null,"durationDays":number|null,"category":string|null,"bestFor":string|null,"startingPrice":number|null,"travelWindow":string|null,"flightSector":string|null,"roomCategory":string|null,"mealPlan":string|null,"baggage":string|null,"summary":string|null,"overview":string|null,"highlights":string[],"inclusions":string[],"exclusions":string[],"itinerary":[{"day":number,"title":string,"description":string}],"cancellationPolicy":string|null,"importantTerms":string|null}
+{"name":string|null,"destinationName":string|null,"country":string|null,"durationNights":number|null,"durationDays":number|null,"category":string|null,"bestFor":string|null,"startingPrice":number|null,"travelWindow":string|null,"flightSector":string|null,"roomCategory":string|null,"mealPlan":string|null,"baggage":string|null,"summary":string|null,"overview":string|null,"highlights":string[],"inclusions":string[],"exclusions":string[],"itinerary":[{"day":number,"title":string,"description":string,"items":[{"timeslot":"MORNING"|"AFTERNOON"|"EVENING","kind":"FLIGHT"|"TRANSFER"|"HOTEL"|"ACTIVITY"|"MEAL"|"FREE_TIME"|"NOTE","title":string,"description":string}]}],"cancellationPolicy":string|null,"importantTerms":string|null}
 category must be one of FIRST_ESCAPE, SIGNATURE, HONEYMOON, FAMILY, LUXURY, PREMIUM or null.
+For EACH itinerary day, break the day into 2-4 time-slotted items (morning/afternoon/evening) with the right kind — this powers the day-by-day view. Only use activities actually mentioned on the page; if a slot is genuinely free, use kind FREE_TIME.
 ${copyRule}
 If this is not a holiday/tour package (e.g. a flight, hotel-only, visa or insurance page), return {"name":null}.
 Return ONLY the JSON object, no prose.
 
 PAGE CONTENT:
 ${text}`;
-  const out = await aiComplete(prompt, { system: verbatim ? VERBATIM_SYSTEM : EXTRACT_SYSTEM, maxTokens: 2600, temperature: verbatim ? 0 : 0.2 });
+  const out = await aiComplete(prompt, { system: verbatim ? VERBATIM_SYSTEM : EXTRACT_SYSTEM, maxTokens: 3200, temperature: verbatim ? 0 : 0.25 });
+  return parseAiPackage(out);
+}
+
+/** Parse a model's JSON reply into a normalized AiPackage (null on any failure). */
+function parseAiPackage(out: string | null): AiPackage | null {
   if (!out) return null;
   try {
     const json = out.match(/\{[\s\S]*\}/);
@@ -83,6 +114,7 @@ ${text}`;
       itinerary: Array.isArray(p.itinerary)
         ? p.itinerary.slice(0, 30).map((d: Record<string, unknown>, i: number) => ({
             day: num(d.day) ?? i + 1, title: (str(d.title) ?? `Day ${i + 1}`).slice(0, 120), description: (str(d.description) ?? "").slice(0, 1000),
+            items: normItems(d.items),
           }))
         : [],
       cancellationPolicy: str(p.cancellationPolicy), importantTerms: str(p.importantTerms),
@@ -136,7 +168,18 @@ export async function scanListing(rawUrl: string): Promise<R<{ links: string[]; 
 }
 
 // ── Create a DRAFT package from reviewed import data (admin only) ───
-const daySchema = z.object({ day: z.coerce.number().int().min(1).max(60), title: z.string().max(160), description: z.string().max(2000).optional().default("") });
+const dayItemSchema = z.object({
+  timeslot: z.enum(["MORNING", "AFTERNOON", "EVENING"]).catch("MORNING"),
+  kind: z.enum(["FLIGHT", "TRANSFER", "HOTEL", "ACTIVITY", "MEAL", "FREE_TIME", "NOTE"]).catch("ACTIVITY"),
+  title: z.string().max(200),
+  description: z.string().max(1000).optional().default(""),
+});
+const daySchema = z.object({
+  day: z.coerce.number().int().min(1).max(60),
+  title: z.string().max(160),
+  description: z.string().max(2000).optional().default(""),
+  items: z.array(dayItemSchema).max(8).optional().default([]),
+});
 const draftSchema = z.object({
   name: z.string().min(3, "Package name is required.").max(120),
   destinationId: z.string().min(1, "Choose a destination."),
@@ -191,7 +234,16 @@ async function createDraft(admin: { id: string }, d: z.infer<typeof draftSchema>
             ? { create: d.imageUrls.map((url, i) => ({ url, alt: d.name, isCover: i === 0, sortOrder: i })) }
             : undefined,
           days: d.itinerary.length
-            ? { create: d.itinerary.map((day) => ({ dayNumber: day.day, title: day.title || `Day ${day.day}`, summary: day.description || null })) }
+            ? {
+                create: d.itinerary.map((day) => ({
+                  dayNumber: day.day,
+                  title: day.title || `Day ${day.day}`,
+                  summary: day.description || null,
+                  items: day.items?.length
+                    ? { create: day.items.map((it, i) => ({ timeslot: it.timeslot, kind: it.kind, title: it.title, description: it.description || null, sortOrder: i })) }
+                    : undefined,
+                })),
+              }
             : undefined,
         },
       },
@@ -257,4 +309,61 @@ export async function batchImport(urls: string[], destinationId: string, verbati
   }
   await writeAudit({ adminUserId: admin.id, action: "package.import.batch", resource: "Import:batch", after: { created: created.length, failed: failed.length } });
   return { ok: true, created, failed };
+}
+
+// ── AI Package Builder: generate a full DRAFT from a brief (no source URL) ──
+const BUILDER_SYSTEM =
+  "You are a senior holiday product designer for ExpertzTrip, a premium Indian holiday brand. " +
+  "You design complete, realistic and appealing DRAFT holiday packages that a human editor reviews before publishing. " +
+  "Rules: (1) Write original, premium, concise copy in Indian English. " +
+  "(2) Build a realistic day-by-day itinerary — every day split into 2-4 morning/afternoon/evening items, each with the correct kind (FLIGHT/TRANSFER/HOTEL/ACTIVITY/MEAL/FREE_TIME/NOTE). " +
+  "(3) NEVER invent a specific price — startingPrice MUST be null; the team confirms pricing separately. " +
+  "(4) Keep hotels generic (e.g. '4-star beachfront resort') instead of naming a specific property you can't verify. " +
+  "(5) Stay faithful to the requested destination, duration and theme; keep inclusions/exclusions realistic for that trip.";
+
+const buildSchema = z.object({
+  destinationId: z.string().min(1, "Choose a destination."),
+  destinationName: z.string().max(120).optional().default(""),
+  country: z.string().max(80).optional().default(""),
+  nights: z.coerce.number().int().min(1).max(30),
+  category: z.string().max(40).optional().nullable(),
+  departureCity: z.string().max(80).optional().default(""),
+  style: z.string().max(1200).optional().default(""),
+  basePrice: z.coerce.number().int().min(0).max(5_000_000).optional().default(0),
+});
+
+export async function buildPackage(input: unknown): Promise<R<{ packageId: string; slug: string; name: string }>> {
+  const admin = await authorize("package.create");
+  if (!admin) return { ok: false, error: "You don't have permission to build packages." };
+  if (!isAiConfigured()) return { ok: false, error: "The AI package builder needs AI — configure AI_API_KEY first." };
+
+  const parsed = buildSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Please complete the form." };
+  const b = parsed.data;
+  const days = b.nights + 1;
+
+  const prompt = `Design a ${b.nights}-night (${days}-day) holiday package for ${b.destinationName || "the chosen destination"}${b.country ? `, ${b.country}` : ""}.
+${b.category ? `Theme / category: ${b.category}.` : ""}${b.departureCity ? ` Departing from: ${b.departureCity}.` : ""}${b.style ? ` Traveller style / must-haves: ${b.style}.` : ""}
+Return STRICT JSON with exactly these keys:
+{"name":string,"destinationName":string|null,"country":string|null,"durationNights":${b.nights},"durationDays":${days},"category":string|null,"bestFor":string|null,"startingPrice":null,"travelWindow":string|null,"flightSector":string|null,"roomCategory":string|null,"mealPlan":string|null,"baggage":string|null,"summary":string,"overview":string,"highlights":string[],"inclusions":string[],"exclusions":string[],"itinerary":[{"day":number,"title":string,"description":string,"items":[{"timeslot":"MORNING"|"AFTERNOON"|"EVENING","kind":"FLIGHT"|"TRANSFER"|"HOTEL"|"ACTIVITY"|"MEAL"|"FREE_TIME"|"NOTE","title":string,"description":string}]}],"cancellationPolicy":string|null,"importantTerms":string|null}
+category must be one of FIRST_ESCAPE, SIGNATURE, HONEYMOON, FAMILY, LUXURY, PREMIUM or null.
+The itinerary MUST have exactly ${days} days, each with 2-4 time-slotted items. startingPrice MUST be null.
+Return ONLY the JSON object, no prose.`;
+
+  const ai = parseAiPackage(await aiComplete(prompt, { system: BUILDER_SYSTEM, maxTokens: 4000, temperature: 0.5 }));
+  if (!ai || !ai.name) return { ok: false, error: "The AI builder couldn't generate a package. Try again with a clearer brief." };
+
+  const res = await createDraft(admin, {
+    name: ai.name, destinationId: b.destinationId, nights: b.nights, basePrice: b.basePrice ?? 0,
+    category: ai.category ?? b.category ?? null, bestFor: ai.bestFor ?? null,
+    summary: ai.summary ?? null, overview: ai.overview ?? null,
+    roomCategory: ai.roomCategory ?? null, mealPlan: ai.mealPlan ?? null,
+    flightSector: ai.flightSector ?? null, baggage: ai.baggage ?? null, travelWindows: ai.travelWindow ?? null,
+    cancellationPolicy: ai.cancellationPolicy ?? null, importantInfo: ai.importantTerms ?? null,
+    highlights: ai.highlights, inclusions: ai.inclusions, exclusions: ai.exclusions,
+    itinerary: ai.itinerary, imageUrls: [],
+    sourceUrl: null, sourceName: "AI Builder",
+  });
+  await writeAudit({ adminUserId: admin.id, action: "package.build.ai", resource: `Package:${res.packageId}`, after: { name: ai.name, nights: b.nights, days: ai.itinerary.length } });
+  return { ok: true, ...res, name: ai.name };
 }

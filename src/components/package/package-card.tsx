@@ -15,7 +15,7 @@ const THEME_LABEL: Record<string, string> = {
   GROUP: "Group",
 };
 
-export function PackageCard({ pkg, priority }: { pkg: PackageListItem; priority?: boolean }) {
+export function PackageCard({ pkg, priority, matchPct }: { pkg: PackageListItem; priority?: boolean; matchPct?: number }) {
   return (
     <div className="group flex flex-col overflow-hidden rounded-2xl border border-surface-border bg-white shadow-card transition-shadow duration-200 hover:shadow-cardHover">
       <Link href={`/packages/${pkg.slug}`} className="relative block aspect-[4/3] w-full" aria-label={pkg.name}>
@@ -30,6 +30,9 @@ export function PackageCard({ pkg, priority }: { pkg: PackageListItem; priority?
           <div className="absolute left-3 top-3">
             <Badge tone="brand">{THEME_LABEL[pkg.theme]}</Badge>
           </div>
+        )}
+        {typeof matchPct === "number" && (
+          <div className="absolute right-3 top-3 rounded-full bg-success px-2.5 py-1 text-xs font-bold text-white shadow-sm">{matchPct}% match</div>
         )}
       </Link>
       <div className="flex flex-1 flex-col p-4">

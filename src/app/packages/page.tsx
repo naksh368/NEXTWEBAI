@@ -7,8 +7,25 @@ import { EmptyState } from "@/components/ui/states";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PackageCard } from "@/components/package/package-card";
 import { PackageFilters } from "@/components/package/package-filters";
-import { listPackages, type PackageFilters as Filters } from "@/lib/queries";
+import { BuildMyHoliday } from "@/components/package/build-my-holiday";
+import { listPackages, type PackageFilters as Filters, type PackageListItem } from "@/lib/queries";
 import { SearchX } from "lucide-react";
+
+type BuildCriteria = { budgetMax: number | null; theme?: string; destination?: string } | null;
+
+function matchScore(pkg: PackageListItem, c: NonNullable<BuildCriteria>): number {
+  let score = 55;
+  if (c.destination && pkg.destination.name.toLowerCase().includes(c.destination.toLowerCase())) score += 15;
+  if (c.theme && pkg.theme === c.theme) score += 15;
+  if (c.budgetMax != null) {
+    if (pkg.pricingStatus === "PRICE_REVIEW_REQUIRED") score += 5;
+    else if (pkg.basePrice <= c.budgetMax) score += 20;
+    else if (pkg.basePrice <= c.budgetMax * 1.15) score += 8;
+  } else {
+    score += 10;
+  }
+  return Math.min(100, score);
+}
 
 export const metadata: Metadata = {
   title: "Holiday packages",
@@ -31,12 +48,19 @@ export default async function PackagesPage({ searchParams }: { searchParams: Sea
     sort: (first(sp.sort) as Filters["sort"]) ?? "popular",
   };
 
+  const isBuild = first(sp.build) === "1";
+  const budgetRaw = Number(first(sp.budget));
+  const build: BuildCriteria = isBuild
+    ? { budgetMax: Number.isFinite(budgetRaw) && budgetRaw > 0 && budgetRaw < 999_000_000 ? budgetRaw : null, theme: filters.theme, destination: filters.destination }
+    : null;
+
   const buildHref = (page: number) => {
     const params = new URLSearchParams();
     if (filters.destination) params.set("destination", filters.destination);
     if (filters.theme) params.set("theme", filters.theme);
     if (filters.q) params.set("q", filters.q);
     if (filters.sort && filters.sort !== "popular") params.set("sort", filters.sort);
+    if (isBuild) { params.set("build", "1"); const bud = first(sp.budget); if (bud) params.set("budget", bud); }
     if (page > 1) params.set("page", String(page));
     const qs = params.toString();
     return qs ? `/packages?${qs}` : "/packages";
@@ -50,21 +74,30 @@ export default async function PackagesPage({ searchParams }: { searchParams: Sea
         <p className="mt-1.5 text-ink-muted">Complete holidays you can tailor to your taste — priced transparently.</p>
       </div>
 
+      <div className="mt-5">
+        <BuildMyHoliday />
+      </div>
+
       <div className="mt-6">
         <Suspense fallback={<div className="h-10" />}>
           <PackageFilters />
         </Suspense>
       </div>
 
-      <Suspense key={JSON.stringify(filters)} fallback={<GridSkeleton />}>
-        <Results filters={filters} buildHref={buildHref} />
+      <Suspense key={JSON.stringify({ filters, build })} fallback={<GridSkeleton />}>
+        <Results filters={filters} buildHref={buildHref} build={build} />
       </Suspense>
     </Container>
   );
 }
 
-async function Results({ filters, buildHref }: { filters: Filters; buildHref: (p: number) => string }) {
+async function Results({ filters, buildHref, build }: { filters: Filters; buildHref: (p: number) => string; build: BuildCriteria }) {
   const { items, total, page, totalPages } = await listPackages(filters);
+
+  // Build-my-holiday: score the current page and show the best matches first.
+  const scored = build
+    ? items.map((p) => ({ p, m: matchScore(p, build) })).sort((a, b) => b.m - a.m)
+    : items.map((p) => ({ p, m: undefined as number | undefined }));
 
   if (!items.length) {
     return (
@@ -82,11 +115,11 @@ async function Results({ filters, buildHref }: { filters: Filters; buildHref: (p
   return (
     <>
       <p className="mt-6 text-sm text-ink-muted">
-        {total} package{total === 1 ? "" : "s"} found{filters.q ? ` for “${filters.q}”` : ""}
+        {build ? "Best matches for your trip — " : ""}{total} package{total === 1 ? "" : "s"} found{filters.q ? ` for “${filters.q}”` : ""}
       </p>
       <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {items.map((p, i) => (
-          <PackageCard key={p.id} pkg={p} priority={i < 3} />
+        {scored.map(({ p, m }, i) => (
+          <PackageCard key={p.id} pkg={p} priority={i < 3} matchPct={m} />
         ))}
       </div>
       <Pagination page={page} totalPages={totalPages} buildHref={buildHref} />

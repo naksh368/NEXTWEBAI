@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { requireAdmin, hasPermission } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 import { PageHeader, Panel, Pill } from "@/components/admin/ui";
-import { BookingStatusControl, ComponentStatusControl, AddNoteForm, AssignSpecialistControl } from "@/components/admin/booking-actions";
+import { BookingStatusControl, ComponentStatusControl, AddNoteForm, AssignSpecialistControl, SupplierCostControl } from "@/components/admin/booking-actions";
 import { DocumentManager } from "@/components/admin/document-upload";
 import { BOOKING_STATUS_META } from "@/lib/constants";
 import { BOOKING_TRANSITIONS } from "@/lib/booking-states";
@@ -18,6 +18,7 @@ const COMPONENT_TONE: Record<string, string> = { CONFIRMED: "success", PENDING: 
 export default async function AdminBookingDetail({ params }: { params: Promise<{ id: string }> }) {
   const admin = await requireAdmin("booking.view");
   const canUpdate = hasPermission(admin, "booking.update");
+  const canFinance = hasPermission(admin, "payment.view");
   const { id } = await params;
 
   const booking = await db.booking.findUnique({
@@ -177,6 +178,12 @@ export default async function AdminBookingDetail({ params }: { params: Promise<{
               ))}
             </div>
           </Panel>
+
+          {canFinance && (
+            <Panel title="Financials" action={<span className="text-xs text-ink-faint">Finance only</span>}>
+              <div className="p-5"><SupplierCostControl bookingId={booking.id} customerPrice={booking.totalAmount} supplierCost={booking.supplierCost} /></div>
+            </Panel>
+          )}
 
           <Panel title="Price">
             <div className="space-y-1.5 p-5 text-sm">

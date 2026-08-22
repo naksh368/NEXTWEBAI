@@ -65,6 +65,18 @@ export async function assignBookingAction(bookingId: string, adminUserId: string
   return { ok: true };
 }
 
+/** Set the internal supplier cost on a booking (finance only). */
+export async function setSupplierCostAction(bookingId: string, cost: number | null): Promise<ActionResult> {
+  const admin = await authorize("payment.view");
+  if (!admin) return { ok: false, error: "You don't have permission to edit financials." };
+
+  const value = cost == null || Number.isNaN(cost) ? null : Math.max(0, Math.round(cost));
+  await db.booking.update({ where: { id: bookingId }, data: { supplierCost: value } });
+  await writeAudit({ adminUserId: admin.id, action: "booking.supplierCost.set", resource: `Booking:${bookingId}`, after: { supplierCost: value } });
+  revalidatePath(`/admin/bookings/${bookingId}`);
+  return { ok: true };
+}
+
 /** Add an internal timeline note to a booking. */
 export async function addBookingNoteAction(bookingId: string, note: string): Promise<ActionResult> {
   const admin = await authorize("booking.update");

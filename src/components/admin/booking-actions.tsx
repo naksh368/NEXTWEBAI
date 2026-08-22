@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BOOKING_STATUS_META } from "@/lib/constants";
-import { updateBookingStatusAction, updateComponentStatusAction, addBookingNoteAction, assignBookingAction } from "@/app/admin/(panel)/actions";
+import { updateBookingStatusAction, updateComponentStatusAction, addBookingNoteAction, assignBookingAction, setSupplierCostAction } from "@/app/admin/(panel)/actions";
+import { formatINR } from "@/lib/utils";
 
 export function BookingStatusControl({ bookingId, current, allowed }: { bookingId: string; current: string; allowed: string[] }) {
   const router = useRouter();
@@ -82,6 +83,40 @@ export function AssignSpecialistControl({ bookingId, current, staff }: { booking
         {saved && <Check className="h-4 w-4 text-success" />}
       </div>
       {error && <p className="text-sm font-medium text-danger">{error}</p>}
+    </div>
+  );
+}
+
+export function SupplierCostControl({ bookingId, customerPrice, supplierCost }: { bookingId: string; customerPrice: number; supplierCost: number | null }) {
+  const router = useRouter();
+  const [value, setValue] = useState(supplierCost != null ? String(supplierCost) : "");
+  const [pending, start] = useTransition();
+  const [saved, setSaved] = useState(false);
+
+  const cost = value.trim() === "" ? null : Number(value);
+  const margin = cost != null ? customerPrice - cost : null;
+  const marginPct = cost != null && customerPrice > 0 ? Math.round((margin! / customerPrice) * 1000) / 10 : null;
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between text-sm"><span className="text-ink-muted">Customer price</span><span className="font-semibold tabular-nums">{formatINR(customerPrice)}</span></div>
+      <div className="flex items-center gap-2">
+        <label className="flex-1 text-sm">
+          <span className="mb-1 block text-ink-muted">Supplier cost (₹)</span>
+          <input type="number" min={0} value={value} onChange={(e) => { setValue(e.target.value); setSaved(false); }} placeholder="cost of goods"
+            className="h-10 w-full rounded-xl border border-surface-border px-3 text-sm focus:border-brand-blue focus:outline-none" />
+        </label>
+        <button type="button" disabled={pending} onClick={() => start(async () => { const r = await setSupplierCostAction(bookingId, cost); if (r.ok) { setSaved(true); router.refresh(); } })}
+          className="mt-6 inline-flex h-10 items-center gap-1.5 rounded-xl bg-brand-blue px-3 text-sm font-semibold text-white hover:bg-brand-blueDark disabled:opacity-60">
+          {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : saved ? <Check className="h-4 w-4" /> : null} Save
+        </button>
+      </div>
+      {margin != null && (
+        <div className="rounded-xl bg-surface-muted/60 p-3 text-sm">
+          <div className="flex items-center justify-between"><span className="text-ink-muted">Gross margin</span><span className={`font-bold tabular-nums ${margin >= 0 ? "text-success" : "text-danger"}`}>{formatINR(margin)}</span></div>
+          {marginPct != null && <div className="mt-0.5 flex items-center justify-between"><span className="text-ink-muted">Margin %</span><span className="font-semibold tabular-nums">{marginPct}%</span></div>}
+        </div>
+      )}
     </div>
   );
 }

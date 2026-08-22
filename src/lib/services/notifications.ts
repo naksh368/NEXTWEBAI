@@ -213,6 +213,20 @@ function buildContent(event: AppEvent, ctx: Ctx, data: Record<string, string>): 
         },
       };
 
+    case "REVIEW_REQUESTED":
+      return {
+        title: "How was your holiday?",
+        body: `We'd love your review of ${trip}.`,
+        href: ctx.tripHref,
+        email: {
+          subject: "How was your ExpertzTrip holiday? ✨",
+          heading: `Welcome back, ${ctx.firstName}!`,
+          bodyHtml: `We hope you had a wonderful time on <b>${ctx.packageName ?? trip}</b>. Your feedback helps other travellers and helps us do better — it only takes a minute. And when you're ready for your next holiday, we're here.`,
+          cta: { label: "Leave a review", href: `${siteUrl()}${ctx.tripHref}` },
+        },
+        sms: `ExpertzTrip: We hope you enjoyed ${trip}! We'd love a quick review — see My Trips.`,
+      };
+
     case "REFUND_PROCESSED":
       return {
         title: `Refund processed — ${ref}`,

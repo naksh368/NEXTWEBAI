@@ -15,6 +15,7 @@ import { formatINR, formatDate } from "@/lib/utils";
 import { BookingStatusWatcher } from "@/components/account/booking-status-watcher";
 import { TripProgress } from "@/components/account/trip-progress";
 import { WhatHappensNext } from "@/components/account/what-happens-next";
+import { ReviewForm } from "@/components/account/review-form";
 import { isRazorpayTestMode } from "@/lib/services/razorpay-service";
 
 export const metadata: Metadata = { title: "Trip details", robots: { index: false } };
@@ -78,6 +79,11 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
   });
   if (!booking) notFound();
 
+  // After a completed trip, invite a review (once).
+  const existingReview = booking.status === "COMPLETED"
+    ? await db.review.findFirst({ where: { customerId: customer.id, packageId: booking.packageId }, select: { id: true } })
+    : null;
+
   const meta = BOOKING_STATUS_META[booking.status] ?? { label: booking.status, tone: "neutral" as const };
   let view = STATUS_VIEW[booking.status] ?? { tone: "neutral" as BannerTone, title: meta.label, body: "" };
   // Payment awaiting + last attempt failed → show a retry-focused payment-failed state.
@@ -137,6 +143,15 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
 
       <TripProgress status={booking.status} documentCount={booking.documents.length} />
       <WhatHappensNext status={booking.status} />
+
+      {booking.status === "COMPLETED" && (
+        <Card className="mt-6"><CardBody>
+          <h2 className="text-lg font-bold">Share your experience</h2>
+          <div className="mt-3">
+            <ReviewForm bookingId={booking.id} alreadyReviewed={!!existingReview} />
+          </div>
+        </CardBody></Card>
+      )}
 
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">

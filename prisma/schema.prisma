@@ -30,6 +30,7 @@ model Customer {
   passwordHash String?           // scrypt hash via lib/password.ts
   fullName     String?
   isVerified   Boolean  @default(false)
+  isRepeat     Boolean  @default(false) // has booked more than once
   status       String   @default("ACTIVE") // ACTIVE | SUSPENDED
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

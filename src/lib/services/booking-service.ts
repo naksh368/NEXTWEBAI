@@ -14,6 +14,7 @@ const STATUS_EVENT: Partial<Record<BookingStatus, AppEvent>> = {
   CONFIRMED: "BOOKING_CONFIRMED",
   CANCELLED: "BOOKING_CANCELLED",
   REFUNDED: "REFUND_PROCESSED",
+  COMPLETED: "REVIEW_REQUESTED",
 };
 
 /**
@@ -222,6 +223,19 @@ export async function transitionBooking(
     db.booking.update({ where: { id: bookingId }, data: { status: toStatus } }),
     db.bookingEvent.create({ data: { bookingId, fromStatus: from, toStatus, actor: opts.actor ?? "system", message: opts.message } }),
   ]);
+
+  // Mark repeat customers once they have more than one confirmed/completed trip.
+  if (toStatus === "CONFIRMED" || toStatus === "COMPLETED") {
+    try {
+      const b = await db.booking.findUnique({ where: { id: bookingId }, select: { customerId: true } });
+      if (b) {
+        const count = await db.booking.count({ where: { customerId: b.customerId, status: { in: ["CONFIRMED", "COMPLETED"] } } });
+        if (count >= 2) await db.customer.update({ where: { id: b.customerId }, data: { isRepeat: true } });
+      }
+    } catch (e) {
+      console.error("repeat-customer flag failed (non-blocking):", (e as Error).message);
+    }
+  }
 
   // Fan out a customer notification for meaningful transitions (idempotent).
   // A notification failure must NEVER halt the state machine — the status change

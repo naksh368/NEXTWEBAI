@@ -157,6 +157,7 @@ export const APP_EVENTS = [
   "ITINERARY_READY",
   "BOOKING_CANCELLED",
   "REFUND_PROCESSED",
+  "REVIEW_REQUESTED",
 ] as const;
 export type AppEvent = (typeof APP_EVENTS)[number];
 

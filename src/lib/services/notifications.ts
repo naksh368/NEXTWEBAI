@@ -352,3 +352,27 @@ export async function emitEvent(input: EmitInput): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * Re-send a single booking email (admin retry). Bypasses idempotency on purpose
+ * — it re-composes the same event's email and logs a fresh MessageLog row.
+ */
+export async function resendEventEmail(event: AppEvent, bookingId: string): Promise<{ ok: boolean; error?: string }> {
+  const ctx = await resolveContext({ event, bookingId, dedupeKey: "" });
+  if (!ctx || !ctx.customerId) return { ok: false, error: "Booking/customer not found." };
+  if (!ctx.email) return { ok: false, error: "This customer has no email on file." };
+  const content = buildContent(event, ctx, {});
+  if (!content.email) return { ok: false, error: "This event has no email to resend." };
+
+  const r = await sendEmail({
+    to: ctx.email,
+    subject: content.email.subject,
+    html: emailLayout(content.email.heading, content.email.bodyHtml, content.email.cta),
+  });
+  await logMessage({
+    customerId: ctx.customerId, bookingId: ctx.bookingId, channel: "EMAIL", event,
+    toAddress: ctx.email, status: r.ok ? "SENT" : "FAILED", error: r.error,
+    dedupeKey: `RESEND:${event}:${bookingId}:${Date.now()}`,
+  });
+  return r;
+}

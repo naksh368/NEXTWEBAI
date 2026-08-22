@@ -925,6 +925,7 @@ model Enquiry {
   assignedToId  String?
   assignedTo    AdminUser? @relation("AssignedEnquiries", fields: [assignedToId], references: [id])
   followUpAt    DateTime?  // when to chase this lead next
+  firstRespondedAt DateTime? // set when the lead first moves out of NEW (response-time metric)
   internalNotes String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { requireAdmin, hasPermission } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 import { PageHeader, Panel, Pill } from "@/components/admin/ui";
-import { BookingStatusControl, ComponentStatusControl, AddNoteForm, AssignSpecialistControl, SupplierCostControl } from "@/components/admin/booking-actions";
+import { BookingStatusControl, ComponentStatusControl, AddNoteForm, AssignSpecialistControl, SupplierCostControl, ResendEmailButton } from "@/components/admin/booking-actions";
 import { DocumentManager } from "@/components/admin/document-upload";
 import { BOOKING_STATUS_META } from "@/lib/constants";
 import { BOOKING_TRANSITIONS } from "@/lib/booking-states";
@@ -160,7 +160,10 @@ export default async function AdminBookingDetail({ params }: { params: Promise<{
                       <span className="block truncate font-medium">{m.event}</span>
                       <span className="text-xs text-ink-muted">{m.channel} · {m.toAddress} · {formatDate(m.createdAt, { hour: "2-digit", minute: "2-digit" })}</span>
                     </span>
-                    <Pill tone={m.status === "SENT" ? "success" : m.status === "FAILED" ? "danger" : "neutral"}>{m.status}</Pill>
+                    <span className="flex shrink-0 items-center gap-2">
+                      {canUpdate && m.channel === "EMAIL" && m.status === "FAILED" && <ResendEmailButton bookingId={booking.id} event={m.event} />}
+                      <Pill tone={m.status === "SENT" ? "success" : m.status === "FAILED" ? "danger" : "neutral"}>{m.status}</Pill>
+                    </span>
                   </li>
                 ))}
               </ul>

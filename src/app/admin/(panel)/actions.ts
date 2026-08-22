@@ -5,7 +5,8 @@ import { db } from "@/lib/db";
 import { authorize } from "@/lib/admin-auth";
 import { writeAudit } from "@/lib/services/audit-service";
 import { transitionBooking } from "@/lib/services/booking-service";
-import type { BookingStatus } from "@/lib/constants";
+import { resendEventEmail } from "@/lib/services/notifications";
+import type { AppEvent, BookingStatus } from "@/lib/constants";
 
 type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -62,6 +63,17 @@ export async function assignBookingAction(bookingId: string, adminUserId: string
   await writeAudit({ adminUserId: admin.id, action: "booking.assign", resource: `Booking:${bookingId}`, before: { assignedToId: booking.assignedToId }, after: { assignedToId } });
   revalidatePath(`/admin/bookings/${bookingId}`);
   revalidatePath("/admin/bookings");
+  return { ok: true };
+}
+
+/** Retry sending a booking email that previously failed. */
+export async function resendBookingEmailAction(bookingId: string, event: string): Promise<ActionResult> {
+  const admin = await authorize("booking.update");
+  if (!admin) return { ok: false, error: "Not authorized." };
+  const r = await resendEventEmail(event as AppEvent, bookingId);
+  if (!r.ok) return { ok: false, error: r.error ?? "Could not resend the email." };
+  await writeAudit({ adminUserId: admin.id, action: "booking.email.resend", resource: `Booking:${bookingId}`, after: { event } });
+  revalidatePath(`/admin/bookings/${bookingId}`);
   return { ok: true };
 }
 

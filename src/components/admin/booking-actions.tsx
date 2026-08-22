@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BOOKING_STATUS_META } from "@/lib/constants";
-import { updateBookingStatusAction, updateComponentStatusAction, addBookingNoteAction, assignBookingAction, setSupplierCostAction } from "@/app/admin/(panel)/actions";
+import { updateBookingStatusAction, updateComponentStatusAction, addBookingNoteAction, assignBookingAction, setSupplierCostAction, resendBookingEmailAction } from "@/app/admin/(panel)/actions";
 import { formatINR } from "@/lib/utils";
 
 export function BookingStatusControl({ bookingId, current, allowed }: { bookingId: string; current: string; allowed: string[] }) {
@@ -118,6 +118,24 @@ export function SupplierCostControl({ bookingId, customerPrice, supplierCost }: 
         </div>
       )}
     </div>
+  );
+}
+
+export function ResendEmailButton({ bookingId, event }: { bookingId: string; event: string }) {
+  const router = useRouter();
+  const [pending, start] = useTransition();
+  const [state, setState] = useState<"idle" | "ok" | "err">("idle");
+  const [msg, setMsg] = useState<string | null>(null);
+
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <button type="button" disabled={pending} title="Resend this email"
+        onClick={() => { setMsg(null); start(async () => { const r = await resendBookingEmailAction(bookingId, event); if (r.ok) { setState("ok"); router.refresh(); } else { setState("err"); setMsg(r.error); } }); }}
+        className="rounded-lg border border-surface-border px-2 py-0.5 text-xs font-semibold text-brand-blue hover:border-brand-blue disabled:opacity-60">
+        {pending ? <Loader2 className="inline h-3 w-3 animate-spin" /> : state === "ok" ? <Check className="inline h-3 w-3 text-success" /> : "Retry"}
+      </button>
+      {state === "err" && msg && <span className="max-w-[160px] truncate text-[11px] text-danger">{msg}</span>}
+    </span>
   );
 }
 

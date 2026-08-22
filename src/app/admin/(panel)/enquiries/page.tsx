@@ -27,12 +27,13 @@ export default async function AdminEnquiriesPage({ searchParams }: { searchParam
   const page = Math.max(1, Number((await searchParams).page ?? 1) || 1);
   const now = new Date();
 
-  const [total, newCount, convertedCount, followUpsDue, staff, rows] = await Promise.all([
+  const [total, newCount, convertedCount, followUpsDue, staff, responded, rows] = await Promise.all([
     db.enquiry.count(),
     db.enquiry.count({ where: { status: "NEW" } }),
     db.enquiry.count({ where: { status: "WON" } }),
     db.enquiry.count({ where: { followUpAt: { lte: now }, status: { notIn: ["WON", "LOST"] } } }),
     db.adminUser.findMany({ where: { status: "ACTIVE" }, select: { id: true, fullName: true }, orderBy: { fullName: "asc" } }),
+    db.enquiry.findMany({ where: { firstRespondedAt: { not: null } }, select: { createdAt: true, firstRespondedAt: true }, orderBy: { createdAt: "desc" }, take: 200 }),
     db.enquiry.findMany({
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * PAGE_SIZE,
@@ -42,14 +43,22 @@ export default async function AdminEnquiriesPage({ searchParams }: { searchParam
   ]);
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
+  // Average first-response time (real, from firstRespondedAt − createdAt).
+  const durations = responded
+    .map((e) => (e.firstRespondedAt ? e.firstRespondedAt.getTime() - e.createdAt.getTime() : 0))
+    .filter((ms) => ms > 0);
+  const avgMs = durations.length ? durations.reduce((s, ms) => s + ms, 0) / durations.length : 0;
+  const avgResponse = !durations.length ? "—" : avgMs < 3600_000 ? `${Math.round(avgMs / 60000)} min` : avgMs < 86400_000 ? `${(avgMs / 3600_000).toFixed(1)} h` : `${(avgMs / 86400_000).toFixed(1)} d`;
+
   return (
     <>
       <PageHeader title="Enquiries" subtitle="Travel leads submitted from the website." />
 
-      <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-5">
+      <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-6">
         <StatCard label="Total leads" value={total} tone="navy" />
         <StatCard label="New" value={newCount} tone="orange" hint="Needs follow-up" />
         <StatCard label="Follow-ups due" value={followUpsDue} tone="orange" hint="Chase now" />
+        <StatCard label="Avg 1st response" value={avgResponse} tone="blue" hint="createdAt → contacted" />
         <StatCard label="Won" value={convertedCount} tone="green" />
         <StatCard label="Conversion" value={total ? `${Math.round((convertedCount / total) * 100)}%` : "—"} tone="blue" />
       </div>

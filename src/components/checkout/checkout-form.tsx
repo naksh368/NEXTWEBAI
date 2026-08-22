@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
-import { Loader2, ShieldCheck, CreditCard, Info, User } from "lucide-react";
+import { Loader2, ShieldCheck, CreditCard, Info, User, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input, Field } from "@/components/ui/input";
 import { formatINR, cn } from "@/lib/utils";
@@ -90,6 +90,8 @@ export function CheckoutForm({
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Premium post-payment interstitial: shown briefly before we move to My Trip.
+  const [booked, setBooked] = useState<{ id: string; reference: string } | null>(null);
 
   function update(i: number, patch: Partial<Traveller>) {
     setTravellers((prev) => prev.map((t, idx) => (idx === i ? { ...t, ...patch } : t)));
@@ -149,10 +151,11 @@ export function CheckoutForm({
           });
           const v = await verify.json();
           if (v.ok) {
-            // Navigate to the trip page and bust the client router cache so the
-            // fresh (post-payment) server render is shown, not a stale one.
-            router.push(`/account/trips/${booking.bookingId}`);
-            router.refresh();
+            // Calm "Payment received" screen, then auto-move to the trip page
+            // (busting the client cache so the fresh server render is shown).
+            setStatus(null);
+            setBooked({ id: booking.bookingId, reference: booking.reference });
+            setTimeout(() => { router.push(`/account/trips/${booking.bookingId}`); router.refresh(); }, 2600);
           } else {
             setError("Payment could not be verified. If you were charged, contact support.");
             setLoading(false); setStatus(null);
@@ -167,6 +170,21 @@ export function CheckoutForm({
       setLoading(false);
       setStatus(null);
     }
+  }
+
+  if (booked) {
+    return (
+      <div className="flex flex-col items-center py-10 text-center">
+        <span className="flex h-16 w-16 items-center justify-center rounded-full bg-success/10 text-success">
+          <CheckCircle2 className="h-10 w-10" />
+        </span>
+        <h2 className="mt-5 text-2xl font-extrabold text-brand-navy">Payment received</h2>
+        <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-ink-faint">Booking reference</p>
+        <p className="text-lg font-bold tracking-wide text-brand-navy">{booked.reference}</p>
+        <p className="mt-4 max-w-sm text-sm text-ink-muted">Your payment has been securely received. We&apos;re now processing your holiday — you&apos;ll get an email as it&apos;s confirmed.</p>
+        <p className="mt-6 flex items-center gap-2 text-sm text-ink-muted"><Loader2 className="h-4 w-4 animate-spin" /> Taking you to your trip…</p>
+      </div>
+    );
   }
 
   return (

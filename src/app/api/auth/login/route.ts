@@ -41,27 +41,35 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, step: "done", redirect: "/admin", role: "admin" }, { headers: { "Cache-Control": "no-store" } });
     }
 
-    const code = generateOtp();
-    await db.loginOtp.deleteMany({ where: { adminUserId: adminId } });
-    await db.loginOtp.create({ data: { adminUserId: adminId, email: adminEmail, codeHash: hashOtp(code), expiresAt: new Date(Date.now() + OTP_TTL_MIN * 60_000) } });
-    const sent = await sendEmail({
-      to: adminEmail,
-      subject: `${code} is your ExpertzTrip admin login code`,
-      html: emailLayout(
-        "Your admin login code",
-        `<p>Use this code to finish signing in to the ExpertzTrip admin:</p>
-         <div style="margin:16px 0;text-align:center">
-           <span style="display:inline-block;background:#EEF1FE;border:1px solid #2340D9;border-radius:12px;padding:12px 22px;font-size:30px;font-weight:800;letter-spacing:8px;color:#2340D9">${code}</span>
-         </div>
-         <p>This code expires in ${OTP_TTL_MIN} minutes. If this wasn't you, ignore this email.</p>`,
-      ),
-    });
-    if (!sent.ok) {
+    // OTP is best-effort: any failure (send error OR a DB/schema hiccup) must
+    // sign the admin in directly rather than lock them out or 500 the request.
+    try {
+      const code = generateOtp();
       await db.loginOtp.deleteMany({ where: { adminUserId: adminId } });
+      await db.loginOtp.create({ data: { adminUserId: adminId, email: adminEmail, codeHash: hashOtp(code), expiresAt: new Date(Date.now() + OTP_TTL_MIN * 60_000) } });
+      const sent = await sendEmail({
+        to: adminEmail,
+        subject: `${code} is your ExpertzTrip admin login code`,
+        html: emailLayout(
+          "Your admin login code",
+          `<p>Use this code to finish signing in to the ExpertzTrip admin:</p>
+           <div style="margin:16px 0;text-align:center">
+             <span style="display:inline-block;background:#EEF1FE;border:1px solid #2340D9;border-radius:12px;padding:12px 22px;font-size:30px;font-weight:800;letter-spacing:8px;color:#2340D9">${code}</span>
+           </div>
+           <p>This code expires in ${OTP_TTL_MIN} minutes. If this wasn't you, ignore this email.</p>`,
+        ),
+      });
+      if (!sent.ok) {
+        await db.loginOtp.deleteMany({ where: { adminUserId: adminId } }).catch(() => {});
+        await setAdminCookie(adminId);
+        return NextResponse.json({ ok: true, step: "done", redirect: "/admin", role: "admin" }, { headers: { "Cache-Control": "no-store" } });
+      }
+      return NextResponse.json({ ok: true, step: "otp", email: adminEmail, role: "admin" }, { headers: { "Cache-Control": "no-store" } });
+    } catch (e) {
+      console.error("[login] admin OTP step failed, signing in directly:", e);
       await setAdminCookie(adminId);
       return NextResponse.json({ ok: true, step: "done", redirect: "/admin", role: "admin" }, { headers: { "Cache-Control": "no-store" } });
     }
-    return NextResponse.json({ ok: true, step: "otp", email: adminEmail, role: "admin" }, { headers: { "Cache-Control": "no-store" } });
   }
 
   const email = identifier.trim().toLowerCase();
@@ -83,29 +91,36 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, step: "done", redirect: safeRedirect(parsed.data.redirect), role: "customer" }, { headers: { "Cache-Control": "no-store" } });
   }
 
-  const code = generateOtp();
-  await db.loginOtp.deleteMany({ where: { customerId: customer.id } });
-  await db.loginOtp.create({ data: { customerId: customer.id, email, codeHash: hashOtp(code), expiresAt: new Date(Date.now() + OTP_TTL_MIN * 60_000) } });
-
-  const sent = await sendEmail({
-    to: email,
-    subject: `${code} is your ExpertzTrip login code`,
-    html: emailLayout(
-      "Your login code",
-      `<p>Use this code to finish signing in to ExpertzTrip:</p>
-       <div style="margin:16px 0;text-align:center">
-         <span style="display:inline-block;background:#EEF1FE;border:1px solid #2340D9;border-radius:12px;padding:12px 22px;font-size:30px;font-weight:800;letter-spacing:8px;color:#2340D9">${code}</span>
-       </div>
-       <p>This code expires in ${OTP_TTL_MIN} minutes. If you didn't try to sign in, you can ignore this email.</p>`,
-    ),
-  });
-
-  if (!sent.ok) {
-    // Never lock the customer out because email failed — sign in directly.
+  // OTP is best-effort: any failure (send error OR a DB/schema hiccup) signs the
+  // customer in directly (password already verified) rather than 500 or lock out.
+  try {
+    const code = generateOtp();
     await db.loginOtp.deleteMany({ where: { customerId: customer.id } });
+    await db.loginOtp.create({ data: { customerId: customer.id, email, codeHash: hashOtp(code), expiresAt: new Date(Date.now() + OTP_TTL_MIN * 60_000) } });
+
+    const sent = await sendEmail({
+      to: email,
+      subject: `${code} is your ExpertzTrip login code`,
+      html: emailLayout(
+        "Your login code",
+        `<p>Use this code to finish signing in to ExpertzTrip:</p>
+         <div style="margin:16px 0;text-align:center">
+           <span style="display:inline-block;background:#EEF1FE;border:1px solid #2340D9;border-radius:12px;padding:12px 22px;font-size:30px;font-weight:800;letter-spacing:8px;color:#2340D9">${code}</span>
+         </div>
+         <p>This code expires in ${OTP_TTL_MIN} minutes. If you didn't try to sign in, you can ignore this email.</p>`,
+      ),
+    });
+
+    if (!sent.ok) {
+      await db.loginOtp.deleteMany({ where: { customerId: customer.id } }).catch(() => {});
+      await setCustomerCookie(customer.id);
+      return NextResponse.json({ ok: true, step: "done", redirect: safeRedirect(parsed.data.redirect), role: "customer" }, { headers: { "Cache-Control": "no-store" } });
+    }
+
+    return NextResponse.json({ ok: true, step: "otp", email }, { headers: { "Cache-Control": "no-store" } });
+  } catch (e) {
+    console.error("[login] customer OTP step failed, signing in directly:", e);
     await setCustomerCookie(customer.id);
     return NextResponse.json({ ok: true, step: "done", redirect: safeRedirect(parsed.data.redirect), role: "customer" }, { headers: { "Cache-Control": "no-store" } });
   }
-
-  return NextResponse.json({ ok: true, step: "otp", email }, { headers: { "Cache-Control": "no-store" } });
 }

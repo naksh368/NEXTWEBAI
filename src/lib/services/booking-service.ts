@@ -41,6 +41,7 @@ export type CreateBookingInput = {
     passportIssueCity?: string | null; passportIssueCountry?: string | null;
     panNumber?: string | null; mealPreference?: string | null;
   }[];
+  travellerBreakdown?: { adults: number; children: number; childrenAges: number[]; infants: number; rooms: number } | null;
 };
 
 const toDate = (s?: string | null) => (s ? new Date(`${s}T00:00:00`) : null);
@@ -130,6 +131,7 @@ export async function createBooking(input: CreateBookingInput): Promise<CreateBo
           status: "PAYMENT_PENDING",
           travelDate: input.travelDate ? new Date(`${input.travelDate}T00:00:00`) : (departure?.date ?? null),
           travellerCount: b.travellerCount,
+          travellerBreakdown: input.travellerBreakdown ?? undefined,
           currency: b.currency,
           couponCode: input.couponCode ?? null,
           ...amounts,

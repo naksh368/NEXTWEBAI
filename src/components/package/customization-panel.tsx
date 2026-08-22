@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Minus, Plus, Loader2, Tag, ArrowRight, Check } from "lucide-react";
+import { Loader2, Tag, ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatINR, formatDelta, formatDate, cn } from "@/lib/utils";
 import type { PriceBreakdown } from "@/lib/pricing";
+import { TravellersSelector, type Pax } from "@/components/package/travellers-selector";
 
 export type OptionVM = {
   id: string; category: string; groupKey: string; label: string;
@@ -57,7 +58,8 @@ export function CustomizationPanel(props: CustomizationProps) {
     return ids;
   }, [props.options]);
 
-  const [travellers, setTravellers] = useState(Math.max(2, props.minTravellers));
+  const [pax, setPax] = useState<Pax>({ adults: Math.max(2, props.minTravellers), children: 0, childrenAges: [], infants: 0, rooms: 1 });
+  const travellers = pax.adults + pax.children; // priced travellers (infants excluded)
   const [selected, setSelected] = useState<string[]>(initialSelected);
 
   // Free calendar — the customer picks any day in the next 12 months.
@@ -141,6 +143,14 @@ export function CustomizationPanel(props: CustomizationProps) {
   function continueToBook() {
     const params = new URLSearchParams();
     params.set("travellers", String(travellers));
+    // Structured traveller composition (infants excluded from the priced count).
+    params.set("adults", String(pax.adults));
+    if (pax.children > 0) {
+      params.set("children", String(pax.children));
+      params.set("childrenAges", pax.childrenAges.join(","));
+    }
+    if (pax.infants > 0) params.set("infants", String(pax.infants));
+    if (pax.rooms > 1) params.set("rooms", String(pax.rooms));
     if (selected.length) params.set("options", selected.join(","));
     if (travelDate) params.set("date", travelDate);
     router.push(`/packages/${props.packageSlug}/checkout?${params.toString()}`);
@@ -148,31 +158,11 @@ export function CustomizationPanel(props: CustomizationProps) {
 
   return (
     <div className="space-y-5">
-      {/* Travellers */}
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-semibold text-brand-navy">Travellers</p>
-          <p className="text-xs text-ink-muted">Price is per person</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setTravellers((t) => Math.max(props.minTravellers, t - 1))}
-            disabled={travellers <= props.minTravellers}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-surface-border disabled:opacity-40"
-            aria-label="Decrease travellers"
-          >
-            <Minus className="h-4 w-4" />
-          </button>
-          <span className="w-6 text-center font-semibold tabular-nums">{travellers}</span>
-          <button
-            onClick={() => setTravellers((t) => Math.min(props.maxTravellers, t + 1))}
-            disabled={travellers >= props.maxTravellers}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-surface-border disabled:opacity-40"
-            aria-label="Increase travellers"
-          >
-            <Plus className="h-4 w-4" />
-          </button>
-        </div>
+      {/* Travellers & rooms */}
+      <div>
+        <p className="mb-2 text-sm font-semibold text-brand-navy">Travellers &amp; rooms</p>
+        <TravellersSelector value={pax} onChange={setPax} maxTravellers={props.maxTravellers} />
+        <p className="mt-1.5 text-xs text-ink-muted">Price is per person, on twin-sharing.</p>
       </div>
 
       {/* Departure date — free calendar, any day in the next 12 months */}

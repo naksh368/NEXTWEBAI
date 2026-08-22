@@ -32,6 +32,13 @@ const schema = z.object({
   travelDate: z.string().min(8).max(10).nullable().optional(), // YYYY-MM-DD from the calendar
   couponCode: z.string().max(40).nullable().optional(),
   travellers: z.array(travellerSchema).min(1),
+  travellerBreakdown: z.object({
+    adults: z.number().int().min(1).max(99),
+    children: z.number().int().min(0).max(99),
+    childrenAges: z.array(z.number().int().min(0).max(17)).max(99),
+    infants: z.number().int().min(0).max(99),
+    rooms: z.number().int().min(1).max(30),
+  }).nullable().optional(),
   termsAccepted: z.literal(true, { errorMap: () => ({ message: "You must accept the terms." }) }),
 });
 
@@ -57,6 +64,7 @@ export async function POST(request: Request) {
       ...t,
       fullName: `${t.givenName} ${t.surname}`.trim(),
     })),
+    travellerBreakdown: parsed.data.travellerBreakdown ?? null,
   });
 
   if (!result.ok) return NextResponse.json(result, { status: 409 });

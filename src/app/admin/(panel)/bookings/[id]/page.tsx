@@ -61,6 +61,17 @@ export default async function AdminBookingDetail({ params }: { params: Promise<{
           </Panel>
 
           <Panel title="Travellers">
+            {(() => {
+              const b = booking.travellerBreakdown as { adults?: number; children?: number; childrenAges?: number[]; infants?: number; rooms?: number } | null;
+              if (!b) return null;
+              const parts = [
+                b.adults ? `${b.adults} adult${b.adults > 1 ? "s" : ""}` : null,
+                b.children ? `${b.children} child${b.children > 1 ? "ren" : ""}${b.childrenAges?.length ? ` (ages ${b.childrenAges.join(", ")})` : ""}` : null,
+                b.infants ? `${b.infants} infant${b.infants > 1 ? "s" : ""}` : null,
+                b.rooms ? `${b.rooms} room${b.rooms > 1 ? "s" : ""}` : null,
+              ].filter(Boolean).join(" · ");
+              return <p className="border-b border-surface-border bg-surface-muted/40 px-5 py-2.5 text-xs font-medium text-ink-muted">{parts}</p>;
+            })()}
             <ul className="divide-y divide-surface-border">
               {booking.travellers.map((t) => (
                 <li key={t.id} className="flex items-center justify-between px-5 py-3 text-sm">

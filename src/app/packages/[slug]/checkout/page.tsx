@@ -47,6 +47,14 @@ export default async function CheckoutPage({
   const travellers = Math.max(1, Number(first(sp.travellers) ?? 2) || 2);
   const optionIds = (first(sp.options) ?? "").split(",").filter(Boolean);
   const travelDate = first(sp.date) ?? null; // free calendar date (YYYY-MM-DD)
+
+  // Structured traveller composition (from the Travellers selector).
+  const adults = Math.max(1, Number(first(sp.adults) ?? travellers) || travellers);
+  const childrenN = Math.max(0, Number(first(sp.children) ?? 0) || 0);
+  const childrenAges = (first(sp.childrenAges) ?? "").split(",").map((n) => Number(n)).filter((n) => Number.isFinite(n)).slice(0, childrenN);
+  const infants = Math.max(0, Number(first(sp.infants) ?? 0) || 0);
+  const rooms = Math.max(1, Number(first(sp.rooms) ?? 1) || 1);
+  const travellerBreakdown = { adults, children: childrenN, childrenAges, infants, rooms };
   // No coupon codes — the best live offer auto-applies server-side.
   const couponCode = null;
 
@@ -128,6 +136,7 @@ export default async function CheckoutPage({
                   total={b.total}
                   prefillName={customer.fullName}
                   isDomestic={pkg.destination.country === "India"}
+                  travellerBreakdown={travellerBreakdown}
                 />
               </div>
             </CardBody></Card>

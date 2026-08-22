@@ -367,6 +367,8 @@ model Booking {
   status         String   @default("DRAFT") // see BOOKING_STATUS in constants
   travelDate     DateTime?
   travellerCount Int      @default(1)
+  // Structured traveller composition { adults, children, childrenAges[], infants, rooms }
+  travellerBreakdown Json?
   currency       String   @default("INR")
 
   // Authoritative money (whole rupees), copied from server-side reprice at checkout

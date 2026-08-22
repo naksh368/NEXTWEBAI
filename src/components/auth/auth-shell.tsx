@@ -13,9 +13,9 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
       <div className="relative hidden overflow-hidden rounded-3xl bg-gradient-to-br from-brand-blue to-brand-blueDark p-10 text-white lg:flex lg:flex-col">
         <div className="dotted-bg absolute inset-0 opacity-10" aria-hidden />
         <div className="relative">
-          {/* Logo on a dark panel: white "expertz" + orange "trip" (brand accent). */}
-          <Link href="/" className="inline-flex items-baseline text-3xl font-extrabold lowercase tracking-tight">
-            <span className="text-white">expertz</span><span className="text-brand-orange">trip</span>
+          {/* Original blue+orange logo on a white pill so both brand colours stay visible. */}
+          <Link href="/" className="inline-flex rounded-2xl bg-white px-4 py-2.5 shadow-sm">
+            <Logo size="md" href={null} />
           </Link>
           <h2 className="mt-10 text-4xl font-extrabold leading-[1.1] !text-white">Your next holiday<br />starts here.</h2>
           <p className="mt-4 max-w-sm text-white/85">Handpicked holidays, transparent pricing and expert support — from India to the world.</p>

@@ -17,7 +17,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
   const [
     totalBookings, confirmed, processing, paymentReceived, customers,
     publishedPackages, openTickets, upcoming, paidAgg, refundAgg, recent,
-    newEnquiries, recentEnquiries, paidNoDocs, unassigned,
+    newEnquiries, recentEnquiries, paidNoDocs, unassigned, followUpsDue,
   ] = await Promise.all([
     db.booking.count(),
     db.booking.count({ where: { status: "CONFIRMED" } }),
@@ -34,6 +34,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
     db.enquiry.findMany({ orderBy: { createdAt: "desc" }, take: 6 }),
     db.booking.count({ where: { status: { in: ["PAYMENT_RECEIVED", "BOOKING_PROCESSING", "SUPPLIER_CONFIRMATION_PENDING", "CONFIRMED"] }, documents: { none: {} } } }),
     db.booking.count({ where: { status: { in: ACTIVE_BOOKING_STATUSES }, assignedToId: null } }),
+    db.enquiry.count({ where: { followUpAt: { lte: now }, status: { notIn: ["WON", "LOST"] } } }),
   ]);
 
   const revenue = paidAgg._sum.amount ?? 0;
@@ -46,6 +47,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
     { n: paidNoDocs, label: "paid bookings with no documents uploaded", href: "/admin/bookings", tone: "orange" as const },
     { n: unassigned, label: "active bookings not assigned to a specialist", href: "/admin/bookings", tone: "navy" as const },
     { n: newEnquiries, label: "new enquiries to follow up", href: "/admin/enquiries", tone: "orange" as const },
+    { n: followUpsDue, label: "enquiry follow-ups due now", href: "/admin/enquiries", tone: "orange" as const },
   ].filter((a) => a.n > 0);
   const actionTotal = actions.reduce((s, a) => s + a.n, 0);
 

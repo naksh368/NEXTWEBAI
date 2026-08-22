@@ -752,6 +752,7 @@ model AdminUser {
 
   auditLogs    AuditLog[]
   assignedBookings Booking[] @relation("AssignedBookings")
+  assignedEnquiries Enquiry[] @relation("AssignedEnquiries")
 
   @@index([roleId])
 }
@@ -875,9 +876,15 @@ model Enquiry {
   message       String?
   status        String   @default("NEW") // NEW | CONTACTED | QUOTED | CONVERTED | CLOSED
   source        String   @default("WEBSITE") // WEBSITE | PACKAGE | WHATSAPP
+  // Lead management
+  assignedToId  String?
+  assignedTo    AdminUser? @relation("AssignedEnquiries", fields: [assignedToId], references: [id])
+  followUpAt    DateTime?  // when to chase this lead next
+  internalNotes String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   @@index([status])
   @@index([createdAt])
+  @@index([followUpAt])
 }

@@ -11,9 +11,18 @@ export async function updateEnquiryStatus(formData: FormData) {
   if (!admin) return;
 
   const id = String(formData.get("id") ?? "");
-  const status = String(formData.get("status") ?? "");
-  if (!id || !STATUSES.includes(status)) return;
+  if (!id) return;
 
-  await db.enquiry.update({ where: { id }, data: { status } });
+  const status = String(formData.get("status") ?? "");
+  const assignedToId = String(formData.get("assignedToId") ?? "");
+  const followUp = String(formData.get("followUpAt") ?? "");
+
+  const data: { status?: string; assignedToId?: string | null; followUpAt?: Date | null } = {
+    assignedToId: assignedToId || null,
+    followUpAt: followUp ? new Date(`${followUp}T00:00:00`) : null,
+  };
+  if (STATUSES.includes(status)) data.status = status;
+
+  await db.enquiry.update({ where: { id }, data });
   revalidatePath("/admin/enquiries");
 }

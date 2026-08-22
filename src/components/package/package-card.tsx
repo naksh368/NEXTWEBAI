@@ -3,6 +3,7 @@ import { MapPin, Clock, ArrowRight, Check } from "lucide-react";
 import { SmartImage } from "@/components/ui/smart-image";
 import { Badge } from "@/components/ui/badge";
 import { EnquireButton } from "@/components/package/enquire-button";
+import { SaveButton } from "@/components/package/save-button";
 import { formatINR } from "@/lib/utils";
 import type { PackageListItem } from "@/lib/queries";
 
@@ -28,7 +29,7 @@ const THEME_LABEL: Record<string, string> = {
 
 export function PackageCard({ pkg, priority, matchPct }: { pkg: PackageListItem; priority?: boolean; matchPct?: number }) {
   return (
-    <div className="group flex flex-col overflow-hidden rounded-2xl border border-surface-border bg-white shadow-card transition-shadow duration-200 hover:shadow-cardHover">
+    <div className="group relative flex flex-col overflow-hidden rounded-2xl border border-surface-border bg-white shadow-card transition-shadow duration-200 hover:shadow-cardHover">
       <Link href={`/packages/${pkg.slug}`} className="relative block aspect-[4/3] w-full" aria-label={pkg.name}>
         <SmartImage
           src={pkg.cover}
@@ -43,9 +44,12 @@ export function PackageCard({ pkg, priority, matchPct }: { pkg: PackageListItem;
           </div>
         )}
         {typeof matchPct === "number" && (
-          <div className="absolute right-3 top-3 rounded-full bg-success px-2.5 py-1 text-xs font-bold text-white shadow-sm">{matchPct}% match</div>
+          <div className="absolute left-3 bottom-3 rounded-full bg-success px-2.5 py-1 text-xs font-bold text-white shadow-sm">{matchPct}% match</div>
         )}
       </Link>
+      <div className="pointer-events-none absolute right-3 top-3">
+        <div className="pointer-events-auto"><SaveButton slug={pkg.slug} /></div>
+      </div>
       <div className="flex flex-1 flex-col p-4">
         <div className="flex items-center gap-1.5 text-xs font-medium text-ink-muted">
           <MapPin className="h-3.5 w-3.5 text-brand-orange" />

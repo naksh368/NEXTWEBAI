@@ -3,10 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, LifeBuoy, Luggage, User, Bell } from "lucide-react";
+import { Menu, X, LifeBuoy, Luggage, User, Bell, Heart } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useWishlist } from "@/lib/wishlist";
 
 const NAV = [
   { label: "Holidays", href: "/packages" },
@@ -24,6 +25,7 @@ interface HeaderProps {
 export function Header({ isSignedIn, unreadCount = 0 }: HeaderProps) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const savedCount = useWishlist().length;
 
   return (
     <header className="sticky top-0 z-40 border-b border-surface-border bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/80 print:hidden">
@@ -52,6 +54,12 @@ export function Header({ isSignedIn, unreadCount = 0 }: HeaderProps) {
         <div className="flex items-center gap-1 sm:gap-2">
           <Link href="/support" className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-ink-muted hover:bg-surface-muted hover:text-brand-navy sm:inline-flex">
             <LifeBuoy className="h-4 w-4" /> Help
+          </Link>
+          <Link href="/saved" aria-label={`Saved${savedCount ? ` (${savedCount})` : ""}`} className="relative hidden h-10 w-10 items-center justify-center rounded-lg text-ink-muted hover:bg-surface-muted hover:text-brand-navy sm:inline-flex">
+            <Heart className={cn("h-5 w-5", savedCount > 0 && "fill-brand-orange text-brand-orange")} />
+            {savedCount > 0 && (
+              <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-orange px-1 text-[10px] font-bold text-white">{savedCount > 9 ? "9+" : savedCount}</span>
+            )}
           </Link>
           <Link href="/account/trips" className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-ink-muted hover:bg-surface-muted hover:text-brand-navy sm:inline-flex">
             <Luggage className="h-4 w-4" /> My Trips
@@ -103,6 +111,10 @@ export function Header({ isSignedIn, unreadCount = 0 }: HeaderProps) {
             ))}
             <Link href="/support" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-[15px] font-medium text-ink hover:bg-surface-muted">
               <LifeBuoy className="h-4 w-4" /> Help
+            </Link>
+            <Link href="/saved" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-[15px] font-medium text-ink hover:bg-surface-muted">
+              <Heart className="h-4 w-4" /> Saved
+              {savedCount > 0 && <span className="ml-auto rounded-full bg-brand-orange px-2 text-xs font-bold text-white">{savedCount}</span>}
             </Link>
             <Link href="/account/trips" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-[15px] font-medium text-ink hover:bg-surface-muted">
               <Luggage className="h-4 w-4" /> My Trips

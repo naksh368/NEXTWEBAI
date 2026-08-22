@@ -183,6 +183,21 @@ export async function getFeaturedPackages(limit = 6): Promise<PackageListItem[]>
   }, []);
 }
 
+/** Fetch published package cards by slug, preserving the given order (for the wishlist). */
+export async function getPackagesBySlugs(slugs: string[]): Promise<PackageListItem[]> {
+  const clean = [...new Set(slugs.filter(Boolean))].slice(0, 30);
+  if (!clean.length) return [];
+  return safe(async () => {
+    const rows = await db.package.findMany({
+      where: { status: "PUBLISHED", slug: { in: clean } },
+      ...packageWithVersionArgs,
+    });
+    const items = rows.filter((r) => r.currentVersion).map(toListItem);
+    const bySlug = new Map(items.map((i) => [i.slug, i]));
+    return clean.map((s) => bySlug.get(s)).filter((x): x is PackageListItem => Boolean(x));
+  }, []);
+}
+
 export async function getPackagesForDestination(destinationSlug: string, theme?: string): Promise<PackageListItem[]> {
   return safe(async () => {
     const rows = await db.package.findMany({

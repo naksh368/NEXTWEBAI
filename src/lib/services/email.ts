@@ -9,6 +9,12 @@ const provider = () => process.env.EMAIL_PROVIDER || "console";
 const apiKey = () => process.env.EMAIL_API_KEY || "";
 const from = () => process.env.EMAIL_FROM || "ExpertzTrip <noreply@expertztrip.com>";
 
+/** True when a real transactional provider (not the dev console) is configured. */
+export function isEmailConfigured(): boolean {
+  const p = provider();
+  return (p === "sendgrid" || p === "zavu") && Boolean(apiKey());
+}
+
 /** Parse "Name <email>" or a bare email into { email, name }. */
 function parseFrom(v: string): { email: string; name?: string } {
   const m = v.match(/^\s*(.*?)\s*<\s*([^>]+)\s*>\s*$/);

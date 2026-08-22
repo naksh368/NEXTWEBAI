@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ShieldCheck, Wallet, Headset, Plane } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 
@@ -12,11 +13,14 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
       <div className="relative hidden overflow-hidden rounded-3xl bg-gradient-to-br from-brand-blue to-brand-blueDark p-10 text-white lg:flex lg:flex-col">
         <div className="dotted-bg absolute inset-0 opacity-10" aria-hidden />
         <div className="relative">
-          <Logo size="md" href={null} className="[&_*]:!text-white" />
-          <h2 className="mt-10 text-3xl font-extrabold leading-tight">Your next holiday<br />starts here.</h2>
-          <p className="mt-3 max-w-sm text-white/85">Handpicked holidays, transparent pricing and expert support — from India to the world.</p>
+          {/* Logo on a dark panel: white "expertz" + orange "trip" (brand accent). */}
+          <Link href="/" className="inline-flex items-baseline text-3xl font-extrabold lowercase tracking-tight">
+            <span className="text-white">expertz</span><span className="text-brand-orange">trip</span>
+          </Link>
+          <h2 className="mt-10 text-4xl font-extrabold leading-[1.1] !text-white">Your next holiday<br />starts here.</h2>
+          <p className="mt-4 max-w-sm text-white/85">Handpicked holidays, transparent pricing and expert support — from India to the world.</p>
         </div>
-        <ul className="relative mt-auto space-y-3 pt-10 text-sm">
+        <ul className="relative mt-auto space-y-3 pt-10 text-sm text-white">
           {[
             { icon: ShieldCheck, t: "Real, complete holiday packages" },
             { icon: Wallet, t: "Transparent pricing — no hidden costs" },

@@ -259,6 +259,8 @@ export function discoverPackageLinks(html: string, baseUrl: string, limit = 40):
     if (!KEYWORDS.test(path)) continue;
     // skip obvious non-detail paths
     if (/\/(category|tag|blog|about|contact|privacy|terms|login|cart|wp-|feed)\b/.test(path)) continue;
+    // skip flights & other non-holiday-package products (only packages/tours import)
+    if (/(flights?|air-?fare|air-?ticket|airline|visa|forex|insurance|cabs?|taxi|bus|trains?|car-?rental|hotels?-only|homestays?-only)\b/.test(path)) continue;
     abs.hash = "";
     out.add(abs.toString());
     if (out.size >= limit) break;

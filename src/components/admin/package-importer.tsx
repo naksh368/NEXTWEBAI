@@ -58,7 +58,7 @@ function SingleImport({ destinations }: { destinations: Destination[] }) {
   function onScan() {
     setError(null); setNotice(null);
     startScan(async () => {
-      const res = await scanSource(url);
+      const res = await scanSource(url, verbatim);
       if (!res.ok) { setError(res.error); return; }
       setSource({ host: res.host, sourceUrl: res.sourceUrl });
       setAi(res.ai);
@@ -70,9 +70,10 @@ function SingleImport({ destinations }: { destinations: Destination[] }) {
         nights: String(a?.durationNights ?? res.facts.durationNights ?? ""),
         basePrice: String(a?.startingPrice ?? res.facts.priceCandidates[0] ?? ""),
         category: a?.category ?? "", bestFor: a?.bestFor ?? "",
-        // Verbatim mode keeps the source's own copy; otherwise use AI-rewritten original copy.
-        summary: verbatim ? (res.facts.summary ?? a?.summary ?? "") : (a?.summary ?? res.facts.summary ?? ""),
-        overview: verbatim ? (res.facts.summary ?? "") : (a?.overview ?? ""),
+        // In verbatim mode the AI returns the source's own wording; otherwise it's
+        // AI-rewritten original copy. Fall back to the raw page summary either way.
+        summary: a?.summary ?? res.facts.summary ?? "",
+        overview: a?.overview ?? (verbatim ? (res.facts.summary ?? "") : ""),
         roomCategory: a?.roomCategory ?? "", mealPlan: a?.mealPlan ?? "",
         flightSector: a?.flightSector ?? "", baggage: a?.baggage ?? "", travelWindows: a?.travelWindow ?? "",
         highlights: (a?.highlights ?? res.facts.headings.slice(0, 6)).join("\n"),
@@ -81,7 +82,9 @@ function SingleImport({ destinations }: { destinations: Destination[] }) {
       });
       setItinerary(a?.itinerary ?? []);
       setNotice(res.aiConfigured
-        ? "AI extracted & rewrote the details — review every field before saving."
+        ? (verbatim
+            ? "Copied the source's details verbatim — review every field before saving."
+            : "AI extracted & rewrote the details — review every field before saving.")
         : "AI is not configured (add AI_API_KEY). Filled basic facts only; complete the rest manually.");
     });
   }
@@ -202,6 +205,7 @@ function BatchImport({ destinations }: { destinations: Destination[] }) {
   const [scanning, startScan] = useTransition();
   const [importing, startImport] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [verbatim, setVerbatim] = useState(false);
   const [links, setLinks] = useState<{ url: string; use: boolean }[]>([]);
   const [result, setResult] = useState<{ created: { name: string; slug: string }[]; failed: { url: string; error: string }[] } | null>(null);
 
@@ -219,7 +223,7 @@ function BatchImport({ destinations }: { destinations: Destination[] }) {
     if (!chosen.length) { setError("Select at least one package link."); return; }
     if (!destinationId) { setError("Choose a destination for the drafts."); return; }
     startImport(async () => {
-      const res = await batchImport(chosen, destinationId);
+      const res = await batchImport(chosen, destinationId, verbatim);
       if (!res.ok) { setError(res.error); return; }
       setResult(res);
     });
@@ -228,7 +232,7 @@ function BatchImport({ destinations }: { destinations: Destination[] }) {
   return (
     <div className="space-y-5">
       <div className="rounded-xl border border-warning/30 bg-[#FDF7EC] px-4 py-3 text-sm text-warning">
-        Paste a supplier <strong>listing / category</strong> page. We find the package links, then AI extracts each into a <strong>draft</strong> (never published). Up to 12 per run. Review every draft before publishing.
+        Paste a supplier <strong>listing / category</strong> page. We find the <strong>holiday-package</strong> links only — flights, hotel-only, visa &amp; other non-package pages are skipped — then extract each into a <strong>draft</strong> (never published). Up to 12 per run. Review every draft before publishing.
       </div>
       <ScanBar url={url} setUrl={setUrl} onScan={onScanListing} scanning={scanning} placeholder="https://supplier.com/andaman-packages" label="Find packages" />
       <Alerts error={error} notice={null} />
@@ -239,6 +243,13 @@ function BatchImport({ destinations }: { destinations: Destination[] }) {
             <div>
               <p className="text-sm font-semibold text-brand-navy">{links.length} package links found</p>
               <p className="text-xs text-ink-muted">Uncheck any you don&apos;t want.</p>
+              <label className="mt-2 flex cursor-pointer items-start gap-2">
+                <input type="checkbox" checked={verbatim} onChange={(e) => setVerbatim(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-brand-blue" />
+                <span className="text-xs">
+                  <span className="font-semibold text-brand-navy">Copy source copy exactly (verbatim)</span>
+                  <span className="mt-0.5 block text-ink-muted">Keeps each page&apos;s own wording instead of AI-rewriting it. Only enable if you have the rights to reproduce that content.</span>
+                </span>
+              </label>
             </div>
             <div className="flex items-end gap-2">
               <div>

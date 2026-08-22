@@ -41,19 +41,32 @@ const EXTRACT_SYSTEM =
   "Absolute rules: (1) NEVER invent facts — prices, hotels, inclusions, durations, reviews. Use null when the page doesn't state it. " +
   "(2) Do NOT copy the supplier's marketing sentences verbatim — REWRITE summary and overview into fresh, concise, original copy while keeping every fact accurate. " +
   "(3) Keep inclusions/exclusions/itinerary factual and faithful to the page. " +
+  "(4) This is a HOLIDAY/TOUR PACKAGE importer only. If the page is a flight-only, hotel-only, visa, insurance, cab/bus/train or other non-package page, return {\"name\":null} and nothing else. " +
+  "(5) Prices are Indian Rupees; return startingPrice as an integer number of rupees (no symbols/commas) or null.";
+
+// Verbatim mode — reproduce the page's OWN words exactly (no rewriting).
+const VERBATIM_SYSTEM =
+  "You are a data-extraction assistant for ExpertzTrip. You convert a scraped travel-PACKAGE web page into STRUCTURED FACTS, copying the page's OWN wording EXACTLY. " +
+  "Absolute rules: (1) NEVER invent facts — use null when the page doesn't state it. " +
+  "(2) COPY VERBATIM — reproduce summary, overview and every itinerary day description using the EXACT words and sentences from the page. Do NOT paraphrase, summarise or rewrite. " +
+  "(3) This is a HOLIDAY/TOUR PACKAGE importer only. If the page is a flight-only, hotel-only, visa, insurance, cab/bus/train or other non-package page, return {\"name\":null} and nothing else. " +
   "(4) Prices are Indian Rupees; return startingPrice as an integer number of rupees (no symbols/commas) or null.";
 
-async function aiExtractPackage(text: string): Promise<AiPackage | null> {
+async function aiExtractPackage(text: string, verbatim = false): Promise<AiPackage | null> {
   if (!isAiConfigured()) return null;
+  const copyRule = verbatim
+    ? "Copy the page's EXACT wording: summary and overview must reproduce the page's own sentences verbatim, and each itinerary description must be the page's exact text. Do NOT paraphrase or rewrite anything."
+    : "summary <= 280 chars; overview 2-3 short original paragraphs. Rewrite descriptions in original words.";
   const prompt = `Extract this travel package page into STRICT JSON with exactly these keys:
 {"name":string|null,"destinationName":string|null,"country":string|null,"durationNights":number|null,"durationDays":number|null,"category":string|null,"bestFor":string|null,"startingPrice":number|null,"travelWindow":string|null,"flightSector":string|null,"roomCategory":string|null,"mealPlan":string|null,"baggage":string|null,"summary":string|null,"overview":string|null,"highlights":string[],"inclusions":string[],"exclusions":string[],"itinerary":[{"day":number,"title":string,"description":string}],"cancellationPolicy":string|null,"importantTerms":string|null}
 category must be one of FIRST_ESCAPE, SIGNATURE, HONEYMOON, FAMILY, LUXURY, PREMIUM or null.
-summary <= 280 chars; overview 2-3 short original paragraphs. Rewrite descriptions in original words.
+${copyRule}
+If this is not a holiday/tour package (e.g. a flight, hotel-only, visa or insurance page), return {"name":null}.
 Return ONLY the JSON object, no prose.
 
 PAGE CONTENT:
 ${text}`;
-  const out = await aiComplete(prompt, { system: EXTRACT_SYSTEM, maxTokens: 2200, temperature: 0.2 });
+  const out = await aiComplete(prompt, { system: verbatim ? VERBATIM_SYSTEM : EXTRACT_SYSTEM, maxTokens: 2600, temperature: verbatim ? 0 : 0.2 });
   if (!out) return null;
   try {
     const json = out.match(/\{[\s\S]*\}/);
@@ -84,7 +97,7 @@ const num = (v: unknown): number | null => (typeof v === "number" && isFinite(v)
 const arr = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x) => typeof x === "string" && x.trim()).map((x: string) => x.trim().slice(0, 200)).slice(0, 40) : []);
 
 // ── Scan a single supplier / public package URL (admin only) ───────
-export async function scanSource(rawUrl: string): Promise<R<{ facts: ExtractedFacts; ai: AiPackage | null; aiConfigured: boolean; host: string; sourceUrl: string; imageUrls: string[] }>> {
+export async function scanSource(rawUrl: string, verbatim = false): Promise<R<{ facts: ExtractedFacts; ai: AiPackage | null; aiConfigured: boolean; host: string; sourceUrl: string; imageUrls: string[] }>> {
   const admin = await authorize("package.create");
   if (!admin) return { ok: false, error: "You don't have permission to import packages." };
 
@@ -95,7 +108,7 @@ export async function scanSource(rawUrl: string): Promise<R<{ facts: ExtractedFa
   if (!fetched.ok) return { ok: false, error: fetched.error };
 
   const facts = extractFacts(fetched.html);
-  const ai = await aiExtractPackage(extractMainText(fetched.html));
+  const ai = await aiExtractPackage(extractMainText(fetched.html), verbatim);
 
   await writeAudit({
     adminUserId: admin.id,
@@ -199,7 +212,7 @@ export async function createDraftFromImport(input: unknown): Promise<R<{ package
 }
 
 // ── Batch import: scan + AI-extract + create DRAFT for several URLs ──
-export async function batchImport(urls: string[], destinationId: string): Promise<R<{ created: { url: string; name: string; slug: string }[]; failed: { url: string; error: string }[] }>> {
+export async function batchImport(urls: string[], destinationId: string, verbatim = false): Promise<R<{ created: { url: string; name: string; slug: string }[]; failed: { url: string; error: string }[] }>> {
   const admin = await authorize("package.create");
   if (!admin) return { ok: false, error: "You don't have permission to import packages." };
   if (!destinationId) return { ok: false, error: "Choose a destination for the imported drafts." };
@@ -215,11 +228,16 @@ export async function batchImport(urls: string[], destinationId: string): Promis
       if (!parsed.success) { failed.push({ url, error: "invalid url" }); continue; }
       const fetched = await safeFetchHtml(parsed.data);
       if (!fetched.ok) { failed.push({ url, error: fetched.error }); continue; }
-      const ai = await aiExtractPackage(extractMainText(fetched.html));
+      const ai = await aiExtractPackage(extractMainText(fetched.html), verbatim);
       const facts = extractFacts(fetched.html);
       const name = ai?.name ?? facts.name;
       const nights = ai?.durationNights ?? facts.durationNights;
-      if (!name || !nights) { failed.push({ url, error: "missing name or duration" }); continue; }
+      // Only holiday/tour PACKAGES: a real package has a name AND a night count
+      // (an itinerary). Flight-only / hotel-only / visa pages lack these — skip.
+      if (!name || !nights) { failed.push({ url, error: "not a holiday package (no itinerary) — skipped" }); continue; }
+      if (/\b(flight|flights|air\s?fare|air\s?ticket|one[-\s]?way|round[-\s]?trip)\b/i.test(name) && !(ai?.itinerary?.length)) {
+        failed.push({ url, error: "looks like a flight, not a package — skipped" }); continue;
+      }
       const res = await createDraft(admin, {
         name, destinationId, nights, basePrice: ai?.startingPrice ?? facts.priceCandidates[0] ?? 0,
         category: ai?.category ?? null, bestFor: ai?.bestFor ?? null,

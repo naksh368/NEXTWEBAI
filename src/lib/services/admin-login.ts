@@ -6,7 +6,7 @@ import { hashPassword } from "@/lib/password";
  * existing admin account so the same email/mobile + password keeps working.
  * There is ONE login page — this check runs inside the normal customer login.
  */
-const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "admin@expertztrip.com").toLowerCase();
+const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "support@expertztrip.com").toLowerCase();
 const ADMIN_MOBILE = process.env.ADMIN_MOBILE || "8700650467";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Ashok@84";
 
@@ -29,10 +29,13 @@ export async function tryAdminLogin(identifier: string, password: string): Promi
     });
   }
 
+  // Key the upsert on the stable mobile (not the email) so changing ADMIN_EMAIL
+  // just updates the existing admin's email instead of creating a second row
+  // that would collide on the unique mobile.
   const admin = await db.adminUser.upsert({
-    where: { email: ADMIN_EMAIL },
+    where: { mobile: ADMIN_MOBILE },
     create: { email: ADMIN_EMAIL, mobile: ADMIN_MOBILE, fullName: "Admin", passwordHash: hashPassword(ADMIN_PASSWORD), status: "ACTIVE", roleId: superRole.id },
-    update: { lastLoginAt: new Date(), status: "ACTIVE", roleId: superRole.id },
+    update: { email: ADMIN_EMAIL, lastLoginAt: new Date(), status: "ACTIVE", roleId: superRole.id },
     select: { id: true },
   });
   return admin.id;

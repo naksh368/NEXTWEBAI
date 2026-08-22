@@ -425,8 +425,10 @@ async function main() {
   // Phone-OTP super admin. Owner sets their name + email on first login.
   // Admin logs in by email OTP. Defaults to the owner's email; override with
   // ADMIN_EMAIL (must be a real inbox — the login code is sent there).
-  const adminEmail = (process.env.ADMIN_EMAIL || "expertztripofficial@gmail.com").toLowerCase();
-  await db.adminUser.create({ data: { email: adminEmail, mobile: "+918700650467", fullName: "Admin", roleId: roleId.get("SUPER_ADMIN")! } });
+  const adminEmail = (process.env.ADMIN_EMAIL || "support@expertztrip.com").toLowerCase();
+  // Mobile matches ADMIN_MOBILE in the login service so the login upsert reuses
+  // this row instead of creating a duplicate.
+  await db.adminUser.create({ data: { email: adminEmail, mobile: process.env.ADMIN_MOBILE || "8700650467", fullName: "Admin", roleId: roleId.get("SUPER_ADMIN")! } });
   await db.supplier.createMany({ data: [
     { name: "SkyLink Aviation", type: "FLIGHT", status: "ACTIVE", credentialRef: "secret://suppliers/skylink" },
     { name: "StayWell Hotels DMC", type: "HOTEL", status: "ACTIVE", credentialRef: "secret://suppliers/staywell" },

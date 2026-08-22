@@ -66,6 +66,7 @@ model CustomerProfile {
 model EmailOtp {
   id           String   @id @default(cuid())
   email        String
+  mobile       String?
   codeHash     String
   fullName     String
   passwordHash String

@@ -39,7 +39,7 @@ export async function POST(request: Request) {
   }
 
   const customer = await db.customer.create({
-    data: { email, fullName: otp.fullName, passwordHash: otp.passwordHash, isVerified: true },
+    data: { email, mobile: otp.mobile ?? undefined, fullName: otp.fullName, passwordHash: otp.passwordHash, isVerified: true },
     select: { id: true },
   });
   await db.emailOtp.update({ where: { id: otp.id }, data: { consumedAt: new Date() } });

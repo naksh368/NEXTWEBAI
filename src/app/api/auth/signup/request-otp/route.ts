@@ -10,6 +10,7 @@ export const runtime = "nodejs";
 const schema = z.object({
   fullName: z.string().min(1, "Enter your full name.").max(120),
   email: z.string().email("Enter a valid email address.").max(160),
+  mobile: z.string().regex(/^\d{10}$/, "Enter a valid 10-digit mobile number."),
   password: z.string().min(6, "Password must be at least 6 characters."),
 });
 
@@ -22,10 +23,12 @@ export async function POST(request: Request) {
   }
   const email = parsed.data.email.toLowerCase();
 
-  // Already registered?
-  const existing = await db.customer.findFirst({ where: { email }, select: { id: true } });
+  const mobile = parsed.data.mobile;
+
+  // Already registered? (email or mobile)
+  const existing = await db.customer.findFirst({ where: { OR: [{ email }, { mobile }] }, select: { email: true } });
   if (existing) {
-    return NextResponse.json({ ok: false, error: "An account with this email already exists. Please sign in." }, { status: 409 });
+    return NextResponse.json({ ok: false, error: "An account with this email or mobile already exists. Please sign in." }, { status: 409 });
   }
 
   const code = generateOtp();
@@ -34,7 +37,7 @@ export async function POST(request: Request) {
   // Replace any prior pending signup for this email.
   await db.emailOtp.deleteMany({ where: { email } });
   await db.emailOtp.create({
-    data: { email, codeHash: hashOtp(code), fullName: parsed.data.fullName, passwordHash: hashPassword(parsed.data.password), expiresAt },
+    data: { email, mobile, codeHash: hashOtp(code), fullName: parsed.data.fullName, passwordHash: hashPassword(parsed.data.password), expiresAt },
   });
 
   const sent = await sendEmail({

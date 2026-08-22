@@ -4,7 +4,26 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Check, X, Loader2 } from "lucide-react";
 import { PACKAGE_STATUS } from "@/lib/constants";
-import { setPackageStatusAction, moderateReviewAction, toggleCouponAction, toggleOfferAction } from "@/app/admin/(panel)/actions";
+import { setPackageStatusAction, moderateReviewAction, toggleCouponAction, toggleOfferAction, toggleFeaturedAction, toggleDestinationPopularAction } from "@/app/admin/(panel)/actions";
+
+/** Labelled switch for "Feature on home" (package) and "Popular" (destination). */
+export function FlagToggle({ id, on: initialOn, kind, label }: { id: string; on: boolean; kind: "featured" | "popular"; label: string }) {
+  const router = useRouter();
+  const [on, setOn] = useState(initialOn);
+  const [pending, start] = useTransition();
+  return (
+    <label className="inline-flex cursor-pointer items-center gap-2">
+      <button
+        type="button" role="switch" aria-checked={on} aria-label={label} disabled={pending}
+        onClick={() => { const next = !on; setOn(next); start(async () => { const r = kind === "featured" ? await toggleFeaturedAction(id, next) : await toggleDestinationPopularAction(id, next); if (!r.ok) setOn(!next); else router.refresh(); }); }}
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${on ? "bg-brand-orange" : "bg-surface-border"}`}
+      >
+        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${on ? "translate-x-6" : "translate-x-1"}`} />
+      </button>
+      <span className="text-xs font-medium text-ink-muted">{label}</span>
+    </label>
+  );
+}
 
 export function PackageStatusControl({ packageId, current }: { packageId: string; current: string }) {
   const router = useRouter();

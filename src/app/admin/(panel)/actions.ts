@@ -119,6 +119,28 @@ export async function setPackageStatusAction(packageId: string, status: string):
   return { ok: true };
 }
 
+/** Feature / unfeature a package on the homepage. */
+export async function toggleFeaturedAction(packageId: string, isFeatured: boolean): Promise<ActionResult> {
+  const admin = await authorize("package.edit");
+  if (!admin) return { ok: false, error: "Not authorized." };
+  await db.package.update({ where: { id: packageId }, data: { isFeatured } });
+  await writeAudit({ adminUserId: admin.id, action: "package.feature", resource: `Package:${packageId}`, after: { isFeatured } });
+  revalidatePath("/admin/packages");
+  revalidatePath("/");
+  return { ok: true };
+}
+
+/** Mark / unmark a destination as popular (shown in the popular-destinations rail). */
+export async function toggleDestinationPopularAction(destinationId: string, isPopular: boolean): Promise<ActionResult> {
+  const admin = await authorize("destination.manage");
+  if (!admin) return { ok: false, error: "Not authorized." };
+  await db.destination.update({ where: { id: destinationId }, data: { isPopular } });
+  await writeAudit({ adminUserId: admin.id, action: "destination.popular", resource: `Destination:${destinationId}`, after: { isPopular } });
+  revalidatePath("/admin/destinations");
+  revalidatePath("/");
+  return { ok: true };
+}
+
 /** Moderate a customer review (Phase 28). */
 export async function moderateReviewAction(reviewId: string, status: "PUBLISHED" | "REJECTED"): Promise<ActionResult> {
   const admin = await authorize("review.moderate");

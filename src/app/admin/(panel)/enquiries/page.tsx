@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireAdmin } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 import { PageHeader, StatCard, Panel, Table, Th, Td, EmptyRow, Pill, AdminPager } from "@/components/admin/ui";
@@ -105,6 +106,7 @@ export default async function AdminEnquiriesPage({ searchParams }: { searchParam
                     <button type="submit" className="rounded-lg bg-brand-blue px-3 py-1 text-xs font-semibold text-white hover:bg-brand-blueDark">Save</button>
                   </div>
                 </form>
+                <Link href={`/admin/quotes?enquiryId=${e.id}`} className="mt-1.5 inline-block text-xs font-semibold text-brand-orange hover:underline">Create quote →</Link>
               </Td>
               <Td className="whitespace-nowrap text-ink-muted">{formatDate(e.createdAt)}</Td>
             </tr>

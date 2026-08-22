@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { reprice } from "@/lib/services/pricing-service";
 import { canTransition } from "@/lib/booking-states";
@@ -43,6 +44,11 @@ export type CreateBookingInput = {
     panNumber?: string | null; mealPreference?: string | null;
   }[];
   travellerBreakdown?: { adults: number; children: number; childrenAges: number[]; infants: number; rooms: number } | null;
+  /** When set (from an admin-authored Quote), use this exact total instead of
+   * repricing. Only ever supplied server-side from a stored Quote. */
+  overrideTotal?: number | null;
+  /** The Quote being accepted — linked to the booking, and its lead marked won. */
+  quoteId?: string | null;
 };
 
 const toDate = (s?: string | null) => (s ? new Date(`${s}T00:00:00`) : null);
@@ -69,20 +75,49 @@ export async function createBooking(input: CreateBookingInput): Promise<CreateBo
     versionId: version.id,
   })) return { ok: false, error: "This package is no longer available." };
 
-  // Authoritative server-side reprice — never trust a client total.
-  const priced = await reprice({
-    versionId: input.versionId,
-    travellerCount: input.travellerCount,
-    selectedOptionIds: input.selectedOptionIds,
-    departureId: input.departureId ?? null,
-    couponCode: input.couponCode ?? null,
-  });
-  if (!priced.ok) return { ok: false, error: priced.error };
-  const b = priced.breakdown;
-
   if (!input.travellers.length) return { ok: false, error: "At least one traveller is required." };
 
-  const selectedOptions = version.options.filter((o) => priced.selectedOptionIds.includes(o.id));
+  // Pricing: normally an authoritative server-side reprice. For an admin-authored
+  // Quote we trust the stored quote amount (already authorized by staff), so the
+  // agreed quoted price — including any discount — is honoured exactly.
+  const override = input.overrideTotal != null && input.overrideTotal >= 0;
+  let travellerCount = input.travellerCount;
+  let selectedOptionIds: string[] = [];
+  let currency = version.currency;
+  let items: { kind: string; label: string; amount: number }[];
+  let amounts: { baseAmount: number; addonsAmount: number; discountAmount: number; taxAmount: number; totalAmount: number };
+  let pricingSnapshot: Prisma.InputJsonValue;
+
+  if (override) {
+    const total = input.overrideTotal!;
+    items = [{ kind: "BASE", label: "Quoted holiday price", amount: total }];
+    amounts = { baseAmount: total, addonsAmount: 0, discountAmount: 0, taxAmount: 0, totalAmount: total };
+    pricingSnapshot = { total, currency, quoted: true, travellerCount };
+  } else {
+    const priced = await reprice({
+      versionId: input.versionId,
+      travellerCount: input.travellerCount,
+      selectedOptionIds: input.selectedOptionIds,
+      departureId: input.departureId ?? null,
+      couponCode: input.couponCode ?? null,
+    });
+    if (!priced.ok) return { ok: false, error: priced.error };
+    const b = priced.breakdown;
+    travellerCount = b.travellerCount;
+    selectedOptionIds = priced.selectedOptionIds;
+    currency = b.currency;
+    items = b.items.map((it) => ({ kind: it.kind, label: it.label, amount: it.amount }));
+    amounts = {
+      baseAmount: b.items.filter((i) => i.kind === "BASE").reduce((s, i) => s + i.amount, 0),
+      addonsAmount: b.items.filter((i) => i.kind === "OPTION" || i.kind === "DEPARTURE").reduce((s, i) => s + i.amount, 0),
+      discountAmount: b.discount,
+      taxAmount: b.tax,
+      totalAmount: b.total,
+    };
+    pricingSnapshot = b as unknown as Prisma.InputJsonValue;
+  }
+
+  const selectedOptions = version.options.filter((o) => selectedOptionIds.includes(o.id));
   const departure = version.departures.find((d) => d.id === input.departureId);
 
   // Which components need real confirmation before CONFIRMED (Phase 18).
@@ -91,14 +126,6 @@ export async function createBooking(input: CreateBookingInput): Promise<CreateBo
   const components = (["FLIGHT", "HOTEL", "TRANSFER", "ACTIVITY"] as const).filter((c) =>
     c === "HOTEL" ? true : dayKinds.has(c) || optCats.has(c)
   );
-
-  const amounts = {
-    baseAmount: b.items.filter((i) => i.kind === "BASE").reduce((s, i) => s + i.amount, 0),
-    addonsAmount: b.items.filter((i) => i.kind === "OPTION" || i.kind === "DEPARTURE").reduce((s, i) => s + i.amount, 0),
-    discountAmount: b.discount,
-    taxAmount: b.tax,
-    totalAmount: b.total,
-  };
 
   const snapshot = {
     packageData: {
@@ -113,13 +140,14 @@ export async function createBooking(input: CreateBookingInput): Promise<CreateBo
       items: d.items.map((it) => ({ timeslot: it.timeslot, kind: it.kind, title: it.title, description: it.description })),
     })),
     selection: {
-      travellerCount: b.travellerCount,
+      travellerCount,
       options: selectedOptions.map((o) => ({ category: o.category, label: o.label, priceDelta: o.priceDelta, perPerson: o.perPerson })),
       departure: departure ? { date: departure.date.toISOString(), priceDelta: departure.priceDelta } : null,
       departureCity: input.departureCity ?? null,
       coupon: input.couponCode ?? null,
+      quoteId: input.quoteId ?? null,
     },
-    pricing: b,
+    pricing: pricingSnapshot,
   };
 
   try {
@@ -133,13 +161,13 @@ export async function createBooking(input: CreateBookingInput): Promise<CreateBo
           status: "PAYMENT_PENDING",
           travelDate: input.travelDate ? new Date(`${input.travelDate}T00:00:00`) : (departure?.date ?? null),
           departureCity: input.departureCity ?? null,
-          travellerCount: b.travellerCount,
+          travellerCount,
           travellerBreakdown: input.travellerBreakdown ?? undefined,
-          currency: b.currency,
+          currency,
           couponCode: input.couponCode ?? null,
           ...amounts,
           items: {
-            create: b.items.map((it, idx) => ({ kind: it.kind, label: it.label, amount: it.amount, sortOrder: idx })),
+            create: items.map((it, idx) => ({ kind: it.kind, label: it.label, amount: it.amount, sortOrder: idx })),
           },
           travellers: {
             create: input.travellers.map((t) => ({
@@ -158,6 +186,16 @@ export async function createBooking(input: CreateBookingInput): Promise<CreateBo
       });
       return created;
     });
+
+    // Link an accepted quote to its booking and mark the originating lead won.
+    if (input.quoteId) {
+      try {
+        const q = await db.quote.update({ where: { id: input.quoteId }, data: { bookingId: booking.id, status: "ACCEPTED" }, select: { enquiryId: true } });
+        if (q.enquiryId) await db.enquiry.update({ where: { id: q.enquiryId }, data: { status: "WON" } });
+      } catch (e) {
+        console.error("quote link failed (non-blocking):", (e as Error).message);
+      }
+    }
 
     // "Booking received" email (idempotent, non-blocking).
     await emitEvent({ event: "BOOKING_CREATED", bookingId: booking.id, dedupeKey: `BOOKING_CREATED:${booking.id}` });

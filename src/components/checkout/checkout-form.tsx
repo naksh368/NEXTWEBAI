@@ -60,7 +60,7 @@ function isValid(t: Traveller, isDomestic: boolean): boolean {
 }
 
 export function CheckoutForm({
-  versionId, travellerCount, selectedOptionIds, travelDate, departureCity = null, couponCode, total, prefillName, isDomestic = false, travellerBreakdown,
+  versionId, travellerCount, selectedOptionIds, travelDate, departureCity = null, couponCode, total, prefillName, isDomestic = false, travellerBreakdown, quoteId,
 }: {
   versionId: string;
   travellerCount: number;
@@ -72,6 +72,8 @@ export function CheckoutForm({
   prefillName?: string | null;
   isDomestic?: boolean;
   travellerBreakdown?: { adults: number; children: number; childrenAges: number[]; infants: number; rooms: number } | null;
+  /** When set, create the booking from this accepted quote (fixed quoted price). */
+  quoteId?: string;
 }) {
   const router = useRouter();
   const [travellers, setTravellers] = useState<Traveller[]>(
@@ -105,10 +107,15 @@ export function CheckoutForm({
     setLoading(true);
     try {
       setStatus("Creating your booking…");
-      const bookRes = await fetch("/api/bookings", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ versionId, travellerCount: travellers.length, selectedOptionIds, travelDate, departureCity, couponCode, travellers, travellerBreakdown, termsAccepted: true }),
-      });
+      const bookRes = quoteId
+        ? await fetch(`/api/quotes/${quoteId}/accept`, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ travellers, termsAccepted: true }),
+          })
+        : await fetch("/api/bookings", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ versionId, travellerCount: travellers.length, selectedOptionIds, travelDate, departureCity, couponCode, travellers, travellerBreakdown, termsAccepted: true }),
+          });
       const booking = await bookRes.json();
       if (!booking.ok) { setError(booking.error ?? "Could not create booking."); setLoading(false); setStatus(null); return; }
 

@@ -96,6 +96,49 @@ model LoginOtp {
   @@index([expiresAt])
 }
 
+/**
+ * A personalized quote an admin sends to a lead. Enquiry → Quote → Accept →
+ * Pay → Booking. FKs are scalar (resolved in code) to keep the graph small.
+ */
+model Quote {
+  id            String   @id @default(cuid())
+  reference     String   @unique // QUO-XXXXXX
+  enquiryId     String?  // the lead this quote answers
+  customerId    String?  // linked customer account, if known
+  packageId     String?
+  packageVersionId String?
+  customerName  String
+  customerEmail String?
+  customerPhone String?
+  title         String   // e.g. "Bali Escape — 5N / 6D"
+  travellerCount Int     @default(2)
+  travelDate    String?  // ISO or free text
+  departureCity String?
+  currency      String   @default("INR")
+  amount        Int      // agreed total (whole rupees) — may include a discount
+  notes         String?  // message shown to the customer
+  status        String   @default("DRAFT") // DRAFT | SENT | ACCEPTED | DECLINED | EXPIRED
+  validUntil    DateTime?
+  bookingId     String?  @unique // set once accepted and booked
+  createdById   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  items         QuoteItem[]
+
+  @@index([status])
+  @@index([enquiryId])
+}
+
+model QuoteItem {
+  id        String @id @default(cuid())
+  quoteId   String
+  quote     Quote  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  label     String
+  amount    Int
+  sortOrder Int    @default(0)
+}
+
 model OtpSession {
   id           String   @id @default(cuid())
   mobile       String

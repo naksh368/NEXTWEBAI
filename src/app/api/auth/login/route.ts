@@ -29,11 +29,39 @@ export async function POST(request: Request) {
   }
   const { identifier, password } = parsed.data;
 
-  // Admin logs in directly (no OTP) — the admin mailbox may not be reachable.
+  // Admin credentials → email OTP as well (falls back to direct login if email
+  // isn't configured or the send fails, so the admin is never locked out).
   const adminId = await tryAdminLogin(identifier, password);
   if (adminId) {
-    await setAdminCookie(adminId);
-    return NextResponse.json({ ok: true, step: "done", redirect: "/admin", role: "admin" }, { headers: { "Cache-Control": "no-store" } });
+    const admin = await db.adminUser.findUnique({ where: { id: adminId }, select: { email: true } });
+    const adminEmail = (admin?.email ?? identifier).toLowerCase();
+
+    if (!isEmailConfigured()) {
+      await setAdminCookie(adminId);
+      return NextResponse.json({ ok: true, step: "done", redirect: "/admin", role: "admin" }, { headers: { "Cache-Control": "no-store" } });
+    }
+
+    const code = generateOtp();
+    await db.loginOtp.deleteMany({ where: { adminUserId: adminId } });
+    await db.loginOtp.create({ data: { adminUserId: adminId, email: adminEmail, codeHash: hashOtp(code), expiresAt: new Date(Date.now() + OTP_TTL_MIN * 60_000) } });
+    const sent = await sendEmail({
+      to: adminEmail,
+      subject: `${code} is your ExpertzTrip admin login code`,
+      html: emailLayout(
+        "Your admin login code",
+        `<p>Use this code to finish signing in to the ExpertzTrip admin:</p>
+         <div style="margin:16px 0;text-align:center">
+           <span style="display:inline-block;background:#EEF1FE;border:1px solid #2340D9;border-radius:12px;padding:12px 22px;font-size:30px;font-weight:800;letter-spacing:8px;color:#2340D9">${code}</span>
+         </div>
+         <p>This code expires in ${OTP_TTL_MIN} minutes. If this wasn't you, ignore this email.</p>`,
+      ),
+    });
+    if (!sent.ok) {
+      await db.loginOtp.deleteMany({ where: { adminUserId: adminId } });
+      await setAdminCookie(adminId);
+      return NextResponse.json({ ok: true, step: "done", redirect: "/admin", role: "admin" }, { headers: { "Cache-Control": "no-store" } });
+    }
+    return NextResponse.json({ ok: true, step: "otp", email: adminEmail, role: "admin" }, { headers: { "Cache-Control": "no-store" } });
   }
 
   const email = identifier.trim().toLowerCase();

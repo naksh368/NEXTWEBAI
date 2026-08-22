@@ -82,16 +82,17 @@ model EmailOtp {
 // Email OTP for customer LOGIN (2-step). Created after the password is verified;
 // the customer is signed in only after the emailed code is confirmed.
 model LoginOtp {
-  id         String   @id @default(cuid())
-  customerId String
-  email      String
-  codeHash   String
-  attempts   Int      @default(0)
-  expiresAt  DateTime
-  consumedAt DateTime?
-  createdAt  DateTime @default(now())
+  id          String   @id @default(cuid())
+  customerId  String?  // set for customer login
+  adminUserId String?  // set for admin login
+  email       String
+  codeHash    String
+  attempts    Int      @default(0)
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  createdAt   DateTime @default(now())
 
-  @@index([customerId])
+  @@index([email])
   @@index([expiresAt])
 }
 

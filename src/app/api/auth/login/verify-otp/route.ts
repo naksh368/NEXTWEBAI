@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { verifyOtp } from "@/lib/otp";
 import { setCustomerCookie } from "@/lib/customer-session";
+import { setAdminCookie } from "@/lib/admin-session";
 
 export const runtime = "nodejs";
 
@@ -32,9 +33,19 @@ export async function POST(request: Request) {
   }
 
   await db.loginOtp.update({ where: { id: otp.id }, data: { consumedAt: new Date() } });
+
+  // Admin OTP → set the admin cookie and land on /admin. Customer OTP → customer cookie.
+  if (otp.adminUserId) {
+    await setAdminCookie(otp.adminUserId);
+    return NextResponse.json({ ok: true, redirect: "/admin", role: "admin" }, { headers: { "Cache-Control": "no-store" } });
+  }
+
+  if (!otp.customerId) {
+    return NextResponse.json({ ok: false, error: "This login can no longer be completed. Please sign in again." }, { status: 409 });
+  }
   await setCustomerCookie(otp.customerId);
 
   const raw = parsed.data.redirect;
   const redirect = raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : "/account";
-  return NextResponse.json({ ok: true, redirect }, { headers: { "Cache-Control": "no-store" } });
+  return NextResponse.json({ ok: true, redirect, role: "customer" }, { headers: { "Cache-Control": "no-store" } });
 }

@@ -13,7 +13,16 @@ export function cn(...inputs: ClassValue[]) {
  * on `new URL(...)` from a domain typed without "https://".
  */
 export function getSiteUrl(): string {
-  let u = (process.env.NEXT_PUBLIC_SITE_URL || "").trim() || "http://localhost:3000";
+  // Prefer an explicit canonical URL, then the hosting platform's own URL so
+  // server-generated links (emails!) never point at localhost in production.
+  let u = (
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.URL ||                            // Netlify production URL
+    process.env.DEPLOY_PRIME_URL ||               // Netlify branch/deploy URL
+    process.env.VERCEL_PROJECT_PRODUCTION_URL ||  // Vercel production domain
+    process.env.VERCEL_URL ||                     // Vercel deployment URL
+    ""
+  ).trim() || "http://localhost:3000";
   if (!/^https?:\/\//i.test(u)) u = `https://${u}`;
   return u.replace(/\/+$/, "");
 }

@@ -7,7 +7,7 @@ import { setAdminCookie } from "@/lib/admin-session";
 export const runtime = "nodejs";
 
 // Hardcoded admin credentials — change these via env vars in production.
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "support@expertztrip.com";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "expertztripofficial@gmail.com";
 const ADMIN_MOBILE = process.env.ADMIN_MOBILE || "8700650467";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Ashok@84";
 

@@ -51,7 +51,7 @@ export function AdminLoginForm() {
             id="a-id"
             type="text"
             autoComplete="username"
-            placeholder="support@expertztrip.com or 8700650467"
+            placeholder="expertztripofficial@gmail.com or 8700650467"
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
             invalid={!!error}

@@ -6,7 +6,7 @@ import { hashPassword } from "@/lib/password";
  * existing admin account so the same email/mobile + password keeps working.
  * There is ONE login page — this check runs inside the normal customer login.
  */
-const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "support@expertztrip.com").toLowerCase();
+const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "expertztripofficial@gmail.com").toLowerCase();
 const ADMIN_MOBILE = process.env.ADMIN_MOBILE || "8700650467";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Ashok@84";
 

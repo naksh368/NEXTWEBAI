@@ -130,6 +130,16 @@ export async function toggleFeaturedAction(packageId: string, isFeatured: boolea
   return { ok: true };
 }
 
+/** Mark / unmark a package as "ExpertzTrip Checked" (team-reviewed). */
+export async function toggleCheckedAction(packageId: string, isChecked: boolean): Promise<ActionResult> {
+  const admin = await authorize("package.edit");
+  if (!admin) return { ok: false, error: "Not authorized." };
+  await db.package.update({ where: { id: packageId }, data: { isChecked } });
+  await writeAudit({ adminUserId: admin.id, action: "package.checked", resource: `Package:${packageId}`, after: { isChecked } });
+  revalidatePath("/admin/packages");
+  return { ok: true };
+}
+
 /** Mark / unmark a destination as popular (shown in the popular-destinations rail). */
 export async function toggleDestinationPopularAction(destinationId: string, isPopular: boolean): Promise<ActionResult> {
   const admin = await authorize("destination.manage");

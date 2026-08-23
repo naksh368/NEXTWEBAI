@@ -164,6 +164,14 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
             </div>
             <h1 className="mt-2 text-2xl font-bold sm:text-3xl">{pkg.name}</h1>
 
+            {pkg.isChecked && (
+              <div className="mt-2 inline-flex items-center gap-2 rounded-lg border border-success/25 bg-success/[0.06] px-3 py-1.5">
+                <ShieldCheck className="h-4 w-4 text-success" />
+                <span className="text-sm font-semibold text-success">ExpertzTrip Checked</span>
+                <span className="hidden text-xs text-ink-muted sm:inline">· inclusions, itinerary &amp; pricing reviewed by our team</span>
+              </div>
+            )}
+
             {/* Real rating — only when genuine published reviews exist */}
             {avgRating !== null && (
               <div className="mt-2 flex items-center gap-2 text-sm">

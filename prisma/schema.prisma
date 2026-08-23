@@ -253,6 +253,7 @@ model Package {
   theme          String?  // HONEYMOON | FAMILY | LUXURY | GROUP | ...
   status         String   @default("DRAFT") // DRAFT|IN_REVIEW|PUBLISHED|PAUSED|ARCHIVED
   isFeatured     Boolean  @default(false)
+  isChecked      Boolean  @default(false) // "ExpertzTrip Checked" — team-reviewed
   // Internal-only supplier import tracking (never exposed to customers)
   sourceUrl      String?
   sourceName     String?

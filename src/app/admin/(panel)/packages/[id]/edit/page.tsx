@@ -21,6 +21,7 @@ export default async function EditPackagePage({ params }: { params: Promise<{ id
     db.package.findUnique({
       where: { id },
       include: {
+        destination: { select: { name: true } },
         currentVersion: {
           include: {
             images: { orderBy: { sortOrder: "asc" } },
@@ -34,6 +35,16 @@ export default async function EditPackagePage({ params }: { params: Promise<{ id
   ]);
   if (!pkg || !pkg.currentVersion) notFound();
   const v = pkg.currentVersion;
+
+  // Catalogue activities to offer in "+ Add from catalogue" — this destination's
+  // activities plus any un-citied ones.
+  const destName = pkg.destination?.name ?? null;
+  const activities = await db.activity.findMany({
+    where: { isActive: true, ...(destName ? { OR: [{ city: destName }, { city: null }] } : {}) },
+    orderBy: [{ title: "asc" }],
+    take: 200,
+    select: { id: true, title: true, city: true, timeslot: true, kind: true },
+  });
 
   return (
     <>
@@ -60,7 +71,7 @@ export default async function EditPackagePage({ params }: { params: Promise<{ id
         </Panel>
 
         <Panel title={`Day-by-day itinerary (${v.days.length} days)`}>
-          <div className="p-5"><ItineraryEditor versionId={v.id} days={v.days.map((d) => ({ id: d.id, dayNumber: d.dayNumber, title: d.title, summary: d.summary, items: d.items.map((it) => ({ id: it.id, timeslot: it.timeslot, kind: it.kind, title: it.title, description: it.description })) }))} /></div>
+          <div className="p-5"><ItineraryEditor versionId={v.id} activities={activities} days={v.days.map((d) => ({ id: d.id, dayNumber: d.dayNumber, title: d.title, summary: d.summary, items: d.items.map((it) => ({ id: it.id, timeslot: it.timeslot, kind: it.kind, title: it.title, description: it.description })) }))} /></div>
         </Panel>
 
         <Panel title={`Customization options (${v.options.length})`}>

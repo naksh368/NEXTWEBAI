@@ -953,6 +953,28 @@ model Enquiry {
   @@index([followUpAt])
 }
 
+/// Reusable experiences/activities catalogue. Populated by admins or harvested
+/// from imported packages; picked into itinerary days via "+ Add activity".
+model Activity {
+  id          String   @id @default(cuid())
+  title       String
+  summary     String?
+  city        String?  // e.g. "Kuta", "Uluwatu"
+  country     String?
+  timeslot    String   @default("MORNING")  // MORNING | AFTERNOON | EVENING
+  kind        String   @default("ACTIVITY") // ACTIVITY | MEAL | TRANSFER | HOTEL | FLIGHT | FREE_TIME | NOTE
+  priceFrom   Int?     // per-person, whole rupees
+  imageUrl    String?
+  sourceUrl   String?
+  isActive    Boolean  @default(true)
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([city])
+  @@index([isActive])
+}
+
 /// Self-hosted media library — image bytes stored in the DB (serverless-safe,
 /// no third-party host). Served publicly via /api/media/[id].
 model MediaAsset {

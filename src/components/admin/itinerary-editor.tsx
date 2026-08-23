@@ -2,17 +2,19 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2, ChevronUp, ChevronDown, Check } from "lucide-react";
+import { Plus, Trash2, ChevronUp, ChevronDown, Check, Compass } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   addDayAction, updateDayAction, deleteDayAction, moveDayAction, addItemAction, deleteItemAction,
 } from "@/app/admin/(panel)/packages/actions";
+import { addActivityToDayAction } from "@/app/admin/(panel)/activities/actions";
 import { DAY_ITEM_KIND } from "@/lib/constants";
 
 type Item = { id: string; timeslot: string; kind: string; title: string; description: string | null };
 type Day = { id: string; dayNumber: number; title: string; summary: string | null; items: Item[] };
+type CatalogActivity = { id: string; title: string; city: string | null; timeslot: string; kind: string };
 
-export function ItineraryEditor({ versionId, days }: { versionId: string; days: Day[] }) {
+export function ItineraryEditor({ versionId, days, activities = [] }: { versionId: string; days: Day[]; activities?: CatalogActivity[] }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const run = (fn: () => Promise<{ ok: boolean; error?: string }>) => start(async () => { const r = await fn(); if (r.ok) router.refresh(); });
@@ -20,17 +22,18 @@ export function ItineraryEditor({ versionId, days }: { versionId: string; days: 
   return (
     <div className="space-y-4">
       {days.map((day) => (
-        <DayCard key={day.id} day={day} pending={pending} run={run} />
+        <DayCard key={day.id} day={day} pending={pending} run={run} activities={activities} />
       ))}
       <Button variant="outline" size="sm" onClick={() => run(() => addDayAction(versionId))} disabled={pending}><Plus className="h-4 w-4" /> Add day</Button>
     </div>
   );
 }
 
-function DayCard({ day, pending, run }: { day: Day; pending: boolean; run: (fn: () => Promise<{ ok: boolean; error?: string }>) => void }) {
+function DayCard({ day, pending, run, activities }: { day: Day; pending: boolean; run: (fn: () => Promise<{ ok: boolean; error?: string }>) => void; activities: CatalogActivity[] }) {
   const [title, setTitle] = useState(day.title);
   const [savedTitle, setSavedTitle] = useState(false);
   const [ni, setNi] = useState({ timeslot: "MORNING", kind: "ACTIVITY", title: "" });
+  const [pick, setPick] = useState("");
 
   return (
     <div className="rounded-xl border border-surface-border p-4">
@@ -63,6 +66,17 @@ function DayCard({ day, pending, run }: { day: Day; pending: boolean; run: (fn: 
         <input value={ni.title} onChange={(e) => setNi({ ...ni, title: e.target.value })} placeholder="Activity / note title" className="h-9 min-w-[160px] flex-1 rounded-lg border border-surface-border px-3 text-sm" />
         <Button size="sm" variant="outline" disabled={pending || !ni.title.trim()} onClick={() => run(async () => { const r = await addItemAction(day.id, ni); if (r.ok) setNi({ ...ni, title: "" }); return r; })}><Plus className="h-4 w-4" /> Add</Button>
       </div>
+
+      {activities.length > 0 && (
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-ink-muted"><Compass className="h-3.5 w-3.5 text-brand-orange" /> From catalogue:</span>
+          <select value={pick} onChange={(e) => setPick(e.target.value)} className="h-9 min-w-[200px] flex-1 rounded-lg border border-surface-border px-2 text-sm">
+            <option value="">Choose an activity…</option>
+            {activities.map((a) => <option key={a.id} value={a.id}>{a.title}{a.city ? ` — ${a.city}` : ""}</option>)}
+          </select>
+          <Button size="sm" variant="outline" disabled={pending || !pick} onClick={() => run(async () => { const r = await addActivityToDayAction(day.id, pick); if (r.ok) setPick(""); return r; })}><Plus className="h-4 w-4" /> Add activity</Button>
+        </div>
+      )}
     </div>
   );
 }

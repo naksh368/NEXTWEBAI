@@ -18,6 +18,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
     totalBookings, confirmed, processing, paymentReceived, customers,
     publishedPackages, openTickets, upcoming, paidAgg, refundAgg, recent,
     newEnquiries, recentEnquiries, paidNoDocs, unassigned, followUpsDue,
+    checkedPackages, featuredPackages, emptyDestinations, draftPackages,
   ] = await Promise.all([
     db.booking.count(),
     db.booking.count({ where: { status: "CONFIRMED" } }),
@@ -35,6 +36,10 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
     db.booking.count({ where: { status: { in: ["PAYMENT_RECEIVED", "BOOKING_PROCESSING", "SUPPLIER_CONFIRMATION_PENDING", "CONFIRMED"] }, documents: { none: {} } } }),
     db.booking.count({ where: { status: { in: ACTIVE_BOOKING_STATUSES }, assignedToId: null } }),
     db.enquiry.count({ where: { followUpAt: { lte: now }, status: { notIn: ["WON", "LOST"] } } }),
+    db.package.count({ where: { status: "PUBLISHED", isChecked: true } }),
+    db.package.count({ where: { status: "PUBLISHED", isFeatured: true } }),
+    db.destination.count({ where: { isPublished: true, packages: { none: { status: "PUBLISHED" } } } }),
+    db.package.count({ where: { status: { in: ["DRAFT", "IN_REVIEW"] } } }),
   ]);
 
   const revenue = paidAgg._sum.amount ?? 0;
@@ -48,6 +53,8 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
     { n: unassigned, label: "active bookings not assigned to a specialist", href: "/admin/bookings", tone: "navy" as const },
     { n: newEnquiries, label: "new enquiries to follow up", href: "/admin/enquiries", tone: "orange" as const },
     { n: followUpsDue, label: "enquiry follow-ups due now", href: "/admin/enquiries", tone: "orange" as const },
+    { n: publishedPackages - checkedPackages, label: "published holidays not yet ExpertzTrip-Checked", href: "/admin/packages", tone: "blue" as const },
+    { n: emptyDestinations, label: "live destinations shown as “Coming soon” (no packages yet)", href: "/admin/packages/new", tone: "navy" as const },
   ].filter((a) => a.n > 0);
   const actionTotal = actions.reduce((s, a) => s + a.n, 0);
 
@@ -94,6 +101,27 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
         <StatCard label="New enquiries" value={newEnquiries} tone="orange" hint="Leads to follow up" />
       </div>
 
+      {/* CATALOG HEALTH — how complete the storefront looks to customers. */}
+      <div className="mt-6">
+        <Panel
+          title="Catalog health"
+          action={<Link href="/admin/packages" className="text-sm font-semibold text-brand-blue hover:underline">Manage packages</Link>}
+        >
+          <div className="grid grid-cols-2 gap-4 p-4 lg:grid-cols-4">
+            <CatalogStat label="Live holidays" value={publishedPackages} hint="Visible to customers" href="/admin/packages" tone="navy" />
+            <CatalogStat label="ExpertzTrip-Checked" value={`${checkedPackages}/${publishedPackages}`} hint="Show the trust badge" href="/admin/packages" tone={publishedPackages > 0 && checkedPackages === publishedPackages ? "green" : "orange"} />
+            <CatalogStat label="Featured on home" value={featuredPackages} hint="Homepage spotlight" href="/admin/packages" tone="blue" />
+            <CatalogStat label="Empty destinations" value={emptyDestinations} hint={emptyDestinations > 0 ? "Shown as “Coming soon”" : "All destinations sell"} href="/admin/destinations" tone={emptyDestinations > 0 ? "orange" : "green"} />
+          </div>
+          {draftPackages > 0 && (
+            <p className="border-t border-surface-border px-4 py-3 text-sm text-ink-muted">
+              {draftPackages} package{draftPackages === 1 ? " is" : "s are"} in draft/review and not yet live.{" "}
+              <Link href="/admin/packages" className="font-semibold text-brand-blue hover:underline">Review &amp; publish →</Link>
+            </p>
+          )}
+        </Panel>
+      </div>
+
       <div className="mt-6">
         <Panel title="Recent bookings" action={<Link href="/admin/bookings" className="text-sm font-semibold text-brand-blue hover:underline">View all</Link>}>
           <Table head={<><Th>Reference</Th><Th>Customer</Th><Th>Package</Th><Th>Status</Th><Th className="text-right">Amount</Th><Th>Created</Th></>}>
@@ -134,5 +162,23 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
         </Panel>
       </div>
     </>
+  );
+}
+
+const CATALOG_TONE: Record<string, string> = {
+  navy: "text-brand-navy",
+  blue: "text-brand-blue",
+  orange: "text-brand-orange",
+  green: "text-success",
+};
+
+/** Compact, clickable catalog metric used in the "Catalog health" panel. */
+function CatalogStat({ label, value, hint, href, tone }: { label: string; value: string | number; hint: string; href: string; tone: keyof typeof CATALOG_TONE }) {
+  return (
+    <Link href={href} className="block rounded-xl border border-surface-border bg-white p-4 transition-colors hover:border-brand-blue">
+      <p className="text-xs font-semibold uppercase tracking-wide text-ink-faint">{label}</p>
+      <p className={`mt-1 text-2xl font-extrabold tabular-nums ${CATALOG_TONE[tone]}`}>{value}</p>
+      <p className="mt-0.5 text-xs text-ink-muted">{hint}</p>
+    </Link>
   );
 }

@@ -17,7 +17,7 @@ import {
   getPopularDestinations, getFeaturedPackages, getActiveOffers,
   getGlobalFaqs, getPublishedReviews, getAllDestinations,
 } from "@/lib/queries";
-import { formatINR, holidayCountLabel } from "@/lib/utils";
+import { formatINR } from "@/lib/utils";
 
 const CATEGORIES = [
   { label: "Honeymoon", theme: "HONEYMOON", icon: Star, blurb: "Romantic getaways" },
@@ -102,36 +102,6 @@ export default async function HomePage() {
           </div>
         </Container>
       </section>
-
-      {/* POPULAR DESTINATIONS */}
-      <Section>
-        <Container>
-          <SectionHeading
-            eyebrow="Where to next"
-            title="Popular destinations"
-            description="Handpicked places our travellers love most."
-            action={<Link href="/destinations" className={buttonVariants({ variant: "outline", size: "sm" })}>All destinations</Link>}
-          />
-          <div className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-2 no-scrollbar sm:mx-0 sm:grid sm:grid-cols-3 sm:px-0 lg:grid-cols-6">
-            {destinations.filter((d) => d._count.packages > 0).map((d) => (
-              <Link
-                key={d.id}
-                href={`/destinations/${d.slug}`}
-                className="group relative w-40 shrink-0 snap-start overflow-hidden rounded-2xl sm:w-auto"
-              >
-                <div className="relative aspect-[3/4]">
-                  <SmartImage src={d.thumbnail} alt={d.name} sizes="(max-width:640px) 40vw, 16vw" imgClassName="transition-transform duration-500 group-hover:scale-105" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" aria-hidden />
-                  <div className="absolute bottom-0 left-0 p-3">
-                    <p className="font-semibold text-white">{d.name}</p>
-                    <p className="text-xs text-white/80">{holidayCountLabel(d._count.packages)}</p>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </Container>
-      </Section>
 
       {/* HOLIDAY CATEGORIES */}
       <Section className="bg-surface-muted/60 py-12">

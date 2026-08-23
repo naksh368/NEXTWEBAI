@@ -8,6 +8,7 @@ import { PackageEditor } from "@/components/admin/package-editor";
 import { ImageManager } from "@/components/admin/image-manager";
 import { ItineraryEditor } from "@/components/admin/itinerary-editor";
 import { OptionsEditor } from "@/components/admin/options-editor";
+import { AiAutofillButton } from "@/components/admin/ai-autofill-button";
 
 export const dynamic = "force-dynamic";
 
@@ -52,7 +53,7 @@ export default async function EditPackagePage({ params }: { params: Promise<{ id
       <PageHeader
         title={pkg.name}
         subtitle={`${pkg.code ?? pkg.slug} · v${v.versionNumber}`}
-        action={<div className="flex items-center gap-2"><Pill tone={STATUS_TONE[pkg.status] ?? "neutral"}>{pkg.status}</Pill><Link href={`/packages/${pkg.slug}`} className="text-sm font-semibold text-brand-blue hover:underline">View live ↗</Link></div>}
+        action={<div className="flex items-center gap-3"><AiAutofillButton versionId={v.id} /><Pill tone={STATUS_TONE[pkg.status] ?? "neutral"}>{pkg.status}</Pill><Link href={`/packages/${pkg.slug}`} className="text-sm font-semibold text-brand-blue hover:underline">View live ↗</Link></div>}
       />
 
       <div className="space-y-6">

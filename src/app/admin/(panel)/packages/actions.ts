@@ -6,6 +6,7 @@ import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { authorize } from "@/lib/admin-auth";
 import { writeAudit } from "@/lib/services/audit-service";
+import { aiComplete, isAiConfigured } from "@/lib/services/ai-service";
 import { slugify } from "@/lib/utils";
 import { PACKAGE_STATUS, DAY_ITEM_KIND } from "@/lib/constants";
 
@@ -218,6 +219,87 @@ export async function updatePackageMetaAction(packageId: string, input: unknown)
   await writeAudit({ adminUserId: admin.id, action: "package.meta.update", resource: `Package:${packageId}`, before, after: p.data });
   revalidateAll(packageId, before.slug);
   return { ok: true };
+}
+
+// ── AI autofill (expert draft) ──────────────────────────
+const AI_CATEGORY = new Set(["FIRST_ESCAPE", "SIGNATURE", "HONEYMOON", "FAMILY", "LUXURY", "PREMIUM"]);
+const aiStr = (v: unknown, max = 4000): string | null => (typeof v === "string" && v.trim() ? v.trim().slice(0, max) : null);
+const aiArr = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x) => typeof x === "string" && x.trim()).map((x: string) => x.trim().slice(0, 200)).slice(0, 30) : []);
+
+/**
+ * Let the AI "expert" draft the empty content fields of a package — summary,
+ * overview, highlights, inclusions/exclusions, SEO, cancellation policy, etc.
+ * mode="blanks" fills only empty fields (default, safe); mode="all" rewrites.
+ * Never touches price or availability, and is instructed to invent no prices or
+ * specific hotels. Output is a DRAFT to review before publishing.
+ */
+export async function autofillPackageAction(versionId: string, mode: "blanks" | "all" = "blanks"): Promise<R<{ filled: string[] }>> {
+  const admin = await authorize("package.edit");
+  if (!admin) return { ok: false, error: "Not authorized." };
+  if (!isAiConfigured()) return { ok: false, error: "AI isn't configured yet — set AI_API_KEY to use AI autofill." };
+
+  const ver = await db.packageVersion.findUnique({
+    where: { id: versionId },
+    include: { package: { select: { slug: true, name: true, destination: { select: { name: true, country: true } } } } },
+  });
+  if (!ver) return { ok: false, error: "Version not found." };
+  const dest = ver.package.destination;
+
+  const prompt = `Package: "${ver.package.name}"
+Destination: ${dest?.name ?? "unknown"}${dest?.country ? `, ${dest.country}` : ""}
+Duration: ${ver.durationNights} nights / ${ver.durationDays} days
+Category hint: ${ver.category ?? "n/a"}
+
+Write realistic, premium, ORIGINAL content for this India-outbound holiday as STRICT JSON with exactly these keys:
+{"summary":string,"overview":string,"bestFor":string,"category":"FIRST_ESCAPE"|"SIGNATURE"|"HONEYMOON"|"FAMILY"|"LUXURY"|"PREMIUM","roomCategory":string,"mealPlan":string,"travelWindows":string,"highlights":string[],"inclusions":string[],"exclusions":string[],"cancellationPolicy":string,"importantInfo":string,"visaInfo":string,"seoTitle":string,"seoDescription":string}
+Rules: summary <=280 chars; overview 2-3 short paragraphs; 5-8 highlights; realistic inclusions and exclusions; a fair, clearly tiered cancellation policy; seoTitle <=60 chars; seoDescription <=155 chars. Keep hotels generic (e.g. "4-star central hotel") — never name a specific property. NEVER mention or invent any price or amount. Indian English. Return ONLY the JSON object.`;
+
+  const out = await aiComplete(prompt, {
+    system: "You are a senior holiday product editor for ExpertzTrip, a premium Indian holiday brand. Write accurate, original, premium copy for Indian travellers. Never invent prices or specific hotel names; keep everything realistic and verifiable.",
+    maxTokens: 2200, temperature: 0.5, timeoutMs: 26_000,
+  });
+  if (!out) return { ok: false, error: "The AI couldn't draft this one — please try again in a moment." };
+
+  let p: Record<string, unknown>;
+  try { const m = out.match(/\{[\s\S]*\}/); if (!m) throw new Error(); p = JSON.parse(m[0]); }
+  catch { return { ok: false, error: "The AI reply couldn't be read — please try again." }; }
+
+  const data: Record<string, unknown> = {};
+  const filled: string[] = [];
+  const blankStr = (cur: unknown) => !cur || !String(cur).trim();
+  const blankArr = (cur: unknown) => !Array.isArray(cur) || cur.length === 0;
+  const putStr = (key: string, cur: unknown, val: string | null, max = 4000) => {
+    const v = aiStr(val, max);
+    if (v && (mode === "all" || blankStr(cur))) { data[key] = v; filled.push(key); }
+  };
+  const putArr = (key: string, cur: unknown, val: unknown) => {
+    const v = aiArr(val);
+    if (v.length && (mode === "all" || blankArr(cur))) { data[key] = v; filled.push(key); }
+  };
+
+  putStr("summary", ver.summary, aiStr(p.summary, 400), 400);
+  putStr("overview", ver.overview, aiStr(p.overview));
+  putStr("bestFor", ver.bestFor, aiStr(p.bestFor, 160), 160);
+  const cat = aiStr(p.category);
+  if (cat && AI_CATEGORY.has(cat) && (mode === "all" || blankStr(ver.category))) { data.category = cat; filled.push("category"); }
+  putStr("roomCategory", ver.roomCategory, aiStr(p.roomCategory, 80), 80);
+  putStr("mealPlan", ver.mealPlan, aiStr(p.mealPlan, 80), 80);
+  putStr("travelWindows", ver.travelWindows, aiStr(p.travelWindows, 120), 120);
+  putArr("highlights", ver.highlights, p.highlights);
+  putArr("inclusions", ver.inclusions, p.inclusions);
+  putArr("exclusions", ver.exclusions, p.exclusions);
+  putStr("cancellationPolicy", ver.cancellationPolicy, aiStr(p.cancellationPolicy, 2000), 2000);
+  putStr("importantInfo", ver.importantInfo, aiStr(p.importantInfo, 2000), 2000);
+  putStr("visaInfo", ver.visaInfo, aiStr(p.visaInfo, 400), 400);
+  putStr("seoTitle", ver.seoTitle, aiStr(p.seoTitle, 160), 160);
+  putStr("seoDescription", ver.seoDescription, aiStr(p.seoDescription, 320), 320);
+
+  if (!filled.length) return { ok: false, error: mode === "blanks" ? "Nothing to fill — all fields already have content. Use “Regenerate all” to rewrite." : "The AI returned no usable content." };
+
+  await db.packageVersion.update({ where: { id: versionId }, data });
+  await writeAudit({ adminUserId: admin.id, action: "package.ai.autofill", resource: `Package:${ver.packageId}`, after: { mode, filled } });
+  revalidateAll(ver.packageId, ver.package.slug);
+  return { ok: true, filled };
 }
 
 // ── Version content ─────────────────────────────────────

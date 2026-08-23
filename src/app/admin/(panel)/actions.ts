@@ -130,6 +130,39 @@ export async function toggleFeaturedAction(packageId: string, isFeatured: boolea
   return { ok: true };
 }
 
+/** Schedule a package to auto-publish at a future time (or clear the schedule). */
+export async function schedulePublishAction(packageId: string, whenISO: string | null): Promise<ActionResult> {
+  const admin = await authorize("package.publish");
+  if (!admin) return { ok: false, error: "You don't have permission to publish packages." };
+
+  const pkg = await db.package.findUnique({ where: { id: packageId }, select: { status: true } });
+  if (!pkg) return { ok: false, error: "Package not found." };
+
+  let publishAt: Date | null = null;
+  if (whenISO) {
+    const d = new Date(whenISO);
+    if (Number.isNaN(d.getTime())) return { ok: false, error: "That date/time isn't valid." };
+    if (d.getTime() <= Date.now()) return { ok: false, error: "Pick a time in the future." };
+    if (pkg.status === "PUBLISHED") return { ok: false, error: "This package is already published — no need to schedule it." };
+    publishAt = d;
+  }
+
+  await db.package.update({ where: { id: packageId }, data: { publishAt } });
+  await writeAudit({ adminUserId: admin.id, action: "package.schedule", resource: `Package:${packageId}`, after: { publishAt: publishAt?.toISOString() ?? null } });
+  revalidatePath("/admin/packages");
+  return { ok: true };
+}
+
+/** Manually publish any packages whose scheduled time has passed. */
+export async function runDuePublishAction(): Promise<ActionResult & { published?: number }> {
+  const admin = await authorize("package.publish");
+  if (!admin) return { ok: false, error: "You don't have permission to publish packages." };
+  const { publishDuePackages } = await import("@/lib/services/scheduler");
+  const published = await publishDuePackages();
+  if (published > 0) await writeAudit({ adminUserId: admin.id, action: "package.schedule.run", resource: "Package", after: { published } });
+  return { ok: true, published };
+}
+
 /** Mark / unmark a package as "ExpertzTrip Checked" (team-reviewed). */
 export async function toggleCheckedAction(packageId: string, isChecked: boolean): Promise<ActionResult> {
   const admin = await authorize("package.edit");

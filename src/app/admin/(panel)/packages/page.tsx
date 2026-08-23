@@ -2,7 +2,8 @@ import Link from "next/link";
 import { requireAdmin, hasPermission } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 import { PageHeader, Panel, Table, Th, Td, Pill, EmptyRow, AdminPager } from "@/components/admin/ui";
-import { PackageStatusControl, FlagToggle } from "@/components/admin/catalog-actions";
+import { PackageStatusControl, FlagToggle, SchedulePublish } from "@/components/admin/catalog-actions";
+import { RunDuePublish } from "@/components/admin/run-due-publish";
 import { formatINR } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -30,11 +31,16 @@ export default async function AdminPackagesPage({ searchParams }: { searchParams
       <PageHeader
         title="Packages"
         subtitle={`${total} package${total === 1 ? "" : "s"} · only PUBLISHED appear on the site; toggle "Home" to feature (shows once published)`}
-        action={canCreate ? <Link href="/admin/packages/new" className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-brand-blue px-4 text-sm font-bold text-white hover:bg-brand-blueDark">+ New package</Link> : null}
+        action={
+          <div className="flex items-center gap-2">
+            {canEdit && <RunDuePublish />}
+            {canCreate && <Link href="/admin/packages/new" className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-brand-blue px-4 text-sm font-bold text-white hover:bg-brand-blueDark">+ New package</Link>}
+          </div>
+        }
       />
       <Panel>
-        <Table head={<><Th>Package</Th><Th>Destination</Th><Th>Duration</Th><Th className="text-right">From</Th><Th>Status</Th><Th>Home</Th><Th>Checked</Th><Th></Th></>}>
-          {rows.length === 0 ? <EmptyRow colSpan={8} label="No packages yet." /> : rows.map((p) => (
+        <Table head={<><Th>Package</Th><Th>Destination</Th><Th>Duration</Th><Th className="text-right">From</Th><Th>Status</Th><Th>Home</Th><Th>Checked</Th><Th>Schedule</Th><Th></Th></>}>
+          {rows.length === 0 ? <EmptyRow colSpan={9} label="No packages yet." /> : rows.map((p) => (
             <tr key={p.id} className="hover:bg-surface-muted/40">
               <Td className="font-medium text-brand-navy">{p.name}</Td>
               <Td className="text-ink-muted">{p.destination.name}</Td>
@@ -43,6 +49,7 @@ export default async function AdminPackagesPage({ searchParams }: { searchParams
               <Td>{canEdit ? <PackageStatusControl packageId={p.id} current={p.status} /> : <Pill tone={STATUS_TONE[p.status] ?? "neutral"}>{p.status}</Pill>}</Td>
               <Td>{canEdit ? <FlagToggle id={p.id} on={p.isFeatured} kind="featured" label="Feature" /> : (p.isFeatured ? <Pill tone="brand">Featured</Pill> : "—")}</Td>
               <Td>{canEdit ? <FlagToggle id={p.id} on={p.isChecked} kind="checked" label="Checked" /> : (p.isChecked ? <Pill tone="success">Checked</Pill> : "—")}</Td>
+              <Td>{canEdit ? <SchedulePublish id={p.id} publishAt={p.publishAt ? p.publishAt.toISOString() : null} status={p.status} /> : (p.publishAt ? <Pill tone="info">Scheduled</Pill> : "—")}</Td>
               <Td className="text-right">
                 <span className="flex items-center justify-end gap-3">
                   {canEdit && <Link href={`/admin/packages/${p.id}/edit`} className="text-sm font-semibold text-brand-blue hover:underline">Edit</Link>}

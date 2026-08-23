@@ -2,9 +2,61 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check, X, Loader2 } from "lucide-react";
+import { Check, X, Loader2, Clock } from "lucide-react";
 import { PACKAGE_STATUS } from "@/lib/constants";
-import { setPackageStatusAction, moderateReviewAction, toggleCouponAction, toggleOfferAction, toggleFeaturedAction, toggleDestinationPopularAction, toggleCheckedAction } from "@/app/admin/(panel)/actions";
+import { setPackageStatusAction, moderateReviewAction, toggleCouponAction, toggleOfferAction, toggleFeaturedAction, toggleDestinationPopularAction, toggleCheckedAction, schedulePublishAction } from "@/app/admin/(panel)/actions";
+
+/** datetime-local min = now (local), formatted YYYY-MM-DDTHH:mm. */
+function nowLocal(): string {
+  const d = new Date(Date.now() - new Date().getTimezoneOffset() * 60000);
+  return d.toISOString().slice(0, 16);
+}
+
+/** Schedule a package to auto-publish later, or show/clear an existing schedule. */
+export function SchedulePublish({ id, publishAt, status }: { id: string; publishAt: string | null; status: string }) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [pending, start] = useTransition();
+
+  if (status === "PUBLISHED") return <span className="text-xs text-ink-faint">—</span>;
+
+  const scheduled = publishAt ? new Date(publishAt) : null;
+  const save = (iso: string | null) => start(async () => {
+    setError(null);
+    const r = await schedulePublishAction(id, iso);
+    if (!r.ok) setError(r.error);
+    else { setOpen(false); setValue(""); router.refresh(); }
+  });
+
+  if (scheduled && !open) {
+    return (
+      <div className="flex items-center gap-1.5">
+        <span className="inline-flex items-center gap-1 rounded-full bg-brand-blueLight px-2 py-0.5 text-xs font-semibold text-brand-blue" title="Auto-publishes at this time">
+          <Clock className="h-3 w-3" /> {scheduled.toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+        </span>
+        <button type="button" disabled={pending} onClick={() => save(null)} className="text-xs text-ink-muted hover:text-danger" aria-label="Clear schedule">Clear</button>
+      </div>
+    );
+  }
+
+  if (!open) {
+    return <button type="button" onClick={() => setOpen(true)} className="inline-flex items-center gap-1 text-xs font-semibold text-brand-blue hover:underline"><Clock className="h-3.5 w-3.5" /> Schedule</button>;
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-1.5">
+        <input type="datetime-local" value={value} min={nowLocal()} onChange={(e) => setValue(e.target.value)} className="h-8 rounded-lg border border-surface-border px-2 text-xs" />
+        <button type="button" disabled={pending || !value} onClick={() => save(value ? new Date(value).toISOString() : null)} className="rounded-lg bg-brand-blue px-2.5 py-1 text-xs font-semibold text-white disabled:opacity-50">Save</button>
+        <button type="button" onClick={() => { setOpen(false); setError(null); }} className="text-xs text-ink-muted hover:text-ink">Cancel</button>
+        {pending && <Loader2 className="h-3.5 w-3.5 animate-spin text-ink-faint" />}
+      </div>
+      {error && <span className="text-xs text-danger">{error}</span>}
+    </div>
+  );
+}
 
 /** Labelled switch for "Feature on home", "ExpertzTrip Checked", and "Popular". */
 export function FlagToggle({ id, on: initialOn, kind, label }: { id: string; on: boolean; kind: "featured" | "popular" | "checked"; label: string }) {

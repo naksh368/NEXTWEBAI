@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PackageCard } from "@/components/package/package-card";
 import { PackageFilters } from "@/components/package/package-filters";
 import { listPackages, type PackageFilters as Filters, type PackageListItem } from "@/lib/queries";
-import { SearchX } from "lucide-react";
+import { SearchX, Check } from "lucide-react";
 
 type BuildCriteria = { budgetMax: number | null; theme?: string; destination?: string } | null;
 
@@ -24,6 +24,28 @@ function matchScore(pkg: PackageListItem, c: NonNullable<BuildCriteria>): number
     score += 10;
   }
   return Math.min(100, score);
+}
+
+const THEME_LABEL: Record<string, string> = {
+  HONEYMOON: "Honeymoon", FAMILY: "Family-friendly", LUXURY: "Luxury",
+  BEACH: "Beach", ADVENTURE: "Adventure", GROUP: "Group",
+};
+
+/** Plain-language reasons this package fits the customer's brief. */
+function matchReasons(pkg: PackageListItem, c: NonNullable<BuildCriteria>): string[] {
+  const reasons: string[] = [];
+  if (c.destination && pkg.destination.name.toLowerCase().includes(c.destination.toLowerCase())) {
+    reasons.push(`Goes to ${pkg.destination.name}`);
+  }
+  if (c.budgetMax != null && pkg.pricingStatus !== "PRICE_REVIEW_REQUIRED") {
+    if (pkg.basePrice <= c.budgetMax) reasons.push("Within your budget");
+    else if (pkg.basePrice <= c.budgetMax * 1.15) reasons.push("Close to your budget");
+  }
+  if (c.theme && pkg.theme === c.theme && THEME_LABEL[pkg.theme]) {
+    reasons.push(`${THEME_LABEL[pkg.theme]} holiday`);
+  }
+  if (reasons.length === 0) reasons.push("Handpicked & verified");
+  return reasons;
 }
 
 export const metadata: Metadata = {
@@ -89,10 +111,13 @@ export default async function PackagesPage({ searchParams }: { searchParams: Sea
 async function Results({ filters, buildHref, build }: { filters: Filters; buildHref: (p: number) => string; build: BuildCriteria }) {
   const { items, total, page, totalPages } = await listPackages(filters);
 
-  // Build-my-holiday: score the current page and show the best matches first.
+  // Build-my-holiday: score the current page and show the best matches first,
+  // each with plain-language reasons it fits the brief.
   const scored = build
-    ? items.map((p) => ({ p, m: matchScore(p, build) })).sort((a, b) => b.m - a.m)
-    : items.map((p) => ({ p, m: undefined as number | undefined }));
+    ? items
+        .map((p) => ({ p, m: matchScore(p, build), reasons: matchReasons(p, build) }))
+        .sort((a, b) => b.m - a.m)
+    : items.map((p) => ({ p, m: undefined as number | undefined, reasons: undefined as string[] | undefined }));
 
   if (!items.length) {
     return (
@@ -107,14 +132,36 @@ async function Results({ filters, buildHref, build }: { filters: Filters; buildH
     );
   }
 
+  const top = build && scored.length ? scored[0] : null;
+
   return (
     <>
+      {top && (
+        <div className="mt-6 rounded-2xl border border-success/30 bg-[#E7F6EC]/60 p-4 sm:flex sm:items-center sm:justify-between sm:gap-4">
+          <div className="min-w-0">
+            <p className="text-xs font-bold uppercase tracking-wide text-success">Best match for you</p>
+            <p className="mt-0.5 truncate text-sm font-semibold text-brand-navy">
+              {top.p.name} · {top.p.nights}N / {top.p.days}D
+            </p>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {top.reasons?.slice(0, 3).map((r) => (
+                <span key={r} className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-success">
+                  <Check className="h-3 w-3" /> {r}
+                </span>
+              ))}
+            </div>
+          </div>
+          <a href={`/packages/${top.p.slug}`} className="mt-3 inline-flex h-10 shrink-0 items-center justify-center rounded-xl bg-success px-5 text-sm font-semibold text-white hover:brightness-95 sm:mt-0">
+            View best match
+          </a>
+        </div>
+      )}
       <p className="mt-6 text-sm text-ink-muted">
         {build ? "Best matches for your trip — " : ""}{total} package{total === 1 ? "" : "s"} found{filters.q ? ` for “${filters.q}”` : ""}
       </p>
       <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {scored.map(({ p, m }, i) => (
-          <PackageCard key={p.id} pkg={p} priority={i < 3} matchPct={m} />
+        {scored.map(({ p, m, reasons }, i) => (
+          <PackageCard key={p.id} pkg={p} priority={i < 3} matchPct={m} reasons={reasons} />
         ))}
       </div>
       <Pagination page={page} totalPages={totalPages} buildHref={buildHref} />

@@ -9,7 +9,8 @@ import { SmartImage } from "@/components/ui/smart-image";
 import { Accordion } from "@/components/ui/accordion";
 import { EmptyState } from "@/components/ui/states";
 import { PackageCard } from "@/components/package/package-card";
-import { SearchBox } from "@/components/home/search-box";
+import { HeroSearch } from "@/components/home/hero-search";
+import { RecentlyViewedRail } from "@/components/package/recently-viewed";
 import { Newsletter } from "@/components/home/newsletter";
 import { AiAvatar } from "@/components/ui/ai-avatar";
 import {
@@ -39,6 +40,19 @@ export default async function HomePage() {
   const indiaDestinations = allDestinations.filter((d) => d.country === "India" && d._count.packages > 0);
   const worldDestinations = allDestinations.filter((d) => d.country !== "India" && d._count.packages > 0);
 
+  // Every destination name feeds the "Where to?" autocomplete so a customer
+  // always sees the full set of places we cover.
+  const heroDestinations = [...allDestinations]
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((d) => d.name);
+  // Trending chips: destinations we actually sell (most packages first); if none
+  // are live yet, fall back to the popular rail so the row is never empty.
+  const trending = (
+    [...allDestinations].filter((d) => d._count.packages > 0).sort((a, b) => b._count.packages - a._count.packages).length
+      ? [...allDestinations].filter((d) => d._count.packages > 0).sort((a, b) => b._count.packages - a._count.packages)
+      : destinations
+  ).slice(0, 8);
+
   return (
     <>
       {/* HERO — clean light background, no photo */}
@@ -56,8 +70,22 @@ export default async function HomePage() {
             <p className="mx-auto mt-5 max-w-xl text-lg text-ink-muted">
               Handpicked holidays, transparent pricing and expert support — from India to the world.
             </p>
-            <div className="mx-auto mt-9 max-w-2xl">
-              <SearchBox />
+            <div className="mx-auto mt-9 max-w-4xl text-left">
+              <HeroSearch destinations={heroDestinations} />
+              {trending.length > 0 && (
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-center">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-ink-faint">Trending now</span>
+                  {trending.map((d) => (
+                    <Link
+                      key={d.id}
+                      href={`/packages?build=1&destination=${encodeURIComponent(d.name)}`}
+                      className="inline-flex items-center gap-1 rounded-full border border-surface-border bg-white px-3 py-1 text-xs font-semibold text-brand-navy transition-colors hover:border-brand-blue hover:text-brand-blue"
+                    >
+                      <MapPin className="h-3 w-3 text-brand-orange" /> {d.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="mt-6 flex justify-center">
               <Link href="/packages" className={buttonVariants({ variant: "orange", size: "lg" })}>
@@ -147,6 +175,13 @@ export default async function HomePage() {
           ) : (
             <EmptyState title="No packages published yet" description="Once packages are published they'll appear here." action={{ label: "Browse destinations", href: "/destinations" }} />
           )}
+        </Container>
+      </Section>
+
+      {/* RECENTLY VIEWED (per-viewer; renders nothing when empty) */}
+      <Section className="py-0">
+        <Container>
+          <RecentlyViewedRail limit={4} />
         </Container>
       </Section>
 

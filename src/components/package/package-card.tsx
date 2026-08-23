@@ -27,7 +27,7 @@ const THEME_LABEL: Record<string, string> = {
   GROUP: "Group",
 };
 
-export function PackageCard({ pkg, priority, matchPct }: { pkg: PackageListItem; priority?: boolean; matchPct?: number }) {
+export function PackageCard({ pkg, priority, matchPct, reasons }: { pkg: PackageListItem; priority?: boolean; matchPct?: number; reasons?: string[] }) {
   return (
     <div className="group relative flex flex-col overflow-hidden rounded-2xl border border-surface-border bg-white shadow-card transition-shadow duration-200 hover:shadow-cardHover">
       <Link href={`/packages/${pkg.slug}`} className="relative block aspect-[4/3] w-full" aria-label={pkg.name}>
@@ -74,6 +74,16 @@ export function PackageCard({ pkg, priority, matchPct }: { pkg: PackageListItem;
         ) : pkg.summary ? (
           <p className="mt-1 line-clamp-2 text-sm text-ink-muted">{pkg.summary}</p>
         ) : null}
+
+        {reasons && reasons.length > 0 && (
+          <ul className="mt-2 flex flex-wrap gap-1.5">
+            {reasons.slice(0, 3).map((r) => (
+              <li key={r} className="inline-flex items-center gap-1 rounded-full bg-[#E7F6EC] px-2 py-0.5 text-[11px] font-semibold text-success">
+                <Check className="h-3 w-3 shrink-0" /> {r}
+              </li>
+            ))}
+          </ul>
+        )}
 
         <ul className="mt-2.5 flex flex-wrap gap-x-3 gap-y-1">
           {inclusionChips(pkg).map((c) => (

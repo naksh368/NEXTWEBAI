@@ -16,6 +16,7 @@ import { CustomizationPanel, type OptionVM } from "@/components/package/customiz
 import { BookNowButton } from "@/components/package/booking-wizard";
 import { EnquireButton } from "@/components/package/enquire-button";
 import { PackageCard } from "@/components/package/package-card";
+import { RecordView, RecentlyViewedRail } from "@/components/package/recently-viewed";
 import { getPackageBySlug, getSimilarPackages } from "@/lib/queries";
 import { getCurrentCustomer } from "@/lib/auth";
 import { formatINR } from "@/lib/utils";
@@ -490,6 +491,9 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
             </div>
           </section>
         )}
+
+        <RecordView slug={pkg.slug} />
+        <RecentlyViewedRail exclude={pkg.slug} />
       </Container>
 
       {/* Mobile sticky CTA */}

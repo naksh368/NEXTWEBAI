@@ -254,6 +254,7 @@ model Package {
   status         String   @default("DRAFT") // DRAFT|IN_REVIEW|PUBLISHED|PAUSED|ARCHIVED
   isFeatured     Boolean  @default(false)
   isChecked      Boolean  @default(false) // "ExpertzTrip Checked" — team-reviewed
+  enquiryOnly    Boolean  @default(false) // lead-gen: show "Enquire" instead of "Book now"
   publishAt      DateTime? // when set & in the future, auto-publishes at this time
   // Internal-only supplier import tracking (never exposed to customers)
   sourceUrl      String?

@@ -140,7 +140,7 @@ export async function deletePackageAction(packageId: string): Promise<R> {
 }
 
 // ── Bulk actions ────────────────────────────────────────
-type BulkOp = "publish" | "draft" | "feature" | "unfeature" | "check" | "uncheck" | "archive" | "delete";
+type BulkOp = "publish" | "draft" | "feature" | "unfeature" | "check" | "uncheck" | "archive" | "delete" | "enquiry" | "bookable";
 
 /** Apply one operation to many packages at once. */
 export async function bulkPackageAction(rawIds: string[], op: BulkOp): Promise<R<{ affected: number; skipped: number }>> {
@@ -178,6 +178,8 @@ export async function bulkPackageAction(rawIds: string[], op: BulkOp): Promise<R
       op === "unfeature" ? { isFeatured: false } :
       op === "check" ? { isChecked: true } :
       op === "uncheck" ? { isChecked: false } :
+      op === "enquiry" ? { enquiryOnly: true } :
+      op === "bookable" ? { enquiryOnly: false } :
       { status: "ARCHIVED" };
     const res = await db.package.updateMany({ where: { id: { in: ids } }, data });
     affected = res.count;
@@ -197,6 +199,7 @@ const metaSchema = z.object({
   destinationId: z.string().min(1),
   theme: z.string().max(40).nullable().optional(),
   isFeatured: z.boolean(),
+  enquiryOnly: z.boolean().optional(),
   status: z.enum(PACKAGE_STATUS),
 });
 
@@ -210,7 +213,7 @@ export async function updatePackageMetaAction(packageId: string, input: unknown)
   if (p.data.status === "PUBLISHED" && !(await authorize("package.publish"))) {
     return { ok: false, error: "You don't have permission to publish." };
   }
-  await db.package.update({ where: { id: packageId }, data: { name: p.data.name, code: p.data.code || null, destinationId: p.data.destinationId, theme: p.data.theme || null, isFeatured: p.data.isFeatured, status: p.data.status } });
+  await db.package.update({ where: { id: packageId }, data: { name: p.data.name, code: p.data.code || null, destinationId: p.data.destinationId, theme: p.data.theme || null, isFeatured: p.data.isFeatured, ...(p.data.enquiryOnly !== undefined ? { enquiryOnly: p.data.enquiryOnly } : {}), status: p.data.status } });
   // Keep the current version's publish flag in sync so pricing/booking treat it
   // as sellable (published) or not, consistently with the package status.
   if (before.currentVersionId) {

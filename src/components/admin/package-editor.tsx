@@ -37,7 +37,7 @@ export function PackageEditor({ pkg, version, destinations }: { pkg: Data; versi
     const gb = (n: string) => (f.elements.namedItem(n) as HTMLInputElement)?.checked ?? false;
     const gn = (n: string) => parseInt(g(n) || "0", 10) || 0;
 
-    const meta = { name: g("name"), code: g("code") || null, destinationId: g("destinationId"), theme: g("theme") || null, isFeatured: gb("isFeatured"), status: g("status") };
+    const meta = { name: g("name"), code: g("code") || null, destinationId: g("destinationId"), theme: g("theme") || null, isFeatured: gb("isFeatured"), enquiryOnly: gb("enquiryOnly"), status: g("status") };
     const ver = {
       name: g("name"), summary: g("summary") || null, overview: g("overview") || null,
       durationNights: gn("durationNights"), basePrice: gn("basePrice"),
@@ -82,6 +82,7 @@ export function PackageEditor({ pkg, version, destinations }: { pkg: Data; versi
           </select>
         </Field>
         <label className="flex items-center gap-2 self-end pb-2 text-sm font-medium"><input type="checkbox" name="isFeatured" defaultChecked={!!pkg.isFeatured} className="h-4 w-4 accent-brand-blue" /> Featured on homepage</label>
+        <label className="flex items-center gap-2 self-end pb-2 text-sm font-medium sm:col-span-2"><input type="checkbox" name="enquiryOnly" defaultChecked={!!pkg.enquiryOnly} className="h-4 w-4 accent-brand-blue" /> Enquiry only — show &ldquo;Enquire&rdquo; instead of &ldquo;Book now&rdquo; (no online payment)</label>
       </fieldset>
 
       <fieldset className="grid grid-cols-1 gap-4 sm:grid-cols-2">

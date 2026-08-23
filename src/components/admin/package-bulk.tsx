@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Trash2, Star, ShieldCheck, Archive, Eye, EyeOff, X, Copy } from "lucide-react";
+import { Loader2, Trash2, Star, ShieldCheck, Archive, Eye, EyeOff, X, Copy, MessageCircle } from "lucide-react";
 import { bulkPackageAction, deletePackageAction, duplicatePackageAction } from "@/app/admin/(panel)/packages/actions";
 
 // ── Selection context (shared across the table) ─────────────
@@ -82,6 +82,7 @@ export function BulkBar() {
       <button disabled={pending} onClick={() => run("draft")} className={`${btn} bg-surface-muted text-ink-muted hover:brightness-95`}><EyeOff className="h-3.5 w-3.5" /> Draft</button>
       <button disabled={pending} onClick={() => run("feature")} className={`${btn} bg-brand-orangeLight text-brand-orangeDark hover:brightness-95`}><Star className="h-3.5 w-3.5" /> Feature</button>
       <button disabled={pending} onClick={() => run("check")} className={`${btn} bg-brand-blueLight text-brand-blue hover:brightness-95`}><ShieldCheck className="h-3.5 w-3.5" /> Check</button>
+      <button disabled={pending} onClick={() => run("enquiry")} className={`${btn} bg-surface-muted text-ink hover:brightness-95`}><MessageCircle className="h-3.5 w-3.5" /> Enquiry-only</button>
       <button disabled={pending} onClick={() => run("archive", `Archive ${selected.size} package(s)? They'll be hidden from the site.`)} className={`${btn} bg-surface-muted text-ink hover:brightness-95`}><Archive className="h-3.5 w-3.5" /> Archive</button>
       <button disabled={pending} onClick={() => run("delete", `Permanently delete ${selected.size} package(s)? This cannot be undone. Packages with bookings are skipped.`)} className={`${btn} bg-[#FCE9E9] text-danger hover:brightness-95`}><Trash2 className="h-3.5 w-3.5" /> Delete</button>
       {msg && <span className="max-w-[240px] text-xs text-danger">{msg}</span>}

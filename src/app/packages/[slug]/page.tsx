@@ -75,6 +75,8 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
 
   const v = pkg.currentVersion!;
   const reviewRequired = v.pricingStatus === "PRICE_REVIEW_REQUIRED";
+  // Enquiry-only OR price-on-request → the CTA is "Enquire", never online booking.
+  const enquireOnly = reviewRequired || pkg.enquiryOnly;
   const images = v.images;
   const highlights = asStringArray(v.highlights);
   const inclusions = asStringArray(v.inclusions);
@@ -434,6 +436,25 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
                       </div>
                       <p className="mt-2 text-center text-xs text-ink-muted">No login needed — talk to us directly.</p>
                     </div>
+                  ) : pkg.enquiryOnly ? (
+                    <div>
+                      <div className="mb-1 flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-ink-faint">Starting from</p>
+                          <p className="text-2xl font-extrabold text-brand-navy">
+                            {formatINR(v.basePrice)} <span className="text-sm font-normal text-ink-muted">/ person</span>
+                          </p>
+                        </div>
+                        <Badge tone="brand">Enquire</Badge>
+                      </div>
+                      <p className="mb-4 text-xs text-ink-muted">Tell us your dates &amp; travellers — we&apos;ll confirm availability and the final price, then help you book.</p>
+                      <EnquireButton packageName={pkg.name} packageSlug={pkg.slug} {...enquiryDefaults} variant="solid" size="lg" label="Enquire now" className="!bg-brand-orange hover:!bg-brand-orangeDark" />
+                      <ul className="mt-4 space-y-2 text-sm text-ink">
+                        <li className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-brand-blue" /> Fully customizable itinerary</li>
+                        <li className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-brand-blue" /> Best price, personally confirmed</li>
+                        <li className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-brand-blue" /> Expert support, no obligation</li>
+                      </ul>
+                    </div>
                   ) : (
                     <>
                       <div className="mb-1 flex items-start justify-between gap-2">
@@ -525,9 +546,9 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
             <div className="w-[128px]">
               <EnquireButton packageName={pkg.name} packageSlug={pkg.slug} {...enquiryDefaults} label="Enquire" />
             </div>
-            {reviewRequired ? (
+            {enquireOnly ? (
               <Link href="#customize" className="inline-flex h-11 items-center justify-center rounded-xl bg-brand-orange px-5 font-semibold text-white transition-colors hover:bg-brand-orangeDark">
-                Get a quote
+                {reviewRequired ? "Get a quote" : "Enquire"}
               </Link>
             ) : (
               <div className="w-[150px]">

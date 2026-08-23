@@ -7,6 +7,7 @@ import { writeAudit } from "@/lib/services/audit-service";
 import { slugify } from "@/lib/utils";
 import { safeFetchHtml, extractFacts, extractMainText, discoverPackageLinks, type ExtractedFacts } from "@/lib/services/importer";
 import { aiComplete, isAiConfigured } from "@/lib/services/ai-service";
+import { IMPORT_PRICE_MARKUP } from "@/lib/constants";
 
 type R<T extends object = object> = ({ ok: true } & T) | { ok: false; error: string };
 
@@ -336,8 +337,9 @@ export async function batchImport(urls: string[], destinationId = "", verbatim =
       // Auto-detect the destination from the page; fall back to the chosen one.
       const destId = (await resolveDestinationId(ai?.destinationName, ai?.country)) ?? destinationId;
       if (!destId) { failed.push({ url, error: "couldn't detect a destination — pick one for the batch" }); continue; }
+      const srcPrice = ai?.startingPrice ?? facts.priceCandidates[0] ?? 0;
       const res = await createDraft(admin, {
-        name, destinationId: destId, nights, basePrice: ai?.startingPrice ?? facts.priceCandidates[0] ?? 0,
+        name, destinationId: destId, nights, basePrice: srcPrice > 0 ? srcPrice + IMPORT_PRICE_MARKUP : 0,
         category: ai?.category ?? null, bestFor: ai?.bestFor ?? null,
         summary: ai?.summary ?? facts.summary ?? null, overview: ai?.overview ?? null,
         roomCategory: ai?.roomCategory ?? null, mealPlan: ai?.mealPlan ?? null,

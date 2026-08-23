@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Loader2, AlertTriangle, ExternalLink, ShieldCheck, Sparkles, CheckCircle2, ImageIcon, ListChecks } from "lucide-react";
 import { scanSource, scanListing, batchImport, createDraftFromImport, buildPackage, type AiPackage } from "@/app/admin/(panel)/import/actions";
+import { IMPORT_PRICE_MARKUP } from "@/lib/constants";
 
 type Destination = { id: string; name: string; country: string };
 const CATEGORIES = ["", "FIRST_ESCAPE", "SIGNATURE", "HONEYMOON", "FAMILY", "LUXURY", "PREMIUM"];
@@ -71,7 +72,7 @@ function SingleImport({ destinations }: { destinations: Destination[] }) {
         name: a?.name ?? res.facts.name ?? "",
         destinationId: matchDestination(a?.destinationName ?? res.facts.name, destinations),
         nights: String(a?.durationNights ?? res.facts.durationNights ?? ""),
-        basePrice: String(a?.startingPrice ?? res.facts.priceCandidates[0] ?? ""),
+        basePrice: (() => { const src = a?.startingPrice ?? res.facts.priceCandidates[0] ?? 0; return src > 0 ? String(src + IMPORT_PRICE_MARKUP) : ""; })(),
         category: a?.category ?? "", bestFor: a?.bestFor ?? "",
         // In verbatim mode the AI returns the source's own wording; otherwise it's
         // AI-rewritten original copy. Fall back to the raw page summary either way.

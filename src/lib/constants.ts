@@ -115,6 +115,10 @@ export const BOOKING_STATUS_META: Record<
 export const CURRENCY = "INR";
 export const TAX_RATE = 0.05; // 5% GST on holiday packages (illustrative)
 
+// Margin added to a price detected while importing a supplier page, so the
+// imported base price is always this much above the source's advertised price.
+export const IMPORT_PRICE_MARKUP = 550;
+
 // Document types an admin can attach to a booking (Phase 20).
 export const DOCUMENT_TYPES = [
   "BOOKING_CONFIRMATION",

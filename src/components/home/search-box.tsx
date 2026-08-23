@@ -45,7 +45,8 @@ export function SearchBox({ suggestions = [], popular }: { suggestions?: string[
   }
 
   return (
-    <div className="relative w-full">
+    <div className="w-full">
+      <div className="relative">
       <form
         onSubmit={(e) => { e.preventDefault(); submit(); }}
         className="flex flex-col gap-2 rounded-2xl border border-surface-border bg-white p-2 shadow-cardHover sm:flex-row sm:items-center"
@@ -77,12 +78,12 @@ export function SearchBox({ suggestions = [], popular }: { suggestions?: string[
         </button>
       </form>
 
-      {/* Google-style recommendations */}
+      {/* Google-style recommendations — anchored right under the search box */}
       {open && items.length > 0 && (
         <div
           id="home-search-suggestions"
           role="listbox"
-          className="absolute left-0 right-0 top-[calc(100%+8px)] z-40 overflow-hidden rounded-2xl border border-surface-border bg-white text-left shadow-cardHover"
+          className="absolute left-0 right-0 top-[calc(100%+8px)] z-40 max-h-[min(60vh,340px)] overflow-y-auto rounded-2xl border border-surface-border bg-white text-left shadow-cardHover"
         >
           <p className="flex items-center gap-1.5 px-4 pt-3 text-xs font-semibold uppercase tracking-wide text-ink-faint">
             {showingPopular ? <><TrendingUp className="h-3.5 w-3.5" /> Popular destinations</> : "Destinations"}
@@ -119,6 +120,7 @@ export function SearchBox({ suggestions = [], popular }: { suggestions?: string[
           </ul>
         </div>
       )}
+      </div>
 
       <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
         <span className="text-sm font-medium text-ink-muted">Popular:</span>

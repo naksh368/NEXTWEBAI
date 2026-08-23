@@ -5,9 +5,21 @@ import { PackageCard } from "@/components/package/package-card";
 import { recordViewed, useRecentlyViewed } from "@/lib/recently-viewed";
 import type { PackageListItem } from "@/lib/queries";
 
-/** Silently records the current package as recently viewed (renders nothing). */
+/** Silently records the current package as recently viewed + counts one view (renders nothing). */
 export function RecordView({ slug }: { slug: string }) {
-  useEffect(() => { recordViewed(slug); }, [slug]);
+  useEffect(() => {
+    recordViewed(slug);
+    // Count a view at most once per browser session per package.
+    try {
+      const key = `etx_viewed_${slug}`;
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, "1");
+        fetch(`/api/packages/${encodeURIComponent(slug)}/view`, { method: "POST", keepalive: true }).catch(() => {});
+      }
+    } catch {
+      fetch(`/api/packages/${encodeURIComponent(slug)}/view`, { method: "POST", keepalive: true }).catch(() => {});
+    }
+  }, [slug]);
   return null;
 }
 

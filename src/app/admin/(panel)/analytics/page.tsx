@@ -18,7 +18,7 @@ export default async function AdminAnalyticsPage() {
   const [
     leads, responded, quotesSent, quotesAccepted, won, lost,
     confirmedBookings, revenueAgg, customers, repeat,
-    leads30, bookings30, revenue30Agg, responseRows,
+    leads30, bookings30, revenue30Agg, responseRows, viewsAgg,
   ] = await Promise.all([
     db.enquiry.count(),
     db.enquiry.count({ where: { firstRespondedAt: { not: null } } }),
@@ -34,10 +34,12 @@ export default async function AdminAnalyticsPage() {
     db.booking.count({ where: { createdAt: { gte: d30 } } }),
     db.payment.aggregate({ _sum: { amount: true }, where: { status: "PAID", createdAt: { gte: d30 } } }),
     db.enquiry.findMany({ where: { firstRespondedAt: { not: null } }, select: { createdAt: true, firstRespondedAt: true }, take: 2000 }),
+    db.package.aggregate({ _sum: { views: true } }),
   ]);
 
   const revenue = revenueAgg._sum.amount ?? 0;
   const revenue30 = revenue30Agg._sum.amount ?? 0;
+  const views = viewsAgg._sum.views ?? 0;
 
   // Average first-response time + share answered within a day.
   let avgHours = 0;
@@ -51,12 +53,14 @@ export default async function AdminAnalyticsPage() {
 
   // Funnel stages (all-time), each measured against the top of the funnel.
   const funnel = [
+    { label: "Package views", n: views, tone: "bg-brand-navy" },
     { label: "Enquiries (leads)", n: leads, tone: "bg-brand-blue" },
     { label: "Responded to", n: responded, tone: "bg-brand-blue/80" },
     { label: "Quotes sent", n: quotesSent, tone: "bg-brand-orange/80" },
     { label: "Won / converted", n: won, tone: "bg-success" },
   ];
-  const funnelMax = Math.max(1, leads);
+  const funnelMax = Math.max(1, views, leads);
+  const enquiryRate = pct(leads, views);
   const winRate = pct(won, leads);
   const quoteAcceptRate = pct(quotesAccepted, quotesSent);
   const responseRate = pct(within24h, responseRows.length || 1);
@@ -82,7 +86,7 @@ export default async function AdminAnalyticsPage() {
                   <span className="font-medium text-brand-navy">{s.label}</span>
                   <span className="tabular-nums text-ink-muted">
                     {s.n}
-                    {i > 0 && <span className="ml-2 text-xs text-ink-faint">{pct(s.n, funnelMax)}% of leads</span>}
+                    {i > 0 && <span className="ml-2 text-xs text-ink-faint">{pct(s.n, funnelMax)}% of top</span>}
                   </span>
                 </div>
                 <div className="h-3 w-full overflow-hidden rounded-full bg-surface-muted">
@@ -91,7 +95,8 @@ export default async function AdminAnalyticsPage() {
               </div>
             ))}
             {leads === 0 && <p className="pt-2 text-sm text-ink-muted">No enquiries yet — the funnel fills in as leads arrive.</p>}
-            <div className="grid grid-cols-2 gap-3 pt-2 text-sm sm:grid-cols-3">
+            <div className="grid grid-cols-2 gap-3 pt-2 text-sm sm:grid-cols-4">
+              <MiniStat label="View → enquiry" value={`${enquiryRate}%`} />
               <MiniStat label="Quote accept rate" value={`${quoteAcceptRate}%`} />
               <MiniStat label="Lost leads" value={String(lost)} />
               <MiniStat label="Answered < 24h" value={`${responseRate}%`} />

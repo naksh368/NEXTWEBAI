@@ -10,7 +10,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { SmartImage } from "@/components/ui/smart-image";
 import { PackageCard } from "@/components/package/package-card";
 import { getDestinationBySlug, getPackagesForDestination } from "@/lib/queries";
-import { formatINR } from "@/lib/utils";
+import { formatINR, holidayCountLabel } from "@/lib/utils";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -44,6 +44,8 @@ export default async function DestinationPage({ params }: { params: Promise<{ sl
   const nightRange = nightsList.length ? { min: Math.min(...nightsList), max: Math.max(...nightsList) } : null;
 
   const breadcrumbs = [{ label: "Home", href: "/" }, { label: "Destinations", href: "/destinations" }, { label: d.name }];
+  const ctaLabel = allPackages.length ? `See ${holidayCountLabel(allPackages.length)}` : "Browse all holidays";
+  const ctaHref = allPackages.length ? `/packages?destination=${d.slug}` : "/packages";
 
   return (
     <>
@@ -58,8 +60,8 @@ export default async function DestinationPage({ params }: { params: Promise<{ sl
               <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-white sm:text-5xl">{d.name}</h1>
               <p className="mt-1 text-white/85">{d.country}</p>
               {d.shortSummary && <p className="mt-4 max-w-2xl text-lg text-white/90">{d.shortSummary}</p>}
-              <Link href={`/packages?destination=${d.slug}`} className={buttonVariants({ variant: "orange", className: "mt-6" })}>
-                See {allPackages.length} packages <ArrowRight className="h-4 w-4" />
+              <Link href={ctaHref} className={buttonVariants({ variant: "orange", className: "mt-6" })}>
+                {ctaLabel} <ArrowRight className="h-4 w-4" />
               </Link>
             </Container>
           </section>
@@ -73,9 +75,9 @@ export default async function DestinationPage({ params }: { params: Promise<{ sl
             <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-brand-navy sm:text-5xl">{d.name}</h1>
             <p className="mt-1 text-ink-muted">{d.country}</p>
             {d.shortSummary && <p className="mt-4 max-w-2xl text-lg text-ink-muted">{d.shortSummary}</p>}
-            <Link href={`/packages?destination=${d.slug}`} className={buttonVariants({ variant: "orange", className: "mt-6" })}>
-              See {allPackages.length} packages <ArrowRight className="h-4 w-4" />
-            </Link>
+            <Link href={ctaHref} className={buttonVariants({ variant: "orange", className: "mt-6" })}>
+                {ctaLabel} <ArrowRight className="h-4 w-4" />
+              </Link>
           </Container>
         </section>
       )}

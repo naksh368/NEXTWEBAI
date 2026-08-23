@@ -78,3 +78,9 @@ export function makeReference(prefix = "ETX"): string {
 export function pluralize(n: number, singular: string, plural?: string) {
   return `${n} ${n === 1 ? singular : plural ?? `${singular}s`}`;
 }
+
+/** Human label for a destination's inventory — never the credibility-killing "0 pkgs". */
+export function holidayCountLabel(n: number): string {
+  if (n <= 0) return "Coming soon";
+  return `${n} holiday${n === 1 ? "" : "s"}`;
+}

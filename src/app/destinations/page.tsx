@@ -6,6 +6,7 @@ import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { SmartImage } from "@/components/ui/smart-image";
 import { EmptyState } from "@/components/ui/states";
 import { getAllDestinations } from "@/lib/queries";
+import { holidayCountLabel } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Destinations",
@@ -13,7 +14,9 @@ export const metadata: Metadata = {
 };
 
 export default async function DestinationsPage() {
-  const destinations = await getAllDestinations();
+  const all = await getAllDestinations();
+  // Destinations we actually sell come first; empty ones show "Coming soon".
+  const destinations = [...all].sort((a, b) => b._count.packages - a._count.packages);
 
   return (
     <Container className="py-8">
@@ -39,9 +42,9 @@ export default async function DestinationsPage() {
                   <p className="flex items-center gap-1 text-sm text-white/85"><MapPin className="h-3.5 w-3.5" /> {d.country}</p>
                 </div>
               </div>
-              <div className="flex items-center justify-between p-4">
+              <div className="flex items-center justify-between gap-3 p-4">
                 <p className="line-clamp-1 text-sm text-ink-muted">{d.shortSummary}</p>
-                <span className="shrink-0 text-sm font-semibold text-brand-blue">{d._count.packages} pkgs</span>
+                <span className={`shrink-0 text-sm font-semibold ${d._count.packages > 0 ? "text-brand-blue" : "text-ink-faint"}`}>{holidayCountLabel(d._count.packages)}</span>
               </div>
             </Link>
           ))}

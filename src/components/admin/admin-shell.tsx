@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, CalendarCheck, Users, LifeBuoy, Package, MapPin, Truck,
   Tag, Ticket, Star, BookOpen, CreditCard, RotateCcw, Shield, KeyRound,
-  ScrollText, Settings, Menu, X, LogOut, MessageSquare, DownloadCloud, FileText, Sparkles,
+  ScrollText, Settings, Menu, X, LogOut, MessageSquare, DownloadCloud, FileText, Sparkles, BarChart3,
 } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import { cn } from "@/lib/utils";
@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 const NAV: { section: string; items: { label: string; href: string; icon: React.ComponentType<{ className?: string }> }[] }[] = [
   { section: "Overview", items: [
     { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
+    { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
     { label: "AI Assistant", href: "/admin/ai", icon: Sparkles },
   ] },
   { section: "Operations", items: [

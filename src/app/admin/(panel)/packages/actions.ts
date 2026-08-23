@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { authorize } from "@/lib/admin-auth";
 import { writeAudit } from "@/lib/services/audit-service";
@@ -56,6 +57,136 @@ export async function createPackageAction(input: unknown): Promise<R<{ packageId
   await writeAudit({ adminUserId: admin.id, action: "package.create", resource: `Package:${pkg.id}`, after: { name: d.name } });
   revalidateAll(pkg.id, slug);
   return { ok: true, packageId: pkg.id };
+}
+
+// ── Duplicate ───────────────────────────────────────────
+/**
+ * Clone a package (and its current version's content — images, itinerary days,
+ * options) into a new DRAFT, so a similar holiday can be built fast. Bookings,
+ * reviews and publish state are never copied.
+ */
+export async function duplicatePackageAction(packageId: string): Promise<R<{ packageId: string }>> {
+  const admin = await authorize("package.create");
+  if (!admin) return { ok: false, error: "You don't have permission to create packages." };
+  const src = await db.package.findUnique({
+    where: { id: packageId },
+    include: { currentVersion: { include: { images: true, options: true, days: { include: { items: true }, orderBy: { dayNumber: "asc" } } } } },
+  });
+  if (!src) return { ok: false, error: "Package not found." };
+  const v = src.currentVersion;
+  if (!v) return { ok: false, error: "This package has no content to duplicate yet." };
+
+  const baseName = `${src.name} (copy)`;
+  let slug = slugify(baseName);
+  if (await db.package.findUnique({ where: { slug } })) slug = `${slug}-${Date.now().toString(36).slice(-4)}`;
+  const j = (x: unknown) => (x == null ? undefined : (x as Prisma.InputJsonValue));
+
+  const pkg = await db.package.create({
+    data: {
+      slug, code: null, name: baseName, theme: src.theme, destinationId: src.destinationId, status: "DRAFT",
+      versions: {
+        create: {
+          versionNumber: 1, isPublished: false,
+          name: v.name, summary: v.summary, overview: v.overview,
+          durationDays: v.durationDays, durationNights: v.durationNights,
+          currency: v.currency, basePrice: v.basePrice, childPrice: v.childPrice, perPersonPricing: v.perPersonPricing,
+          highlights: j(v.highlights), inclusions: j(v.inclusions), exclusions: j(v.exclusions),
+          cancellationPolicy: v.cancellationPolicy, importantInfo: v.importantInfo,
+          category: v.category, bestFor: v.bestFor, departureCities: j(v.departureCities), cityBreakdown: j(v.cityBreakdown),
+          travelWindows: v.travelWindows, roomCategory: v.roomCategory, mealPlan: v.mealPlan, flightSector: v.flightSector,
+          baggage: v.baggage, visaInfo: v.visaInfo, insuranceInfo: v.insuranceInfo, seoTitle: v.seoTitle, seoDescription: v.seoDescription,
+          availabilityStatus: v.availabilityStatus, pricingStatus: v.pricingStatus, benchmark: j(v.benchmark), targetPrice: v.targetPrice,
+          allowHotelChange: v.allowHotelChange, allowFlightChange: v.allowFlightChange, allowTransferChange: v.allowTransferChange,
+          allowActivityChange: v.allowActivityChange, allowMealChange: v.allowMealChange, allowAddons: v.allowAddons, allowDateChange: v.allowDateChange,
+          minTravellers: v.minTravellers, maxTravellers: v.maxTravellers,
+          images: { create: v.images.map((im) => ({ url: im.url, alt: im.alt, isCover: im.isCover, sortOrder: im.sortOrder })) },
+          options: { create: v.options.map((o) => ({ category: o.category, groupKey: o.groupKey, label: o.label, description: o.description, meta: j(o.meta), priceDelta: o.priceDelta, perPerson: o.perPerson, isDefault: o.isDefault, isEnabled: o.isEnabled, sortOrder: o.sortOrder })) },
+          days: { create: v.days.map((d) => ({ dayNumber: d.dayNumber, title: d.title, summary: d.summary, items: { create: d.items.map((it) => ({ timeslot: it.timeslot, kind: it.kind, title: it.title, description: it.description, sortOrder: it.sortOrder })) } })) },
+        },
+      },
+    },
+    include: { versions: true },
+  });
+  await db.package.update({ where: { id: pkg.id }, data: { currentVersionId: pkg.versions[0].id } });
+  await writeAudit({ adminUserId: admin.id, action: "package.duplicate", resource: `Package:${pkg.id}`, after: { from: packageId, name: baseName } });
+  revalidatePath("/admin/packages");
+  return { ok: true, packageId: pkg.id };
+}
+
+// ── Delete (hard) ───────────────────────────────────────
+/**
+ * Permanently delete a package and all its versions/content. Refused when the
+ * package has bookings (those must stay for financial/audit records) — archive
+ * it instead. Reviews and FAQs are detached (SetNull), versions cascade.
+ */
+export async function deletePackageAction(packageId: string): Promise<R> {
+  const admin = await authorize("package.archive");
+  if (!admin) return { ok: false, error: "You don't have permission to delete packages." };
+  const pkg = await db.package.findUnique({ where: { id: packageId }, select: { name: true, slug: true, _count: { select: { bookings: true } } } });
+  if (!pkg) return { ok: false, error: "Package not found." };
+  if (pkg._count.bookings > 0) {
+    return { ok: false, error: `This package has ${pkg._count.bookings} booking${pkg._count.bookings === 1 ? "" : "s"} and can't be deleted. Archive it to hide it from the site while keeping records.` };
+  }
+  // Detach the current-version pointer first so the cascade can remove versions.
+  await db.package.update({ where: { id: packageId }, data: { currentVersionId: null } });
+  await db.package.delete({ where: { id: packageId } });
+  await writeAudit({ adminUserId: admin.id, action: "package.delete", resource: `Package:${packageId}`, before: { name: pkg.name } });
+  revalidatePath("/admin/packages");
+  revalidatePath("/packages");
+  revalidatePath("/");
+  revalidatePath(`/packages/${pkg.slug}`);
+  return { ok: true };
+}
+
+// ── Bulk actions ────────────────────────────────────────
+type BulkOp = "publish" | "draft" | "feature" | "unfeature" | "check" | "uncheck" | "archive" | "delete";
+
+/** Apply one operation to many packages at once. */
+export async function bulkPackageAction(rawIds: string[], op: BulkOp): Promise<R<{ affected: number; skipped: number }>> {
+  const ids = [...new Set((rawIds ?? []).filter(Boolean))].slice(0, 200);
+  if (!ids.length) return { ok: false, error: "Select at least one package." };
+
+  const perm = op === "publish" ? "package.publish" : op === "archive" || op === "delete" ? "package.archive" : "package.edit";
+  const admin = await authorize(perm);
+  if (!admin) return { ok: false, error: "You don't have permission for that action." };
+
+  let affected = 0;
+  let skipped = 0;
+
+  if (op === "delete") {
+    const rows = await db.package.findMany({ where: { id: { in: ids } }, select: { id: true, currentVersionId: true, _count: { select: { bookings: true } } } });
+    const deletable = rows.filter((r) => r._count.bookings === 0).map((r) => r.id);
+    skipped = rows.length - deletable.length;
+    if (deletable.length) {
+      await db.package.updateMany({ where: { id: { in: deletable } }, data: { currentVersionId: null } });
+      const res = await db.package.deleteMany({ where: { id: { in: deletable } } });
+      affected = res.count;
+    }
+  } else if (op === "publish" || op === "draft") {
+    const status = op === "publish" ? "PUBLISHED" : "DRAFT";
+    const pkgs = await db.package.findMany({ where: { id: { in: ids } }, select: { currentVersionId: true } });
+    const versionIds = pkgs.map((p) => p.currentVersionId).filter((v): v is string => Boolean(v));
+    const [res] = await db.$transaction([
+      db.package.updateMany({ where: { id: { in: ids } }, data: { status, publishAt: null } }),
+      db.packageVersion.updateMany({ where: { id: { in: versionIds } }, data: { isPublished: op === "publish" } }),
+    ]);
+    affected = res.count;
+  } else {
+    const data =
+      op === "feature" ? { isFeatured: true } :
+      op === "unfeature" ? { isFeatured: false } :
+      op === "check" ? { isChecked: true } :
+      op === "uncheck" ? { isChecked: false } :
+      { status: "ARCHIVED" };
+    const res = await db.package.updateMany({ where: { id: { in: ids } }, data });
+    affected = res.count;
+  }
+
+  await writeAudit({ adminUserId: admin.id, action: `package.bulk.${op}`, resource: "Package", after: { ids: ids.length, affected, skipped } });
+  revalidatePath("/admin/packages");
+  revalidatePath("/packages");
+  revalidatePath("/");
+  return { ok: true, affected, skipped };
 }
 
 // ── Package meta ────────────────────────────────────────

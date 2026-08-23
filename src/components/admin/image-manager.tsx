@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Star, Trash2, Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MediaUploader } from "@/components/admin/media-library";
 import { addImageAction, removeImageAction, setCoverImageAction } from "@/app/admin/(panel)/packages/actions";
 
 type Img = { id: string; url: string; alt: string | null; isCover: boolean };
@@ -35,11 +36,14 @@ export function ImageManager({ versionId, images }: { versionId: string; images:
         ))}
         {images.length === 0 && <p className="col-span-full text-sm text-ink-muted">No images yet — add at least 3 below.</p>}
       </div>
-      <div className="flex flex-col gap-2 sm:flex-row">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Paste image URL (https://…)" className="h-10 flex-1 rounded-lg border border-surface-border px-3 text-sm" />
         <Button size="sm" onClick={() => { if (!url.trim()) return; run(async () => { const r = await addImageAction(versionId, url.trim()); if (r.ok) setUrl(""); return r; }); }} disabled={pending}>
           {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4" /> Add image</>}
         </Button>
+        <span className="text-xs font-medium text-ink-faint sm:px-1">or</span>
+        {/* Upload straight to the self-hosted media store, then attach the new URL. */}
+        <MediaUploader compact onUploaded={(newUrl) => run(() => addImageAction(versionId, newUrl))} />
       </div>
       {error && <p className="text-sm font-medium text-danger">{error}</p>}
     </div>

@@ -3,7 +3,7 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 import { PageHeader, StatCard, Panel, Table, Th, Td, EmptyRow, Pill } from "@/components/admin/ui";
 import { SendQuoteButton } from "@/components/admin/quote-actions";
-import { formatINR, formatDate } from "@/lib/utils";
+import { formatINR, formatDate, getSiteUrl } from "@/lib/utils";
 import { createQuoteAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -108,7 +108,20 @@ export default async function AdminQuotesPage({ searchParams }: { searchParams: 
                 <Td className="text-right font-medium tabular-nums">{formatINR(q.amount)}</Td>
                 <Td><Pill tone={STATUS_TONE[q.status] ?? "neutral"}>{q.status}</Pill>{q.bookingId && <div className="mt-1"><Link href={`/admin/bookings/${q.bookingId}`} className="text-xs text-brand-blue hover:underline">Booked ↗</Link></div>}</Td>
                 <Td className="whitespace-nowrap text-ink-muted">{formatDate(q.createdAt)}</Td>
-                <Td>{q.status === "ACCEPTED" ? <span className="text-xs text-success">Accepted</span> : <SendQuoteButton quoteId={q.id} sent={q.status === "SENT"} />}</Td>
+                <Td>
+                  {q.status === "ACCEPTED" ? <span className="text-xs text-success">Accepted</span> : <SendQuoteButton quoteId={q.id} sent={q.status === "SENT"} />}
+                  {q.customerPhone && (
+                    <div className="mt-1">
+                      <a
+                        href={`https://wa.me/91${q.customerPhone.replace(/\D/g, "").slice(-10)}?text=${encodeURIComponent(`Hi ${q.customerName.split(" ")[0]}, your ExpertzTrip quote ${q.reference} for ${q.title} is ${formatINR(q.amount)}. View & accept: ${getSiteUrl()}/quote/${q.id}`)}`}
+                        target="_blank" rel="noreferrer"
+                        className="text-xs font-semibold text-[#128C4B] hover:underline"
+                      >
+                        Send on WhatsApp
+                      </a>
+                    </div>
+                  )}
+                </Td>
               </tr>
             ))}
           </Table>

@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/publish-due",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/enquiry-followup",
+      "schedule": "0 */6 * * *"
     }
   ]
 }

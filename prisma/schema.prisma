@@ -943,6 +943,7 @@ model Enquiry {
   assignedTo    AdminUser? @relation("AssignedEnquiries", fields: [assignedToId], references: [id])
   followUpAt    DateTime?  // when to chase this lead next
   firstRespondedAt DateTime? // set when the lead first moves out of NEW (response-time metric)
+  followUpEmailedAt DateTime? // set when the automatic "still planning?" nudge was sent
   internalNotes String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -950,4 +951,19 @@ model Enquiry {
   @@index([status])
   @@index([createdAt])
   @@index([followUpAt])
+}
+
+/// Self-hosted media library — image bytes stored in the DB (serverless-safe,
+/// no third-party host). Served publicly via /api/media/[id].
+model MediaAsset {
+  id          String   @id @default(cuid())
+  filename    String
+  contentType String
+  data        Bytes
+  size        Int
+  alt         String?
+  createdById String?
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
 }

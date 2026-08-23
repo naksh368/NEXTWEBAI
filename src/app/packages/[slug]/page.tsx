@@ -45,13 +45,25 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const pkg = await getPackageBySlug(slug);
   if (!pkg) return { title: "Package not found" };
   const v = pkg.currentVersion!;
+  const description = v.summary ?? `${pkg.name} — a handpicked ${v.durationNights}N / ${v.durationDays}D holiday to ${pkg.destination.name} with clear pricing and expert support.`;
+  const image = v.images[0]?.url;
+  const canonical = `/packages/${slug}`;
   return {
     title: pkg.name,
-    description: v.summary ?? undefined,
+    description,
+    alternates: { canonical },
     openGraph: {
-      title: pkg.name,
-      description: v.summary ?? undefined,
-      images: v.images[0]?.url ? [v.images[0].url] : undefined,
+      type: "website",
+      url: canonical,
+      title: `${pkg.name} · ExpertzTrip`,
+      description,
+      images: image ? [{ url: image, alt: pkg.name }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${pkg.name} · ExpertzTrip`,
+      description,
+      images: image ? [image] : undefined,
     },
   };
 }

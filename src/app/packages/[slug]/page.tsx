@@ -304,7 +304,7 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
                 <section className="rounded-2xl border border-success/20 bg-success/[0.04] p-5">
                   <h2 className="flex items-center gap-2 text-lg font-bold text-brand-navy">
                     <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-success/15 text-success"><Check className="h-4 w-4" /></span>
-                    What&apos;s included
+                    {reviewRequired ? "What's included" : "What your price includes"}
                   </h2>
                   <ul className="mt-4 space-y-2.5">
                     {inclusions.map((inc, i) => (
@@ -312,6 +312,11 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
                         <Check className="mt-0.5 h-4 w-4 shrink-0 text-success" /> {inc}
                       </li>
                     ))}
+                    {!reviewRequired && (
+                      <li className="flex items-start gap-2.5 text-sm text-ink">
+                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-success" /> Applicable taxes &amp; fees
+                      </li>
+                    )}
                   </ul>
                 </section>
               )}

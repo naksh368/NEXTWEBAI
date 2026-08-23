@@ -150,6 +150,26 @@ export default async function HomePage() {
         </Container>
       </Section>
 
+      {/* CHOOSE YOUR WAY — 3 ways to travel */}
+      <Section>
+        <Container>
+          <SectionHeading eyebrow="Your holiday, your way" title="Three ways to travel" />
+          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {[
+              { title: "Ready to book", body: "Find a package and book it online in minutes.", href: "/packages", cta: "Browse holidays" },
+              { title: "Make it yours", body: "Customise hotels, activities, dates and travellers.", href: "/packages", cta: "Customise a trip" },
+              { title: "Need help choosing?", body: "Tell us what you want and get real recommendations.", href: "/ai", cta: "Get recommendations" },
+            ].map((w) => (
+              <Link key={w.title} href={w.href} className="group rounded-2xl border border-surface-border bg-white p-6 transition-shadow hover:shadow-cardHover">
+                <h3 className="text-lg font-bold text-brand-navy">{w.title}</h3>
+                <p className="mt-1.5 text-sm text-ink-muted">{w.body}</p>
+                <span className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-brand-blue group-hover:gap-1.5">{w.cta} <ArrowRight className="h-4 w-4" /></span>
+              </Link>
+            ))}
+          </div>
+        </Container>
+      </Section>
+
       {/* EXPLORE INDIA + THE WORLD */}
       {(indiaDestinations.length > 0 || worldDestinations.length > 0) && (
         <Section className="bg-surface-muted/40">

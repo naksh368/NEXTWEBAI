@@ -30,7 +30,15 @@ type Props = {
   buttonClassName?: string;
 };
 
-const STEPS = ["Departure city", "Departure date", "Travellers & rooms", "Review"] as const;
+const STEPS = ["Departure city", "Departure date", "Who's travelling", "Travellers & rooms", "Review"] as const;
+
+// "Who are you travelling with?" — each also seeds a sensible traveller default.
+const TRAVEL_TYPES: { key: string; emoji: string; label: string; pax: Pax }[] = [
+  { key: "COUPLE", emoji: "💑", label: "Couple", pax: { adults: 2, children: 0, childrenAges: [], infants: 0, rooms: 1 } },
+  { key: "FAMILY", emoji: "👨‍👩‍👧", label: "Family", pax: { adults: 2, children: 2, childrenAges: [8, 10], infants: 0, rooms: 1 } },
+  { key: "FRIENDS", emoji: "🎉", label: "Friends", pax: { adults: 4, children: 0, childrenAges: [], infants: 0, rooms: 2 } },
+  { key: "SOLO", emoji: "🎒", label: "Solo", pax: { adults: 1, children: 0, childrenAges: [], infants: 0, rooms: 1 } },
+];
 
 const PRESETS: { label: string; pax: Pax }[] = [
   { label: "2 Adults", pax: { adults: 2, children: 0, childrenAges: [], infants: 0, rooms: 1 } },
@@ -86,6 +94,8 @@ function Wizard({ onClose, ...props }: Props & { onClose: () => void }) {
   const [date, setDate] = useState<string>("");
   const [pax, setPax] = useState<Pax>({ adults: Math.max(2, props.minTravellers), children: 0, childrenAges: [], infants: 0, rooms: 1 });
   const [custom, setCustom] = useState(false);
+  const [travelType, setTravelType] = useState<string>("");
+  const [flights, setFlights] = useState<"INCLUDE" | "SKIP">("INCLUDE");
 
   // Price (fetched on the review step) — consistent with server-side reprice.
   const [breakdown, setBreakdown] = useState<PriceBreakdown | null>(null);
@@ -154,7 +164,7 @@ function Wizard({ onClose, ...props }: Props & { onClose: () => void }) {
   }, [props.versionId, travellers]);
 
   useEffect(() => {
-    if (step === 3) fetchPrice();
+    if (step === 4) fetchPrice();
   }, [step, fetchPrice]);
 
   function next() { setStep((s) => Math.min(STEPS.length - 1, s + 1)); }
@@ -169,6 +179,7 @@ function Wizard({ onClose, ...props }: Props & { onClose: () => void }) {
     setStep(1);
   }
   function chooseDate(key: string) { setDate(key); setStep(2); }
+  function chooseTravelType(t: { key: string; pax: Pax }) { setTravelType(t.key); setPax(t.pax); setCustom(false); setStep(3); }
   function choosePreset(p: Pax) { setPax(p); setCustom(false); }
 
   function goToCheckout() {
@@ -180,6 +191,8 @@ function Wizard({ onClose, ...props }: Props & { onClose: () => void }) {
     if (pax.rooms > 1) params.set("rooms", String(pax.rooms));
     if (date) params.set("date", date);
     if (city) params.set("city", city);
+    if (travelType) params.set("travelType", travelType);
+    params.set("flights", flights);
     router.push(`/packages/${props.packageSlug}/checkout?${params.toString()}`);
   }
 
@@ -200,7 +213,8 @@ function Wizard({ onClose, ...props }: Props & { onClose: () => void }) {
   const primaryDisabled =
     (step === 0 && !city) ||
     (step === 1 && !date) ||
-    (step === 3 && (priceLoading || !!priceError || !breakdown));
+    (step === 2 && !travelType) ||
+    (step === 4 && (priceLoading || !!priceError || !breakdown));
 
   return (
     <div className="fixed inset-0 z-[100] flex items-stretch justify-center bg-black/50 sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-label="Book this holiday">
@@ -339,10 +353,28 @@ function Wizard({ onClose, ...props }: Props & { onClose: () => void }) {
             </div>
           )}
 
-          {/* STEP 2 — Travellers */}
+          {/* STEP 2 — Who are you travelling with? */}
           {step === 2 && (
             <div>
-              <h3 className="text-lg font-bold text-brand-navy">Who&apos;s travelling?</h3>
+              <h3 className="text-lg font-bold text-brand-navy">Who are you travelling with?</h3>
+              <p className="mt-1 text-sm text-ink-muted">This helps us tailor rooms, activities and pace.</p>
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                {TRAVEL_TYPES.map((t) => (
+                  <button key={t.key} type="button" onClick={() => chooseTravelType(t)}
+                    className={cn("flex flex-col items-center justify-center gap-2 rounded-2xl border-2 p-6 text-center transition-colors",
+                      travelType === t.key ? "border-success bg-[#E7F6EC]/60" : "border-surface-border hover:border-brand-blue/50")}>
+                    <span className="flex h-16 w-16 items-center justify-center rounded-full bg-[#E7F6EC] text-3xl">{t.emoji}</span>
+                    <span className="text-base font-semibold text-brand-navy">{t.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* STEP 3 — Travellers */}
+          {step === 3 && (
+            <div>
+              <h3 className="text-lg font-bold text-brand-navy">How many travellers?</h3>
               <p className="mt-1 text-sm text-ink-muted">Choose a room configuration, or set your own.</p>
               {!custom ? (
                 <>
@@ -397,8 +429,8 @@ function Wizard({ onClose, ...props }: Props & { onClose: () => void }) {
             </div>
           )}
 
-          {/* STEP 3 — Review */}
-          {step === 3 && (
+          {/* STEP 4 — Review */}
+          {step === 4 && (
             <div>
               <h3 className="text-lg font-bold text-brand-navy">Review your holiday</h3>
               <p className="mt-1 text-sm text-ink-muted">{props.packageName}</p>
@@ -406,8 +438,23 @@ function Wizard({ onClose, ...props }: Props & { onClose: () => void }) {
                 <Line term="Duration" val={`${props.nights}N / ${props.days}D`} />
                 <Line term="Departure city" val={city} />
                 <Line term="Departure date" val={date ? formatDate(date, { weekday: "short", day: "numeric", month: "short", year: "numeric" }) : "—"} />
+                <Line term="Travelling as" val={TRAVEL_TYPES.find((t) => t.key === travelType)?.label ?? "—"} />
                 <Line term="Travellers" val={paxSummary(pax)} />
               </dl>
+
+              {/* Flights preference */}
+              <div className="mt-4 rounded-2xl border border-surface-border p-4">
+                <p className="text-sm font-semibold text-brand-navy">Include return flights from {city}?</p>
+                <p className="mt-0.5 text-xs text-ink-muted">Your expert confirms the best fares — the price updates before you pay.</p>
+                <div className="mt-3 inline-flex overflow-hidden rounded-xl border border-surface-border text-sm font-semibold">
+                  {([["INCLUDE", "Yes, add flights"], ["SKIP", "No, land only"]] as const).map(([val, label]) => (
+                    <button key={val} type="button" onClick={() => setFlights(val)}
+                      className={cn("px-4 py-2 transition-colors", flights === val ? "bg-brand-blue text-white" : "text-ink-muted hover:text-ink")}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
               <div className="mt-4 rounded-2xl border border-surface-border bg-surface-muted/40 p-4">
                 {priceLoading ? (
@@ -442,7 +489,7 @@ function Wizard({ onClose, ...props }: Props & { onClose: () => void }) {
 
         {/* Footer */}
         <div className="shrink-0 border-t border-surface-border px-5 py-4 sm:px-6">
-          {step < 3 ? (
+          {step < 4 ? (
             <Button onClick={next} size="lg" variant="orange" className="w-full" disabled={primaryDisabled}>
               Continue <ArrowRight className="h-4 w-4" />
             </Button>

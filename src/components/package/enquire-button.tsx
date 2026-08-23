@@ -149,7 +149,7 @@ export function EnquireButton({
           aria-modal="true"
         >
           <div
-            className="my-0 w-full max-w-md rounded-t-3xl bg-white shadow-2xl animate-fade-in sm:my-8 sm:rounded-3xl"
+            className="my-0 max-h-[100dvh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-white shadow-2xl animate-fade-in sm:my-8 sm:max-h-[calc(100dvh-4rem)] sm:rounded-3xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}

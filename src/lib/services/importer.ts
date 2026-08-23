@@ -215,7 +215,7 @@ export function extractFacts(html: string): ExtractedFacts {
   // Image urls (research only — not auto-published)
   const ogImg = firstMatch(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i, html);
   if (ogImg) facts.imageUrls.unshift(ogImg);
-  facts.imageUrls = facts.imageUrls.filter((u, i, a) => a.indexOf(u) === i).slice(0, 12);
+  facts.imageUrls = facts.imageUrls.filter((u, i, a) => a.indexOf(u) === i).slice(0, 24);
 
   if (!facts.name && !facts.summary && facts.priceCandidates.length === 0 && facts.listItems.length === 0) {
     facts.note = "Page content could not be reliably extracted (it may be JavaScript-rendered).";

@@ -103,7 +103,7 @@ Return ONLY the JSON object, no prose.
 
 PAGE CONTENT:
 ${text}`;
-  const out = await aiComplete(prompt, { system: verbatim ? VERBATIM_SYSTEM : EXTRACT_SYSTEM, maxTokens: 2200, temperature: verbatim ? 0 : 0.25, timeoutMs: 22_000 });
+  const out = await aiComplete(prompt, { system: verbatim ? VERBATIM_SYSTEM : EXTRACT_SYSTEM, maxTokens: 3500, temperature: verbatim ? 0 : 0.25, timeoutMs: 26_000 });
   return parseAiPackage(out);
 }
 
@@ -216,7 +216,7 @@ const draftSchema = z.object({
   exclusions: z.array(z.string().max(200)).max(40).default([]),
   itinerary: z.array(daySchema).max(30).default([]),
   cityBreakdown: z.array(z.object({ city: z.string().max(60), nights: z.coerce.number().int().min(0).max(60) })).max(12).optional().default([]),
-  imageUrls: z.array(z.string().url().max(1024)).max(12).default([]),
+  imageUrls: z.array(z.string().url().max(1024)).max(24).default([]),
   sourceUrl: z.string().url().max(2048).optional().nullable(),
   sourceName: z.string().max(120).optional().nullable(),
 });
@@ -345,7 +345,7 @@ export async function batchImport(urls: string[], destinationId = "", verbatim =
         travelWindows: ai?.travelWindow ?? null,
         cancellationPolicy: ai?.cancellationPolicy ?? null, importantInfo: ai?.importantTerms ?? null,
         highlights: ai?.highlights ?? [], inclusions: ai?.inclusions ?? [], exclusions: ai?.exclusions ?? [],
-        itinerary: ai?.itinerary ?? [], cityBreakdown: ai?.cityBreakdown ?? [], imageUrls: facts.imageUrls.slice(0, 6),
+        itinerary: ai?.itinerary ?? [], cityBreakdown: ai?.cityBreakdown ?? [], imageUrls: facts.imageUrls.slice(0, 12),
         sourceUrl: fetched.finalUrl, sourceName: fetched.host,
       });
       created.push({ url, name, slug: res.slug });

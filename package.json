@@ -1,32 +1,21 @@
 {
   "name": "expertztrip",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
-    "vercel-build": "sh scripts/build.sh",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit",
-    "test": "node --import tsx --test tests/*.test.ts",
-    "db:generate": "prisma generate",
-    "db:push": "prisma db push",
-    "db:seed": "tsx prisma/seed.ts",
-    "db:reset": "prisma db push --force-reset && tsx prisma/seed.ts"
-  },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@prisma/client": "6.2.1",
     "clsx": "2.1.1",
     "lucide-react": "0.469.0",
     "next": "^15.5.23",
     "react": "19.0.0",
     "react-dom": "19.0.0",
-    "tailwind-merge": "2.6.0",
-    "zod": "3.24.1"
+    "tailwind-merge": "2.6.0"
   },
   "devDependencies": {
     "@types/node": "22.10.7",
@@ -36,9 +25,7 @@
     "eslint": "^8.57.1",
     "eslint-config-next": "^15.5.23",
     "postcss": "8.5.1",
-    "prisma": "6.2.1",
     "tailwindcss": "3.4.17",
-    "tsx": "4.19.2",
     "typescript": "5.7.3"
   }
 }

@@ -1,12 +1,4 @@
 {
-  "crons": [
-    {
-      "path": "/api/cron/publish-due",
-      "schedule": "0 * * * *"
-    },
-    {
-      "path": "/api/cron/enquiry-followup",
-      "schedule": "0 */6 * * *"
-    }
-  ]
+  "buildCommand": "next build",
+  "framework": "nextjs"
 }

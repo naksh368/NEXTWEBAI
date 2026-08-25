@@ -1,70 +1,63 @@
 import * as React from "react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-type Variant = "primary" | "orange" | "secondary" | "outline" | "ghost" | "danger";
+type Variant = "primary" | "accent" | "outline" | "ghost" | "navy" | "subtle";
 type Size = "sm" | "md" | "lg";
 
 const base =
-  "inline-flex items-center justify-center gap-2 font-bold rounded-xl transition-all duration-150 " +
-  "focus-visible:outline-none disabled:opacity-50 disabled:pointer-events-none select-none " +
-  "active:scale-[0.98] whitespace-nowrap";
+  "inline-flex items-center justify-center gap-2 rounded-lg font-bold transition-all duration-150 " +
+  "focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 whitespace-nowrap active:scale-[0.98]";
 
 const variants: Record<Variant, string> = {
+  // Blue is the primary UI color
   primary:
-    "bg-brand-blue text-white shadow-sm hover:bg-brand-blueDark hover:shadow-md",
-  orange:
-    "bg-brand-orange text-white shadow-sm hover:bg-brand-orangeDark hover:shadow-md",
-  secondary: "bg-brand-blueLight text-brand-blue hover:bg-[#E2E7FE]",
+    "bg-blue text-white shadow-sm hover:bg-blue-600 hover:shadow-md",
+  // Orange strictly for booking / financial / key CTAs
+  accent:
+    "bg-orange text-white shadow-sm hover:bg-orange-600 hover:shadow-md",
+  navy: "bg-navy text-white hover:bg-blue-900",
   outline:
-    "border border-surface-border bg-white text-ink hover:border-brand-blue hover:text-brand-blue",
-  ghost: "text-ink hover:bg-surface-muted",
-  danger: "bg-danger text-white hover:brightness-95",
+    "border border-surface-border bg-white text-navy hover:border-blue hover:text-blue",
+  subtle: "bg-blue-50 text-blue hover:bg-blue-100",
+  ghost: "text-ink-muted hover:bg-surface-muted hover:text-navy",
 };
 
 const sizes: Record<Size, string> = {
-  sm: "h-9 px-3.5 text-sm",
-  md: "h-11 px-5 text-[15px]",
-  lg: "h-12 px-6 text-base",
+  sm: "h-9 px-3.5 text-[0.82rem]",
+  md: "h-11 px-5 text-sm",
+  lg: "h-12 px-6 text-[0.95rem]",
 };
 
-export function buttonVariants({
-  variant = "primary",
-  size = "md",
-  className,
-}: {
+type CommonProps = {
   variant?: Variant;
   size?: Size;
   className?: string;
-} = {}) {
-  return cn(base, variants[variant], sizes[size], className);
+  children: React.ReactNode;
+};
+
+export function Button({
+  variant = "primary",
+  size = "md",
+  className,
+  ...props
+}: CommonProps & React.ButtonHTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button className={cn(base, variants[variant], sizes[size], className)} {...props} />
+  );
 }
 
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: Variant;
-  size?: Size;
-  loading?: boolean;
+export function ButtonLink({
+  variant = "primary",
+  size = "md",
+  className,
+  href,
+  children,
+  ...props
+}: CommonProps & { href: string } & React.AnchorHTMLAttributes<HTMLAnchorElement>) {
+  return (
+    <Link href={href} className={cn(base, variants[variant], sizes[size], className)} {...props}>
+      {children}
+    </Link>
+  );
 }
-
-export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, loading, children, disabled, ...props }, ref) => {
-    return (
-      <button
-        ref={ref}
-        className={buttonVariants({ variant, size, className })}
-        disabled={disabled || loading}
-        aria-busy={loading || undefined}
-        {...props}
-      >
-        {loading && (
-          <span
-            aria-hidden
-            className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
-          />
-        )}
-        {children}
-      </button>
-    );
-  }
-);
-Button.displayName = "Button";

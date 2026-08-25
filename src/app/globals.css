@@ -3,15 +3,14 @@
 @tailwind utilities;
 
 /* ─────────────────────────────────────────────────────────────
-   ExpertzTrip design tokens (Phase 4)
-   White foundation · navy/blue type · restrained orange accent.
+   ExpertzTrip — B2B flight booking platform
+   White foundation · royal-blue primary · strategic orange accents
    ───────────────────────────────────────────────────────────── */
 :root {
-  /* Overridden by next/font (Nunito) on <html>; this is the fallback stack. */
   --font-sans: "Nunito", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
-  --brand-blue: #2340d9;
-  --brand-navy: #0b1b45;
-  --brand-orange: #ff6a1a;
+  --brand-blue: #1455d9;
+  --brand-navy: #0b1b4a;
+  --brand-orange: #ff6b00;
 }
 
 @layer base {
@@ -23,19 +22,17 @@
     -webkit-text-size-adjust: 100%;
   }
   body {
-    @apply bg-surface text-ink antialiased;
+    @apply bg-white text-ink antialiased;
     font-family: var(--font-sans);
     text-rendering: optimizeLegibility;
   }
   h1, h2, h3, h4 {
-    /* Headings are near-black; only the hero tagline + accents use brand blue. */
-    @apply text-brand-navy font-bold tracking-tight;
+    @apply text-navy font-extrabold tracking-tight;
     text-wrap: balance;
   }
   ::selection {
-    background: rgba(35, 64, 217, 0.14);
+    background: rgba(20, 85, 217, 0.16);
   }
-  /* Accessible focus ring on every interactive element (Phase 37) */
   a:focus-visible,
   button:focus-visible,
   input:focus-visible,
@@ -44,61 +41,58 @@
   [tabindex]:focus-visible {
     outline: 2px solid var(--brand-blue);
     outline-offset: 2px;
-    border-radius: 6px;
+    border-radius: 8px;
   }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: #cdd9ee; border-radius: 8px; border: 2px solid #fff; }
+  ::-webkit-scrollbar-thumb:hover { background: #b4c5e6; }
 }
 
 @layer components {
-  /* Light hero background — subtle dot pattern instead of a photo. */
-  .dotted-bg {
-    background-color: #ffffff;
-    background-image: radial-gradient(rgba(35, 64, 217, 0.09) 1.2px, transparent 1.2px);
+  /* Subtle brand dot pattern for light hero backgrounds */
+  .dot-grid {
+    background-image: radial-gradient(rgba(20, 85, 217, 0.10) 1.2px, transparent 1.2px);
     background-size: 22px 22px;
-    background-position: -11px -11px;
   }
-  /* Soft brand wash used behind light heroes. */
-  .hero-wash {
+  /* Soft brand wash */
+  .brand-wash {
     background:
-      radial-gradient(60% 60% at 15% 0%, rgba(35, 64, 217, 0.06), transparent 70%),
-      radial-gradient(50% 50% at 90% 10%, rgba(255, 106, 26, 0.07), transparent 70%);
+      radial-gradient(60rem 40rem at 90% -10%, rgba(20, 85, 217, 0.08), transparent 60%),
+      radial-gradient(50rem 30rem at -10% 10%, rgba(255, 107, 0, 0.06), transparent 55%),
+      #ffffff;
   }
-
-  /* Reserve space for images to avoid layout shift (Phase 33) */
-  .aspect-frame {
-    @apply relative overflow-hidden bg-surface-muted;
+  .navy-wash {
+    background:
+      radial-gradient(50rem 30rem at 85% 0%, rgba(20, 85, 217, 0.35), transparent 60%),
+      radial-gradient(40rem 30rem at 0% 100%, rgba(255, 107, 0, 0.18), transparent 55%),
+      #0b1b4a;
   }
-  /* Skeleton shimmer */
-  .skeleton {
-    @apply relative overflow-hidden bg-surface-muted;
+  /* Thin uppercase eyebrow label */
+  .eyebrow {
+    @apply inline-flex items-center gap-2 text-[0.72rem] font-extrabold uppercase tracking-[0.16em];
   }
-  .skeleton::after {
-    content: "";
-    @apply absolute inset-0 -translate-x-full animate-shimmer;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.65),
-      transparent
-    );
+  .card-base {
+    @apply rounded-xl border border-surface-border bg-white shadow-card;
   }
-  /* Hide scrollbars on horizontal mobile rails while keeping scroll */
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+  /* Focus ring util for search fields */
+  .field {
+    @apply w-full rounded-lg border border-surface-border bg-white px-3.5 py-2.5 text-sm font-semibold text-ink
+           placeholder:font-normal placeholder:text-ink-faint outline-none transition
+           focus:border-blue focus:ring-4 focus:ring-blue/10;
   }
 }
 
-/* Respect reduced-motion preferences (Phase 37) */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
+/* Dashed connector for step flows */
+.step-connector::after {
+  content: "";
+  position: absolute;
+  left: 100%;
+  top: 1.75rem;
+  width: 100%;
+  border-top: 2px dashed var(--brand-navy);
+  opacity: 0.15;
 }
+
+/* Hide scrollbar for horizontal chip rows */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

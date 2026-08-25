@@ -1,86 +1,41 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
-/** Tailwind-aware className combiner used by every UI primitive. */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-/**
- * The site's public base URL, always a valid absolute URL. Tolerates a
- * NEXT_PUBLIC_SITE_URL set without a protocol (e.g. "expertztrip.com") by
- * adding https://, and strips any trailing slash — so the build never crashes
- * on `new URL(...)` from a domain typed without "https://".
- */
-export function getSiteUrl(): string {
-  // Prefer an explicit canonical URL, then the hosting platform's own URL so
-  // server-generated links (emails!) never point at localhost in production.
-  let u = (
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.URL ||                            // Netlify production URL
-    process.env.DEPLOY_PRIME_URL ||               // Netlify branch/deploy URL
-    process.env.VERCEL_PROJECT_PRODUCTION_URL ||  // Vercel production domain
-    process.env.VERCEL_URL ||                     // Vercel deployment URL
-    ""
-  ).trim() || "http://localhost:3000";
-  if (!/^https?:\/\//i.test(u)) u = `https://${u}`;
-  return u.replace(/\/+$/, "");
-}
-
-/** Format whole-rupee integers as INR. All money in this app is whole rupees. */
-export function formatINR(amount: number, opts?: { compact?: boolean }): string {
-  if (opts?.compact && Math.abs(amount) >= 100000) {
-    const lakhs = amount / 100000;
-    return `₹${lakhs % 1 === 0 ? lakhs.toFixed(0) : lakhs.toFixed(2)} L`;
-  }
+/** Format an integer amount of rupees using the Indian numbering system. */
+export function inr(amount: number, opts: { decimals?: boolean } = {}) {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
-    maximumFractionDigits: 0,
+    maximumFractionDigits: opts.decimals ? 2 : 0,
+    minimumFractionDigits: opts.decimals ? 2 : 0,
   }).format(amount);
 }
 
-/** Signed money, e.g. "+₹7,000" / "-₹4,000" — used in the price breakdown. */
-export function formatDelta(amount: number): string {
-  const sign = amount > 0 ? "+" : amount < 0 ? "-" : "";
-  return `${sign}${formatINR(Math.abs(amount))}`;
+/** Plain grouped number, no currency symbol. */
+export function inrNumber(amount: number) {
+  return new Intl.NumberFormat("en-IN").format(amount);
 }
 
-export function formatDate(date: Date | string, opts?: Intl.DateTimeFormatOptions) {
-  const d = typeof date === "string" ? new Date(date) : date;
-  return new Intl.DateTimeFormat("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    ...opts,
-  }).format(d);
+/** Convert minutes to "2h 40m". */
+export function formatDuration(mins: number) {
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return `${h}h${m ? ` ${m}m` : ""}`;
 }
 
-export function slugify(input: string): string {
-  return input
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
+/** Format an ISO time (HH:MM) or a Date to a short clock, e.g. "09:40". */
+export function clock(value: string) {
+  return value;
 }
 
-/** Short, human-friendly booking reference, e.g. ETX-2K7QF3. */
-export function makeReference(prefix = "ETX"): string {
-  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let out = "";
-  for (let i = 0; i < 6; i++) {
-    out += alphabet[Math.floor(Math.random() * alphabet.length)];
-  }
-  return `${prefix}-${out}`;
-}
-
-export function pluralize(n: number, singular: string, plural?: string) {
-  return `${n} ${n === 1 ? singular : plural ?? `${singular}s`}`;
-}
-
-/** Human label for a destination's inventory — never the credibility-killing "0 pkgs". */
-export function holidayCountLabel(n: number): string {
-  if (n <= 0) return "Coming soon";
-  return `${n} holiday${n === 1 ? "" : "s"}`;
+export function formatDate(
+  value: string | Date,
+  opts: Intl.DateTimeFormatOptions = { day: "2-digit", month: "short", year: "numeric" },
+) {
+  const d = typeof value === "string" ? new Date(value) : value;
+  return new Intl.DateTimeFormat("en-IN", opts).format(d);
 }

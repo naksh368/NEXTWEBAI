@@ -7,6 +7,7 @@ import {
   LayoutDashboard, CalendarCheck, Users, LifeBuoy, Package, MapPin, Truck,
   Tag, Ticket, Star, BookOpen, CreditCard, RotateCcw, Shield, KeyRound,
   ScrollText, Settings, Menu, X, LogOut, MessageSquare, DownloadCloud, FileText, Sparkles, BarChart3, ImageIcon, Compass,
+  UserCheck, Wallet,
 } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import { cn } from "@/lib/utils";
@@ -23,6 +24,10 @@ const NAV: { section: string; items: { label: string; href: string; icon: React.
     { label: "Quotes", href: "/admin/quotes", icon: FileText },
     { label: "Customers", href: "/admin/customers", icon: Users },
     { label: "Support", href: "/admin/support", icon: LifeBuoy },
+  ] },
+  { section: "B2B Agents", items: [
+    { label: "Agents", href: "/admin/agents", icon: UserCheck },
+    { label: "Agent Wallets", href: "/admin/agents?tab=wallets", icon: Wallet },
   ] },
   { section: "Catalogue", items: [
     { label: "Packages", href: "/admin/packages", icon: Package },

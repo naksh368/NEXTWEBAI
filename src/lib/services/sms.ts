@@ -14,6 +14,30 @@ const sender = () => process.env.SMS_SENDER_ID || "EXPRTZ";
 
 const onlyDigits = (e164: string) => e164.replace(/[^\d]/g, ""); // 918700650467
 const tenDigit = (e164: string) => onlyDigits(e164).replace(/^91/, "");
+const e164 = (m: string) => (m.startsWith("+") ? m : `+${onlyDigits(m)}`);
+
+// ── Twilio (SMS delivery for our own auditable OTP) ──────────────────
+// Secrets stay server-side. Either a Messaging Service SID or a From number.
+async function twilioSend(mobile: string, body: string) {
+  const sid = process.env.TWILIO_ACCOUNT_SID;
+  const token = process.env.TWILIO_AUTH_TOKEN;
+  const from = process.env.TWILIO_FROM_NUMBER;
+  const messagingService = process.env.TWILIO_MESSAGING_SERVICE_SID;
+  if (!sid || !token) throw new Error("Twilio is not configured (TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN).");
+  if (!from && !messagingService) throw new Error("Twilio needs TWILIO_FROM_NUMBER or TWILIO_MESSAGING_SERVICE_SID.");
+  const params = new URLSearchParams({ To: e164(mobile), Body: body });
+  if (messagingService) params.set("MessagingServiceSid", messagingService);
+  else params.set("From", from!);
+  const auth = Buffer.from(`${sid}:${token}`).toString("base64");
+  const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
+    method: "POST",
+    headers: { Authorization: `Basic ${auth}`, "Content-Type": "application/x-www-form-urlencoded" },
+    body: params.toString(),
+  });
+  const text = await res.text().catch(() => "");
+  if (!res.ok) throw new Error(`Twilio send failed (${res.status}): ${text.slice(0, 140)}`);
+  try { return (JSON.parse(text) as { sid?: string }).sid; } catch { return undefined; }
+}
 
 async function msg91Flow(mobile: string, templateId: string, vars: Record<string, string>) {
   if (!templateId) throw new Error("MSG91 template id is not configured.");
@@ -39,6 +63,9 @@ export async function sendOtpSms(mobile: string, code: string, message: string) 
   switch (provider()) {
     case "console":
       console.log(`\n📱 [SMS:console] to ${mobile} · sender ${sender()}\n   ${message}\n`);
+      return;
+    case "twilio":
+      await twilioSend(mobile, message);
       return;
     case "msg91":
       return msg91Flow(mobile, process.env.MSG91_OTP_TEMPLATE_ID || "", { OTP: code });
@@ -85,6 +112,10 @@ export async function sendTransactionalSms(mobile: string, message: string): Pro
       case "console":
         console.log(`\n📱 [SMS:console] to ${mobile}\n   ${message}\n`);
         return { status: "SENT" };
+      case "twilio": {
+        const providerId = await twilioSend(mobile, message);
+        return { status: "SENT", providerId };
+      }
       case "msg91": {
         const tpl = process.env.MSG91_TXN_TEMPLATE_ID;
         if (!tpl) return { status: "SKIPPED", error: "MSG91_TXN_TEMPLATE_ID not configured" };

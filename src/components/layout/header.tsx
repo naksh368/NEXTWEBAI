@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, ChevronDown, ArrowRight, LogIn } from "lucide-react";
+import { Menu, X, ChevronDown, ArrowRight, UserRound } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -52,11 +52,11 @@ export function Header() {
         </nav>
 
         <div className="hidden items-center gap-2.5 sm:flex">
-          <Link href="/register" className={buttonVariants({ variant: "orange", size: "sm", className: "h-10 px-4" })}>
+          <Link href="/register" className={buttonVariants({ variant: "orange", size: "md", className: "px-5" })}>
             Register Your Agency <ArrowRight className="h-4 w-4" />
           </Link>
-          <Link href="/partner-login" className={buttonVariants({ variant: "primary", size: "sm", className: "h-10 px-4" })}>
-            <LogIn className="h-4 w-4" /> Partner Login
+          <Link href="/partner-login" className={buttonVariants({ variant: "primary", size: "md", className: "px-5" })}>
+            <UserRound className="h-4 w-4" /> Partner Login
           </Link>
         </div>
 
@@ -88,7 +88,7 @@ export function Header() {
                 Register Your Agency <ArrowRight className="h-4 w-4" />
               </Link>
               <Link href="/partner-login" onClick={() => setOpen(false)} className={buttonVariants({ variant: "primary", size: "md", className: "w-full" })}>
-                <LogIn className="h-4 w-4" /> Partner Login
+                <UserRound className="h-4 w-4" /> Partner Login
               </Link>
             </div>
           </nav>

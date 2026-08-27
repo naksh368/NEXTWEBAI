@@ -991,3 +991,147 @@ model MediaAsset {
 
   @@index([createdAt])
 }
+
+// ─────────────────────────────────────────────────────────────
+// B2B AGENTS — registration, KYC, prepaid wallet (real money)
+// Money is stored in PAISE (integer) everywhere in the wallet so the
+// ledger is exact and auditable — no floating-point rupees.
+// ─────────────────────────────────────────────────────────────
+
+/// A travel agency account (the partner that logs in and books).
+model Agent {
+  id            String   @id @default(cuid())
+  agencyName    String
+  ownerName     String
+  email         String   @unique
+  mobile        String   @unique
+  passwordHash  String
+  // PENDING | UNDER_REVIEW | APPROVED | REJECTED | SUSPENDED
+  status        String   @default("PENDING")
+  mobileVerified Boolean @default(false)
+  emailVerified  Boolean @default(false)
+
+  // Business details (Step 2)
+  businessType  String?  // PROPRIETORSHIP | PARTNERSHIP | PVT_LTD | LLP | OTHER
+  pan           String?
+  gstin         String?
+  addressLine   String?
+  city          String?
+  state         String?
+  pincode       String?
+
+  rejectionReason String?
+  approvedAt      DateTime?
+  approvedById    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  wallet        WalletAccount?
+  kycDocuments  AgentKycDocument[]
+  transactions  WalletTransaction[]
+  holds         WalletHold[]
+  payments      WalletPayment[]
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+/// A KYC / business document uploaded by an agent, reviewed by an admin.
+model AgentKycDocument {
+  id        String   @id @default(cuid())
+  agentId   String
+  agent     Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  // PAN | GSTIN | ADDRESS_PROOF | AGENCY_LICENSE | OTHER
+  type      String
+  fileUrl   String
+  // PENDING | APPROVED | REJECTED
+  status    String   @default("PENDING")
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([agentId])
+}
+
+/// One prepaid wallet per agent. `balancePaise` is a cached projection of the
+/// ledger (sum of successful transactions); it is only ever changed inside the
+/// same DB transaction that appends the ledger row, so it stays reconciled.
+model WalletAccount {
+  id           String   @id @default(cuid())
+  agentId      String   @unique
+  agent        Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  balancePaise BigInt   @default(0)
+  heldPaise    BigInt   @default(0)
+  currency     String   @default("INR")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  transactions WalletTransaction[]
+  holds        WalletHold[]
+}
+
+/// Immutable ledger. Every money movement is one row. `amountPaise` is SIGNED
+/// (credit > 0, debit < 0). `idempotencyKey` is unique so the same gateway
+/// payment / booking event can never be applied twice.
+model WalletTransaction {
+  id               String   @id @default(cuid())
+  walletId         String
+  wallet           WalletAccount @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  agentId          String
+  agent            Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  // TOPUP | BOOKING_HOLD | BOOKING_DEBIT | HOLD_RELEASE | REFUND
+  // | MANUAL_CREDIT | MANUAL_DEBIT | REVERSAL
+  type             String
+  amountPaise      BigInt
+  balanceAfterPaise BigInt
+  // PENDING | SUCCESS | FAILED
+  status           String   @default("SUCCESS")
+  description      String?
+  paymentId        String?  // WalletPayment.id or gateway reference
+  bookingRef       String?
+  idempotencyKey   String   @unique
+  createdById      String?  // admin id for manual adjustments
+  createdAt        DateTime @default(now())
+
+  @@index([agentId, createdAt])
+  @@index([type])
+}
+
+/// A temporary hold placed on wallet funds while a booking is in flight.
+model WalletHold {
+  id          String   @id @default(cuid())
+  walletId    String
+  wallet      WalletAccount @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  agentId     String
+  agent       Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  amountPaise BigInt
+  // ACTIVE | RELEASED | CAPTURED
+  status      String   @default("ACTIVE")
+  bookingRef  String?
+  reason      String?
+  createdAt   DateTime @default(now())
+  releasedAt  DateTime?
+
+  @@index([agentId, status])
+}
+
+/// A wallet top-up payment through the gateway (Razorpay). Idempotent on
+/// `orderId`; the ledger credit is idempotent on the gateway `paymentId`.
+model WalletPayment {
+  id             String   @id @default(cuid())
+  agentId        String
+  agent          Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  provider       String   @default("razorpay")
+  orderId        String   @unique
+  paymentId      String?
+  amountPaise    BigInt
+  currency       String   @default("INR")
+  // CREATED | PAID | FAILED
+  status         String   @default("CREATED")
+  receipt        String?
+  signature      String?
+  processedAt    DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([agentId, status])
+}

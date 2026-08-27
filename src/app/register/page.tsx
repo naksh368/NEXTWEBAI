@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 import { Container, Section } from "@/components/ui/container";
 import { buttonVariants } from "@/components/ui/button";
-import { RegisterStepOne } from "@/components/marketing/register-step-one";
+import { RegisterFlow } from "@/components/marketing/register-flow";
 
 export const metadata = {
   title: "Register Your Agency",
@@ -61,13 +61,9 @@ export default function RegisterPage() {
           </ol>
 
           <div className="mt-10 grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-            {/* Step 1 form */}
+            {/* Live multi-step registration */}
             <div className="rounded-3xl border border-surface-border bg-white p-6 shadow-card sm:p-8">
-              <div className="flex items-center gap-3">
-                <span className="flex h-9 items-center rounded-full bg-brand-orangeLight px-3 text-sm font-bold text-brand-orangeDark">Step 1 of 5</span>
-                <h2 className="text-lg font-extrabold text-brand-navy">Agency details</h2>
-              </div>
-              <RegisterStepOne />
+              <RegisterFlow />
             </div>
 
             {/* Status / what to expect */}
@@ -75,12 +71,12 @@ export default function RegisterPage() {
               <div className="flex items-start gap-3 rounded-2xl border border-brand-blueLight bg-brand-blueLight/50 p-5">
                 <Info className="mt-0.5 h-5 w-5 shrink-0 text-brand-blue" />
                 <div className="text-sm text-brand-navy">
-                  <p className="font-bold">Secure verification is being activated</p>
+                  <p className="font-bold">Secure, server-side verification</p>
                   <p className="mt-1 text-ink-muted">
-                    Mobile / email OTP and KYC review run entirely on our servers — no
-                    codes or credentials are ever exposed to the browser. While we
-                    finish connecting verification, submit your details and our team
-                    will complete your onboarding.
+                    A one-time code is sent to your mobile (via Twilio) to verify it —
+                    codes are generated, hashed and checked entirely on our servers and
+                    are never exposed to the browser. After you submit, our team reviews
+                    your KYC and activates your wallet.
                   </p>
                 </div>
               </div>

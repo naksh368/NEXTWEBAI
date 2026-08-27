@@ -2,19 +2,17 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Menu, X, LifeBuoy, Luggage, User, Bell, Heart } from "lucide-react";
+import { Menu, X, ArrowRight, LayoutDashboard } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { useWishlist } from "@/lib/wishlist";
 
 const NAV = [
-  { label: "Holidays", href: "/packages" },
-  { label: "Destinations", href: "/destinations" },
-  { label: "Honeymoon", href: "/packages?theme=HONEYMOON" },
-  { label: "Family", href: "/packages?theme=FAMILY" },
-  { label: "Offers", href: "/offers" },
+  { label: "Flights", href: "/#flights" },
+  { label: "Why ExpertzTrip", href: "/#why" },
+  { label: "For Agents", href: "/#features" },
+  { label: "How It Works", href: "/#how-it-works" },
+  { label: "Wallet", href: "/#wallet" },
+  { label: "Support", href: "/support" },
 ];
 
 interface HeaderProps {
@@ -22,73 +20,41 @@ interface HeaderProps {
   unreadCount?: number;
 }
 
-export function Header({ isSignedIn, unreadCount = 0 }: HeaderProps) {
+export function Header({ isSignedIn }: HeaderProps) {
   const [open, setOpen] = useState(false);
-  const pathname = usePathname();
-  const savedCount = useWishlist().length;
 
   return (
     <header className="sticky top-0 z-40 border-b border-surface-border bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/80 print:hidden">
       <div className="mx-auto flex h-16 w-full max-w-[1200px] items-center justify-between px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-6 xl:gap-9">
-          <Logo size="md" />
-          <nav className="hidden items-center gap-1 lg:flex">
-            {NAV.map((item) => {
-              const active = pathname === item.href.split("?")[0] && !item.href.includes("?");
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "rounded-lg px-3 py-2 text-sm font-semibold text-ink-muted transition-colors hover:bg-surface-muted hover:text-brand-navy",
-                    active && "text-brand-navy"
-                  )}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
+        <Logo size="md" />
 
-        <div className="flex items-center gap-1 sm:gap-2">
-          <Link href="/support" className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-ink-muted hover:bg-surface-muted hover:text-brand-navy sm:inline-flex">
-            <LifeBuoy className="h-4 w-4" /> Help
-          </Link>
-          <Link href="/saved" aria-label={`Saved${savedCount ? ` (${savedCount})` : ""}`} className="relative hidden h-10 w-10 items-center justify-center rounded-lg text-ink-muted hover:bg-surface-muted hover:text-brand-navy sm:inline-flex">
-            <Heart className={cn("h-5 w-5", savedCount > 0 && "fill-brand-orange text-brand-orange")} />
-            {savedCount > 0 && (
-              <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-orange px-1 text-[10px] font-bold text-white">{savedCount > 9 ? "9+" : savedCount}</span>
-            )}
-          </Link>
-          <Link href="/account/trips" className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-ink-muted hover:bg-surface-muted hover:text-brand-navy sm:inline-flex">
-            <Luggage className="h-4 w-4" /> My Trips
-          </Link>
-
-          {isSignedIn && (
-            <Link href="/account/notifications" aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
-              className="relative hidden h-10 w-10 items-center justify-center rounded-lg text-ink-muted hover:bg-surface-muted hover:text-brand-navy sm:inline-flex">
-              <Bell className="h-5 w-5" />
-              {unreadCount > 0 && (
-                <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-orange px-1 text-[10px] font-bold text-white">
-                  {unreadCount > 9 ? "9+" : unreadCount}
-                </span>
-              )}
-            </Link>
-          )}
-
-          {isSignedIn ? (
+        <nav className="hidden items-center gap-1 lg:flex">
+          {NAV.map((item) => (
             <Link
-              href="/account"
-              className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-ink-muted hover:bg-surface-muted hover:text-brand-navy sm:inline-flex"
+              key={item.href}
+              href={item.href}
+              className="rounded-lg px-3 py-2 text-sm font-semibold text-ink-muted transition-colors hover:bg-surface-muted hover:text-brand-navy"
             >
-              <User className="h-4 w-4" /> Account
+              {item.label}
             </Link>
-          ) : (
-            <Link href="/sign-in" className={buttonVariants({ variant: "primary", size: "sm", className: "hidden sm:inline-flex" })}>
-              Sign in
+          ))}
+        </nav>
+
+        <div className="flex items-center gap-2">
+          {isSignedIn && (
+            <Link
+              href="/dashboard"
+              className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-brand-blue hover:bg-surface-muted sm:inline-flex"
+            >
+              <LayoutDashboard className="h-4 w-4" /> Dashboard
             </Link>
           )}
+          <Link href="/login" className={buttonVariants({ variant: "primary", size: "sm", className: "hidden sm:inline-flex" })}>
+            Login
+          </Link>
+          <Link href="/register" className={buttonVariants({ variant: "orange", size: "sm", className: "hidden sm:inline-flex" })}>
+            Register Your Agency
+          </Link>
 
           <button
             className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-ink lg:hidden"
@@ -105,35 +71,18 @@ export function Header({ isSignedIn, unreadCount = 0 }: HeaderProps) {
         <div className="border-t border-surface-border bg-white lg:hidden">
           <nav className="mx-auto flex max-w-[1200px] flex-col gap-1 px-4 py-3">
             {NAV.map((item) => (
-              <Link key={item.href} href={item.href} onClick={() => setOpen(false)} className="rounded-lg px-3 py-2.5 text-[15px] font-medium text-ink hover:bg-surface-muted">
+              <Link key={item.href} href={item.href} onClick={() => setOpen(false)} className="rounded-lg px-3 py-2.5 text-[15px] font-semibold text-ink hover:bg-surface-muted">
                 {item.label}
               </Link>
             ))}
-            <Link href="/support" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-[15px] font-medium text-ink hover:bg-surface-muted">
-              <LifeBuoy className="h-4 w-4" /> Help
-            </Link>
-            <Link href="/saved" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-[15px] font-medium text-ink hover:bg-surface-muted">
-              <Heart className="h-4 w-4" /> Saved
-              {savedCount > 0 && <span className="ml-auto rounded-full bg-brand-orange px-2 text-xs font-bold text-white">{savedCount}</span>}
-            </Link>
-            <Link href="/account/trips" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-[15px] font-medium text-ink hover:bg-surface-muted">
-              <Luggage className="h-4 w-4" /> My Trips
-            </Link>
-            {isSignedIn && (
-              <Link href="/account/notifications" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-[15px] font-medium text-ink hover:bg-surface-muted">
-                <Bell className="h-4 w-4" /> Notifications
-                {unreadCount > 0 && <span className="ml-auto rounded-full bg-brand-orange px-2 text-xs font-bold text-white">{unreadCount}</span>}
+            <div className="mt-2 flex flex-col gap-2">
+              <Link href="/login" onClick={() => setOpen(false)} className={buttonVariants({ variant: "primary", size: "md", className: "w-full" })}>
+                Login
               </Link>
-            )}
-            {isSignedIn ? (
-              <Link href="/account" onClick={() => setOpen(false)} className={buttonVariants({ variant: "primary", size: "sm", className: "mt-2 w-full" })}>
-                My Account
+              <Link href="/register" onClick={() => setOpen(false)} className={buttonVariants({ variant: "orange", size: "md", className: "w-full" })}>
+                Register Your Agency <ArrowRight className="h-4 w-4" />
               </Link>
-            ) : (
-              <Link href="/sign-in" onClick={() => setOpen(false)} className={buttonVariants({ variant: "primary", size: "sm", className: "mt-2 w-full" })}>
-                Sign in
-              </Link>
-            )}
+            </div>
           </nav>
         </div>
       )}

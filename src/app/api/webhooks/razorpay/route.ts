@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { verifyWebhookSignature } from "@/lib/services/razorpay-service";
 import { markPaymentReceivedAndProcess } from "@/lib/services/booking-service";
+import { creditTopupByOrder, failTopupByOrder } from "@/lib/services/wallet-service";
 
 export const runtime = "nodejs";
 
@@ -31,7 +32,20 @@ export async function POST(request: Request) {
   if (!orderId) return NextResponse.json({ ok: true, ignored: true });
 
   const payment = await db.payment.findUnique({ where: { providerOrderId: orderId }, select: { id: true, bookingId: true, status: true } });
-  if (!payment) return NextResponse.json({ ok: true, ignored: true });
+
+  // Not a booking payment? It may be an ExpertzWallet top-up. Credit is
+  // idempotent, so duplicate webhooks (or webhook + client-verify) never
+  // double-credit the wallet (spec §13).
+  if (!payment) {
+    const topup = await db.walletTransaction.findUnique({ where: { providerOrderId: orderId }, select: { id: true } });
+    if (!topup) return NextResponse.json({ ok: true, ignored: true });
+    if (event.event === "payment.captured" || event.event === "order.paid") {
+      await creditTopupByOrder(orderId, paymentId);
+    } else if (event.event === "payment.failed") {
+      await failTopupByOrder(orderId, entity?.error_description);
+    }
+    return NextResponse.json({ ok: true });
+  }
 
   if (event.event === "payment.captured" || event.event === "order.paid") {
     if (payment.status !== "PAID") {

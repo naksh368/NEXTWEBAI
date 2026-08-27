@@ -7,8 +7,8 @@
    White foundation · navy/blue type · restrained orange accent.
    ───────────────────────────────────────────────────────────── */
 :root {
-  /* Overridden by next/font (Nunito) on <html>; this is the fallback stack. */
-  --font-sans: "Nunito", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  /* Overridden by next/font (Plus Jakarta Sans) on <html>; this is the fallback stack. */
+  --font-sans: "Plus Jakarta Sans", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
   --brand-blue: #2340d9;
   --brand-navy: #0b1b45;
   --brand-orange: #ff6a1a;
@@ -61,6 +61,26 @@
     background:
       radial-gradient(60% 60% at 15% 0%, rgba(35, 64, 217, 0.06), transparent 70%),
       radial-gradient(50% 50% at 90% 10%, rgba(255, 106, 26, 0.07), transparent 70%);
+  }
+
+  /* B2B landing hero — very light blue → white, matching the reference. */
+  .b2b-hero {
+    background:
+      radial-gradient(120% 90% at 85% -10%, rgba(35, 64, 217, 0.10), transparent 55%),
+      radial-gradient(90% 80% at 100% 30%, rgba(255, 106, 26, 0.06), transparent 60%),
+      linear-gradient(180deg, #f4f7ff 0%, #ffffff 62%);
+  }
+  /* Faint grid used behind editorial B2B sections. */
+  .grid-bg {
+    background-color: #ffffff;
+    background-image:
+      linear-gradient(rgba(35, 64, 217, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(35, 64, 217, 0.05) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+  /* Floating portal-preview panel shadow used in the hero. */
+  .portal-shadow {
+    box-shadow: 0 4px 12px rgba(11, 27, 69, 0.06), 0 28px 70px rgba(11, 27, 69, 0.16);
   }
 
   /* Reserve space for images to avoid layout shift (Phase 33) */

@@ -991,3 +991,178 @@ model MediaAsset {
 
   @@index([createdAt])
 }
+
+// ─────────────────────────────────────────────────────────────
+// B2B · AGENCY REGISTRATION  (ExpertzTrip partner onboarding)
+// ─────────────────────────────────────────────────────────────
+/// A travel-agency onboarding application (spec §17/§22/§23).
+/// Additive & self-contained — scalar FKs (resolved in code) keep it decoupled
+/// from the existing customer/booking graph. Created (status PENDING_OTP) when a
+/// registration is started, flipped to SUBMITTED once the email OTP is verified
+/// and the agent account exists, then moved through the admin review pipeline.
+model AgencyApplication {
+  id            String   @id @default(cuid())
+  reference     String   @unique // APP-XXXXXX — shown to the applicant & admin
+  status        String   @default("PENDING_OTP") // PENDING_OTP | SUBMITTED | UNDER_REVIEW | APPROVED | REJECTED
+  customerId    String?  // the agent account created on email verification
+
+  // Applicant (personal) — spec §17 step 1
+  applicantName String
+  email         String
+  mobile        String?
+
+  // Agency — spec §17 step 2
+  agencyName    String
+  businessType  String   // PROPRIETORSHIP | PARTNERSHIP | LLP | PVT_LTD | OTHER
+  officeAddress String?
+  country       String   @default("India")
+  state         String?
+  city          String?
+  pincode       String?
+
+  // Tax / KYC — spec §17 step 3 (all optional at submission)
+  pan           String?
+  gstin         String?
+  udyam         String?
+
+  // Branding & documents — spec §19 / §18 (references only; files stored elsewhere)
+  agencyLogoUrl String?
+  documents     Json?
+
+  submittedAt   DateTime?
+  reviewedAt    DateTime?
+  reviewNote    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([email])
+  @@index([status])
+  @@index([customerId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// B2B · PREPAID WALLET  (ExpertzWallet — spec §11/§12/§13/§14)
+// ─────────────────────────────────────────────────────────────
+/// One prepaid balance per agent/agency (tenant). All amounts are whole rupees
+/// (the app's convention). `balance` is spendable; `onHold` is reserved for
+/// in-flight bookings. Credits happen ONLY via trusted server-side verification.
+model Wallet {
+  id           String   @id @default(cuid())
+  customerId   String   @unique // the agent account that owns this wallet
+  balance      Int      @default(0) // available (spendable) rupees
+  onHold       Int      @default(0) // reserved for in-flight bookings
+  currency     String   @default("INR")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  transactions WalletTransaction[]
+
+  @@index([customerId])
+}
+
+/// Immutable-ish ledger. Every money movement is one row with a reference.
+/// Top-up rows are keyed by `providerOrderId` (unique) so a duplicate Razorpay
+/// webhook can never double-credit (spec §13 idempotency).
+model WalletTransaction {
+  id                String   @id @default(cuid())
+  walletId          String
+  wallet            Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  type              String   // TOPUP | HOLD | HOLD_RELEASE | DEBIT | REFUND | ADJUSTMENT
+  amount            Int      // positive whole rupees
+  balanceAfter      Int?     // available balance after this txn settled (null while pending)
+  status            String   @default("SUCCESS") // PENDING | SUCCESS | FAILED
+  reference         String   @unique // WTX-XXXXXX (human-facing)
+  description       String?
+
+  // Razorpay linkage + idempotency (top-ups)
+  provider          String?  // "razorpay"
+  providerOrderId   String?  @unique
+  providerPaymentId String?
+
+  // Flight-booking linkage (hold / debit / refund / release)
+  bookingRef        String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([walletId])
+  @@index([type])
+  @@index([status])
+  @@index([bookingRef])
+}
+
+// ─────────────────────────────────────────────────────────────
+// B2B · KYC DOCUMENTS & AGENCY LOGO  (spec §18/§19)
+// ─────────────────────────────────────────────────────────────
+/// An agent-uploaded KYC document or the agency logo. Bytes are stored in the
+/// DB (portable across serverless hosts, like MediaAsset) and served ONLY via
+/// the access-controlled /api/agent/kyc/[id] route — never a public URL.
+/// Tenant-scoped: `customerId` is the owning agent; only they and admins read it.
+model AgencyDocument {
+  id            String   @id @default(cuid())
+  customerId    String   // owning agent (tenant)
+  applicationId String?  // the agency application this belongs to
+  kind          String   // IDENTITY | PAN | GST | BUSINESS_PROOF | OTHER | LOGO
+  filename      String
+  contentType   String
+  size          Int
+  data          Bytes
+  status        String   @default("PENDING") // PENDING | VERIFIED | REJECTED
+  note          String?
+  createdAt     DateTime @default(now())
+
+  @@index([customerId])
+  @@index([applicationId])
+  @@index([customerId, kind])
+}
+
+// ─────────────────────────────────────────────────────────────
+// B2B · FLIGHT BOOKINGS  (spec §25/§26 — supplier abstraction)
+// ─────────────────────────────────────────────────────────────
+/// A flight booking made by an agent through the supplier abstraction. A ticket
+/// is NEVER marked issued unless the supplier actually confirms issuance (§26).
+/// Money moves via the wallet: HOLD on booking → DEBIT on ticketing, or the
+/// hold is RELEASED if the supplier fails. Tenant-scoped by customerId.
+model FlightBooking {
+  id            String   @id @default(cuid())
+  reference     String   @unique // ETB-XXXXXX (agent-facing)
+  customerId    String   // owning agent (tenant)
+  // PENDING | HELD | BOOKING | CONFIRMED | TICKETED | FAILED | CANCELLED | REFUNDED | PENDING_VERIFICATION
+  status        String   @default("PENDING")
+
+  // Itinerary
+  origin        String
+  destination   String
+  departDate    String   // ISO yyyy-mm-dd
+  airline       String
+  airlineCode   String?
+  flightNumber  String
+  departTime    String
+  arriveTime    String
+  durationMins  Int      @default(0)
+  stops         Int      @default(0)
+  cabin         String   @default("ECONOMY")
+  paxCount      Int      @default(1)
+  passengers    Json?    // [{ firstName, lastName, type }]
+
+  // Money (whole rupees)
+  baseFare      Int
+  taxes         Int      @default(0)
+  amount        Int      // total debited from the wallet
+  currency      String   @default("INR")
+
+  // Supplier + fulfilment
+  supplier      String   @default("mock")
+  supplierRef   String?
+  pnr           String?
+  ticketNumbers Json?    // [string]
+  holdRef       String?  // wallet hold reference
+  failureReason String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([status])
+  @@index([customerId, createdAt])
+}

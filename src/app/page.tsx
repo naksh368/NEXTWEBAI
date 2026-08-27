@@ -1,390 +1,189 @@
 import Link from "next/link";
 import {
-  ShieldCheck, Wallet, Headset, Sparkles, Search, SlidersHorizontal,
-  CreditCard, MapPin, ArrowRight, Star, Plane, Building2,
+  Plane, Wallet, TrendingUp, Clock, ShieldCheck, BadgeCheck,
+  Headset, ReceiptText, ArrowRight, UserPlus, LogIn, Search, CreditCard, Ticket,
 } from "lucide-react";
-import { Container, Section, SectionHeading } from "@/components/ui/container";
+import { SiteHeader } from "@/components/b2b/site-header";
+import { SiteFooter } from "@/components/b2b/site-footer";
 import { buttonVariants } from "@/components/ui/button";
-import { SmartImage } from "@/components/ui/smart-image";
-import { Accordion } from "@/components/ui/accordion";
-import { EmptyState } from "@/components/ui/states";
-import { PackageCard } from "@/components/package/package-card";
-import { SearchBox } from "@/components/home/search-box";
-import { RecentlyViewedRail } from "@/components/package/recently-viewed";
-import { Newsletter } from "@/components/home/newsletter";
-import { AiAvatar } from "@/components/ui/ai-avatar";
-import {
-  getPopularDestinations, getFeaturedPackages, getActiveOffers,
-  getGlobalFaqs, getPublishedReviews, getAllDestinations,
-} from "@/lib/queries";
-import { formatINR } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
-const CATEGORIES = [
-  { label: "Honeymoon", theme: "HONEYMOON", icon: Star, blurb: "Romantic getaways" },
-  { label: "Family", theme: "FAMILY", icon: Building2, blurb: "Fun for all ages" },
-  { label: "Beach", theme: "BEACH", icon: MapPin, blurb: "Sun, sand & sea" },
-  { label: "Luxury", theme: "LUXURY", icon: Sparkles, blurb: "Premium escapes" },
-  { label: "Adventure", theme: "ADVENTURE", icon: Plane, blurb: "Thrills & nature" },
+const FEATURES = [
+  { icon: Plane, title: "Best Fares", body: "Compare and book available flight options.", soon: false },
+  { icon: Wallet, title: "Prepaid Wallet", body: "Add funds and use your available balance for eligible bookings.", soon: false },
+  { icon: TrendingUp, title: "Higher Earnings", body: "See clear booking economics and applicable earnings.", soon: false },
+  { icon: Clock, title: "Future Credit", body: "Build history for future credit eligibility.", soon: true },
 ];
 
-export default async function HomePage() {
-  const [destinations, featured, offers, faqs, reviews, allDestinations] = await Promise.all([
-    getPopularDestinations(),
-    getFeaturedPackages(6),
-    getActiveOffers(),
-    getGlobalFaqs(),
-    getPublishedReviews(6),
-    getAllDestinations(),
-  ]);
+const TRUST_STRIP = [
+  { icon: ShieldCheck, label: "Secure & Reliable Booking" },
+  { icon: BadgeCheck, label: "Quick KYC Verification" },
+  { icon: Headset, label: "Dedicated Agent Support" },
+  { icon: ReceiptText, label: "Transparent Pricing" },
+];
 
-  const indiaDestinations = allDestinations.filter((d) => d.country === "India" && d._count.packages > 0);
-  const worldDestinations = allDestinations.filter((d) => d.country !== "India" && d._count.packages > 0);
+const TRUST_POINTS = [
+  { icon: Plane, label: "Built for Travel Agents" },
+  { icon: ShieldCheck, label: "Secure Booking" },
+  { icon: Wallet, label: "Prepaid Booking Balance" },
+  { icon: Headset, label: "Fast Support" },
+  { icon: ReceiptText, label: "Transparent Transactions" },
+];
 
-  // Every destination name feeds the "Where to?" autocomplete so a customer
-  // always sees the full set of places we cover.
-  const heroDestinations = [...allDestinations]
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .map((d) => d.name);
-  // Trending chips: destinations we actually sell (most packages first); if none
-  // are live yet, fall back to the popular rail so the row is never empty.
-  const trending = (
-    [...allDestinations].filter((d) => d._count.packages > 0).sort((a, b) => b._count.packages - a._count.packages).length
-      ? [...allDestinations].filter((d) => d._count.packages > 0).sort((a, b) => b._count.packages - a._count.packages)
-      : destinations
-  ).slice(0, 8);
+const STEPS = [
+  { icon: UserPlus, title: "Register your agency", body: "Create your account, verify your email and complete a simple KYC." },
+  { icon: CreditCard, title: "Add prepaid balance", body: "Top up your wallet securely and see your available balance instantly." },
+  { icon: Search, title: "Search & compare", body: "Find available flight options with clear, transparent pricing." },
+  { icon: Ticket, title: "Book & earn", body: "Confirm bookings from your balance and track applicable earnings." },
+];
 
+export default function HomePage() {
   return (
     <>
-      {/* HERO — clean light background, no photo */}
-      <section className="relative overflow-hidden dotted-bg">
-        <div className="absolute inset-0 hero-wash" aria-hidden />
-        <Container className="relative py-16 sm:py-24">
-          <div className="mx-auto max-w-3xl text-center">
-            <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand-orange">
-              India &amp; the world, handpicked for you
-            </p>
-            <h1 className="mt-4 text-5xl font-extrabold leading-[1.05] tracking-tight sm:text-7xl">
-              <span className="text-brand-blue">Your next holiday</span>{" "}
-              <span className="text-brand-orange">starts here.</span>
-            </h1>
-            <p className="mx-auto mt-5 max-w-xl text-lg text-ink-muted">
-              Handpicked holidays, transparent pricing and expert support — from India to the world.
-            </p>
-            <div className="mx-auto mt-9 max-w-2xl">
-              <SearchBox suggestions={heroDestinations} popular={trending.map((d) => d.name)} />
+      <SiteHeader />
+      <main id="main">
+        {/* HERO */}
+        <section className="dotted-bg border-b border-surface-border">
+          <div className="mx-auto grid w-full max-w-[1200px] items-center gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:py-24 lg:px-8">
+            <div>
+              <Badge tone="info" className="uppercase tracking-wide">India&apos;s Smarter B2B Travel Platform</Badge>
+              <h1 className="mt-5 text-4xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl">
+                <span className="text-brand-blue">Find Better Flights.</span><br />
+                <span className="text-brand-orange">Earn More.</span><br />
+                <span className="text-brand-blue">Grow Your Business.</span>
+              </h1>
+              <p className="mt-5 max-w-lg text-lg text-ink-muted">
+                Powerful tools, competitive fares and a simpler booking experience built for travel agents.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link href="/register" className={buttonVariants({ variant: "orange", size: "lg" })}>
+                  Register Your Agency <ArrowRight size={18} />
+                </Link>
+                <Link href="/login" className={buttonVariants({ variant: "primary", size: "lg" })}>
+                  Login <ArrowRight size={18} />
+                </Link>
+              </div>
             </div>
-            <div className="mt-6 flex justify-center">
-              <Link href="/packages" className={buttonVariants({ variant: "orange", size: "lg" })}>
-                Explore Holidays <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm font-medium text-ink">
-              <span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-brand-blue" /> 100% real packages</span>
-              <span className="hidden text-ink-faint sm:inline">·</span>
-              <span className="inline-flex items-center gap-2"><Wallet className="h-4 w-4 text-brand-blue" /> Transparent pricing</span>
-              <span className="hidden text-ink-faint sm:inline">·</span>
-              <span className="inline-flex items-center gap-2"><Headset className="h-4 w-4 text-brand-blue" /> 24×7 expert support</span>
-            </div>
-          </div>
-        </Container>
-      </section>
 
-      {/* HOLIDAY CATEGORIES */}
-      <Section className="bg-surface-muted/60 py-12">
-        <Container>
-          <SectionHeading eyebrow="Browse by style" title="Holiday categories" />
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            {CATEGORIES.map((c) => (
-              <Link
-                key={c.theme}
-                href={`/packages?theme=${c.theme}`}
-                className="group flex flex-col items-start gap-3 rounded-2xl border border-surface-border bg-white p-5 transition-shadow hover:shadow-card"
-              >
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-blueLight text-brand-blue transition-colors group-hover:bg-brand-blue group-hover:text-white">
-                  <c.icon className="h-5 w-5" />
-                </span>
-                <div>
-                  <p className="font-semibold text-brand-navy">{c.label}</p>
-                  <p className="text-xs text-ink-muted">{c.blurb}</p>
+            {/* Premium visual — a compact "fare board" card, restrained, no photo. */}
+            <div className="relative mx-auto w-full max-w-md" id="flights">
+              <div className="rounded-2xl border border-surface-border bg-white p-5 shadow-card">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-bold text-ink">Available fares</p>
+                  <Badge tone="success">Live pricing</Badge>
                 </div>
-              </Link>
-            ))}
-          </div>
-        </Container>
-      </Section>
-
-      {/* FEATURED PACKAGES */}
-      <Section>
-        <Container>
-          <SectionHeading
-            eyebrow="Ready to book"
-            title="Featured packages"
-            description="Complete holidays you can customize to your taste."
-            action={<Link href="/packages" className={buttonVariants({ variant: "outline", size: "sm" })}>View all packages</Link>}
-          />
-          {featured.length ? (
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {featured.map((p, i) => (
-                <PackageCard key={p.id} pkg={p} priority={i < 3} />
-              ))}
-            </div>
-          ) : (
-            <EmptyState title="No packages published yet" description="Once packages are published they'll appear here." action={{ label: "Browse destinations", href: "/destinations" }} />
-          )}
-        </Container>
-      </Section>
-
-      {/* RECENTLY VIEWED (per-viewer; renders nothing when empty) */}
-      <Section className="py-0">
-        <Container>
-          <RecentlyViewedRail limit={4} />
-        </Container>
-      </Section>
-
-      {/* CHOOSE YOUR WAY — 3 ways to travel */}
-      <Section>
-        <Container>
-          <SectionHeading eyebrow="Your holiday, your way" title="Three ways to travel" />
-          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-            {[
-              { title: "Ready to book", body: "Find a package and book it online in minutes.", href: "/packages", cta: "Browse holidays" },
-              { title: "Make it yours", body: "Customise hotels, activities, dates and travellers.", href: "/packages", cta: "Customise a trip" },
-              { title: "Need help choosing?", body: "Tell us what you want and get real recommendations.", href: "/ai", cta: "Get recommendations" },
-            ].map((w) => (
-              <Link key={w.title} href={w.href} className="group rounded-2xl border border-surface-border bg-white p-6 transition-shadow hover:shadow-cardHover">
-                <h3 className="text-lg font-bold text-brand-navy">{w.title}</h3>
-                <p className="mt-1.5 text-sm text-ink-muted">{w.body}</p>
-                <span className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-brand-blue group-hover:gap-1.5">{w.cta} <ArrowRight className="h-4 w-4" /></span>
-              </Link>
-            ))}
-          </div>
-        </Container>
-      </Section>
-
-      {/* EXPLORE INDIA + THE WORLD */}
-      {(indiaDestinations.length > 0 || worldDestinations.length > 0) && (
-        <Section className="bg-surface-muted/40">
-          <Container>
-            <div className="mx-auto max-w-2xl text-center">
-              <p className="text-sm font-bold uppercase tracking-[0.16em] text-brand-orange">Handpicked for you</p>
-              <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">India and the world, handpicked for you</h2>
-              <p className="mt-3 text-ink-muted">From the backwaters of Kerala to the beaches of Bali — real, complete holidays curated by our experts.</p>
-            </div>
-
-            {indiaDestinations.length > 0 && (
-              <div className="mt-10">
-                <div className="mb-4 flex items-end justify-between">
-                  <h3 className="flex items-center gap-2 text-xl font-bold text-brand-navy">
-                    <span className="text-2xl">🇮🇳</span> Explore India
-                  </h3>
-                  <Link href="/destinations" className="text-sm font-semibold text-brand-blue hover:underline">View all</Link>
-                </div>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                  {indiaDestinations.slice(0, 10).map((d) => (
-                    <DestinationTile key={d.id} d={d} />
+                <div className="mt-4 space-y-3">
+                  {[
+                    { r: "DEL → BOM", t: "06:20 · Non-stop", p: "₹4,299" },
+                    { r: "BLR → DXB", t: "23:05 · 1 stop", p: "₹18,750" },
+                    { r: "HYD → GOI", t: "09:40 · Non-stop", p: "₹3,150" },
+                  ].map((f) => (
+                    <div key={f.r} className="flex items-center justify-between rounded-xl border border-surface-border bg-surface-muted/50 px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-blueLight text-brand-blue">
+                          <Plane size={16} />
+                        </span>
+                        <div>
+                          <p className="text-sm font-bold text-ink">{f.r}</p>
+                          <p className="text-xs text-ink-faint">{f.t}</p>
+                        </div>
+                      </div>
+                      <p className="text-sm font-extrabold text-brand-blue">{f.p}</p>
+                    </div>
                   ))}
                 </div>
-              </div>
-            )}
-
-            {worldDestinations.length > 0 && (
-              <div className="mt-12">
-                <div className="mb-4 flex items-end justify-between">
-                  <h3 className="flex items-center gap-2 text-xl font-bold text-brand-navy">
-                    <span className="text-2xl">🌏</span> Explore the World
-                  </h3>
-                  <Link href="/destinations" className="text-sm font-semibold text-brand-blue hover:underline">View all</Link>
-                </div>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                  {worldDestinations.slice(0, 10).map((d) => (
-                    <DestinationTile key={d.id} d={d} />
-                  ))}
+                <div className="mt-4 flex items-center justify-between rounded-xl bg-brand-blue px-4 py-3 text-white">
+                  <span className="text-sm font-semibold">Prepaid balance</span>
+                  <span className="text-sm font-extrabold">Ready to book</span>
                 </div>
               </div>
-            )}
-          </Container>
-        </Section>
-      )}
-
-      {/* WHY EXPERTZTRIP / TRUST */}
-      <Section id="why" className="py-14">
-        <Container>
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-sm font-bold uppercase tracking-[0.16em] text-brand-orange">Why ExpertzTrip</p>
-            <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Travel with confidence</h2>
-            <p className="mt-3 text-ink-muted">More than a booking — a better way to travel.</p>
+              <p className="mt-3 text-center text-xs text-ink-faint">Illustrative preview · real fares appear inside the portal</p>
+            </div>
           </div>
-          <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              { icon: Sparkles, title: "Personalized holidays", body: "Tailor every trip — hotels, dates, activities and more, built around you." },
-              { icon: Wallet, title: "Transparent pricing", body: "The price you see is verified on our servers before you ever pay. No surprises." },
-              { icon: Headset, title: "Expert travel support", body: "Real travel experts help you before, during and after your holiday." },
-              { icon: ShieldCheck, title: "Secure online booking", body: "Book and pay securely online, with confirmation and documents in your account." },
-            ].map((f) => (
-              <div key={f.title} className="rounded-2xl border border-surface-border bg-white p-6 transition-shadow hover:shadow-card">
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-blueLight text-brand-blue">
-                  <f.icon className="h-5 w-5" />
-                </span>
-                <h3 className="mt-4 text-base font-bold">{f.title}</h3>
+        </section>
+
+        {/* FEATURE CARDS */}
+        <section id="why" className="mx-auto w-full max-w-[1200px] px-4 py-16 sm:px-6 lg:px-8">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {FEATURES.map((f) => (
+              <div key={f.title} className="rounded-2xl border border-surface-border bg-white p-6 shadow-card transition-shadow hover:shadow-cardHover">
+                <div className="flex items-center justify-between">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-blueLight text-brand-blue">
+                    <f.icon size={20} />
+                  </span>
+                  {f.soon && <Badge tone="brand">SOON</Badge>}
+                </div>
+                <h3 className="mt-4 text-lg font-bold">{f.title}</h3>
                 <p className="mt-1.5 text-sm text-ink-muted">{f.body}</p>
               </div>
             ))}
           </div>
-        </Container>
-      </Section>
+        </section>
 
-      {/* HOW IT WORKS */}
-      <Section id="how-it-works">
-        <Container>
-          <SectionHeading eyebrow="Simple & transparent" title="How it works" />
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              { icon: Search, step: "01", title: "Discover", body: "Search destinations or browse curated holiday packages." },
-              { icon: SlidersHorizontal, step: "02", title: "Customize", body: "Make it yours — upgrade hotels, add activities, pick dates." },
-              { icon: ShieldCheck, step: "03", title: "Verify & confirm", body: "Prices are confirmed on our servers before payment. Pay securely when you're ready." },
-              { icon: CreditCard, step: "04", title: "Travel with support", body: "Your travel expert stays with you before, during and after your trip." },
-            ].map((s) => (
-              <div key={s.step} className="relative rounded-2xl border border-surface-border bg-white p-6">
-                <span className="text-sm font-bold text-brand-orange">{s.step}</span>
-                <span className="mt-3 flex h-11 w-11 items-center justify-center rounded-xl bg-brand-blueLight text-brand-blue">
-                  <s.icon className="h-5 w-5" />
+        {/* TRUST STRIP */}
+        <section className="border-y border-surface-border bg-surface-muted/50">
+          <div className="mx-auto grid w-full max-w-[1200px] gap-4 px-4 py-6 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
+            {TRUST_STRIP.map((t) => (
+              <div key={t.label} className="flex items-center gap-2.5 text-sm font-semibold text-ink">
+                <t.icon size={18} className="text-brand-orange" />
+                {t.label}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* HOW IT WORKS */}
+        <section id="how-it-works" className="mx-auto w-full max-w-[1200px] px-4 py-16 sm:px-6 lg:px-8">
+          <div className="max-w-2xl">
+            <p className="text-sm font-bold uppercase tracking-wide text-brand-orange">How It Works</p>
+            <h2 className="mt-2 text-3xl font-extrabold">From registration to your first booking</h2>
+          </div>
+          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {STEPS.map((s, i) => (
+              <div key={s.title} className="relative rounded-2xl border border-surface-border bg-white p-6 shadow-card">
+                <span className="absolute right-5 top-5 text-3xl font-extrabold text-brand-blueLight">{i + 1}</span>
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-orangeLight text-brand-orange">
+                  <s.icon size={20} />
                 </span>
-                <h3 className="mt-4 font-semibold">{s.title}</h3>
+                <h3 className="mt-4 text-base font-bold">{s.title}</h3>
                 <p className="mt-1.5 text-sm text-ink-muted">{s.body}</p>
               </div>
             ))}
           </div>
-        </Container>
-      </Section>
+        </section>
 
-      {/* EXPERTZTRIP AI */}
-      <Section className="py-6">
-        <Container>
-          <div className="overflow-hidden rounded-3xl border border-surface-border bg-gradient-to-br from-brand-blue to-brand-blueDark p-8 sm:p-12">
-            <div className="grid items-center gap-8 md:grid-cols-2">
-              <div>
-                <span className="inline-flex items-center gap-2 rounded-full bg-white/15 py-1 pl-1 pr-3.5 text-sm font-medium text-white">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white"><AiAvatar size={18} /></span> Need help choosing?
+        {/* TRUST SECTION — no fabricated stats (spec §2, §38) */}
+        <section id="for-agents" className="border-y border-surface-border bg-brand-blue">
+          <div className="mx-auto w-full max-w-[1200px] px-4 py-16 text-center sm:px-6 lg:px-8">
+            <p className="text-sm font-bold uppercase tracking-[0.2em] text-white/70">Built for India&apos;s Travel Agent Network</p>
+            <h2 className="mx-auto mt-3 max-w-2xl text-3xl font-extrabold text-white">
+              A serious platform for serious travel businesses
+            </h2>
+            <div className="mx-auto mt-10 flex max-w-4xl flex-wrap items-center justify-center gap-3">
+              {TRUST_POINTS.map((p) => (
+                <span key={p.label} className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white ring-1 ring-white/20">
+                  <p.icon size={16} className="text-white/90" />
+                  {p.label}
                 </span>
-                <h2 className="mt-4 text-2xl font-bold text-white sm:text-3xl">Describe your dream trip. We&apos;ll find the real match.</h2>
-                <p className="mt-3 text-white/80">
-                  &ldquo;A 6-day Dubai holiday for 2 under ₹1.5 lakh&rdquo; — we search only real, published packages and show you the best match, best value and premium options. No made-up prices, ever.
-                </p>
-                <Link href="/ai" className={buttonVariants({ variant: "orange", className: "mt-6" })}>
-                  Get recommendations <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-              <div className="rounded-2xl bg-white/10 p-5 backdrop-blur">
-                <div className="space-y-3 text-sm">
-                  <div className="ml-auto max-w-[80%] rounded-2xl rounded-tr-sm bg-white px-4 py-2.5 text-ink">
-                    6-day Dubai trip for 2, under ₹1.5 lakh
-                  </div>
-                  <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-white/20 px-4 py-2.5 text-white">
-                    Found 2 real matches. &ldquo;Dubai Extravaganza&rdquo; (5N/6D) fits from {formatINR(45000)}/person — want me to open it?
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
-        </Container>
-      </Section>
+        </section>
 
-      {/* OFFERS */}
-      {offers.length > 0 && (
-        <Section>
-          <Container>
-            <SectionHeading eyebrow="Save more" title="Current offers" action={<Link href="/offers" className={buttonVariants({ variant: "outline", size: "sm" })}>All offers</Link>} />
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-              {offers.slice(0, 3).map((o) => (
-                <Link key={o.id} href={o.ctaHref ?? "/packages"} className="group relative overflow-hidden rounded-2xl border border-surface-border">
-                  <div className="relative aspect-[16/10]">
-                    <SmartImage src={o.image} alt={o.title} sizes="(max-width:640px) 100vw, 33vw" imgClassName="transition-transform duration-500 group-hover:scale-105" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" aria-hidden />
-                  </div>
-                  <div className="absolute bottom-0 p-5 text-white">
-                    {o.badge && <span className="mb-2 inline-block rounded-full bg-brand-orange px-2.5 py-0.5 text-xs font-semibold">{o.badge}</span>}
-                    <h3 className="text-lg font-bold">{o.title}</h3>
-                    <p className="text-sm text-white/85">{o.description}</p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </Container>
-        </Section>
-      )}
-
-      {/* REAL REVIEWS — the whole section only shows when genuine reviews exist */}
-      {reviews.length > 0 && (
-        <Section className="bg-surface-muted/60 py-14">
-          <Container>
-            <SectionHeading eyebrow="Traveller stories" title="Real reviews" description="Verified reviews from real ExpertzTrip customers." />
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {reviews.map((r) => (
-                <div key={r.id} className="rounded-2xl border border-surface-border bg-white p-6">
-                  <div className="flex gap-0.5 text-brand-orange">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} className={i < r.rating ? "h-4 w-4 fill-current" : "h-4 w-4 text-surface-border"} />
-                    ))}
-                  </div>
-                  {r.title && <h3 className="mt-3 font-semibold">{r.title}</h3>}
-                  <p className="mt-1.5 text-sm text-ink-muted">{r.body}</p>
-                  <p className="mt-4 text-sm font-medium text-brand-navy">{r.customer.fullName ?? "Verified traveller"}</p>
-                </div>
-              ))}
-            </div>
-          </Container>
-        </Section>
-      )}
-
-      {/* FAQ */}
-      {faqs.length > 0 && (
-        <Section id="faq">
-          <Container className="max-w-3xl">
-            <SectionHeading eyebrow="Good to know" title="Frequently asked questions" />
-            <Accordion items={faqs.map((f) => ({ question: f.question, answer: f.answer }))} />
-          </Container>
-        </Section>
-      )}
-
-      {/* NEWSLETTER */}
-      <Section className="pt-0">
-        <Container>
-          <Newsletter />
-        </Container>
-      </Section>
+        {/* FINAL CTA */}
+        <section className="mx-auto w-full max-w-[1200px] px-4 py-20 text-center sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-extrabold sm:text-4xl">Ready to grow your travel business?</h2>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <Link href="/register" className={buttonVariants({ variant: "orange", size: "lg" })}>
+              Register Your Agency <ArrowRight size={18} />
+            </Link>
+            <Link href="/login" className={buttonVariants({ variant: "outline", size: "lg", className: "!text-brand-blue !border-brand-blue/30" })}>
+              <LogIn size={18} /> Partner Login
+            </Link>
+          </div>
+        </section>
+      </main>
+      <SiteFooter />
     </>
-  );
-}
-
-type DestTile = {
-  id: string; slug: string; name: string; country: string;
-  region?: string | null; thumbnail: string | null; shortSummary?: string | null;
-  _count: { packages: number };
-};
-
-function DestinationTile({ d }: { d: DestTile }) {
-  return (
-    <Link
-      href={`/destinations/${d.slug}`}
-      className="group relative block overflow-hidden rounded-2xl shadow-card transition-shadow hover:shadow-cardHover"
-    >
-      <div className="relative aspect-[4/5]">
-        <SmartImage
-          src={d.thumbnail}
-          alt={`${d.name} holiday packages`}
-          sizes="(max-width:640px) 45vw, (max-width:1024px) 30vw, 18vw"
-          imgClassName="transition-transform duration-500 group-hover:scale-110"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" aria-hidden />
-        <div className="absolute inset-x-0 bottom-0 p-3.5">
-          <p className="text-base font-extrabold leading-tight text-white drop-shadow">{d.name}</p>
-          {d._count.packages > 0 && (
-            <p className="mt-0.5 text-xs font-medium text-white/85">
-              {d._count.packages} package{d._count.packages > 1 ? "s" : ""}
-            </p>
-          )}
-        </div>
-      </div>
-    </Link>
   );
 }

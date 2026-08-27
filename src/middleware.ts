@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// Cookie names — must match customer-session.ts and admin-session.ts
+// Cookie names — must match customer-session.ts, admin-session.ts, agent-session.ts
 const CUSTOMER_COOKIE = "etx_cust";
 const ADMIN_COOKIE = "etx_admin";
+const AGENT_COOKIE = "etx_agent";
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -12,6 +13,16 @@ export function middleware(req: NextRequest) {
   if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login")) {
     if (!req.cookies.has(ADMIN_COOKIE)) {
       return NextResponse.redirect(new URL("/sign-in?redirect_url=/admin", req.url));
+    }
+    return NextResponse.next();
+  }
+
+  // Agent portal routes — require an agent session. Status/approval gating is
+  // enforced server-side by requireApprovedAgent; this is the fast edge check.
+  if (pathname.startsWith("/agent")) {
+    if (!req.cookies.has(AGENT_COOKIE)) {
+      const redirect = encodeURIComponent(pathname + req.nextUrl.search);
+      return NextResponse.redirect(new URL(`/login?redirect_url=${redirect}`, req.url));
     }
     return NextResponse.next();
   }

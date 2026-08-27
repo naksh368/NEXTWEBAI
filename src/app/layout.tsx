@@ -1,19 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import { Nunito } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-import { PromoBar } from "@/components/layout/promo-bar";
-import { HeaderWrapper } from "@/components/layout/header-wrapper";
-import { Footer } from "@/components/layout/footer";
-import { AiFab } from "@/components/layout/ai-fab";
-import { HideOnAdmin } from "@/components/layout/hide-on-admin";
 import { getSiteUrl } from "@/lib/utils";
 
-// ExpertzTrip brand font — Nunito (the rounded wordmark font used in the logo),
-// self-hosted at build (no runtime font requests, display:swap to avoid layout
-// shift). Used across the entire app so all text matches the logo.
-const nunito = Nunito({
+// ExpertzTrip brand font — Plus Jakarta Sans: a clean, modern, slightly-rounded
+// premium sans that suits a corporate B2B travel-tech product. Self-hosted at
+// build (no runtime font requests), display:swap to avoid layout shift. Sets the
+// --font-sans variable consumed across the whole app. (Deliberately not Nunito.)
+const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
+  weight: ["400", "500", "600", "700", "800"],
   variable: "--font-sans",
   display: "swap",
 });
@@ -23,20 +19,20 @@ const siteUrl = getSiteUrl();
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "ExpertzTrip — Your holiday, your way",
+    default: "ExpertzTrip — India's Smarter B2B Travel Platform",
     template: "%s · ExpertzTrip",
   },
   description:
-    "Real holiday packages with clear pricing and expert support. Customize any trip to Dubai, Bali, Maldives, Thailand, Singapore and Europe — and book securely.",
-  keywords: ["holiday packages", "Dubai", "Bali", "Maldives", "Thailand", "Singapore", "Europe", "travel", "ExpertzTrip"],
+    "Powerful tools, competitive fares and a simpler booking experience built for travel agents. Register your agency, add prepaid balance and book flights.",
+  keywords: ["B2B travel", "travel agent platform", "flight booking", "travel agency", "ExpertzTrip", "India"],
   openGraph: {
     type: "website",
     siteName: "ExpertzTrip",
-    title: "ExpertzTrip — Your holiday, your way",
-    description: "Real holiday packages. Clear pricing. Expert support.",
+    title: "ExpertzTrip — India's Smarter B2B Travel Platform",
+    description: "Find better flights. Earn more. Grow your business.",
     url: siteUrl,
   },
-  twitter: { card: "summary_large_image", title: "ExpertzTrip", description: "Real holiday packages. Clear pricing. Expert support." },
+  twitter: { card: "summary_large_image", title: "ExpertzTrip", description: "India's smarter B2B travel platform." },
   robots: { index: true, follow: true },
 };
 
@@ -48,21 +44,15 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={nunito.variable}>
-      <body className="flex min-h-screen flex-col">
+    <html lang="en" className={jakarta.variable}>
+      <body className="flex min-h-screen flex-col bg-surface">
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-brand-blue focus:px-4 focus:py-2 focus:text-white"
         >
           Skip to content
         </a>
-        <PromoBar />
-        <HideOnAdmin><HeaderWrapper /></HideOnAdmin>
-        <main id="main" className="flex-1">
-          {children}
-        </main>
-        <HideOnAdmin><Footer /></HideOnAdmin>
-        <HideOnAdmin><AiFab /></HideOnAdmin>
+        {children}
       </body>
     </html>
   );

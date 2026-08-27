@@ -26,7 +26,9 @@ type Traveller = {
 };
 
 declare global {
-  interface Window { Razorpay?: new (opts: unknown) => { open: () => void } }
+  // Typed loosely (any) to match the runtime-injected Razorpay checkout global
+  // and avoid a declaration-merge conflict with other Window augmentations.
+  interface Window { Razorpay?: any }
 }
 
 function loadRazorpay(): Promise<boolean> {

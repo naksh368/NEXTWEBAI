@@ -7,8 +7,8 @@
    White foundation · navy/blue type · restrained orange accent.
    ───────────────────────────────────────────────────────────── */
 :root {
-  /* Overridden by next/font (Nunito) on <html>; this is the fallback stack. */
-  --font-sans: "Nunito", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  /* Overridden by next/font (Plus Jakarta Sans) on <html>; fallback stack. */
+  --font-sans: "Plus Jakarta Sans", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
   --brand-blue: #2340d9;
   --brand-navy: #0b1b45;
   --brand-orange: #ff6a1a;

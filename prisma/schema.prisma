@@ -991,3 +991,306 @@ model MediaAsset {
 
   @@index([createdAt])
 }
+
+// ═════════════════════════════════════════════════════════════
+// B2B AGENT PLATFORM (ExpertzTrip Partner)
+// A separate identity + KYC + prepaid-wallet + flight-booking layer for
+// travel agencies. Never mixed with the B2C Customer graph above.
+// ═════════════════════════════════════════════════════════════
+
+/// A travel-agency partner account. This is the login identity for the agent
+/// portal. Application/KYC state lives here; the auditable wallet lives in
+/// WalletAccount + WalletTransaction. Passwords are scrypt-hashed (lib/password).
+model Agent {
+  id              String   @id @default(cuid())
+  applicationId   String?  @unique // EXZ-XXXXXXXX — assigned on submit
+  fullName        String
+  email           String   @unique
+  mobile          String
+  passwordHash    String
+  isEmailVerified Boolean  @default(false)
+  isMobileVerified Boolean @default(false)
+  // Lifecycle: DRAFT (mid-registration) → PENDING_REVIEW → APPROVED |
+  // REJECTED | CORRECTION_REQUESTED | SUSPENDED
+  status          String   @default("DRAFT")
+  decisionReason  String?  // rejection / correction note shown to the agent
+  submittedAt     DateTime?
+  reviewedAt      DateTime?
+  reviewedById    String?  // AdminUser id
+  approvedAt      DateTime?
+  lastLoginAt     DateTime?
+  // Idempotency guards so retried submits never double-send emails
+  welcomeEmailSentAt DateTime?
+  adminNotifiedAt DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  agency          AgencyProfile?
+  documents       AgencyDocument[]
+  wallet          WalletAccount?
+  transactions    WalletTransaction[]
+  holds           WalletHold[]
+  payments        AgentPayment[]
+  notifications   AgentNotification[]
+  flightBookings  FlightBooking[]
+  supportTickets  AgentSupportTicket[]
+  resets          AgentPasswordReset[]
+
+  @@index([status])
+  @@index([email])
+}
+
+model AgencyProfile {
+  id             String   @id @default(cuid())
+  agentId        String   @unique
+  agent          Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  agencyName     String
+  businessType   String   // PROPRIETORSHIP | PARTNERSHIP | LLP | PRIVATE_LIMITED | OTHER
+  officeAddress  String
+  country        String   @default("India")
+  state          String
+  city           String
+  pinCode        String
+  pan            String?
+  gstin          String?
+  udyam          String?
+  otherRegistration String?
+  logoDocumentId String?  // -> AgencyDocument (type LOGO)
+  kycStatus      String   @default("PENDING") // PENDING | IN_REVIEW | APPROVED | REJECTED
+  updatedAt      DateTime @updatedAt
+  createdAt      DateTime @default(now())
+}
+
+/// KYC + branding documents. Bytes stored in the DB (serverless-safe, private).
+/// Served only through the access-controlled /api/agent/documents/[id] route.
+model AgencyDocument {
+  id          String   @id @default(cuid())
+  agentId     String
+  agent       Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  // PAN | IDENTITY | GST_CERT | BUSINESS_PROOF | ADDRESS_PROOF |
+  // PARTNERSHIP_DEED | INCORPORATION | SIGNATORY | LOGO | OTHER
+  type        String
+  title       String
+  filename    String
+  contentType String
+  size        Int
+  data        Bytes
+  status      String   @default("PENDING") // PENDING | APPROVED | REJECTED
+  reviewNote  String?
+  createdAt   DateTime @default(now())
+
+  @@index([agentId, type])
+}
+
+/// Prepaid Booking Balance account (neutral term — not a regulated deposit).
+/// Cached balances are updated inside the same transaction as the ledger row;
+/// WalletTransaction is the authoritative, append-only source of truth.
+model WalletAccount {
+  id               String   @id @default(cuid())
+  agentId          String   @unique
+  agent            Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  availableBalance Int      @default(0) // whole rupees
+  onHoldBalance    Int      @default(0)
+  currency         String   @default("INR")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+/// Append-only wallet ledger. Every financial event is a row with a reference.
+model WalletTransaction {
+  id            String   @id @default(cuid())
+  reference     String   @unique // TXN-XXXXXXXX
+  walletId      String
+  agentId       String
+  agent         Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  // TOPUP | BOOKING_HOLD | BOOKING_DEBIT | HOLD_RELEASE | REFUND |
+  // REVERSAL | MANUAL_CREDIT | MANUAL_DEBIT
+  type          String
+  direction     String   // CREDIT | DEBIT (effect on available balance)
+  amount        Int      // positive whole rupees
+  currency      String   @default("INR")
+  status        String   @default("SUCCESS") // SUCCESS | PENDING | FAILED
+  availableAfter Int     // available balance after this entry (audit)
+  paymentRef    String?  // AgentPayment id / provider payment id
+  holdRef       String?  // WalletHold id
+  bookingRef    String?  // FlightBooking reference
+  description   String?
+  actorType     String   @default("SYSTEM") // SYSTEM | AGENT | ADMIN
+  actorId       String?
+  createdAt     DateTime @default(now())
+
+  @@index([agentId, createdAt])
+  @@index([type])
+}
+
+model WalletHold {
+  id         String   @id @default(cuid())
+  walletId   String
+  agentId    String
+  agent      Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  amount     Int
+  status     String   @default("ACTIVE") // ACTIVE | RELEASED | CAPTURED
+  bookingRef String?
+  reason     String?
+  createdAt  DateTime @default(now())
+  resolvedAt DateTime?
+
+  @@index([agentId, status])
+}
+
+/// Razorpay top-up records for the agent wallet. Idempotency: a payment is
+/// credited to the wallet exactly once (guarded by walletTransactionId).
+model AgentPayment {
+  id                String   @id @default(cuid())
+  agentId           String
+  agent             Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  provider          String   @default("razorpay")
+  providerOrderId   String?  @unique
+  providerPaymentId String?  @unique
+  signatureValid    Boolean  @default(false)
+  amount            Int      // whole rupees
+  currency          String   @default("INR")
+  // INITIATED | PROCESSING | SUCCESS | FAILED | REFUNDED | CANCELLED
+  status            String   @default("INITIATED")
+  method            String?
+  errorReason       String?
+  walletTransactionId String? @unique // set once (and only once) the wallet is credited
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([agentId, status])
+}
+
+model AgentNotification {
+  id        String   @id @default(cuid())
+  agentId   String
+  agent     Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  type      String   // REGISTRATION | KYC | APPROVAL | PAYMENT | BOOKING | REFUND | SYSTEM
+  title     String
+  body      String?
+  href      String?
+  dedupeKey String?  @unique
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([agentId, isRead])
+}
+
+/// Admin-facing notification feed (new registrations, payment mismatches, ...).
+model AdminNotification {
+  id        String   @id @default(cuid())
+  type      String   // NEW_AGENCY | NEW_KYC | PAYMENT_MISMATCH | FAILED_BOOKING | PENDING_REFUND | SYSTEM
+  title     String
+  body      String?
+  href      String?
+  dedupeKey String?  @unique
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([isRead])
+}
+
+model AgentPasswordReset {
+  id         String   @id @default(cuid())
+  agentId    String
+  agent      Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  tokenHash  String   @unique
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime @default(now())
+
+  @@index([expiresAt])
+}
+
+// ── Flight booking scaffolding (supplier-abstracted) ──────────────
+// No supplier is hard-coded. Bookings only ever reach TICKETED when a real
+// supplier confirms issuance — never faked (see lib/services/flight-service).
+model FlightBooking {
+  id             String   @id @default(cuid())
+  reference      String   @unique // ETB-XXXXXXXX
+  agentId        String
+  agent          Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  supplier       String?  // resolved supplier key
+  supplierRef    String?  // PNR / supplier booking id
+  pnr            String?
+  origin         String
+  destination    String
+  departDate     DateTime
+  returnDate     DateTime?
+  tripType       String   @default("ONEWAY") // ONEWAY | ROUND
+  cabin          String   @default("ECONOMY")
+  itinerary      Json?    // frozen fare/segment snapshot
+  baseFare       Int      @default(0)
+  taxes          Int      @default(0)
+  totalAmount    Int      @default(0)
+  currency       String   @default("INR")
+  // DRAFT | REVALIDATED | HOLD | SUPPLIER_PROCESSING | CONFIRMATION_PENDING |
+  // TICKETED | FAILED | CANCELLED | REFUND_PENDING | REFUNDED
+  status         String   @default("DRAFT")
+  holdId         String?  // WalletHold id
+  statusNote     String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  passengers     FlightPassenger[]
+  events         FlightBookingEvent[]
+
+  @@index([agentId, status])
+}
+
+model FlightPassenger {
+  id          String   @id @default(cuid())
+  bookingId   String
+  booking     FlightBooking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  title       String   @default("MR")
+  firstName   String
+  lastName    String
+  type        String   @default("ADULT") // ADULT | CHILD | INFANT
+  dateOfBirth DateTime?
+  passportNo  String?
+  ticketNumber String?
+
+  @@index([bookingId])
+}
+
+model FlightBookingEvent {
+  id         String   @id @default(cuid())
+  bookingId  String
+  booking    FlightBooking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  fromStatus String?
+  toStatus   String
+  message    String?
+  actor      String?
+  createdAt  DateTime @default(now())
+
+  @@index([bookingId])
+}
+
+model AgentSupportTicket {
+  id         String   @id @default(cuid())
+  reference  String   @unique // ETS-XXXXXXXX
+  agentId    String
+  agent      Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  category   String   // BOOKING | TICKET | CANCELLATION | REISSUE | REFUND | PAYMENT | WALLET | KYC | ACCOUNT | TECHNICAL
+  subject    String
+  status     String   @default("OPEN") // OPEN | IN_PROGRESS | RESOLVED | CLOSED
+  priority   String   @default("NORMAL")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  messages   AgentSupportMessage[]
+
+  @@index([agentId, status])
+}
+
+model AgentSupportMessage {
+  id         String   @id @default(cuid())
+  ticketId   String
+  ticket     AgentSupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorType String   // AGENT | ADMIN
+  authorId   String?
+  body       String
+  createdAt  DateTime @default(now())
+
+  @@index([ticketId])
+}

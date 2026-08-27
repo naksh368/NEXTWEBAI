@@ -16,8 +16,6 @@ type DocMeta = { id: string; type: string; title: string; filename: string; stat
 export type RegisterInitial = {
   email: string;
   isEmailVerified: boolean;
-  isMobileVerified: boolean;
-  mobileOtpEnabled: boolean;
   status: string;
   applicationId: string | null;
   agency: {
@@ -33,10 +31,8 @@ const STEPS = ["Account", "Verify", "Agency", "Business", "Documents", "Review"]
 
 export function RegisterFlow({ initial }: { initial: RegisterInitial }) {
   const router = useRouter();
-  // Resume at the furthest completed point (mobile verification, when enabled,
-  // is completed in the same "Verify" step as the email code).
-  const mobilePending = initial.mobileOtpEnabled && !initial.isMobileVerified;
-  const startStep = !initial.email ? 0 : !initial.isEmailVerified || mobilePending ? 1 : !initial.agency ? 2 : 4;
+  // Resume at the furthest completed point.
+  const startStep = !initial.email ? 0 : !initial.isEmailVerified ? 1 : !initial.agency ? 2 : 4;
   const [step, setStep] = useState(startStep);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,15 +46,8 @@ export function RegisterFlow({ initial }: { initial: RegisterInitial }) {
   const [showPw, setShowPw] = useState(false);
   const strength = useMemo(() => passwordStrength(password), [password]);
 
-  // Step 2 — email code + (optional) mobile code
+  // Step 2 — email code
   const [code, setCode] = useState("");
-  const [emailVerified, setEmailVerified] = useState(initial.isEmailVerified);
-  const [mobileVerified, setMobileVerified] = useState(initial.isMobileVerified);
-  const [mobileCode, setMobileCode] = useState("");
-  const [mobileSent, setMobileSent] = useState(false);
-  const [mobileBusy, setMobileBusy] = useState(false);
-  const [mobileError, setMobileError] = useState<string | null>(null);
-  const mobileNeeded = initial.mobileOtpEnabled && !mobileVerified;
 
   // Step 3+4
   const a = initial.agency;
@@ -111,8 +100,7 @@ export function RegisterFlow({ initial }: { initial: RegisterInitial }) {
     setError(null); setBusy(true);
     try {
       await post("/api/agent/register/verify-otp", { code });
-      setEmailVerified(true);
-      if (!initial.mobileOtpEnabled || mobileVerified) setStep(2); // else stay for mobile step
+      setStep(2);
     } catch (e) { setError((e as Error).message); }
     finally { setBusy(false); }
   }
@@ -124,28 +112,6 @@ export function RegisterFlow({ initial }: { initial: RegisterInitial }) {
       const j = await res.json().catch(() => ({}));
       if (!res.ok) setError(j.error || "Could not resend.");
     } catch { setError("Could not resend."); }
-  }
-
-  async function sendMobileCode() {
-    setMobileError(null); setMobileBusy(true);
-    try {
-      const res = await fetch("/api/agent/register/mobile-otp", { method: "POST" });
-      const j = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(j.error || "Could not send the code.");
-      setMobileSent(true);
-    } catch (e) { setMobileError((e as Error).message); }
-    finally { setMobileBusy(false); }
-  }
-
-  async function verifyMobileCode() {
-    setMobileError(null); setMobileBusy(true);
-    try {
-      const res = await fetch("/api/agent/register/mobile-otp", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code: mobileCode }) });
-      const j = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(j.error || "Incorrect code.");
-      setMobileVerified(true);
-    } catch (e) { setMobileError((e as Error).message); }
-    finally { setMobileBusy(false); }
   }
 
   async function saveAgency() {
@@ -209,54 +175,13 @@ export function RegisterFlow({ initial }: { initial: RegisterInitial }) {
         )}
 
         {step === 1 && (
-          <div className="space-y-5">
-            {/* Email OTP */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-bold text-ink">Verify email</p>
-                {emailVerified && <Badge tone="success"><Check size={12} /> Verified</Badge>}
-              </div>
-              {!emailVerified && (
-                <>
-                  <p className="text-sm text-ink-muted">We sent a 6-digit code to <b className="text-ink">{email}</b>.</p>
-                  <Field label="Email Code" required htmlFor="otp">
-                    <Input id="otp" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" placeholder="123456" className="text-center text-2xl tracking-[0.5em]" />
-                  </Field>
-                  <Button className="w-full" loading={busy} onClick={verifyOtp} disabled={code.length !== 6}>Verify Email</Button>
-                  <button type="button" onClick={resendOtp} className="w-full text-sm font-semibold text-brand-blue">Resend email code</button>
-                </>
-              )}
-            </div>
-
-            {/* Mobile OTP (Twilio) — only when enabled */}
-            {initial.mobileOtpEnabled && (
-              <div className="space-y-3 border-t border-surface-border pt-5">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-bold text-ink">Verify mobile</p>
-                  {mobileVerified && <Badge tone="success"><Check size={12} /> Verified</Badge>}
-                </div>
-                {mobileError && <div className="rounded-xl border border-danger/20 bg-[#FCE9E9] px-4 py-2.5 text-sm font-medium text-danger">{mobileError}</div>}
-                {!mobileVerified && (
-                  !mobileSent ? (
-                    <Button variant="outline" className="w-full" loading={mobileBusy} onClick={sendMobileCode}>Send code to {mobile}</Button>
-                  ) : (
-                    <>
-                      <p className="text-sm text-ink-muted">We sent an SMS code to <b className="text-ink">{mobile}</b>.</p>
-                      <Field label="Mobile Code" required htmlFor="motp">
-                        <Input id="motp" value={mobileCode} onChange={(e) => setMobileCode(e.target.value.replace(/\D/g, "").slice(0, 8))} inputMode="numeric" placeholder="123456" className="text-center text-2xl tracking-[0.4em]" />
-                      </Field>
-                      <Button className="w-full" loading={mobileBusy} onClick={verifyMobileCode} disabled={mobileCode.length < 4}>Verify Mobile</Button>
-                      <button type="button" onClick={sendMobileCode} className="w-full text-sm font-semibold text-brand-blue">Resend SMS code</button>
-                    </>
-                  )
-                )}
-              </div>
-            )}
-
-            {/* Continue — enabled once required verifications are done */}
-            {(emailVerified && !mobileNeeded) && (
-              <Button className="w-full" variant="orange" onClick={() => setStep(2)}>Continue <ArrowRight size={18} /></Button>
-            )}
+          <div className="space-y-4">
+            <p className="text-sm text-ink-muted">We sent a 6-digit code to <b className="text-ink">{email}</b>. Enter it below to verify your account.</p>
+            <Field label="Verification Code" required htmlFor="otp">
+              <Input id="otp" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" placeholder="123456" className="text-center text-2xl tracking-[0.5em]" />
+            </Field>
+            <Button className="w-full" loading={busy} onClick={verifyOtp} disabled={code.length !== 6}>Verify Email</Button>
+            <button type="button" onClick={resendOtp} className="w-full text-sm font-semibold text-brand-blue">Resend code</button>
           </div>
         )}
 
@@ -313,7 +238,6 @@ export function RegisterFlow({ initial }: { initial: RegisterInitial }) {
         {step === 5 && (
           <Review
             data={{ fullName, mobile, email, agencyName, businessType, officeAddress, country, state: stateName, city, pinCode, pan, gstin }}
-            mobileVerified={mobileVerified}
             docs={docs} docSlots={docSlots} busy={busy} onBack={() => setStep(4)} onSubmit={submitApplication}
           />
         )}
@@ -393,9 +317,8 @@ function DocRow({ slot, doc, onUploaded, onRemoved, setError }: {
   );
 }
 
-function Review({ data, mobileVerified, docs, docSlots, busy, onBack, onSubmit }: {
+function Review({ data, docs, docSlots, busy, onBack, onSubmit }: {
   data: Record<string, string>;
-  mobileVerified: boolean;
   docs: DocMeta[];
   docSlots: { type: string; label: string; required: boolean }[];
   busy: boolean;
@@ -414,7 +337,7 @@ function Review({ data, mobileVerified, docs, docSlots, busy, onBack, onSubmit }
         <p className="text-xs font-bold uppercase tracking-wide text-ink-faint">Verification</p>
         <div className="mt-2 flex flex-wrap gap-2 text-sm">
           <Badge tone="success"><Check size={12} /> Email Verified</Badge>
-          <Badge tone={mobileVerified ? "success" : "info"}><Check size={12} /> {mobileVerified ? "Mobile Verified" : "Mobile Added"}</Badge>
+          <Badge tone="success"><Check size={12} /> Mobile Added</Badge>
           <Badge tone={data.pan ? "success" : "warning"}>PAN {data.pan ? "✓" : "Pending"}</Badge>
           <Badge tone={data.gstin ? "success" : "neutral"}>GST {data.gstin ? "✓" : "Not Provided"}</Badge>
           <Badge tone={haveRequired === requiredCount ? "success" : "warning"}>Documents {haveRequired}/{requiredCount} complete</Badge>

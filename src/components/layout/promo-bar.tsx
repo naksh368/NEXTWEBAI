@@ -20,8 +20,8 @@ export function PromoBar() {
       <div className="mx-auto flex max-w-[1200px] items-center justify-center gap-2 px-10 py-2 text-center text-xs font-semibold sm:text-sm">
         <Sparkles className="hidden h-4 w-4 text-brand-orange sm:block" />
         <span>
-          Handpicked holidays &middot; Transparent pricing &middot; Expert travel support —{" "}
-          <Link href="/packages" className="underline underline-offset-2 hover:text-brand-orangeLight">Explore packages</Link>
+          Secure prepaid balance &middot; Verified payments &middot; Dedicated agent support —{" "}
+          <Link href="/register" className="underline underline-offset-2 hover:text-brand-orangeLight">Register your agency</Link>
         </span>
         <button
           onClick={() => setHidden(true)}

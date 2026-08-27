@@ -1,231 +1,134 @@
 import Link from "next/link";
 import {
-  ShieldCheck, Wallet, Headset, Sparkles, Search, SlidersHorizontal,
-  CreditCard, MapPin, ArrowRight, Star, Plane, Building2,
+  ShieldCheck, BadgeCheck, Users, ArrowRight, Plane, Wallet,
+  LayoutDashboard, FileBarChart, FileCheck2, CreditCard, Headset,
+  ReceiptText, Building2, RefreshCcw, Layers, Sparkles,
+  Lock, KeyRound, ServerCog, ScrollText,
 } from "lucide-react";
-import { Container, Section, SectionHeading } from "@/components/ui/container";
+import { Container, Section } from "@/components/ui/container";
 import { buttonVariants } from "@/components/ui/button";
-import { SmartImage } from "@/components/ui/smart-image";
-import { Accordion } from "@/components/ui/accordion";
-import { EmptyState } from "@/components/ui/states";
-import { PackageCard } from "@/components/package/package-card";
-import { SearchBox } from "@/components/home/search-box";
-import { RecentlyViewedRail } from "@/components/package/recently-viewed";
-import { Newsletter } from "@/components/home/newsletter";
-import { AiAvatar } from "@/components/ui/ai-avatar";
-import {
-  getPopularDestinations, getFeaturedPackages, getActiveOffers,
-  getGlobalFaqs, getPublishedReviews, getAllDestinations,
-} from "@/lib/queries";
-import { formatINR } from "@/lib/utils";
+import { PortalPreview } from "@/components/home/portal-preview";
 
-const CATEGORIES = [
-  { label: "Honeymoon", theme: "HONEYMOON", icon: Star, blurb: "Romantic getaways" },
-  { label: "Family", theme: "FAMILY", icon: Building2, blurb: "Fun for all ages" },
-  { label: "Beach", theme: "BEACH", icon: MapPin, blurb: "Sun, sand & sea" },
-  { label: "Luxury", theme: "LUXURY", icon: Sparkles, blurb: "Premium escapes" },
-  { label: "Adventure", theme: "ADVENTURE", icon: Plane, blurb: "Thrills & nature" },
+export const metadata = {
+  title: "India's Smarter B2B Travel Platform",
+};
+
+/* ── Core feature cards (spec §7) ── */
+const FEATURES = [
+  { icon: Plane, title: "Flight Booking", body: "Search and book available flight options with fares revalidated before you pay." },
+  { icon: Wallet, title: "Prepaid Booking Balance", body: "Add verified funds and use your available booking balance across the portal." },
+  { icon: LayoutDashboard, title: "Bookings Dashboard", body: "Track bookings, PNRs, tickets and status from one organised dashboard." },
+  { icon: FileBarChart, title: "Reports & Exports", body: "Understand business activity and export reports whenever you need them." },
+  { icon: FileCheck2, title: "Quick KYC", body: "Complete a guided agency verification process with clear progress." },
+  { icon: CreditCard, title: "ExpertzCredit", body: "Build history toward future purchasing-power eligibility.", soon: true },
 ];
 
-export default async function HomePage() {
-  const [destinations, featured, offers, faqs, reviews, allDestinations] = await Promise.all([
-    getPopularDestinations(),
-    getFeaturedPackages(6),
-    getActiveOffers(),
-    getGlobalFaqs(),
-    getPublishedReviews(6),
-    getAllDestinations(),
-  ]);
+/* ── Trust strip (spec §8) — honest capability claims, no fabricated metrics ── */
+const TRUST = [
+  { icon: ShieldCheck, label: "Secure & Reliable Booking" },
+  { icon: BadgeCheck, label: "Verified Payments" },
+  { icon: FileCheck2, label: "Quick KYC Process" },
+  { icon: Headset, label: "Dedicated Agent Support" },
+  { icon: ReceiptText, label: "Transparent Transactions" },
+];
 
-  const indiaDestinations = allDestinations.filter((d) => d.country === "India" && d._count.packages > 0);
-  const worldDestinations = allDestinations.filter((d) => d.country !== "India" && d._count.packages > 0);
+/* ── Why ExpertzTrip benefit groups (spec §9) ── */
+const BENEFITS = [
+  { icon: Wallet, title: "One Prepaid Balance", body: "Manage eligible bookings from a single balance you control." },
+  { icon: ReceiptText, title: "Clear Transactions", body: "Every wallet and payment movement has a reference you can trace." },
+  { icon: Building2, title: "Your Agency Branding", body: "Your agency logo appears inside your own partner portal." },
+  { icon: LayoutDashboard, title: "Booking History", body: "Keep your booking activity organised and searchable." },
+  { icon: RefreshCcw, title: "Refund Tracking", body: "Track post-booking financial activity end to end." },
+  { icon: FileBarChart, title: "Reports & Exports", body: "Access business information whenever you need it." },
+  { icon: Headset, title: "Support Management", body: "Keep your support requests organised in one place." },
+  { icon: Layers, title: "Built for Scale", body: "Architecture designed for your future expansion." },
+];
 
-  // Every destination name feeds the "Where to?" autocomplete so a customer
-  // always sees the full set of places we cover.
-  const heroDestinations = [...allDestinations]
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .map((d) => d.name);
-  // Trending chips: destinations we actually sell (most packages first); if none
-  // are live yet, fall back to the popular rail so the row is never empty.
-  const trending = (
-    [...allDestinations].filter((d) => d._count.packages > 0).sort((a, b) => b._count.packages - a._count.packages).length
-      ? [...allDestinations].filter((d) => d._count.packages > 0).sort((a, b) => b._count.packages - a._count.packages)
-      : destinations
-  ).slice(0, 8);
+/* ── How it works (spec §10) ── */
+const STEPS = [
+  { n: "01", title: "Register", body: "Create your agency account in minutes." },
+  { n: "02", title: "Verify", body: "Complete business and KYC verification." },
+  { n: "03", title: "Add Balance", body: "Top up your prepaid booking balance securely." },
+  { n: "04", title: "Search & Book", body: "Find available flights and complete the booking." },
+  { n: "05", title: "Grow", body: "Track your business, earnings and activity." },
+];
 
+/* ── Illustrative flight routes (spec §27) ── */
+const ROUTES = [
+  { from: "Delhi", to: "Mumbai", stops: "Non-stop", fare: "₹4,299" },
+  { from: "Mumbai", to: "Dubai", stops: "1 stop", fare: "₹18,750" },
+  { from: "Hyderabad", to: "Goa", stops: "Non-stop", fare: "₹3,150" },
+];
+
+export default function HomePage() {
   return (
     <>
-      {/* HERO — clean light background, no photo */}
-      <section className="relative overflow-hidden dotted-bg">
-        <div className="absolute inset-0 hero-wash" aria-hidden />
-        <Container className="relative py-16 sm:py-24">
-          <div className="mx-auto max-w-3xl text-center">
-            <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand-orange">
-              India &amp; the world, handpicked for you
-            </p>
-            <h1 className="mt-4 text-5xl font-extrabold leading-[1.05] tracking-tight sm:text-7xl">
-              <span className="text-brand-blue">Your next holiday</span>{" "}
-              <span className="text-brand-orange">starts here.</span>
-            </h1>
-            <p className="mx-auto mt-5 max-w-xl text-lg text-ink-muted">
-              Handpicked holidays, transparent pricing and expert support — from India to the world.
-            </p>
-            <div className="mx-auto mt-9 max-w-2xl">
-              <SearchBox suggestions={heroDestinations} popular={trending.map((d) => d.name)} />
+      {/* ───────────────────────── HERO ───────────────────────── */}
+      <section className="b2b-hero relative overflow-hidden">
+        <Container className="relative py-12 sm:py-16 lg:py-20">
+          <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12">
+            {/* left */}
+            <div>
+              <span className="inline-flex items-center gap-2 rounded-full border border-brand-blue/15 bg-white/70 px-3.5 py-1.5 text-sm font-semibold text-brand-blue shadow-sm backdrop-blur">
+                <Sparkles className="h-4 w-4" /> India&apos;s Smarter B2B Travel Platform
+              </span>
+              <h1 className="mt-5 text-4xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl lg:text-[3.25rem]">
+                <span className="text-brand-blue">Find Better Flights.</span>
+                <br />
+                <span className="text-brand-orange">Earn More.</span>
+                <br />
+                <span className="text-brand-blue">Grow Your Business.</span>
+              </h1>
+              <p className="mt-5 max-w-xl text-lg text-ink-muted">
+                Powerful tools, smarter booking workflows and transparent business tools built for travel agents.
+              </p>
+
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <Link href="/register" className={buttonVariants({ variant: "orange", size: "lg" })}>
+                  Register Your Agency <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link href="/login" className={buttonVariants({ variant: "primary", size: "lg" })}>
+                  Login <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+
+              <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm font-medium text-ink">
+                <span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-brand-blue" /> Secure Platform</span>
+                <span className="hidden text-ink-faint sm:inline">·</span>
+                <span className="inline-flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-brand-blue" /> Quick Verification</span>
+                <span className="hidden text-ink-faint sm:inline">·</span>
+                <span className="inline-flex items-center gap-2"><Users className="h-4 w-4 text-brand-blue" /> Built for Travel Agents</span>
+              </div>
             </div>
-            <div className="mt-6 flex justify-center">
-              <Link href="/packages" className={buttonVariants({ variant: "orange", size: "lg" })}>
-                Explore Holidays <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm font-medium text-ink">
-              <span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-brand-blue" /> 100% real packages</span>
-              <span className="hidden text-ink-faint sm:inline">·</span>
-              <span className="inline-flex items-center gap-2"><Wallet className="h-4 w-4 text-brand-blue" /> Transparent pricing</span>
-              <span className="hidden text-ink-faint sm:inline">·</span>
-              <span className="inline-flex items-center gap-2"><Headset className="h-4 w-4 text-brand-blue" /> 24×7 expert support</span>
+
+            {/* right — portal preview */}
+            <div className="lg:pl-4">
+              <PortalPreview />
             </div>
           </div>
         </Container>
       </section>
 
-      {/* HOLIDAY CATEGORIES */}
-      <Section className="bg-surface-muted/60 py-12">
-        <Container>
-          <SectionHeading eyebrow="Browse by style" title="Holiday categories" />
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            {CATEGORIES.map((c) => (
-              <Link
-                key={c.theme}
-                href={`/packages?theme=${c.theme}`}
-                className="group flex flex-col items-start gap-3 rounded-2xl border border-surface-border bg-white p-5 transition-shadow hover:shadow-card"
-              >
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-blueLight text-brand-blue transition-colors group-hover:bg-brand-blue group-hover:text-white">
-                  <c.icon className="h-5 w-5" />
-                </span>
-                <div>
-                  <p className="font-semibold text-brand-navy">{c.label}</p>
-                  <p className="text-xs text-ink-muted">{c.blurb}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </Container>
-      </Section>
-
-      {/* FEATURED PACKAGES */}
-      <Section>
-        <Container>
-          <SectionHeading
-            eyebrow="Ready to book"
-            title="Featured packages"
-            description="Complete holidays you can customize to your taste."
-            action={<Link href="/packages" className={buttonVariants({ variant: "outline", size: "sm" })}>View all packages</Link>}
-          />
-          {featured.length ? (
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {featured.map((p, i) => (
-                <PackageCard key={p.id} pkg={p} priority={i < 3} />
-              ))}
-            </div>
-          ) : (
-            <EmptyState title="No packages published yet" description="Once packages are published they'll appear here." action={{ label: "Browse destinations", href: "/destinations" }} />
-          )}
-        </Container>
-      </Section>
-
-      {/* RECENTLY VIEWED (per-viewer; renders nothing when empty) */}
-      <Section className="py-0">
-        <Container>
-          <RecentlyViewedRail limit={4} />
-        </Container>
-      </Section>
-
-      {/* CHOOSE YOUR WAY — 3 ways to travel */}
-      <Section>
-        <Container>
-          <SectionHeading eyebrow="Your holiday, your way" title="Three ways to travel" />
-          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-            {[
-              { title: "Ready to book", body: "Find a package and book it online in minutes.", href: "/packages", cta: "Browse holidays" },
-              { title: "Make it yours", body: "Customise hotels, activities, dates and travellers.", href: "/packages", cta: "Customise a trip" },
-              { title: "Need help choosing?", body: "Tell us what you want and get real recommendations.", href: "/ai", cta: "Get recommendations" },
-            ].map((w) => (
-              <Link key={w.title} href={w.href} className="group rounded-2xl border border-surface-border bg-white p-6 transition-shadow hover:shadow-cardHover">
-                <h3 className="text-lg font-bold text-brand-navy">{w.title}</h3>
-                <p className="mt-1.5 text-sm text-ink-muted">{w.body}</p>
-                <span className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-brand-blue group-hover:gap-1.5">{w.cta} <ArrowRight className="h-4 w-4" /></span>
-              </Link>
-            ))}
-          </div>
-        </Container>
-      </Section>
-
-      {/* EXPLORE INDIA + THE WORLD */}
-      {(indiaDestinations.length > 0 || worldDestinations.length > 0) && (
-        <Section className="bg-surface-muted/40">
-          <Container>
-            <div className="mx-auto max-w-2xl text-center">
-              <p className="text-sm font-bold uppercase tracking-[0.16em] text-brand-orange">Handpicked for you</p>
-              <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">India and the world, handpicked for you</h2>
-              <p className="mt-3 text-ink-muted">From the backwaters of Kerala to the beaches of Bali — real, complete holidays curated by our experts.</p>
-            </div>
-
-            {indiaDestinations.length > 0 && (
-              <div className="mt-10">
-                <div className="mb-4 flex items-end justify-between">
-                  <h3 className="flex items-center gap-2 text-xl font-bold text-brand-navy">
-                    <span className="text-2xl">🇮🇳</span> Explore India
-                  </h3>
-                  <Link href="/destinations" className="text-sm font-semibold text-brand-blue hover:underline">View all</Link>
-                </div>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                  {indiaDestinations.slice(0, 10).map((d) => (
-                    <DestinationTile key={d.id} d={d} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {worldDestinations.length > 0 && (
-              <div className="mt-12">
-                <div className="mb-4 flex items-end justify-between">
-                  <h3 className="flex items-center gap-2 text-xl font-bold text-brand-navy">
-                    <span className="text-2xl">🌏</span> Explore the World
-                  </h3>
-                  <Link href="/destinations" className="text-sm font-semibold text-brand-blue hover:underline">View all</Link>
-                </div>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                  {worldDestinations.slice(0, 10).map((d) => (
-                    <DestinationTile key={d.id} d={d} />
-                  ))}
-                </div>
-              </div>
-            )}
-          </Container>
-        </Section>
-      )}
-
-      {/* WHY EXPERTZTRIP / TRUST */}
-      <Section id="why" className="py-14">
+      {/* ───────────────────── CORE FEATURES ───────────────────── */}
+      <Section id="features" className="py-14">
         <Container>
           <div className="mx-auto max-w-2xl text-center">
-            <p className="text-sm font-bold uppercase tracking-[0.16em] text-brand-orange">Why ExpertzTrip</p>
-            <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Travel with confidence</h2>
-            <p className="mt-3 text-ink-muted">More than a booking — a better way to travel.</p>
+            <p className="text-sm font-bold uppercase tracking-[0.16em] text-brand-orange">Core platform</p>
+            <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Everything you need to book and grow</h2>
+            <p className="mt-3 text-ink-muted">A focused toolset built around how travel agents actually work.</p>
           </div>
-          <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              { icon: Sparkles, title: "Personalized holidays", body: "Tailor every trip — hotels, dates, activities and more, built around you." },
-              { icon: Wallet, title: "Transparent pricing", body: "The price you see is verified on our servers before you ever pay. No surprises." },
-              { icon: Headset, title: "Expert travel support", body: "Real travel experts help you before, during and after your holiday." },
-              { icon: ShieldCheck, title: "Secure online booking", body: "Book and pay securely online, with confirmation and documents in your account." },
-            ].map((f) => (
-              <div key={f.title} className="rounded-2xl border border-surface-border bg-white p-6 transition-shadow hover:shadow-card">
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-blueLight text-brand-blue">
-                  <f.icon className="h-5 w-5" />
-                </span>
-                <h3 className="mt-4 text-base font-bold">{f.title}</h3>
+          <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {FEATURES.map((f) => (
+              <div key={f.title} className="group relative rounded-2xl border border-surface-border bg-white p-6 transition-shadow hover:shadow-card">
+                <div className="flex items-center justify-between">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-blueLight text-brand-blue transition-colors group-hover:bg-brand-blue group-hover:text-white">
+                    <f.icon className="h-5 w-5" />
+                  </span>
+                  {f.soon && (
+                    <span className="rounded-full bg-brand-orangeLight px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-brand-orange">Soon</span>
+                  )}
+                </div>
+                <h3 className="mt-4 text-base font-bold text-brand-navy">{f.title}</h3>
                 <p className="mt-1.5 text-sm text-ink-muted">{f.body}</p>
               </div>
             ))}
@@ -233,23 +136,184 @@ export default async function HomePage() {
         </Container>
       </Section>
 
-      {/* HOW IT WORKS */}
-      <Section id="how-it-works">
+      {/* ─────────────────────── TRUST STRIP ─────────────────────── */}
+      <div className="border-y border-surface-border bg-surface-muted/60">
+        <Container className="py-5">
+          <ul className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-center">
+            {TRUST.map((t) => (
+              <li key={t.label} className="inline-flex items-center gap-2 text-sm font-semibold text-brand-navy">
+                <t.icon className="h-4 w-4 text-brand-blue" /> {t.label}
+              </li>
+            ))}
+          </ul>
+        </Container>
+      </div>
+
+      {/* ───────────────────── WHY EXPERTZTRIP ───────────────────── */}
+      <Section id="why" className="grid-bg py-16">
         <Container>
-          <SectionHeading eyebrow="Simple & transparent" title="How it works" />
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-14">
+            <div className="lg:sticky lg:top-24 lg:self-start">
+              <p className="text-sm font-bold uppercase tracking-[0.16em] text-brand-orange">Why ExpertzTrip</p>
+              <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">
+                Everything your agency needs to run smarter.
+              </h2>
+              <p className="mt-4 text-ink-muted">
+                One platform for bookings, prepaid balance, reporting, support and future growth — built for the way travel agents run their business.
+              </p>
+              <Link href="/register" className={buttonVariants({ variant: "orange", className: "mt-7" })}>
+                Register Your Agency <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {BENEFITS.map((b) => (
+                <div key={b.title} className="rounded-2xl border border-surface-border bg-white p-5">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-blueLight text-brand-blue">
+                    <b.icon className="h-5 w-5" />
+                  </span>
+                  <h3 className="mt-3.5 text-[15px] font-bold text-brand-navy">{b.title}</h3>
+                  <p className="mt-1 text-sm text-ink-muted">{b.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Container>
+      </Section>
+
+      {/* ─────────────────────── HOW IT WORKS ─────────────────────── */}
+      <Section id="how-it-works" className="py-16">
+        <Container>
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-bold uppercase tracking-[0.16em] text-brand-orange">How it works</p>
+            <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">From sign-up to your first booking</h2>
+          </div>
+          <div className="relative mt-12">
+            {/* connecting line */}
+            <div className="pointer-events-none absolute left-0 right-0 top-6 hidden h-px bg-gradient-to-r from-transparent via-brand-blue/25 to-transparent lg:block" aria-hidden />
+            <ol className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
+              {STEPS.map((s) => (
+                <li key={s.n} className="relative text-center lg:text-left">
+                  <span className="relative z-10 mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-brand-blue/20 bg-white text-sm font-extrabold text-brand-blue shadow-sm lg:mx-0">
+                    {s.n}
+                  </span>
+                  <h3 className="mt-4 font-bold text-brand-navy">{s.title}</h3>
+                  <p className="mt-1 text-sm text-ink-muted">{s.body}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </Container>
+      </Section>
+
+      {/* ───────────────────────── EXPERTZWALLET ───────────────────────── */}
+      <Section id="wallet" className="py-6">
+        <Container>
+          <div className="overflow-hidden rounded-3xl border border-surface-border bg-gradient-to-br from-brand-blue to-brand-blueDark">
+            <div className="grid items-center gap-8 p-8 sm:p-12 lg:grid-cols-2">
+              <div>
+                <p className="text-sm font-bold uppercase tracking-[0.16em] text-white/70">ExpertzWallet</p>
+                <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">Your money. Your visibility.</h2>
+                <p className="mt-4 text-white/80">
+                  A prepaid booking balance with a clear ledger. Top up securely, hold funds for bookings, and see every movement with a reference.
+                </p>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <Link href="/register" className={buttonVariants({ variant: "orange" })}>Add Money</Link>
+                  <Link href="/login" className={buttonVariants({ variant: "outline", className: "!border-white/30 !bg-white/10 !text-white hover:!bg-white/20 hover:!text-white" })}>
+                    View Transactions
+                  </Link>
+                </div>
+              </div>
+
+              <div className="rounded-2xl bg-white p-5 shadow-card sm:p-6">
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  {[
+                    { label: "Available", value: "₹25,450", tone: "text-brand-navy" },
+                    { label: "On Hold", value: "₹4,500", tone: "text-warning" },
+                    { label: "Total", value: "₹29,950", tone: "text-brand-blue" },
+                  ].map((c) => (
+                    <div key={c.label} className="rounded-xl border border-surface-border bg-surface-muted/50 p-3">
+                      <p className={`text-lg font-extrabold ${c.tone}`}>{c.value}</p>
+                      <p className="mt-0.5 text-[11px] font-medium text-ink-muted">{c.label}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 space-y-2">
+                  {[
+                    { label: "Wallet Top-up", amount: "+₹10,000", status: "SUCCESS", tone: "text-success" },
+                    { label: "Flight Booking", amount: "−₹4,500", status: "CONFIRMED", tone: "text-ink" },
+                    { label: "Refund", amount: "+₹1,200", status: "CREDITED", tone: "text-brand-blue" },
+                  ].map((t) => (
+                    <div key={t.label} className="flex items-center justify-between rounded-xl border border-surface-border px-3.5 py-2.5">
+                      <div>
+                        <p className="text-sm font-semibold text-brand-navy">{t.label}</p>
+                        <p className="text-[11px] font-medium uppercase tracking-wide text-ink-faint">{t.status}</p>
+                      </div>
+                      <span className={`text-sm font-bold ${t.tone}`}>{t.amount}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-3 text-center text-[10px] font-medium uppercase tracking-wide text-ink-faint">
+                  Illustrative preview · production shows real authenticated data
+                </p>
+              </div>
+            </div>
+          </div>
+        </Container>
+      </Section>
+
+      {/* ───────────────────── FLIGHT BOOKING PREVIEW ───────────────────── */}
+      <Section id="flights" className="py-16">
+        <Container>
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-bold uppercase tracking-[0.16em] text-brand-orange">Search. Compare. Book.</p>
+            <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Live fares inside your Partner Portal</h2>
+            <p className="mt-3 text-ink-muted">A preview of the routes agents book every day.</p>
+          </div>
+          <div className="mx-auto mt-10 max-w-3xl overflow-hidden rounded-2xl border border-surface-border bg-white">
+            {ROUTES.map((r, i) => (
+              <div key={`${r.from}-${r.to}`} className={`flex items-center gap-4 p-4 sm:px-6 ${i > 0 ? "border-t border-surface-border" : ""}`}>
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-blueLight text-brand-blue">
+                  <Plane className="h-5 w-5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-brand-navy">
+                    {r.from} <ArrowRight className="inline h-3.5 w-3.5 text-ink-faint" /> {r.to}
+                  </p>
+                  <p className="text-xs text-ink-muted">{r.stops}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-lg font-extrabold text-brand-navy">{r.fare}</p>
+                  <p className="text-[11px] text-ink-faint">from</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="mt-4 text-center text-xs font-medium text-ink-faint">
+            Illustrative preview · live fares available inside the Partner Portal.
+          </p>
+        </Container>
+      </Section>
+
+      {/* ───────────────────────── SECURITY ───────────────────────── */}
+      <Section className="bg-surface-muted/50 py-16">
+        <Container>
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-bold uppercase tracking-[0.16em] text-brand-orange">Security first</p>
+            <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Serious infrastructure for serious business</h2>
+          </div>
+          <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { icon: Search, step: "01", title: "Discover", body: "Search destinations or browse curated holiday packages." },
-              { icon: SlidersHorizontal, step: "02", title: "Customize", body: "Make it yours — upgrade hotels, add activities, pick dates." },
-              { icon: ShieldCheck, step: "03", title: "Verify & confirm", body: "Prices are confirmed on our servers before payment. Pay securely when you're ready." },
-              { icon: CreditCard, step: "04", title: "Travel with support", body: "Your travel expert stays with you before, during and after your trip." },
+              { icon: Lock, title: "Server-verified payments", body: "Wallet credits happen only after trusted server-side verification." },
+              { icon: KeyRound, title: "Role-based access", body: "Every action is authorised on the server, per agency and per role." },
+              { icon: ServerCog, title: "Tenant isolation", body: "Your wallet, bookings and documents are visible only to your agency." },
+              { icon: ScrollText, title: "Audit logs", body: "Sensitive actions are recorded so nothing is a black box." },
             ].map((s) => (
-              <div key={s.step} className="relative rounded-2xl border border-surface-border bg-white p-6">
-                <span className="text-sm font-bold text-brand-orange">{s.step}</span>
-                <span className="mt-3 flex h-11 w-11 items-center justify-center rounded-xl bg-brand-blueLight text-brand-blue">
+              <div key={s.title} className="rounded-2xl border border-surface-border bg-white p-6">
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-blueLight text-brand-blue">
                   <s.icon className="h-5 w-5" />
                 </span>
-                <h3 className="mt-4 font-semibold">{s.title}</h3>
+                <h3 className="mt-4 text-base font-bold text-brand-navy">{s.title}</h3>
                 <p className="mt-1.5 text-sm text-ink-muted">{s.body}</p>
               </div>
             ))}
@@ -257,134 +321,41 @@ export default async function HomePage() {
         </Container>
       </Section>
 
-      {/* EXPERTZTRIP AI */}
+      {/* ─────────────────── EXPERTZCREDIT — COMING SOON ─────────────────── */}
       <Section className="py-6">
         <Container>
-          <div className="overflow-hidden rounded-3xl border border-surface-border bg-gradient-to-br from-brand-blue to-brand-blueDark p-8 sm:p-12">
-            <div className="grid items-center gap-8 md:grid-cols-2">
-              <div>
-                <span className="inline-flex items-center gap-2 rounded-full bg-white/15 py-1 pl-1 pr-3.5 text-sm font-medium text-white">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white"><AiAvatar size={18} /></span> Need help choosing?
-                </span>
-                <h2 className="mt-4 text-2xl font-bold text-white sm:text-3xl">Describe your dream trip. We&apos;ll find the real match.</h2>
-                <p className="mt-3 text-white/80">
-                  &ldquo;A 6-day Dubai holiday for 2 under ₹1.5 lakh&rdquo; — we search only real, published packages and show you the best match, best value and premium options. No made-up prices, ever.
-                </p>
-                <Link href="/ai" className={buttonVariants({ variant: "orange", className: "mt-6" })}>
-                  Get recommendations <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-              <div className="rounded-2xl bg-white/10 p-5 backdrop-blur">
-                <div className="space-y-3 text-sm">
-                  <div className="ml-auto max-w-[80%] rounded-2xl rounded-tr-sm bg-white px-4 py-2.5 text-ink">
-                    6-day Dubai trip for 2, under ₹1.5 lakh
-                  </div>
-                  <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-white/20 px-4 py-2.5 text-white">
-                    Found 2 real matches. &ldquo;Dubai Extravaganza&rdquo; (5N/6D) fits from {formatINR(45000)}/person — want me to open it?
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div className="rounded-3xl border border-dashed border-brand-blue/25 bg-brand-blueLight/40 p-8 text-center sm:p-12">
+            <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-wide text-brand-blue shadow-sm">
+              <CreditCard className="h-3.5 w-3.5" /> ExpertzCredit · Coming Soon
+            </span>
+            <h2 className="mx-auto mt-4 max-w-2xl text-2xl font-extrabold tracking-tight sm:text-3xl">
+              Build your history toward future purchasing-power eligibility
+            </h2>
+            <p className="mx-auto mt-3 max-w-xl text-ink-muted">
+              As you book and pay through ExpertzTrip, you build the payment history that supports future eligibility — subject to eligibility and applicable requirements. No credit limits are offered today.
+            </p>
           </div>
         </Container>
       </Section>
 
-      {/* OFFERS */}
-      {offers.length > 0 && (
-        <Section>
-          <Container>
-            <SectionHeading eyebrow="Save more" title="Current offers" action={<Link href="/offers" className={buttonVariants({ variant: "outline", size: "sm" })}>All offers</Link>} />
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-              {offers.slice(0, 3).map((o) => (
-                <Link key={o.id} href={o.ctaHref ?? "/packages"} className="group relative overflow-hidden rounded-2xl border border-surface-border">
-                  <div className="relative aspect-[16/10]">
-                    <SmartImage src={o.image} alt={o.title} sizes="(max-width:640px) 100vw, 33vw" imgClassName="transition-transform duration-500 group-hover:scale-105" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" aria-hidden />
-                  </div>
-                  <div className="absolute bottom-0 p-5 text-white">
-                    {o.badge && <span className="mb-2 inline-block rounded-full bg-brand-orange px-2.5 py-0.5 text-xs font-semibold">{o.badge}</span>}
-                    <h3 className="text-lg font-bold">{o.title}</h3>
-                    <p className="text-sm text-white/85">{o.description}</p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </Container>
-        </Section>
-      )}
-
-      {/* REAL REVIEWS — the whole section only shows when genuine reviews exist */}
-      {reviews.length > 0 && (
-        <Section className="bg-surface-muted/60 py-14">
-          <Container>
-            <SectionHeading eyebrow="Traveller stories" title="Real reviews" description="Verified reviews from real ExpertzTrip customers." />
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {reviews.map((r) => (
-                <div key={r.id} className="rounded-2xl border border-surface-border bg-white p-6">
-                  <div className="flex gap-0.5 text-brand-orange">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} className={i < r.rating ? "h-4 w-4 fill-current" : "h-4 w-4 text-surface-border"} />
-                    ))}
-                  </div>
-                  {r.title && <h3 className="mt-3 font-semibold">{r.title}</h3>}
-                  <p className="mt-1.5 text-sm text-ink-muted">{r.body}</p>
-                  <p className="mt-4 text-sm font-medium text-brand-navy">{r.customer.fullName ?? "Verified traveller"}</p>
-                </div>
-              ))}
-            </div>
-          </Container>
-        </Section>
-      )}
-
-      {/* FAQ */}
-      {faqs.length > 0 && (
-        <Section id="faq">
-          <Container className="max-w-3xl">
-            <SectionHeading eyebrow="Good to know" title="Frequently asked questions" />
-            <Accordion items={faqs.map((f) => ({ question: f.question, answer: f.answer }))} />
-          </Container>
-        </Section>
-      )}
-
-      {/* NEWSLETTER */}
-      <Section className="pt-0">
+      {/* ───────────────────────── FINAL CTA ───────────────────────── */}
+      <Section className="py-16">
         <Container>
-          <Newsletter />
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-bold uppercase tracking-[0.16em] text-brand-orange">Built for India&apos;s travel agent network</p>
+            <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Your agency. One smarter platform.</h2>
+            <p className="mt-3 text-ink-muted">Secure booking · verified payments · prepaid booking balance · dedicated support.</p>
+            <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+              <Link href="/register" className={buttonVariants({ variant: "orange", size: "lg" })}>
+                Register Your Agency <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link href="/login" className={buttonVariants({ variant: "primary", size: "lg" })}>
+                Login <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
         </Container>
       </Section>
     </>
-  );
-}
-
-type DestTile = {
-  id: string; slug: string; name: string; country: string;
-  region?: string | null; thumbnail: string | null; shortSummary?: string | null;
-  _count: { packages: number };
-};
-
-function DestinationTile({ d }: { d: DestTile }) {
-  return (
-    <Link
-      href={`/destinations/${d.slug}`}
-      className="group relative block overflow-hidden rounded-2xl shadow-card transition-shadow hover:shadow-cardHover"
-    >
-      <div className="relative aspect-[4/5]">
-        <SmartImage
-          src={d.thumbnail}
-          alt={`${d.name} holiday packages`}
-          sizes="(max-width:640px) 45vw, (max-width:1024px) 30vw, 18vw"
-          imgClassName="transition-transform duration-500 group-hover:scale-110"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" aria-hidden />
-        <div className="absolute inset-x-0 bottom-0 p-3.5">
-          <p className="text-base font-extrabold leading-tight text-white drop-shadow">{d.name}</p>
-          {d._count.packages > 0 && (
-            <p className="mt-0.5 text-xs font-medium text-white/85">
-              {d._count.packages} package{d._count.packages > 1 ? "s" : ""}
-            </p>
-          )}
-        </div>
-      </div>
-    </Link>
   );
 }

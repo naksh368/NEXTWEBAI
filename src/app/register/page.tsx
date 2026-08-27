@@ -4,15 +4,17 @@ import { db } from "@/lib/db";
 import { getAgentSessionId } from "@/lib/agent-session";
 import { AuthShell } from "@/components/b2b/auth-shell";
 import { RegisterFlow, type RegisterInitial } from "@/components/b2b/register-flow";
+import { isTwilioConfigured } from "@/lib/services/twilio-verify";
 
 export const metadata = { title: "Register Your Agency" };
 export const dynamic = "force-dynamic";
 
 export default async function RegisterPage() {
   const id = await getAgentSessionId();
+  const mobileOtpEnabled = isTwilioConfigured();
   let initial: RegisterInitial = {
-    email: "", isEmailVerified: false, status: "", applicationId: null,
-    agency: null, documents: [], fullName: "", mobile: "",
+    email: "", isEmailVerified: false, isMobileVerified: false, mobileOtpEnabled,
+    status: "", applicationId: null, agency: null, documents: [], fullName: "", mobile: "",
   };
 
   if (id) {
@@ -23,6 +25,8 @@ export default async function RegisterPage() {
       initial = {
         email: agent.email,
         isEmailVerified: agent.isEmailVerified,
+        isMobileVerified: agent.isMobileVerified,
+        mobileOtpEnabled,
         status: agent.status,
         applicationId: agent.applicationId,
         fullName: agent.fullName,

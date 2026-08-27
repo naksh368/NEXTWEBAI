@@ -991,3 +991,51 @@ model MediaAsset {
 
   @@index([createdAt])
 }
+
+// ─────────────────────────────────────────────────────────────
+// B2B · AGENCY REGISTRATION  (ExpertzTrip partner onboarding)
+// ─────────────────────────────────────────────────────────────
+/// A travel-agency onboarding application (spec §17/§22/§23).
+/// Additive & self-contained — scalar FKs (resolved in code) keep it decoupled
+/// from the existing customer/booking graph. Created (status PENDING_OTP) when a
+/// registration is started, flipped to SUBMITTED once the email OTP is verified
+/// and the agent account exists, then moved through the admin review pipeline.
+model AgencyApplication {
+  id            String   @id @default(cuid())
+  reference     String   @unique // APP-XXXXXX — shown to the applicant & admin
+  status        String   @default("PENDING_OTP") // PENDING_OTP | SUBMITTED | UNDER_REVIEW | APPROVED | REJECTED
+  customerId    String?  // the agent account created on email verification
+
+  // Applicant (personal) — spec §17 step 1
+  applicantName String
+  email         String
+  mobile        String?
+
+  // Agency — spec §17 step 2
+  agencyName    String
+  businessType  String   // PROPRIETORSHIP | PARTNERSHIP | LLP | PVT_LTD | OTHER
+  officeAddress String?
+  country       String   @default("India")
+  state         String?
+  city          String?
+  pincode       String?
+
+  // Tax / KYC — spec §17 step 3 (all optional at submission)
+  pan           String?
+  gstin         String?
+  udyam         String?
+
+  // Branding & documents — spec §19 / §18 (references only; files stored elsewhere)
+  agencyLogoUrl String?
+  documents     Json?
+
+  submittedAt   DateTime?
+  reviewedAt    DateTime?
+  reviewNote    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([email])
+  @@index([status])
+  @@index([customerId])
+}

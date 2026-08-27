@@ -92,7 +92,7 @@ export function emailLayout(heading: string, bodyHtml: string, cta?: { label: st
   const button = cta
     ? `<tr><td style="padding:8px 0 4px"><a href="${cta.href}" style="display:inline-block;background:#FF6A1A;color:#fff;text-decoration:none;font-weight:800;font-size:15px;padding:12px 22px;border-radius:12px">${cta.label}</a></td></tr>`
     : "";
-  return `<!doctype html><html><body style="margin:0;background:#F6F7FB;font-family:'Nunito',Segoe UI,system-ui,Arial,sans-serif;color:#16171C">
+  return `<!doctype html><html><body style="margin:0;background:#F6F7FB;font-family:'Plus Jakarta Sans',Segoe UI,system-ui,Arial,sans-serif;color:#16171C">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:28px 16px">
     <table role="presentation" width="100%" style="max-width:520px;background:#fff;border:1px solid #E6E9F1;border-radius:16px;overflow:hidden">
       <tr><td style="padding:22px 28px;border-bottom:2px solid #2340D9">
@@ -104,7 +104,7 @@ export function emailLayout(heading: string, bodyHtml: string, cta?: { label: st
       </td></tr>
       <tr><td style="padding:8px 28px 24px"><table role="presentation">${button}</table></td></tr>
       <tr><td style="padding:16px 28px;border-top:1px solid #E6E9F1;font-size:12px;color:#8A8F9E">
-        Real holiday packages · clear pricing · expert support.<br>© ${new Date().getFullYear()} ExpertzTrip.
+        India's smarter B2B travel platform · built for travel agents.<br>© ${new Date().getFullYear()} ExpertzTrip.
       </td></tr>
     </table>
   </td></tr></table></body></html>`;

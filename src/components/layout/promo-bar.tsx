@@ -4,16 +4,17 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Sparkles, X } from "lucide-react";
+import { isChromelessRoute } from "./hide-on-admin";
 
 /**
- * Site-wide announcement bar. Hidden on admin routes. Dismissible per-session.
- * Honest value message only — no invented discounts / ratings / stats.
+ * Site-wide announcement bar. Hidden on admin + standalone auth routes.
+ * Dismissible per-session. Honest value message only — no invented stats.
  */
 export function PromoBar() {
   const pathname = usePathname();
   const [hidden, setHidden] = useState(false);
 
-  if (hidden || pathname?.startsWith("/admin")) return null;
+  if (hidden || isChromelessRoute(pathname)) return null;
 
   return (
     <div className="relative bg-gradient-to-r from-brand-blue to-brand-blueDark text-white print:hidden">

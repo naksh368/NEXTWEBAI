@@ -19,6 +19,19 @@ export function businessTypeLabel(value: string): string {
   return BUSINESS_TYPES.find((b) => b.value === value)?.label ?? value;
 }
 
+/** KYC document types an agency uploads (spec §18). `required` drives progress. */
+export const KYC_DOC_TYPES = [
+  { kind: "IDENTITY", label: "Identity document", hint: "Aadhaar / Passport / Voter ID of the proprietor or signatory", required: true },
+  { kind: "PAN", label: "PAN document", hint: "Agency or proprietor PAN card", required: true },
+  { kind: "GST", label: "GST certificate", hint: "Where applicable", required: false },
+  { kind: "BUSINESS_PROOF", label: "Business / address proof", hint: "Registration, Udyam, utility bill or lease", required: true },
+  { kind: "OTHER", label: "Other document", hint: "Anything else that supports your application", required: false },
+] as const;
+
+export type KycDocKind = (typeof KYC_DOC_TYPES)[number]["kind"];
+export const KYC_DOC_KINDS = KYC_DOC_TYPES.map((d) => d.kind);
+export const REQUIRED_KYC_KINDS = KYC_DOC_TYPES.filter((d) => d.required).map((d) => d.kind);
+
 /** Human-facing application status labels for the applicant + admin. */
 export const APPLICATION_STATUS_LABEL: Record<string, string> = {
   PENDING_OTP: "Awaiting email verification",

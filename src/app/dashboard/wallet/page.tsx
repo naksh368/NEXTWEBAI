@@ -30,7 +30,7 @@ export default async function WalletPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-surface-muted/40">
+    <div>
       <Container className="py-8 sm:py-10">
         <Link href="/dashboard" className="inline-flex items-center gap-1 text-sm font-medium text-ink-muted hover:text-brand-navy">
           <ArrowLeft className="h-4 w-4" /> Dashboard

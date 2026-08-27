@@ -31,6 +31,10 @@ export default async function AgencyDetailPage({ params }: { params: Promise<{ i
   if (!a) notFound();
 
   const wallet = a.customerId ? await db.wallet.findUnique({ where: { customerId: a.customerId }, select: { balance: true, onHold: true } }).catch(() => null) : null;
+  const docs = a.customerId
+    ? await db.agencyDocument.findMany({ where: { customerId: a.customerId }, orderBy: { createdAt: "desc" }, select: { id: true, kind: true, filename: true, status: true } }).catch(() => [])
+    : [];
+  const kycDocs = docs.filter((d) => d.kind !== "LOGO");
   const decided = a.status === "APPROVED" || a.status === "REJECTED";
 
   return (
@@ -85,10 +89,27 @@ export default async function AgencyDetailPage({ params }: { params: Promise<{ i
                 <Row label="GSTIN" value={a.gstin} />
                 <Row label="Udyam" value={a.udyam} />
               </dl>
-              <p className="mt-3 flex items-start gap-2 text-xs text-ink-muted">
-                <FileText className="mt-0.5 h-4 w-4 shrink-0 text-brand-blue" />
-                Uploaded KYC documents (identity, PAN, GST certificate, business proof) appear here once the agent completes the guided KYC step in their dashboard.
-              </p>
+              <div className="mt-4">
+                <p className="mb-2 text-xs font-bold uppercase tracking-wide text-ink-faint">Uploaded documents</p>
+                {kycDocs.length === 0 ? (
+                  <p className="flex items-start gap-2 text-xs text-ink-muted">
+                    <FileText className="mt-0.5 h-4 w-4 shrink-0 text-brand-blue" />
+                    No documents uploaded yet. The agent uploads identity, PAN, GST and business proof in their dashboard KYC step.
+                  </p>
+                ) : (
+                  <ul className="space-y-1.5">
+                    {kycDocs.map((d) => (
+                      <li key={d.id} className="flex items-center justify-between rounded-xl border border-surface-border px-3 py-2">
+                        <span className="min-w-0">
+                          <span className="text-xs font-semibold text-brand-navy">{d.kind}</span>
+                          <span className="ml-2 truncate text-xs text-ink-faint">{d.filename}</span>
+                        </span>
+                        <a href={`/api/agent/kyc/${d.id}`} target="_blank" rel="noreferrer" className="shrink-0 text-xs font-semibold text-brand-blue hover:underline">View →</a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
           </Panel>
         </div>

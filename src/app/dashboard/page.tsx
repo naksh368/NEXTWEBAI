@@ -56,7 +56,7 @@ export default async function DashboardPage() {
   ];
 
   return (
-    <div className="bg-surface-muted/40">
+    <div>
       <Container className="py-8 sm:py-10">
         {/* Header */}
         <div className="flex flex-col gap-1">
@@ -131,9 +131,9 @@ export default async function DashboardPage() {
             <p className="mt-1.5 text-sm text-ink-muted">
               Upload your identity, PAN, GST certificate (where applicable) and business proof to get your agency verified and approved.
             </p>
-            <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-ink-faint">
-              Guided KYC uploads — coming to your portal <ArrowRight className="h-4 w-4" />
-            </span>
+            <Link href="/dashboard/kyc" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-blue hover:gap-1.5">
+              Upload documents <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
           <div className="rounded-2xl border border-surface-border bg-white p-6">
             <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-orangeLight text-brand-orange">

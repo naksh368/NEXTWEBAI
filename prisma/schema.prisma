@@ -1090,3 +1090,28 @@ model WalletTransaction {
   @@index([status])
   @@index([bookingRef])
 }
+
+// ─────────────────────────────────────────────────────────────
+// B2B · KYC DOCUMENTS & AGENCY LOGO  (spec §18/§19)
+// ─────────────────────────────────────────────────────────────
+/// An agent-uploaded KYC document or the agency logo. Bytes are stored in the
+/// DB (portable across serverless hosts, like MediaAsset) and served ONLY via
+/// the access-controlled /api/agent/kyc/[id] route — never a public URL.
+/// Tenant-scoped: `customerId` is the owning agent; only they and admins read it.
+model AgencyDocument {
+  id            String   @id @default(cuid())
+  customerId    String   // owning agent (tenant)
+  applicationId String?  // the agency application this belongs to
+  kind          String   // IDENTITY | PAN | GST | BUSINESS_PROOF | OTHER | LOGO
+  filename      String
+  contentType   String
+  size          Int
+  data          Bytes
+  status        String   @default("PENDING") // PENDING | VERIFIED | REJECTED
+  note          String?
+  createdAt     DateTime @default(now())
+
+  @@index([customerId])
+  @@index([applicationId])
+  @@index([customerId, kind])
+}

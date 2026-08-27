@@ -7,6 +7,7 @@ export function isChromelessRoute(pathname: string | null): boolean {
   if (!pathname) return false;
   return (
     pathname.startsWith("/admin") ||
+    pathname.startsWith("/dashboard") ||
     pathname === "/login" ||
     pathname === "/register"
   );

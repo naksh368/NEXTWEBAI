@@ -1,10 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Nunito } from "next/font/google";
 import "./globals.css";
-import { PromoBar } from "@/components/layout/promo-bar";
 import { HeaderWrapper } from "@/components/layout/header-wrapper";
 import { Footer } from "@/components/layout/footer";
-import { AiFab } from "@/components/layout/ai-fab";
 import { HideOnAdmin } from "@/components/layout/hide-on-admin";
 import { getSiteUrl } from "@/lib/utils";
 
@@ -23,20 +21,20 @@ const siteUrl = getSiteUrl();
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "ExpertzTrip — Your holiday, your way",
+    default: "ExpertzTrip — India's Smarter B2B Travel Platform",
     template: "%s · ExpertzTrip",
   },
   description:
-    "Real holiday packages with clear pricing and expert support. Customize any trip to Dubai, Bali, Maldives, Thailand, Singapore and Europe — and book securely.",
-  keywords: ["holiday packages", "Dubai", "Bali", "Maldives", "Thailand", "Singapore", "Europe", "travel", "ExpertzTrip"],
+    "Find better flights, earn more and grow your agency. Powerful tools, competitive fares, a prepaid wallet and a simpler booking experience built for India's travel agents.",
+  keywords: ["B2B travel", "travel agent platform", "flight booking for agents", "travel agency", "prepaid wallet", "India", "ExpertzTrip"],
   openGraph: {
     type: "website",
     siteName: "ExpertzTrip",
-    title: "ExpertzTrip — Your holiday, your way",
-    description: "Real holiday packages. Clear pricing. Expert support.",
+    title: "ExpertzTrip — India's Smarter B2B Travel Platform",
+    description: "Find better flights. Earn more. Grow your business. Built for travel agents.",
     url: siteUrl,
   },
-  twitter: { card: "summary_large_image", title: "ExpertzTrip", description: "Real holiday packages. Clear pricing. Expert support." },
+  twitter: { card: "summary_large_image", title: "ExpertzTrip", description: "India's smarter B2B travel platform for agents." },
   robots: { index: true, follow: true },
 };
 
@@ -56,13 +54,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           Skip to content
         </a>
-        <PromoBar />
         <HideOnAdmin><HeaderWrapper /></HideOnAdmin>
         <main id="main" className="flex-1">
           {children}
         </main>
         <HideOnAdmin><Footer /></HideOnAdmin>
-        <HideOnAdmin><AiFab /></HideOnAdmin>
       </body>
     </html>
   );

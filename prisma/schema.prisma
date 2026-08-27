@@ -1039,3 +1039,54 @@ model AgencyApplication {
   @@index([status])
   @@index([customerId])
 }
+
+// ─────────────────────────────────────────────────────────────
+// B2B · PREPAID WALLET  (ExpertzWallet — spec §11/§12/§13/§14)
+// ─────────────────────────────────────────────────────────────
+/// One prepaid balance per agent/agency (tenant). All amounts are whole rupees
+/// (the app's convention). `balance` is spendable; `onHold` is reserved for
+/// in-flight bookings. Credits happen ONLY via trusted server-side verification.
+model Wallet {
+  id           String   @id @default(cuid())
+  customerId   String   @unique // the agent account that owns this wallet
+  balance      Int      @default(0) // available (spendable) rupees
+  onHold       Int      @default(0) // reserved for in-flight bookings
+  currency     String   @default("INR")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  transactions WalletTransaction[]
+
+  @@index([customerId])
+}
+
+/// Immutable-ish ledger. Every money movement is one row with a reference.
+/// Top-up rows are keyed by `providerOrderId` (unique) so a duplicate Razorpay
+/// webhook can never double-credit (spec §13 idempotency).
+model WalletTransaction {
+  id                String   @id @default(cuid())
+  walletId          String
+  wallet            Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  type              String   // TOPUP | HOLD | HOLD_RELEASE | DEBIT | REFUND | ADJUSTMENT
+  amount            Int      // positive whole rupees
+  balanceAfter      Int?     // available balance after this txn settled (null while pending)
+  status            String   @default("SUCCESS") // PENDING | SUCCESS | FAILED
+  reference         String   @unique // WTX-XXXXXX (human-facing)
+  description       String?
+
+  // Razorpay linkage + idempotency (top-ups)
+  provider          String?  // "razorpay"
+  providerOrderId   String?  @unique
+  providerPaymentId String?
+
+  // Flight-booking linkage (hold / debit / refund / release)
+  bookingRef        String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([walletId])
+  @@index([type])
+  @@index([status])
+  @@index([bookingRef])
+}

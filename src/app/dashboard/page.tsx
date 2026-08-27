@@ -8,6 +8,8 @@ import { Container } from "@/components/ui/container";
 import { getCurrentCustomer } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { APPLICATION_STATUS_LABEL, businessTypeLabel } from "@/lib/agency";
+import { getWalletSummary } from "@/lib/services/wallet-service";
+import { formatINR } from "@/lib/utils";
 
 export const metadata = { title: "Dashboard" };
 export const dynamic = "force-dynamic";
@@ -37,16 +39,19 @@ export default async function DashboardPage() {
   const statusLabel = application ? (APPLICATION_STATUS_LABEL[application.status] ?? application.status) : null;
   const approved = application?.status === "APPROVED";
 
+  let wallet = { available: 0, onHold: 0, total: 0, currency: "INR" };
+  try { wallet = await getWalletSummary(customer.id); } catch { /* not migrated yet */ }
+
   const stats = [
-    { label: "Wallet Balance", value: "₹0", icon: Wallet, tone: "bg-brand-blueLight text-brand-blue" },
+    { label: "Wallet Balance", value: formatINR(wallet.available), icon: Wallet, tone: "bg-brand-blueLight text-brand-blue" },
     { label: "Bookings", value: "0", icon: CalendarCheck, tone: "bg-brand-orangeLight text-brand-orange" },
-    { label: "Sales", value: "₹0", icon: IndianRupee, tone: "bg-emerald-50 text-emerald-600" },
-    { label: "Earnings", value: "₹0", icon: TrendingUp, tone: "bg-violet-50 text-violet-600" },
+    { label: "Sales", value: formatINR(0), icon: IndianRupee, tone: "bg-emerald-50 text-emerald-600" },
+    { label: "Earnings", value: formatINR(0), icon: TrendingUp, tone: "bg-violet-50 text-violet-600" },
   ];
   const actions = [
-    { label: "Search Flights", icon: Plane, href: "/#flights" },
-    { label: "My Bookings", icon: Receipt, href: "/dashboard" },
-    { label: "Add Money", icon: Plus, href: "/dashboard" },
+    { label: "Search Flights", icon: Plane, href: "/flights" },
+    { label: "My Bookings", icon: Receipt, href: "/dashboard/bookings" },
+    { label: "Add Money", icon: Plus, href: "/dashboard/wallet" },
     { label: "Reports", icon: BarChart3, href: "/dashboard" },
   ];
 
@@ -138,9 +143,9 @@ export default async function DashboardPage() {
             <p className="mt-1.5 text-sm text-ink-muted">
               Top up securely to book flights from a single balance. Every credit is verified server-side before it reflects here.
             </p>
-            <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-ink-faint">
-              Wallet top-up — unlocks after approval <ArrowRight className="h-4 w-4" />
-            </span>
+            <Link href="/dashboard/wallet" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-blue hover:gap-1.5">
+              Open ExpertzWallet <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
         </div>
       </Container>

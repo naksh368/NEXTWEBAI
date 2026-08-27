@@ -60,10 +60,10 @@ export default function HomePage() {
                 India&apos;s Smarter B2B Travel Platform
               </span>
 
-              <h1 className="mt-5 text-[2.9rem] font-extrabold leading-[1.02] tracking-tight sm:text-[3.8rem]">
-                <span className="block text-brand-navy">Find Better Flights.</span>
-                <span className="block text-brand-orange">Earn More.</span>
-                <span className="block text-brand-navy">Grow Your Business.</span>
+              <h1 className="mt-5 text-[2.55rem] font-extrabold leading-[1.04] tracking-[-0.02em] sm:text-[3.35rem]">
+                <span className="block whitespace-nowrap text-brand-navy">Find Better Flights.</span>
+                <span className="block whitespace-nowrap text-brand-orange">Earn More.</span>
+                <span className="block whitespace-nowrap text-brand-navy">Grow Your Business.</span>
               </h1>
 
               <p className="mt-5 max-w-md text-lg text-ink-muted">
@@ -77,25 +77,26 @@ export default function HomePage() {
                   href="/register"
                   className="group flex items-center gap-3 rounded-2xl bg-brand-orange p-4 text-white shadow-card transition-all hover:bg-brand-orangeDark hover:shadow-cardHover"
                 >
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/20">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20">
                     <Building2 className="h-5 w-5" />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="flex items-center gap-1.5 font-extrabold">Register Your Agency <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></span>
-                    <span className="mt-0.5 block text-sm text-white/85">Join thousands of travel agents</span>
+                    <span className="block whitespace-nowrap text-[15px] font-extrabold">Register Your Agency</span>
+                    <span className="mt-0.5 block text-[13px] text-white/85">Join thousands of travel agents</span>
                   </span>
+                  <ArrowRight className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5" />
                 </Link>
 
                 <Link
                   href="/partner-login"
                   className="group flex items-center gap-3 rounded-2xl border border-surface-border bg-white p-4 shadow-card transition-all hover:border-brand-blue hover:shadow-cardHover"
                 >
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-blueLight text-brand-blue">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-blueLight text-brand-blue">
                     <Lock className="h-5 w-5" />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block font-extrabold text-brand-blue">Partner Login</span>
-                    <span className="mt-0.5 block text-sm text-ink-muted">Access your dashboard</span>
+                    <span className="block whitespace-nowrap text-[15px] font-extrabold text-brand-blue">Partner Login</span>
+                    <span className="mt-0.5 block text-[13px] text-ink-muted">Access your dashboard</span>
                   </span>
                 </Link>
               </div>

@@ -1,17 +1,18 @@
 import type { Metadata, Viewport } from "next";
-import { Nunito } from "next/font/google";
+import { Poppins } from "next/font/google";
 import "./globals.css";
 import { HeaderWrapper } from "@/components/layout/header-wrapper";
 import { Footer } from "@/components/layout/footer";
 import { HideOnAdmin } from "@/components/layout/hide-on-admin";
 import { getSiteUrl } from "@/lib/utils";
 
-// ExpertzTrip brand font — Nunito (the rounded wordmark font used in the logo),
-// self-hosted at build (no runtime font requests, display:swap to avoid layout
-// shift). Used across the entire app so all text matches the logo.
-const nunito = Nunito({
+// ExpertzTrip brand font — Poppins: a clean, rounded, geometric sans that
+// matches the reference typography (friendly + premium). Self-hosted at build
+// (no runtime font requests; display:swap to avoid layout shift). Used across
+// the entire app.
+const poppins = Poppins({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
+  weight: ["400", "500", "600", "700", "800"],
   variable: "--font-sans",
   display: "swap",
 });
@@ -46,7 +47,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={nunito.variable}>
+    <html lang="en" className={poppins.variable}>
       <body className="flex min-h-screen flex-col">
         <a
           href="#main"

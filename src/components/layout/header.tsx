@@ -40,7 +40,7 @@ export function Header() {
                 key={item.label}
                 href={item.href}
                 className={cn(
-                  "inline-flex items-center gap-1 rounded-lg px-3 py-2 text-[15px] font-semibold text-ink-muted transition-colors hover:bg-surface-muted hover:text-brand-navy",
+                  "inline-flex items-center gap-1 whitespace-nowrap rounded-lg px-2.5 py-2 text-sm font-semibold text-ink-muted transition-colors hover:bg-surface-muted hover:text-brand-navy",
                   active && "text-brand-navy"
                 )}
               >

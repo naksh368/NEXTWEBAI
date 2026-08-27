@@ -107,18 +107,20 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Four benefit cards */}
+          {/* Four benefit cards — icon-left, matching the reference */}
           <div id="benefits" className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {BENEFITS.map((b) => (
-              <div key={b.title} className="group relative rounded-2xl border border-surface-border bg-white p-5 shadow-card transition-shadow hover:shadow-cardHover">
-                {b.soon && (
-                  <span className="absolute right-4 top-4 rounded-full bg-brand-orangeLight px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand-orangeDark">Soon</span>
-                )}
-                <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-blueLight text-brand-blue">
+              <div key={b.title} className="group relative flex items-start gap-4 rounded-2xl border border-surface-border bg-white p-5 shadow-card transition-shadow hover:shadow-cardHover">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-blueLight text-brand-blue">
                   <b.icon className="h-6 w-6" />
                 </span>
-                <h3 className="mt-4 text-base font-extrabold text-brand-navy">{b.title}</h3>
-                <p className="mt-1 text-sm text-ink-muted">{b.body}</p>
+                <div className="min-w-0">
+                  <h3 className="text-base font-extrabold text-brand-navy">{b.title}</h3>
+                  <p className="mt-1 text-sm text-ink-muted">{b.body}</p>
+                </div>
+                {b.soon && (
+                  <span className="absolute right-3 top-3 rounded-full bg-brand-orangeLight px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand-orangeDark">Soon</span>
+                )}
               </div>
             ))}
           </div>

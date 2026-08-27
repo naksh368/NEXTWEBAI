@@ -92,7 +92,7 @@ export function emailLayout(heading: string, bodyHtml: string, cta?: { label: st
   const button = cta
     ? `<tr><td style="padding:8px 0 4px"><a href="${cta.href}" style="display:inline-block;background:#FF6A1A;color:#fff;text-decoration:none;font-weight:800;font-size:15px;padding:12px 22px;border-radius:12px">${cta.label}</a></td></tr>`
     : "";
-  return `<!doctype html><html><body style="margin:0;background:#F6F7FB;font-family:'Nunito',Segoe UI,system-ui,Arial,sans-serif;color:#16171C">
+  return `<!doctype html><html><body style="margin:0;background:#F6F7FB;font-family:'Poppins',Segoe UI,system-ui,Arial,sans-serif;color:#16171C">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:28px 16px">
     <table role="presentation" width="100%" style="max-width:520px;background:#fff;border:1px solid #E6E9F1;border-radius:16px;overflow:hidden">
       <tr><td style="padding:22px 28px;border-bottom:2px solid #2340D9">

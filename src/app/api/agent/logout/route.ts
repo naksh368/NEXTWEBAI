@@ -1,0 +1,9 @@
+import { NextResponse } from "next/server";
+import { clearAgentCookie } from "@/lib/agent-session";
+
+export const runtime = "nodejs";
+
+export async function POST() {
+  await clearAgentCookie();
+  return NextResponse.json({ ok: true });
+}

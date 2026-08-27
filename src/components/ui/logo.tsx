@@ -16,13 +16,16 @@ export function Logo({
   href = "/",
 }: {
   className?: string;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
   href?: string | null;
 }) {
   const sizeCls = {
     sm: "text-lg",
-    md: "text-2xl",
-    lg: "text-3xl",
+    // Slightly larger, still compact — the brand wordmark should read clearly
+    // without dominating the header.
+    md: "text-[1.7rem] leading-none",
+    lg: "text-[2rem] leading-none",
+    xl: "text-4xl leading-none",
   }[size];
 
   const mark = (

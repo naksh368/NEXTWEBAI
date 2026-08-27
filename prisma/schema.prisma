@@ -1115,3 +1115,54 @@ model AgencyDocument {
   @@index([applicationId])
   @@index([customerId, kind])
 }
+
+// ─────────────────────────────────────────────────────────────
+// B2B · FLIGHT BOOKINGS  (spec §25/§26 — supplier abstraction)
+// ─────────────────────────────────────────────────────────────
+/// A flight booking made by an agent through the supplier abstraction. A ticket
+/// is NEVER marked issued unless the supplier actually confirms issuance (§26).
+/// Money moves via the wallet: HOLD on booking → DEBIT on ticketing, or the
+/// hold is RELEASED if the supplier fails. Tenant-scoped by customerId.
+model FlightBooking {
+  id            String   @id @default(cuid())
+  reference     String   @unique // ETB-XXXXXX (agent-facing)
+  customerId    String   // owning agent (tenant)
+  // PENDING | HELD | BOOKING | CONFIRMED | TICKETED | FAILED | CANCELLED | REFUNDED | PENDING_VERIFICATION
+  status        String   @default("PENDING")
+
+  // Itinerary
+  origin        String
+  destination   String
+  departDate    String   // ISO yyyy-mm-dd
+  airline       String
+  airlineCode   String?
+  flightNumber  String
+  departTime    String
+  arriveTime    String
+  durationMins  Int      @default(0)
+  stops         Int      @default(0)
+  cabin         String   @default("ECONOMY")
+  paxCount      Int      @default(1)
+  passengers    Json?    // [{ firstName, lastName, type }]
+
+  // Money (whole rupees)
+  baseFare      Int
+  taxes         Int      @default(0)
+  amount        Int      // total debited from the wallet
+  currency      String   @default("INR")
+
+  // Supplier + fulfilment
+  supplier      String   @default("mock")
+  supplierRef   String?
+  pnr           String?
+  ticketNumbers Json?    // [string]
+  holdRef       String?  // wallet hold reference
+  failureReason String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([status])
+  @@index([customerId, createdAt])
+}

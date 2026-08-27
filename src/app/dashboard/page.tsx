@@ -49,7 +49,7 @@ export default async function DashboardPage() {
     { label: "Earnings", value: formatINR(0), icon: TrendingUp, tone: "bg-violet-50 text-violet-600" },
   ];
   const actions = [
-    { label: "Search Flights", icon: Plane, href: "/flights" },
+    { label: "Search Flights", icon: Plane, href: "/dashboard/flights" },
     { label: "My Bookings", icon: Receipt, href: "/dashboard/bookings" },
     { label: "Add Money", icon: Plus, href: "/dashboard/wallet" },
     { label: "Reports", icon: BarChart3, href: "/dashboard" },

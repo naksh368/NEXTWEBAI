@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 
 const NAV = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Flights", href: "/flights", icon: Plane },
+  { label: "Flights", href: "/dashboard/flights", icon: Plane },
   { label: "Bookings", href: "/dashboard/bookings", icon: Receipt },
   { label: "Wallet", href: "/dashboard/wallet", icon: Wallet },
   { label: "KYC", href: "/dashboard/kyc", icon: FileCheck2 },

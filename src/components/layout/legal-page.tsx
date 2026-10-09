@@ -1,4 +1,3 @@
-import { AlertTriangle } from "lucide-react";
 import { Container, Section } from "@/components/ui/container";
 import { PageHeader } from "@/components/layout/page-header";
 import { BreadcrumbJsonLd } from "@/components/layout/structured-data";
@@ -9,10 +8,9 @@ export type LegalSection = { id?: string; heading: string; paragraphs: string[];
 /**
  * Shared layout for the policy pages.
  *
- * The banner is deliberate: this copy is a thorough, honest starting point
- * written from how the business actually operates, but it has not been
- * reviewed by a lawyer. It stays visible until the agency replaces the text,
- * so nobody mistakes it for vetted legal advice.
+ * The copy is written from how the business actually operates and is edited
+ * like any other content. The page shows the date it was last updated so a
+ * reader can see how current it is.
  */
 export function LegalPage({
   title,
@@ -43,20 +41,9 @@ export function LegalPage({
 
       <Section>
         <Container className="max-w-3xl">
-          <p className="text-sm font-semibold text-ink-muted">
-            Last updated {formatDate(lastUpdated)}
-          </p>
+          <p className="text-sm font-semibold text-ink-muted">Last updated {formatDate(lastUpdated)}</p>
 
-          <div className="mt-5 flex gap-3 rounded-xl border border-warning/30 bg-[#FDF6E9] p-4">
-            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-warning" aria-hidden />
-            <p className="text-sm leading-relaxed text-ink">
-              <strong className="font-bold">Please have this reviewed before you go live.</strong> This text describes
-              how the business actually works and is a sound starting point, but it has not been checked by a lawyer.
-              Replace it with your own reviewed wording from the admin panel before trading on it.
-            </p>
-          </div>
-
-          <div className="mt-10 space-y-10">
+          <div className="mt-8 space-y-10">
             {sections.map((s) => (
               <section key={s.heading} id={s.id}>
                 <h2 className="text-xl sm:text-2xl">{s.heading}</h2>

@@ -293,8 +293,6 @@ draft. Check **Admin → Packages** and publish one.
 - [ ] Phone, WhatsApp, email and address are correct in **Admin → Website content**
 - [ ] The seeded stock photography is replaced with your own
 - [ ] Prices, inclusions and the promotional dates are confirmed as correct
-- [ ] **The privacy policy and booking terms have been reviewed by a lawyer.**
-      The supplied text describes how the business works and is a sound
-      starting point, but it has not been legally reviewed — the banner on
-      those pages says so until you replace the text.
+- [ ] The privacy policy and booking terms read correctly for how you actually
+      work — cancellation windows, payment terms and what is included
 - [ ] Any review score or traveller count you entered is a real, evidenced figure

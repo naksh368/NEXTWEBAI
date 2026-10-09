@@ -151,7 +151,7 @@ function SingleImport({ destinations }: { destinations: Destination[] }) {
             <Field label="Baggage"><input value={f.baggage} onChange={(e) => set("baggage", e.target.value)} className={inp} /></Field>
           </div>
 
-          <div className="flex items-center gap-2 text-sm font-semibold text-brand-navy"><Sparkles className="h-4 w-4 text-brand-orange" /> Original ExpertzTrip copy</div>
+          <div className="flex items-center gap-2 text-sm font-semibold text-brand-navy"><Sparkles className="h-4 w-4 text-brand-orange" /> Original JST Andaman Travels copy</div>
           <Field label="Summary"><textarea value={f.summary} onChange={(e) => set("summary", e.target.value)} rows={2} className={inp} /></Field>
           <Field label="Overview"><textarea value={f.overview} onChange={(e) => set("overview", e.target.value)} rows={4} className={inp} /></Field>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

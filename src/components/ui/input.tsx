@@ -61,3 +61,25 @@ export function Field({
     </div>
   );
 }
+
+export const Select = React.forwardRef<
+  HTMLSelectElement,
+  React.SelectHTMLAttributes<HTMLSelectElement> & { invalid?: boolean }
+>(({ className, invalid, children, ...props }, ref) => (
+  <select
+    ref={ref}
+    className={cn(
+      fieldBase,
+      "h-11 appearance-none bg-[length:16px] bg-[right_0.85rem_center] bg-no-repeat pr-10",
+      // Inline chevron so the control matches Input without an extra wrapper.
+      "bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2363748A%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%226 9 12 15 18 9%22/></svg>')]",
+      invalid && "border-danger focus:border-danger focus:ring-danger/10",
+      className
+    )}
+    aria-invalid={invalid || undefined}
+    {...props}
+  >
+    {children}
+  </select>
+));
+Select.displayName = "Select";

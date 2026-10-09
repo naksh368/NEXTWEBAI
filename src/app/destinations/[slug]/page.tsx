@@ -1,176 +1,224 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { CalendarDays, Info, Plane, ArrowRight, Clock, Wallet } from "lucide-react";
+import { ArrowRight, CalendarDays, Clock, Info, MapPin, Wallet } from "lucide-react";
 import { Container, Section, SectionHeading } from "@/components/ui/container";
-import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { PageHeader } from "@/components/layout/page-header";
+import { BreadcrumbJsonLd } from "@/components/layout/structured-data";
 import { Accordion } from "@/components/ui/accordion";
 import { EmptyState } from "@/components/ui/states";
 import { buttonVariants } from "@/components/ui/button";
-import { SmartImage } from "@/components/ui/smart-image";
 import { PackageCard } from "@/components/package/package-card";
-import { getDestinationBySlug, getPackagesForDestination } from "@/lib/queries";
-import { formatINR, holidayCountLabel } from "@/lib/utils";
+import { getDestinationBySlug, getPackagesForDestinationOrHub } from "@/lib/queries";
+import { formatINR } from "@/lib/utils";
+
+export const revalidate = 600;
+
+/** travelInfo keys that steer the UI rather than describe the place. */
+const INTERNAL_TRAVEL_INFO_KEYS = new Set(["hubSlug"]);
+
+const TRAVEL_INFO_LABEL: Record<string, string> = {
+  gettingThere: "Getting there",
+  ferry: "Ferries",
+  permits: "Permits",
+  staying: "Where to stay",
+  beaches: "Beaches",
+  bestFor: "Best for",
+  location: "Location",
+  activities: "Activities",
+  show: "Light & Sound Show",
+  note: "Good to know",
+  currency: "Currency",
+  language: "Languages",
+  timezone: "Time zone",
+};
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const d = await getDestinationBySlug(slug);
-  if (!d) return { title: "Destination not found" };
+  if (!d) return { title: "Destination not found", robots: { index: false, follow: false } };
   return {
-    title: `${d.name} holiday packages`,
+    title: `${d.name}, Andaman Islands`,
     description: d.shortSummary ?? undefined,
-    openGraph: { title: `${d.name} holidays`, description: d.shortSummary ?? undefined, images: d.heroImage ? [d.heroImage] : undefined },
+    alternates: { canonical: `/destinations/${d.slug}` },
+    openGraph: {
+      title: `${d.name}, Andaman Islands`,
+      description: d.shortSummary ?? undefined,
+      url: `/destinations/${d.slug}`,
+      images: d.heroImage ? [d.heroImage] : undefined,
+    },
   };
 }
-
-const THEME_SECTIONS: { theme: string; title: string }[] = [
-  { theme: "HONEYMOON", title: "Honeymoon packages" },
-  { theme: "FAMILY", title: "Family packages" },
-  { theme: "LUXURY", title: "Luxury packages" },
-];
 
 export default async function DestinationPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const d = await getDestinationBySlug(slug);
   if (!d) notFound();
 
-  const allPackages = await getPackagesForDestination(slug);
-  const travelInfo = (d.travelInfo ?? {}) as Record<string, string>;
+  const { items: packages, viaRoute } = await getPackagesForDestinationOrHub(slug, d.travelInfo, d.name);
 
-  // Real, derived "plan your trip" facts (never fabricated).
-  const priced = allPackages.filter((p) => p.pricingStatus !== "PRICE_REVIEW_REQUIRED");
+  const travelInfo = Object.entries((d.travelInfo ?? {}) as Record<string, string>).filter(
+    ([k, v]) => !INTERNAL_TRAVEL_INFO_KEYS.has(k) && typeof v === "string" && v.trim()
+  );
+
+  // Derived from the real catalogue — never a guessed "from" price.
+  const priced = packages.filter((p) => p.pricingStatus !== "PRICE_REVIEW_REQUIRED");
   const fromPrice = priced.length ? Math.min(...priced.map((p) => p.basePrice)) : null;
-  const nightsList = allPackages.map((p) => p.nights).filter((n) => n > 0);
-  const nightRange = nightsList.length ? { min: Math.min(...nightsList), max: Math.max(...nightsList) } : null;
+  const nights = packages.map((p) => p.nights).filter((n) => n > 0);
+  const nightRange = nights.length ? { min: Math.min(...nights), max: Math.max(...nights) } : null;
 
-  const breadcrumbs = [{ label: "Home", href: "/" }, { label: "Destinations", href: "/destinations" }, { label: d.name }];
-  const ctaLabel = allPackages.length ? `See ${holidayCountLabel(allPackages.length)}` : "Browse all holidays";
-  const ctaHref = allPackages.length ? `/packages?destination=${d.slug}` : "/packages";
+  const crumbs = [
+    { label: "Home", href: "/" },
+    { label: "Destinations", href: "/destinations" },
+    { label: d.name, href: `/destinations/${d.slug}` },
+  ];
 
   return (
     <>
-      {d.heroImage ? (
-        <>
-          <div className="border-b border-surface-border bg-white"><Container className="py-3"><Breadcrumbs items={breadcrumbs} /></Container></div>
-          <section className="relative overflow-hidden">
-            <div className="absolute inset-0"><SmartImage src={d.heroImage} alt={d.name} sizes="100vw" priority className="h-full" /></div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/45 to-black/25" aria-hidden />
-            <Container className="relative py-20 sm:py-28">
-              {d.region && <p className="text-sm font-bold uppercase tracking-[0.16em] text-white/85">{d.region} · Holiday packages</p>}
-              <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-white sm:text-5xl">{d.name}</h1>
-              <p className="mt-1 text-white/85">{d.country}</p>
-              {d.shortSummary && <p className="mt-4 max-w-2xl text-lg text-white/90">{d.shortSummary}</p>}
-              <Link href={ctaHref} className={buttonVariants({ variant: "orange", className: "mt-6" })}>
-                {ctaLabel} <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Container>
-          </section>
-        </>
-      ) : (
-        <section className="relative overflow-hidden dotted-bg border-b border-surface-border">
-          <div className="absolute inset-0 hero-wash" aria-hidden />
-          <Container className="relative py-12 sm:py-16">
-            <Breadcrumbs items={breadcrumbs} />
-            {d.region && <p className="mt-5 text-sm font-bold uppercase tracking-[0.16em] text-brand-orange">{d.region} · Holiday packages</p>}
-            <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-brand-navy sm:text-5xl">{d.name}</h1>
-            <p className="mt-1 text-ink-muted">{d.country}</p>
-            {d.shortSummary && <p className="mt-4 max-w-2xl text-lg text-ink-muted">{d.shortSummary}</p>}
-            <Link href={ctaHref} className={buttonVariants({ variant: "orange", className: "mt-6" })}>
-                {ctaLabel} <ArrowRight className="h-4 w-4" />
-              </Link>
-          </Container>
-        </section>
-      )}
+      <BreadcrumbJsonLd items={crumbs} />
+      <PageHeader
+        eyebrow="Andaman & Nicobar Islands"
+        title={d.name}
+        description={d.shortSummary ?? undefined}
+        breadcrumbs={crumbs}
+        image={d.heroImage}
+        imageAlt={`${d.name}, Andaman Islands`}
+      >
+        <Link
+          href={packages.length ? "#packages" : "/packages"}
+          className={buttonVariants({ variant: "orange" })}
+        >
+          {packages.length ? `See ${packages.length} package${packages.length > 1 ? "s" : ""}` : "Browse all packages"}
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+      </PageHeader>
 
-      <Container className="py-10">
-        {/* Overview + travel info */}
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            {d.overview && (
-              <section>
-                <h2 className="text-xl font-bold">About {d.name}</h2>
-                <p className="mt-3 leading-relaxed text-ink-muted">{d.overview}</p>
-              </section>
-            )}
-          </div>
-          <aside className="space-y-4">
-            {(fromPrice !== null || nightRange) && (
-              <div className="rounded-2xl border border-brand-blue/20 bg-brand-blueLight/40 p-5">
-                <h3 className="text-sm font-bold text-brand-navy">Plan your {d.name} trip</h3>
-                <dl className="mt-2.5 space-y-2 text-sm">
-                  {nightRange && (
-                    <div className="flex items-center gap-2 text-ink">
-                      <Clock className="h-4 w-4 shrink-0 text-brand-blue" />
-                      <span>Recommended stay: <b>{nightRange.min === nightRange.max ? `${nightRange.min} nights` : `${nightRange.min}–${nightRange.max} nights`}</b></span>
-                    </div>
-                  )}
-                  {fromPrice !== null && (
-                    <div className="flex items-center gap-2 text-ink">
-                      <Wallet className="h-4 w-4 shrink-0 text-brand-blue" />
-                      <span>Packages from <b>{formatINR(fromPrice)}</b> / person</span>
-                    </div>
-                  )}
-                </dl>
-              </div>
-            )}
-            {d.bestTimeToVisit && (
-              <div className="rounded-2xl border border-surface-border bg-white p-5">
-                <h3 className="flex items-center gap-2 text-sm font-bold"><CalendarDays className="h-4 w-4 text-brand-orange" /> Best time to visit</h3>
-                <p className="mt-1.5 text-sm text-ink-muted">{d.bestTimeToVisit}</p>
-              </div>
-            )}
-            {Object.keys(travelInfo).length > 0 && (
-              <div className="rounded-2xl border border-surface-border bg-white p-5">
-                <h3 className="flex items-center gap-2 text-sm font-bold"><Info className="h-4 w-4 text-brand-blue" /> Travel information</h3>
-                <dl className="mt-2 space-y-1.5 text-sm">
-                  {Object.entries(travelInfo).map(([k, val]) => (
-                    <div key={k} className="flex justify-between gap-3">
-                      <dt className="capitalize text-ink-faint">{k.replace(/([A-Z])/g, " $1")}</dt>
-                      <dd className="text-right font-medium text-ink">{val}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </div>
-            )}
-          </aside>
-        </div>
-      </Container>
-
-      {/* Popular packages */}
-      <Section className="bg-surface-muted/60 py-12">
+      <Section className="pt-10">
         <Container>
-          <SectionHeading eyebrow={`Holidays in ${d.name}`} title="Popular packages" />
-          {allPackages.length ? (
+          <div className="grid gap-9 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              {d.overview && (
+                <>
+                  <h2 className="text-2xl sm:text-3xl">About {d.name}</h2>
+                  <p className="mt-4 text-[15px] leading-relaxed text-ink-muted sm:text-base">{d.overview}</p>
+                </>
+              )}
+
+              {d.categories.length > 0 && (
+                <ul className="mt-6 flex flex-wrap gap-2">
+                  {d.categories.map(({ category }) => (
+                    <li
+                      key={category.id}
+                      className="rounded-full bg-brand-turquoiseLight px-3 py-1.5 text-xs font-bold text-brand-turquoiseDark"
+                    >
+                      {category.name}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <aside className="space-y-4">
+              {(fromPrice !== null || nightRange) && (
+                <div className="rounded-2xl border border-brand-blue/20 bg-brand-blueLight p-5">
+                  <h3 className="text-sm font-bold text-brand-navy">Plan a trip here</h3>
+                  <dl className="mt-3 space-y-2.5 text-sm">
+                    {nightRange && (
+                      <div className="flex items-start gap-2.5 text-ink">
+                        <Clock className="mt-0.5 h-4 w-4 shrink-0 text-brand-blue" />
+                        <span>
+                          Our itineraries run{" "}
+                          <b>
+                            {nightRange.min === nightRange.max
+                              ? `${nightRange.min} nights`
+                              : `${nightRange.min}–${nightRange.max} nights`}
+                          </b>
+                        </span>
+                      </div>
+                    )}
+                    {fromPrice !== null && (
+                      <div className="flex items-start gap-2.5 text-ink">
+                        <Wallet className="mt-0.5 h-4 w-4 shrink-0 text-brand-blue" />
+                        <span>
+                          From <b className="tabular">{formatINR(fromPrice)}</b> per person
+                        </span>
+                      </div>
+                    )}
+                  </dl>
+                  <Link href="/contact" className={buttonVariants({ variant: "orange", size: "sm", className: "mt-4 w-full" })}>
+                    Plan my trip
+                  </Link>
+                </div>
+              )}
+
+              {d.bestTimeToVisit && (
+                <div className="rounded-2xl border border-surface-border bg-white p-5">
+                  <h3 className="flex items-center gap-2 text-sm font-bold">
+                    <CalendarDays className="h-4 w-4 text-brand-orange" /> Best time to visit
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-ink-muted">{d.bestTimeToVisit}</p>
+                </div>
+              )}
+
+              {travelInfo.length > 0 && (
+                <div className="rounded-2xl border border-surface-border bg-white p-5">
+                  <h3 className="flex items-center gap-2 text-sm font-bold">
+                    <Info className="h-4 w-4 text-brand-blue" /> Travel information
+                  </h3>
+                  <dl className="mt-3 space-y-3 text-sm">
+                    {travelInfo.map(([k, v]) => (
+                      <div key={k}>
+                        <dt className="text-xs font-bold uppercase tracking-wide text-ink-faint">
+                          {TRAVEL_INFO_LABEL[k] ?? k.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase())}
+                        </dt>
+                        <dd className="mt-0.5 leading-relaxed text-ink">{v}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              )}
+            </aside>
+          </div>
+        </Container>
+      </Section>
+
+      <Section id="packages" className="bg-surface-muted">
+        <Container>
+          <SectionHeading
+            eyebrow={`Holidays that include ${d.name}`}
+            title={viaRoute ? `Packages that visit ${d.name}` : `${d.name} packages`}
+            description={
+              viaRoute
+                ? `${d.name} is part of these itineraries rather than a place you stay, so these are the packages whose route covers it.`
+                : undefined
+            }
+            action={
+              <Link href="/packages" className={buttonVariants({ variant: "outline", size: "sm" })}>
+                All packages
+              </Link>
+            }
+          />
+          {packages.length ? (
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {allPackages.slice(0, 6).map((p, i) => <PackageCard key={p.id} pkg={p} priority={i < 3} />)}
+              {packages.slice(0, 6).map((p, i) => (
+                <PackageCard key={p.id} pkg={p} priority={i < 3} />
+              ))}
             </div>
           ) : (
-            <EmptyState icon={<Plane className="h-5 w-5" />} title={`No ${d.name} packages yet`} description="Check back soon — new holidays are added regularly." action={{ label: "Browse all packages", href: "/packages" }} />
+            <EmptyState
+              icon={<MapPin className="h-5 w-5" />}
+              title={`No ${d.name} packages published yet`}
+              description="Tell us your dates and we will build an itinerary that includes it."
+              action={{ label: "Send an enquiry", href: "/contact" }}
+            />
           )}
         </Container>
       </Section>
 
-      {/* Themed sections */}
-      {THEME_SECTIONS.map(({ theme, title }) => {
-        const items = allPackages.filter((p) => p.theme === theme);
-        if (!items.length) return null;
-        return (
-          <Section key={theme}>
-            <Container>
-              <SectionHeading title={title} />
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {items.map((p) => <PackageCard key={p.id} pkg={p} />)}
-              </div>
-            </Container>
-          </Section>
-        );
-      })}
-
-      {/* FAQs */}
       {d.faqs.length > 0 && (
-        <Section className="pt-0">
+        <Section>
           <Container className="max-w-3xl">
-            <SectionHeading title={`${d.name} travel FAQs`} />
+            <SectionHeading align="center" title={`${d.name} questions`} />
             <Accordion items={d.faqs.map((f) => ({ question: f.question, answer: f.answer }))} />
           </Container>
         </Section>

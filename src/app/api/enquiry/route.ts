@@ -3,6 +3,8 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { sendEmail, emailLayout, businessNotifyEmail } from "@/lib/services/email";
 import { getSiteUrl, makeReference } from "@/lib/utils";
+import { clientIp, hit } from "@/lib/rate-limit";
+import { getSiteSettings } from "@/lib/site-settings";
 
 export const runtime = "nodejs";
 
@@ -28,9 +30,26 @@ const schema = z.object({
   wantsDiscount: z.boolean().optional(),
   message: z.string().max(2000).optional(),
   source: z.enum(["WEBSITE", "PACKAGE", "WHATSAPP"]).optional(),
+  /** Privacy-notice consent. Required — we will not store a lead without it. */
+  consent: z.literal(true, { errorMap: () => ({ message: "Please accept the privacy notice so we can contact you." }) }),
+  /** Honeypot: a real person never fills a field they cannot see. */
+  company: z.string().max(0).optional(),
 });
 
+// Per-address caps. Generous enough for a family filling several package
+// forms, tight enough that a script gets nothing useful.
+const RATE_LIMIT = 8;
+const RATE_WINDOW_MS = 10 * 60 * 1000;
+
 export async function POST(request: Request) {
+  const limit = hit(`enquiry:${clientIp(request)}`, RATE_LIMIT, RATE_WINDOW_MS);
+  if (!limit.ok) {
+    return NextResponse.json(
+      { ok: false, error: "You have sent several enquiries already. Please call or WhatsApp us and we will help straight away." },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } }
+    );
+  }
+
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ ok: false, error: parsed.error.issues[0]?.message ?? "Please check the form." }, { status: 422 });
@@ -71,6 +90,8 @@ export async function POST(request: Request) {
 
   const first = d.fullName.split(" ")[0] || "traveller";
   const site = getSiteUrl();
+  const settings = await getSiteSettings().catch(() => null);
+  const brand = settings?.brandName ?? "JST Andaman Travels";
   const travellersLine =
     d.adults || d.children
       ? [d.adults ? `${d.adults} Adult${d.adults > 1 ? "s" : ""}` : "", d.children ? `${d.children} Child${d.children > 1 ? "ren" : ""}` : ""].filter(Boolean).join(", ")
@@ -85,11 +106,11 @@ export async function POST(request: Request) {
   if (d.email) {
     void sendEmail({
       to: d.email,
-      subject: `We've received your ExpertzTrip enquiry — ${reference}`,
+      subject: `We have received your ${brand} enquiry — ${reference}`,
       html: emailLayout(
         "Enquiry received",
-        `Hi ${first}, thanks for your interest${d.packageName ? ` in <b>${d.packageName}</b>` : ""}.<br><br>Enquiry ID: <b>${reference}</b><br>${detailRows}${detailRows ? "<br>" : ""}<br>Your enquiry has been received. An ExpertzTrip travel specialist will review your request and contact you using the details you provided.`,
-        d.packageSlug ? { label: "View holiday", href: `${site}/packages/${d.packageSlug}` } : { label: "Explore holidays", href: `${site}/packages` },
+        `Hi ${first}, thank you for your interest${d.packageName ? ` in <b>${d.packageName}</b>` : ""}.<br><br>Enquiry ID: <b>${reference}</b><br>${detailRows}${detailRows ? "<br>" : ""}<br>Your enquiry has been received. A ${brand} travel specialist will review your request and contact you using the details you provided, with an itinerary and a written quotation. An enquiry does not book or hold anything &mdash; nothing is confirmed until we confirm it with you in writing.`,
+        d.packageSlug ? { label: "View the package", href: `${site}/packages/${d.packageSlug}` } : { label: "Explore packages", href: `${site}/packages` },
       ),
     }).catch(() => {});
   }
@@ -100,13 +121,13 @@ export async function POST(request: Request) {
   void sendEmail({
     to: businessNotifyEmail(),
     replyTo: d.email || undefined,
-    subject: `🔔 New enquiry — ${d.packageName ?? d.destination ?? "ExpertzTrip"} — ${reference}`,
+    subject: `🔔 New enquiry — ${d.packageName ?? d.destination ?? brand} — ${reference}`,
     html: emailLayout(
       "New enquiry received",
       `Enquiry ID: <b>${reference}</b><br>
        Customer: <b>${d.fullName}</b><br>
        Email: <b>${d.email ?? "—"}</b><br>
-       Phone: <b>+91 ${d.phone}</b><br>
+       Phone: <b>${d.phone}</b><br>
        ${d.packageName ? `Package: <b>${d.packageName}</b><br>` : d.destination ? `Destination: <b>${d.destination}</b><br>` : ""}
        ${d.travelDate ? `Travel date: <b>${d.travelDate}</b><br>` : ""}
        ${travellersLine ? `Travellers: <b>${travellersLine}</b><br>` : ""}

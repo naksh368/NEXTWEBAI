@@ -163,7 +163,7 @@ export async function runDuePublishAction(): Promise<ActionResult & { published?
   return { ok: true, published };
 }
 
-/** Mark / unmark a package as "ExpertzTrip Checked" (team-reviewed). */
+/** Mark / unmark a package as "Team reviewed" (team-reviewed). */
 export async function toggleCheckedAction(packageId: string, isChecked: boolean): Promise<ActionResult> {
   const admin = await authorize("package.edit");
   if (!admin) return { ok: false, error: "Not authorized." };

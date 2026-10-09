@@ -1,6 +1,7 @@
 {
-  "name": "expertztrip",
+  "name": "jst-andaman-travels",
   "version": "0.1.0",
+  "description": "Andaman holiday packages, island tours and enquiry management for JST Andaman Travels.",
   "private": true,
   "scripts": {
     "dev": "next dev",

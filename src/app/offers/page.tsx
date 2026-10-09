@@ -9,7 +9,7 @@ import { getActiveOffers } from "@/lib/queries";
 
 export const metadata: Metadata = {
   title: "Offers & deals",
-  description: "Current holiday offers and seasonal sales from ExpertzTrip — discounts apply automatically, no codes to enter.",
+  description: "Current holiday offers and seasonal sales from JST Andaman Travels — discounts apply automatically, no codes to enter.",
 };
 
 export default async function OffersPage() {

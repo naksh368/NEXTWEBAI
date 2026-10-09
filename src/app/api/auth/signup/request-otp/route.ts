@@ -42,12 +42,12 @@ export async function POST(request: Request) {
 
   const sent = await sendEmail({
     to: email,
-    subject: `${code} is your ExpertzTrip verification code`,
+    subject: `${code} is your JST Andaman Travels verification code`,
     html: emailLayout(
       "Verify your email",
-      `<p>Welcome to ExpertzTrip! Use this code to finish creating your account:</p>
+      `<p>Welcome to JST Andaman Travels! Use this code to finish creating your account:</p>
        <div style="margin:16px 0;text-align:center">
-         <span style="display:inline-block;background:#EEF1FE;border:1px solid #2340D9;border-radius:12px;padding:12px 22px;font-size:30px;font-weight:800;letter-spacing:8px;color:#2340D9">${code}</span>
+         <span style="display:inline-block;background:#E8F3FA;border:1px solid #087EBA;border-radius:12px;padding:12px 22px;font-size:30px;font-weight:800;letter-spacing:8px;color:#087EBA">${code}</span>
        </div>
        <p>This code expires in ${OTP_TTL_MIN} minutes. If you didn't request it, you can ignore this email.</p>`,
     ),

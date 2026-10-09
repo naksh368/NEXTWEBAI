@@ -258,7 +258,7 @@ Write realistic, premium, ORIGINAL content for this India-outbound holiday as ST
 Rules: summary <=280 chars; overview 2-3 short paragraphs; 5-8 highlights; realistic inclusions and exclusions; a fair, clearly tiered cancellation policy; seoTitle <=60 chars; seoDescription <=155 chars. Keep hotels generic (e.g. "4-star central hotel") — never name a specific property. NEVER mention or invent any price or amount. Indian English. Return ONLY the JSON object.`;
 
   const out = await aiComplete(prompt, {
-    system: "You are a senior holiday product editor for ExpertzTrip, a premium Indian holiday brand. Write accurate, original, premium copy for Indian travellers. Never invent prices or specific hotel names; keep everything realistic and verifiable.",
+    system: "You are a senior holiday product editor for JST Andaman Travels, a premium Indian holiday brand. Write accurate, original, premium copy for Indian travellers. Never invent prices or specific hotel names; keep everything realistic and verifiable.",
     maxTokens: 2200, temperature: 0.5, timeoutMs: 26_000,
   });
   if (!out) return { ok: false, error: "The AI couldn't draft this one — please try again in a moment." };

@@ -17,7 +17,7 @@ export default async function ImportPackagePage() {
     <>
       <PageHeader
         title="Package Importer"
-        subtitle="Internal research & data-entry assistant. Scan a public package URL, review the extracted facts, rewrite into original ExpertzTrip copy, and save a draft. Never auto-publishes."
+        subtitle="Internal research & data-entry assistant. Scan a public package URL, review the extracted facts, rewrite into original JST Andaman Travels copy, and save a draft. Never auto-publishes."
       />
       <PackageImporter destinations={destinations} />
     </>

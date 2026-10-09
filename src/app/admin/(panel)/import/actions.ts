@@ -71,8 +71,8 @@ function normItems(v: unknown): AiDayItem[] {
 }
 
 const EXTRACT_SYSTEM =
-  "You are a data-extraction and copywriting assistant for ExpertzTrip, a premium Indian holiday brand. " +
-  "You convert a scraped travel-package web page into STRUCTURED FACTS plus ORIGINAL ExpertzTrip copy. " +
+  "You are a data-extraction and copywriting assistant for JST Andaman Travels, a premium Indian holiday brand. " +
+  "You convert a scraped travel-package web page into STRUCTURED FACTS plus ORIGINAL JST Andaman Travels copy. " +
   "Absolute rules: (1) NEVER invent facts — prices, hotels, inclusions, durations, reviews. Use null when the page doesn't state it. " +
   "(2) Do NOT copy the supplier's marketing sentences verbatim — REWRITE summary and overview into fresh, concise, original copy while keeping every fact accurate. " +
   "(3) Keep inclusions/exclusions/itinerary factual and faithful to the page. " +
@@ -81,7 +81,7 @@ const EXTRACT_SYSTEM =
 
 // Verbatim mode — reproduce the page's OWN words exactly (no rewriting).
 const VERBATIM_SYSTEM =
-  "You are a data-extraction assistant for ExpertzTrip. You convert a scraped travel-PACKAGE web page into STRUCTURED FACTS, copying the page's OWN wording EXACTLY. " +
+  "You are a data-extraction assistant for JST Andaman Travels. You convert a scraped travel-PACKAGE web page into STRUCTURED FACTS, copying the page's OWN wording EXACTLY. " +
   "Absolute rules: (1) NEVER invent facts — use null when the page doesn't state it. " +
   "(2) COPY VERBATIM — reproduce summary, overview and every itinerary day description using the EXACT words and sentences from the page. Do NOT paraphrase, summarise or rewrite. " +
   "(3) This is a HOLIDAY/TOUR PACKAGE importer only. If the page is a flight-only, hotel-only, visa, insurance, cab/bus/train or other non-package page, return {\"name\":null} and nothing else. " +
@@ -361,7 +361,7 @@ export async function batchImport(urls: string[], destinationId = "", verbatim =
 
 // ── AI Package Builder: generate a full DRAFT from a brief (no source URL) ──
 const BUILDER_SYSTEM =
-  "You are a senior holiday product designer for ExpertzTrip, a premium Indian holiday brand. " +
+  "You are a senior holiday product designer for JST Andaman Travels, a premium Indian holiday brand. " +
   "You design complete, realistic and appealing DRAFT holiday packages that a human editor reviews before publishing. " +
   "Rules: (1) Write original, premium, concise copy in Indian English. " +
   "(2) Build a realistic day-by-day itinerary — every day split into 2-4 morning/afternoon/evening items, each with the correct kind (FLIGHT/TRANSFER/HOTEL/ACTIVITY/MEAL/FREE_TIME/NOTE). " +

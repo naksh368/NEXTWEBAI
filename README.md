@@ -1,50 +1,39 @@
-# ExpertzTrip
+# JST Andaman Travels
 
-**Your holiday. Your way.** — a production-grade B2C holiday-package platform: real packages, clear server-verified pricing, and a smooth, fast customer experience.
+**Discover Andaman. Experience More.**
 
-## 🚀 Deploy in 3 steps
+A complete, production-ready website and management system for an Andaman &
+Nicobar Islands travel agency: a public site customers browse and enquire
+through, and a secure admin panel the agency runs the business from — packages,
+itineraries, photographs, enquiries and every piece of website copy, all
+editable without touching code.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fnaksh368%2FNEXTWEBAI&env=DATABASE_URL,DIRECT_URL,AUTH_SECRET,NEXT_PUBLIC_SITE_URL,EMAIL_PROVIDER,EMAIL_API_KEY,EMAIL_FROM,ADMIN_EMAIL,NEXT_PUBLIC_RAZORPAY_KEY_ID,RAZORPAY_KEY_ID,RAZORPAY_KEY_SECRET&envDescription=ExpertzTrip%20config%20%E2%80%94%20see%20DEPLOYMENT.md&envLink=https%3A%2F%2Fgithub.com%2Fnaksh368%2FNEXTWEBAI%2Fblob%2Fmain%2FDEPLOYMENT.md)
+Built with **Next.js 15 (App Router) · TypeScript · Tailwind CSS · Prisma ·
+PostgreSQL**.
 
-**1.** Click **Deploy** ☝️ (or Vercel → Add New → import this repo).
+---
 
-**2.** Paste these Environment Variables:
+## What it does
 
-| Variable | Value |
-|---|---|
-| `DATABASE_URL` | Neon **direct** string (the one **without** `-pooler`) |
-| `AUTH_SECRET` | any 32+ random characters |
-| `NEXT_PUBLIC_SITE_URL` | `https://yourdomain.com` |
-| `EMAIL_PROVIDER` | your email service (e.g. `sendgrid`, `mailgun`) |
-| `EMAIL_API_KEY` | your email provider API key |
-| `EMAIL_FROM` | `ExpertzTrip <noreply@yourdomain.com>` |
-| `ADMIN_EMAIL` | your admin login email |
-| `NEXT_PUBLIC_RAZORPAY_KEY_ID` / `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | your Razorpay keys |
+### For customers
+| Page | What it is |
+| --- | --- |
+| `/` | Hero with a working trip-enquiry panel, featured packages, islands, gallery, testimonials, FAQs |
+| `/packages` | All packages, filterable by hotel category, duration, price, group size and island |
+| `/packages/[slug]` | Full package: photo gallery, day-by-day itinerary, inclusions, exclusions, policies, FAQs, enquiry |
+| `/packages/[slug]/itinerary` | A clean, printable itinerary document |
+| `/packages/[slug]/itinerary.pdf` | **A real, downloadable PDF** — branded, illustrated, generated on the server |
+| `/destinations`, `/destinations/[slug]` | Port Blair, Havelock, Neil and the sights, each with the packages that visit them |
+| `/gallery` | Filterable photo gallery with a full-screen viewer |
+| `/ai` | Trip planner — answers only from real published packages |
+| `/about`, `/contact`, `/faq` | Company, contact details with a map, and answers |
+| `/privacy-policy`, `/terms` | Policies written from how the business actually operates |
 
-**3.** Click **Deploy** → the build creates the tables + seeds 50 packages automatically.
-
-> 🔑 **The #1 gotcha:** `DIRECT_URL` must be the **non-pooled** Neon string (delete `-pooler` from the host). The build's schema step fails on the pooled one.
-> 📧 Login is **email OTP** — configure your email provider (SendGrid, Mailgun, AWS SES, etc.) so customers receive their code. SMS/MSG91 is optional.
-
-Full walkthrough (custom domain DNS included) → **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
-
-### Or deploy on Railway (database included, ~$5/mo)
-
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new)
-
-Easiest setup — Railway provisions the database for you:
-
-1. **railway.app** → **New Project** → **Deploy from GitHub repo** → pick `naksh368/NEXTWEBAI`.
-2. In the project → **+ New** → **Database → PostgreSQL** (one click).
-3. On the app service → **Variables**, add:
-   - `DATABASE_URL` = `${{Postgres.DATABASE_URL}}`  *(the only DB value — references the Postgres you added)*
-   - `AUTH_SECRET`, `NEXT_PUBLIC_SITE_URL`, `EMAIL_PROVIDER`, `EMAIL_API_KEY`, `EMAIL_FROM`, `ADMIN_EMAIL`, `NEXT_PUBLIC_RAZORPAY_KEY_ID`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`
-4. **Deploy** — the build creates the tables + seeds 50 packages automatically.
-5. **Custom domain:** service → **Settings → Networking → Custom Domain** → add your domain → Railway shows a **CNAME**; add it at your registrar. HTTPS is automatic.
-
-> Railway provisions the database for you — nothing to configure, no connection strings, no `-pooler` gotcha.
-
-Built with **Next.js 15 (App Router) · TypeScript · Tailwind CSS · Prisma** — server components, pagination, image optimization and code-splitting throughout, so it stays fast and never laggy.
+### For the agency (`/admin`)
+Dashboard · Enquiries (search, filter, statuses, internal notes, CSV export) ·
+Packages · Itinerary editor · Destinations · Media library · **Gallery** ·
+**Testimonials** · **Website content** · Bookings · Quotes · Customers ·
+Offers · Coupons · Users & roles · Audit log · Settings.
 
 ---
 
@@ -52,104 +41,152 @@ Built with **Next.js 15 (App Router) · TypeScript · Tailwind CSS · Prisma** �
 
 ```bash
 npm install
-cp .env.example .env          # dev defaults work out of the box (SQLite + console OTP)
-npm run db:push               # create the SQLite schema
-npm run db:seed               # load the sample catalogue
+cp .env.example .env          # then fill in DATABASE_URL, ADMIN_EMAIL, ADMIN_PASSWORD
+npm run db:push               # create the schema
+npm run db:seed               # load the Andaman catalogue
 npm run dev                   # http://localhost:3000
 ```
 
-Useful scripts:
+Sign in at `/sign-in` with the `ADMIN_EMAIL` / `ADMIN_PASSWORD` you set.
+
+> **There is no default admin password.** Until `ADMIN_EMAIL` and
+> `ADMIN_PASSWORD` are both set (12+ characters), admin login is disabled and
+> every attempt is denied. A password compiled into the source would be public
+> the moment the repository is cloned.
 
 | Script | What it does |
 | --- | --- |
-| `npm run dev` | Start the dev server |
+| `npm run dev` | Dev server |
 | `npm run build` | Production build (`prisma generate` + `next build`) |
 | `npm run start` | Serve the production build |
 | `npm run typecheck` | `tsc --noEmit` |
-| `npm run lint` | ESLint (next/core-web-vitals) |
-| `npm run test` | Pricing engine + booking-state-machine tests |
-| `npm run db:reset` | Wipe + re-seed the dev database |
+| `npm run lint` | ESLint |
+| `npm test` | Unit tests (pricing, booking states, PDF writer, settings, filters) |
+| `npm run db:push` | Apply the Prisma schema |
+| `npm run db:seed` | Seed an **empty** database (no-op if packages already exist) |
+| `npm run db:reset` | Wipe and re-seed — **destroys all data** |
 
-**Dev OTP:** with `SMS_PROVIDER=console`, the one-time code is printed to the **server console** (never to the browser). Sign in at `/account` with any mobile number and read the code from the terminal.
+Full deployment walkthrough → **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
 
 ---
 
-## Architecture
+## How it is put together
 
 ```
 src/
-  app/                     # Routes (App Router)
-    (public)               # /, /packages, /packages/[slug], /destinations, /offers, /ai ...
-    account/               # Customer app (OTP-gated): trips, profile, payments, documents ...
-    api/                   # Backend services: pricing, auth (OTP), assistant search
+  app/
+    (public)              /, /packages, /destinations, /gallery, /about,
+                          /contact, /faq, /privacy-policy, /terms, /ai
+    admin/(panel)/        the management system (server-side permission checks)
+    account/              customer area (OTP-gated)
+    api/                  enquiry, pricing, media, auth, CSV export, cron
   components/
-    ui/                    # Design system: button, card, badge, input, skeleton, states ...
-    layout/                # Header, Footer
-    home/  package/  auth/  ai/
+    ui/                   design system: button, card, badge, input, select…
+    layout/               header, footer, page header, announcement, contact FAB
+    enquiry/              the trip-planner enquiry panel
+    package/  gallery/  admin/  ai/
   lib/
-    db.ts                  # Prisma singleton (single data-access entry point)
-    queries.ts             # Centralized read queries (cached where safe)
-    pricing.ts             # Pure, server-authoritative pricing engine
-    booking-states.ts      # Booking state machine (allowed transitions)
-    session.ts             # HMAC-signed httpOnly session
-    constants.ts           # Status vocabularies + Zod enums (single source of truth)
-    services/              # pricing-service, otp-service (business logic, not in UI)
+    brand.ts              compiled brand fallbacks (name, address, phone, colours)
+    site-settings.ts      the DB-backed, admin-editable website content
+    queries.ts            every public read query, in one place
+    pdf.ts                dependency-free PDF writer (text, images, pagination)
+    pdf-assets.ts         image loading for PDFs (remote, media library, /public)
+    rate-limit.ts         per-address throttling for public write endpoints
+    services/             pricing, bookings, email, SMS, AI, audit
 prisma/
-  schema.prisma            # Full domain model (see Phase 2)
-  seed.ts                  # Sample catalogue (no fake reviews/bookings/payments)
-tests/                     # Node test-runner tests (no extra deps)
+  schema.prisma           the full domain model
+  seed.ts                 the Andaman catalogue
+tests/                    node:test — no extra test runner
 ```
 
-**Principles enforced**
-- Business logic lives in `lib/` services, never in UI components.
-- **Pricing is server-authoritative** — the client shows an estimate, but `/api/pricing` and checkout recompute on the server. Never trust a client price.
-- **Packages are versioned** — bookings pin an immutable `PackageVersion` + snapshot, so changing a package never rewrites history.
-- **Statuses are centralized** in `constants.ts` (SQLite has no enums; ports 1:1 to Postgres enums).
+### Principles this codebase holds to
+
+**Nothing is invented.** The review score, review count, traveller count and
+registration number all start empty and each one stays hidden until an
+administrator enters a real value. No testimonials and no customer reviews are
+seeded; the homepage testimonial section hides itself entirely until the agency
+publishes a genuine one.
+
+**Prices are honest.** Every price is a *starting rate* for the stated
+occupancy and group size, flagged as indicative, and confirmed in writing
+before a booking. An enquiry explicitly books and holds nothing. The site never
+claims live availability, because hotels and ferries are confirmed by hand.
+
+**Inclusions are per package.** A package without air-conditioned transport
+says so. Nothing is assumed to carry across between tiers, in the cards, on the
+detail page, or in the PDF.
+
+**Permissions are enforced on the server.** Every admin action re-checks the
+caller's permission before writing. Hiding a button is never the only defence.
+Unauthenticated requests to admin APIs get a 403 with no data.
+
+**Content is editable, not hard-coded.** Brand name, logo, tagline, hero copy
+and image, phone numbers, WhatsApp, email, address, social links, the
+announcement bar, promotional dates, the price disclaimer and the SEO defaults
+all live in the database and are edited at **Admin → Website content**.
 
 ---
 
-## Design system (Phase 4)
+## The PDF itinerary
 
-White/light foundation, royal-blue + navy typography, restrained orange accent — matched to the ExpertzTrip logo. The logo is a faithful CSS recreation in `components/ui/logo.tsx`; drop the official asset at `public/logo.svg` and swap the inner markup to use it.
+`/packages/[slug]/itinerary.pdf` returns a real PDF file, generated on the
+server from the same database records the web page uses — so a customer's saved
+copy can never drift from what the site shows.
 
-Reusable primitives: `Button`, `Card`, `Badge`, `Input`/`Field`, `Skeleton`, `Accordion`, `Breadcrumbs`, `Pagination`, `EmptyState`, `ErrorState`, `SmartImage` (with graceful fallback).
+It is written by `src/lib/pdf.ts`, a small PDF writer with **no dependencies**:
+a headless browser is not available on a serverless runtime, and a rendering
+library is a lot of weight for one document. It handles text, headings,
+bullets, rules, filled panels, page numbers and embedded JPEGs (the brand logo
+and the package photography), and it paginates automatically.
 
----
+Two consequences worth knowing:
 
-## What's implemented (this build)
+- The standard PDF fonts have no `₹` glyph, so prices are written `INR 22,600`.
+  Typographic punctuation is transliterated the same way (see `toWinAnsi`).
+- Only JPEG images can be embedded. A photograph that cannot be fetched is
+  simply left out and the document still renders completely.
 
-| Milestone | Status |
-| --- | --- |
-| **A** Foundation + full DB schema + design system | ✅ |
-| **B** Homepage · destination pages · package listing (search / filter / paginate) | ✅ |
-| **C** Package detail · structured itinerary · live customization + **server-side reprice** | ✅ |
-| **D** OTP auth (mobile → OTP → mandatory email) · customer account · My Trips | ✅ (real, dev SMS = console) |
-| **E** Checkout · traveller capture · **booking engine** (real bookings + immutable snapshot + component statuses + state machine) · Razorpay wired | ✅ booking creation works with no keys; live **charge** activates when Razorpay keys are set |
-| **F** Admin operations (Phases 22–28): auth + server-side RBAC, dashboard, booking ops (audit-logged), packages/reviews/coupons/offers actions, finance, suppliers, support, users/roles, audit logs, settings | ✅ |
-| **G** ExpertzTrip AI | ✅ grounded package search over **real** data (no invented prices) |
-| Performance / SEO / a11y / security headers | ✅ baseline throughout |
-
-**The critical journey works today:** published package → discover → open full itinerary → customize → **server recalculates price** → verify mobile via OTP → provide mandatory email → checkout review with server-verified total.
+Unpublished and unknown packages return 404 rather than leaking a draft price.
 
 ---
 
-## Deliberately follow-up (needs credentials / more time)
+## The AI trip planner
 
-These are **scaffolded honestly** — the schema, seams and env vars exist, but they are not wired to live third parties, and nothing is faked:
+Optional, and off unless `AI_API_KEY` is set. It works with any
+OpenAI-compatible endpoint (OpenRouter, OpenAI, Azure, a local gateway) chosen
+with `AI_BASE_URL`.
 
-- **Razorpay live payment** (Phase 16): add `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` / `RAZORPAY_WEBHOOK_SECRET`. Backend order creation + signature/webhook verification then complete booking creation. The checkout page already shows the exact seam.
-- **Real SMS OTP** (Phase 13): set `SMS_PROVIDER` to a transactional provider (msg91/twilio) + keys.
-- **Transactional email** (Phase 20): documents/e-tickets/invoices.
-- **Admin operations UI** (Phases 22–28): the full RBAC schema, roles, permissions and a seeded super-admin exist; the interactive admin app (package builder, booking ops, finance) is the next milestone. Seed data stands in for "admin-created, published" packages.
-- **LLM layer on the AI**: today the assistant does real DB retrieval + intent parsing. An LLM can sit on top strictly as a tool-caller against `/api/assistant/search` — grounded, never generative about inventory.
-
-> No fake states, no fake success, no fake inventory, no fake reviews, no fake payment confirmations. Reviews only render when genuine ones exist.
+The model is given **no inventory of its own**. It can only answer from
+packages returned by a `search_packages` tool that queries published rows in
+this database, and it is instructed to decline anything outside the Andamans.
+With no key set, `/ai` falls back to grounded keyword search over the same
+data — there is no "creative" mode where prices could be invented.
 
 ---
 
-## Environment & data
+## Seed data and photography
 
-- **Dev:** SQLite (`prisma/dev.db`, gitignored) + console OTP/email. Zero external setup.
-- **Staging/Prod:** switch `datasource.provider` to `postgresql`, set `DATABASE_URL`, and provide real SMS/email/Razorpay keys per environment. Secrets are never committed (see `.gitignore` / `.env.example`).
+`npm run db:seed` populates an **empty** database only; it skips entirely if
+packages already exist, so a deploy can never wipe real enquiries. Force a full
+reset with `FORCE_SEED=1`.
 
-Dev admin (seed): `admin@expertztrip.com` / `ChangeMe#2026` (change before any real use).
+It creates the eight Andaman destinations, the five promotional packages with
+the complete six-day itinerary, the gallery, the FAQs, roles and permissions,
+and the website content defaults.
+
+**The seeded photography is licensed stock**, chosen so that each image matches
+the scene its alt text describes — it never claims to be a specific Andaman
+landmark it does not show. Replace it with the agency's own photographs from
+**Admin → Media Library** and **Admin → Gallery**.
+
+---
+
+## Testing
+
+```bash
+npm run typecheck && npm run lint && npm test && npm run build
+```
+
+`npm test` covers the pricing engine, the booking state machine, package
+availability, city search, the PDF writer (encoding, wrapping, pagination,
+xref integrity) and the settings/filter logic — 62 tests, no extra runner.

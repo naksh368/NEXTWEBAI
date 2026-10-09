@@ -25,7 +25,7 @@ const SUGGESTIONS = [
 
 export function AssistantChat() {
   const [messages, setMessages] = useState<Msg[]>([
-    { role: "assistant", text: "Hi! Tell me about your dream trip — destination, dates, travellers and budget. I only ever suggest real, published ExpertzTrip packages." },
+    { role: "assistant", text: "Hi! Tell me about your dream trip — destination, dates, travellers and budget. I only ever suggest real, published JST Andaman Travels packages." },
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);

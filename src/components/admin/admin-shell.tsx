@@ -6,7 +6,8 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, CalendarCheck, Users, LifeBuoy, Package, MapPin, Truck,
   Tag, Ticket, Star, BookOpen, CreditCard, RotateCcw, Shield, KeyRound,
-  ScrollText, Settings, Menu, X, LogOut, MessageSquare, DownloadCloud, FileText, Sparkles, BarChart3, ImageIcon, Compass,
+  ScrollText, Settings, Menu, X, LogOut, MessageSquare, DownloadCloud, FileText, Sparkles,
+  BarChart3, ImageIcon, Compass, Images, Quote, Globe,
 } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import { cn } from "@/lib/utils";
@@ -26,14 +27,19 @@ const NAV: { section: string; items: { label: string; href: string; icon: React.
   ] },
   { section: "Catalogue", items: [
     { label: "Packages", href: "/admin/packages", icon: Package },
-    { label: "Import Package", href: "/admin/import", icon: DownloadCloud },
-    { label: "Activities", href: "/admin/activities", icon: Compass },
-    { label: "Media Library", href: "/admin/media", icon: ImageIcon },
     { label: "Destinations", href: "/admin/destinations", icon: MapPin },
-    { label: "Suppliers", href: "/admin/suppliers", icon: Truck },
+    { label: "Activities", href: "/admin/activities", icon: Compass },
+    { label: "Import Package", href: "/admin/import", icon: DownloadCloud },
     { label: "Offers", href: "/admin/offers", icon: Tag },
     { label: "Coupons", href: "/admin/coupons", icon: Ticket },
-    { label: "Reviews", href: "/admin/reviews", icon: Star },
+    { label: "Suppliers", href: "/admin/suppliers", icon: Truck },
+  ] },
+  { section: "Website", items: [
+    { label: "Website Content", href: "/admin/content", icon: Globe },
+    { label: "Gallery", href: "/admin/gallery", icon: Images },
+    { label: "Media Library", href: "/admin/media", icon: ImageIcon },
+    { label: "Testimonials", href: "/admin/testimonials", icon: Quote },
+    { label: "Customer Reviews", href: "/admin/reviews", icon: Star },
     { label: "Travel Guides", href: "/admin/guides", icon: BookOpen },
   ] },
   { section: "Finance", items: [
@@ -41,10 +47,10 @@ const NAV: { section: string; items: { label: string; href: string; icon: React.
     { label: "Refunds", href: "/admin/refunds", icon: RotateCcw },
   ] },
   { section: "System", items: [
+    { label: "Business Settings", href: "/admin/settings", icon: Settings },
     { label: "Users", href: "/admin/users", icon: Shield },
     { label: "Roles", href: "/admin/roles", icon: KeyRound },
     { label: "Audit Logs", href: "/admin/audit", icon: ScrollText },
-    { label: "Settings", href: "/admin/settings", icon: Settings },
   ] },
 ];
 
@@ -89,7 +95,7 @@ export function AdminShell({ admin, children }: { admin: { name: string; role: s
     <div className="min-h-screen bg-surface-muted/50">
       {/* Sidebar (desktop) */}
       <aside className="fixed inset-y-0 left-0 hidden w-60 flex-col border-r border-surface-border bg-white lg:flex">
-        <div className="flex h-16 items-center border-b border-surface-border px-5"><Logo size="sm" href="/admin" /></div>
+        <div className="flex h-16 items-center gap-2.5 border-b border-surface-border px-5"><Logo size="sm" href="/admin" /><span className="text-xs font-bold uppercase tracking-wider text-ink-faint">Admin</span></div>
         {nav}
         <div className="border-t border-surface-border p-3">
           <div className="mb-2 px-2">

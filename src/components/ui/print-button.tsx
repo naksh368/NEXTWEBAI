@@ -1,15 +1,20 @@
 "use client";
 
-import { Download } from "lucide-react";
+import { Printer } from "lucide-react";
 
-/** Opens the browser print dialog → "Save as PDF" for a branded document. */
-export function PrintButton({ label = "Download / Print" }: { label?: string }) {
+/**
+ * Opens the browser print dialog for the on-screen document.
+ *
+ * This is the fallback: the primary download is a real, server-generated
+ * .pdf file at /packages/[slug]/itinerary.pdf.
+ */
+export function PrintButton({ label = "Print" }: { label?: string }) {
   return (
     <button
       onClick={() => window.print()}
-      className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-brand-orange px-5 font-bold text-white transition-colors hover:bg-brand-orangeDark print:hidden"
+      className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-surface-border bg-white px-4 text-sm font-bold text-ink transition-colors hover:border-brand-blue hover:text-brand-blue print:hidden"
     >
-      <Download className="h-4 w-4" /> {label}
+      <Printer className="h-4 w-4" /> {label}
     </button>
   );
 }

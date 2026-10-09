@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-type Variant = "primary" | "orange" | "secondary" | "outline" | "ghost" | "danger";
+type Variant = "primary" | "orange" | "secondary" | "outline" | "ghost" | "danger" | "navy" | "onPhoto";
 type Size = "sm" | "md" | "lg";
 
 const base =
@@ -14,11 +14,15 @@ const variants: Record<Variant, string> = {
     "bg-brand-blue text-white shadow-sm hover:bg-brand-blueDark hover:shadow-md",
   orange:
     "bg-brand-orange text-white shadow-sm hover:bg-brand-orangeDark hover:shadow-md",
-  secondary: "bg-brand-blueLight text-brand-blue hover:bg-[#E2E7FE]",
+  secondary: "bg-brand-blueLight text-brand-blueDark hover:bg-brand-turquoiseLight",
   outline:
     "border border-surface-border bg-white text-ink hover:border-brand-blue hover:text-brand-blue",
   ghost: "text-ink hover:bg-surface-muted",
   danger: "bg-danger text-white hover:brightness-95",
+  navy: "bg-brand-navy text-white shadow-sm hover:bg-brand-navyDark hover:shadow-md",
+  // Over photography: frosted glass that keeps contrast on any image.
+  onPhoto:
+    "border border-white/70 bg-white/15 text-white backdrop-blur-sm hover:bg-white hover:text-brand-navy",
 };
 
 const sizes: Record<Size, string> = {

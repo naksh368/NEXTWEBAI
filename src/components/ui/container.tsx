@@ -26,28 +26,35 @@ export function SectionHeading({
   title,
   description,
   action,
+  align = "left",
   className,
 }: {
   eyebrow?: string;
   title: string;
   description?: string;
   action?: React.ReactNode;
+  align?: "left" | "center";
   className?: string;
 }) {
+  const centered = align === "center";
   return (
-    <div className={cn("mb-8 flex items-end justify-between gap-4", className)}>
-      <div className="max-w-2xl">
+    <div
+      className={cn(
+        "mb-9 gap-5",
+        centered ? "flex flex-col items-center text-center" : "flex items-end justify-between",
+        className
+      )}
+    >
+      <div className={cn("max-w-2xl", centered && "mx-auto")}>
         {eyebrow && (
-          <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-brand-orange">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-turquoiseDark">
             {eyebrow}
           </p>
         )}
-        <h2 className="text-2xl font-bold sm:text-3xl">{title}</h2>
-        {description && (
-          <p className="mt-2 text-ink-muted">{description}</p>
-        )}
+        <h2 className={cn("text-[1.75rem] leading-tight sm:text-4xl", eyebrow && "mt-2.5")}>{title}</h2>
+        {description && <p className="mt-3 text-[15px] leading-relaxed text-ink-muted sm:text-base">{description}</p>}
       </div>
-      {action && <div className="hidden shrink-0 sm:block">{action}</div>}
+      {action && <div className={cn("shrink-0", centered ? "mt-1" : "hidden sm:block")}>{action}</div>}
     </div>
   );
 }

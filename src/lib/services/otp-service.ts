@@ -39,7 +39,7 @@ export function normalizeEmail(input: string): string | null {
 }
 
 function otpText(code: string): string {
-  return `Your ExpertzTrip verification code is ${code}. Valid for ${ttlMinutes()} minutes. Do not share this code with anyone.`;
+  return `Your JST Andaman Travels verification code is ${code}. Valid for ${ttlMinutes()} minutes. Do not share this code with anyone.`;
 }
 
 export type RequestOtpResult =

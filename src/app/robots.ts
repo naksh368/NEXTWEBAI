@@ -5,8 +5,14 @@ export default function robots(): MetadataRoute.Robots {
   const base = getSiteUrl();
   return {
     rules: [
-      { userAgent: "*", allow: "/", disallow: ["/account", "/api", "/admin"] },
+      {
+        userAgent: "*",
+        allow: "/",
+        // Private areas and machine endpoints are never offered to crawlers.
+        disallow: ["/admin", "/account", "/api", "/sign-in", "/sign-up", "/checkout", "/quote"],
+      },
     ],
     sitemap: `${base}/sitemap.xml`,
+    host: base,
   };
 }

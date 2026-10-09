@@ -1,11 +1,14 @@
 import Link from "next/link";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Images, Package as PackageIcon, Plus, Quote } from "lucide-react";
 import { requireAdmin } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 import { PageHeader, StatCard, Panel, Table, Th, Td, Pill, EmptyRow } from "@/components/admin/ui";
 import { BOOKING_STATUS_META } from "@/lib/constants";
 import { ACTIVE_BOOKING_STATUSES } from "@/lib/booking-states";
+import { getSiteSettings } from "@/lib/site-settings";
 import { formatINR, formatDate } from "@/lib/utils";
+
+const ENQUIRY_OPEN_STATUSES = ["NEW", "CONTACTED", "FOLLOW_UP", "QUOTED"];
 
 export const dynamic = "force-dynamic";
 
@@ -14,11 +17,22 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
   const denied = (await searchParams).denied === "1";
 
   const now = new Date();
+  const settings = await getSiteSettings();
+  // A promotion counts as "expiring" once it is inside its last 30 days.
+  const promoEnds = new Date(settings.promoValidTo);
+  const promoExpiringSoon =
+    Number.isFinite(promoEnds.getTime()) &&
+    promoEnds.getTime() > now.getTime() &&
+    promoEnds.getTime() - now.getTime() < 30 * 24 * 60 * 60 * 1000;
+  const promoExpired = Number.isFinite(promoEnds.getTime()) && promoEnds.getTime() < now.getTime();
+
   const [
     totalBookings, confirmed, processing, paymentReceived, customers,
     publishedPackages, openTickets, upcoming, paidAgg, refundAgg, recent,
     newEnquiries, recentEnquiries, paidNoDocs, unassigned, followUpsDue,
     checkedPackages, featuredPackages, emptyDestinations, draftPackages,
+    totalEnquiries, contactedEnquiries, quotedEnquiries, convertedEnquiries,
+    archivedPackages, galleryPublished, testimonialsPending, testimonialsPublished,
   ] = await Promise.all([
     db.booking.count(),
     db.booking.count({ where: { status: "CONFIRMED" } }),
@@ -40,6 +54,14 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
     db.package.count({ where: { status: "PUBLISHED", isFeatured: true } }),
     db.destination.count({ where: { isPublished: true, packages: { none: { status: "PUBLISHED" } } } }),
     db.package.count({ where: { status: { in: ["DRAFT", "IN_REVIEW"] } } }),
+    db.enquiry.count(),
+    db.enquiry.count({ where: { status: "CONTACTED" } }),
+    db.enquiry.count({ where: { status: "QUOTED" } }),
+    db.enquiry.count({ where: { status: { in: ["CONVERTED", "WON"] } } }),
+    db.package.count({ where: { status: "ARCHIVED" } }),
+    db.galleryItem.count({ where: { isPublished: true } }),
+    db.testimonial.count({ where: { status: "PENDING" } }),
+    db.testimonial.count({ where: { status: "PUBLISHED" } }),
   ]);
 
   const revenue = paidAgg._sum.amount ?? 0;
@@ -53,14 +75,32 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
     { n: unassigned, label: "active bookings not assigned to a specialist", href: "/admin/bookings", tone: "navy" as const },
     { n: newEnquiries, label: "new enquiries to follow up", href: "/admin/enquiries", tone: "orange" as const },
     { n: followUpsDue, label: "enquiry follow-ups due now", href: "/admin/enquiries", tone: "orange" as const },
-    { n: publishedPackages - checkedPackages, label: "published holidays not yet ExpertzTrip-Checked", href: "/admin/packages", tone: "blue" as const },
-    { n: emptyDestinations, label: "live destinations shown as “Coming soon” (no packages yet)", href: "/admin/packages/new", tone: "navy" as const },
+    { n: publishedPackages - checkedPackages, label: "published packages not yet reviewed by the team", href: "/admin/packages", tone: "blue" as const },
+    { n: testimonialsPending, label: "testimonials waiting to be published or rejected", href: "/admin/testimonials", tone: "blue" as const },
+    { n: promoExpiringSoon ? 1 : 0, label: `promotional window ends on ${formatDate(settings.promoValidTo)} — review the rates`, href: "/admin/content", tone: "orange" as const },
+    { n: promoExpired ? 1 : 0, label: `promotional window closed on ${formatDate(settings.promoValidTo)} — set a new one`, href: "/admin/content", tone: "orange" as const },
   ].filter((a) => a.n > 0);
   const actionTotal = actions.reduce((s, a) => s + a.n, 0);
 
   return (
     <>
-      <PageHeader title="Dashboard" subtitle="Live operations overview." />
+      <PageHeader
+        title="Dashboard"
+        subtitle="Live figures, straight from the database. Nothing here is estimated."
+        action={
+          <div className="flex flex-wrap gap-2">
+            <Link href="/admin/packages/new" className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-brand-blue px-4 text-sm font-bold text-white hover:bg-brand-blueDark">
+              <Plus className="h-4 w-4" /> New package
+            </Link>
+            <Link href="/admin/gallery" className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-surface-border px-4 text-sm font-bold text-ink hover:border-brand-blue hover:text-brand-blue">
+              <Images className="h-4 w-4" /> Add photos
+            </Link>
+            <Link href="/admin/enquiries?status=NEW" className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-surface-border px-4 text-sm font-bold text-ink hover:border-brand-blue hover:text-brand-blue">
+              Review enquiries
+            </Link>
+          </div>
+        }
+      />
 
       {denied && (
         <div className="mb-6 flex items-center gap-2 rounded-xl border border-warning/30 bg-[#FDF7EC] px-4 py-3 text-sm text-warning">
@@ -87,6 +127,30 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
         </div>
       )}
 
+      <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-ink-faint">Enquiries</h2>
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+        <StatCard label="Total enquiries" value={totalEnquiries} tone="navy" />
+        <StatCard label="New" value={newEnquiries} tone="orange" hint="Not yet contacted" />
+        <StatCard label="Contacted" value={contactedEnquiries} tone="blue" />
+        <StatCard label="Follow-up due" value={followUpsDue} tone="orange" hint="Scheduled for today or earlier" />
+        <StatCard label="Quoted" value={quotedEnquiries} tone="blue" />
+      </div>
+
+      <h2 className="mb-3 mt-8 text-sm font-bold uppercase tracking-wide text-ink-faint">Catalogue &amp; website</h2>
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+        <StatCard label="Active packages" value={publishedPackages} tone="green" hint="Live on the website" />
+        <StatCard label="Draft packages" value={draftPackages} tone="orange" hint="Not yet published" />
+        <StatCard label="Archived packages" value={archivedPackages} tone="navy" />
+        <StatCard label="Gallery photos" value={galleryPublished} tone="blue" hint="Published" />
+        <StatCard
+          label="Testimonials live"
+          value={testimonialsPublished}
+          tone={testimonialsPublished > 0 ? "green" : "navy"}
+          hint={testimonialsPublished > 0 ? "Shown on the homepage" : "Section hidden until one is published"}
+        />
+      </div>
+
+      <h2 className="mb-3 mt-8 text-sm font-bold uppercase tracking-wide text-ink-faint">Bookings &amp; finance</h2>
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard label="Total bookings" value={totalBookings} tone="navy" />
         <StatCard label="Confirmed" value={confirmed} tone="green" />
@@ -98,7 +162,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
         <StatCard label="Published packages" value={publishedPackages} tone="navy" />
         <StatCard label="Upcoming trips" value={upcoming} tone="orange" />
         <StatCard label="Open tickets" value={openTickets} tone="blue" />
-        <StatCard label="New enquiries" value={newEnquiries} tone="orange" hint="Leads to follow up" />
+        <StatCard label="Enquiries converted" value={convertedEnquiries} tone="green" />
       </div>
 
       {/* CATALOG HEALTH — how complete the storefront looks to customers. */}
@@ -108,10 +172,10 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
           action={<Link href="/admin/packages" className="text-sm font-semibold text-brand-blue hover:underline">Manage packages</Link>}
         >
           <div className="grid grid-cols-2 gap-4 p-4 lg:grid-cols-4">
-            <CatalogStat label="Live holidays" value={publishedPackages} hint="Visible to customers" href="/admin/packages" tone="navy" />
-            <CatalogStat label="ExpertzTrip-Checked" value={`${checkedPackages}/${publishedPackages}`} hint="Show the trust badge" href="/admin/packages" tone={publishedPackages > 0 && checkedPackages === publishedPackages ? "green" : "orange"} />
+            <CatalogStat label="Live packages" value={publishedPackages} hint="Visible to customers" href="/admin/packages" tone="navy" />
+            <CatalogStat label="Team-reviewed" value={`${checkedPackages}/${publishedPackages}`} hint="Shows the reviewed badge" href="/admin/packages" tone={publishedPackages > 0 && checkedPackages === publishedPackages ? "green" : "orange"} />
             <CatalogStat label="Featured on home" value={featuredPackages} hint="Homepage spotlight" href="/admin/packages" tone="blue" />
-            <CatalogStat label="Empty destinations" value={emptyDestinations} hint={emptyDestinations > 0 ? "Shown as “Coming soon”" : "All destinations sell"} href="/admin/destinations" tone={emptyDestinations > 0 ? "orange" : "green"} />
+            <CatalogStat label="Empty destinations" value={emptyDestinations} hint={emptyDestinations > 0 ? "No packages attached yet" : "Every destination has packages"} href="/admin/destinations" tone={emptyDestinations > 0 ? "orange" : "green"} />
           </div>
           {draftPackages > 0 && (
             <p className="border-t border-surface-border px-4 py-3 text-sm text-ink-muted">
@@ -152,7 +216,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
             ) : recentEnquiries.map((e) => (
               <tr key={e.id} className="hover:bg-surface-muted/40">
                 <Td className="font-medium">{e.fullName}</Td>
-                <Td><a href={`tel:+91${e.phone}`} className="text-brand-blue hover:underline">+91 {e.phone}</a></Td>
+                <Td><a href={`tel:${e.phone.replace(/[^\d+]/g, "")}`} className="text-brand-blue hover:underline">{e.phone}</a></Td>
                 <Td className="text-ink-muted">{e.packageName ?? e.destination ?? "—"}</Td>
                 <Td><Pill tone={e.status === "NEW" ? "brand" : e.status === "WON" ? "success" : e.status === "LOST" ? "danger" : "neutral"}>{e.status}</Pill></Td>
                 <Td className="text-ink-muted">{formatDate(e.createdAt)}</Td>

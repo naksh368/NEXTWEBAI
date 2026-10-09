@@ -79,10 +79,10 @@ export async function sendQuoteAction(quoteId: string): Promise<ActionResult> {
   const site = getSiteUrl();
   const sent = await sendEmail({
     to: quote.customerEmail,
-    subject: `Your ExpertzTrip holiday quote — ${quote.reference}`,
+    subject: `Your JST Andaman Travels holiday quote — ${quote.reference}`,
     html: emailLayout(
       "Your personalized holiday quote is ready",
-      `Hi ${quote.customerName.split(" ")[0]}, here is your personalized quote from ExpertzTrip.<br><br>
+      `Hi ${quote.customerName.split(" ")[0]}, here is your personalized quote from JST Andaman Travels.<br><br>
        Quote ID: <b>${quote.reference}</b><br>
        Holiday: <b>${quote.title}</b><br>
        Travellers: <b>${quote.travellerCount}</b><br>

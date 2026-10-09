@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {
-  ShieldCheck, Wallet, Headset, Sparkles, Search, SlidersHorizontal,
-  CreditCard, MapPin, ArrowRight, Star, Plane, Building2,
+  ArrowRight, Ship, Palmtree, Waves, Compass, BedDouble, Headset, CalendarCheck,
+  Camera, Star, MapPin, Quote, Phone, MessageCircle, ShieldCheck, Sparkles,
 } from "lucide-react";
 import { Container, Section, SectionHeading } from "@/components/ui/container";
 import { buttonVariants } from "@/components/ui/button";
@@ -9,382 +9,381 @@ import { SmartImage } from "@/components/ui/smart-image";
 import { Accordion } from "@/components/ui/accordion";
 import { EmptyState } from "@/components/ui/states";
 import { PackageCard } from "@/components/package/package-card";
-import { SearchBox } from "@/components/home/search-box";
+import { TripPlanner } from "@/components/enquiry/trip-planner";
 import { RecentlyViewedRail } from "@/components/package/recently-viewed";
-import { Newsletter } from "@/components/home/newsletter";
-import { AiAvatar } from "@/components/ui/ai-avatar";
 import {
-  getPopularDestinations, getFeaturedPackages, getActiveOffers,
-  getGlobalFaqs, getPublishedReviews, getAllDestinations,
+  getAndamanDestinations, getFeaturedPackages, getGlobalFaqs,
+  getPublishedTestimonials, getGalleryItems, listPackages,
 } from "@/lib/queries";
-import { formatINR } from "@/lib/utils";
+import { getSiteSettings, promoIsActive, telLinkFor, whatsappLinkFor } from "@/lib/site-settings";
+import { formatINR, formatDate } from "@/lib/utils";
 
-const CATEGORIES = [
-  { label: "Honeymoon", theme: "HONEYMOON", icon: Star, blurb: "Romantic getaways" },
-  { label: "Family", theme: "FAMILY", icon: Building2, blurb: "Fun for all ages" },
-  { label: "Beach", theme: "BEACH", icon: MapPin, blurb: "Sun, sand & sea" },
-  { label: "Luxury", theme: "LUXURY", icon: Sparkles, blurb: "Premium escapes" },
-  { label: "Adventure", theme: "ADVENTURE", icon: Plane, blurb: "Thrills & nature" },
+export const revalidate = 300;
+
+/** What JST arranges. Shown as capability, never as a per-package promise. */
+const EXPERIENCES = [
+  { icon: Waves, title: "Beautiful beaches", body: "Radhanagar, Kalapathar, Bharatpur and Laxmanpur — the sand the islands are known for." },
+  { icon: Compass, title: "Snorkelling & water sports", body: "Reef snorkelling, glass-bottom boats, sea walking and scuba, through licensed operators." },
+  { icon: Palmtree, title: "Island hopping", body: "Port Blair, Havelock and Neil on one trip, with every connection planned for you." },
+  { icon: BedDouble, title: "Resort & hotel stays", body: "Budget guesthouses through to 4-star beach resorts, chosen to fit your group." },
+  { icon: Camera, title: "Sightseeing", body: "Cellular Jail and the Light & Sound Show, Ross Island, North Bay and Corbyn's Cove." },
+  { icon: Ship, title: "Inter-island transfers", body: "Ferry seats booked and re-booked for you when the sea changes the schedule." },
 ];
 
 export default async function HomePage() {
-  const [destinations, featured, offers, faqs, reviews, allDestinations] = await Promise.all([
-    getPopularDestinations(),
+  const [settings, destinations, featured, allPackages, faqs, testimonials, gallery] = await Promise.all([
+    getSiteSettings(),
+    getAndamanDestinations(),
     getFeaturedPackages(6),
-    getActiveOffers(),
+    listPackages({ page: 1, sort: "price-asc" }),
     getGlobalFaqs(),
-    getPublishedReviews(6),
-    getAllDestinations(),
+    getPublishedTestimonials(6),
+    getGalleryItems(),
   ]);
 
-  const indiaDestinations = allDestinations.filter((d) => d.country === "India" && d._count.packages > 0);
-  const worldDestinations = allDestinations.filter((d) => d.country !== "India" && d._count.packages > 0);
+  const packages = featured.length ? featured : allPackages.items;
+  const planner = allPackages.items.map((p) => ({ slug: p.slug, name: p.name }));
+  const plannerPlaces = ["Andaman Islands", ...destinations.map((d) => d.name)];
 
-  // Every destination name feeds the "Where to?" autocomplete so a customer
-  // always sees the full set of places we cover.
-  const heroDestinations = [...allDestinations]
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .map((d) => d.name);
-  // Trending chips: destinations we actually sell (most packages first); if none
-  // are live yet, fall back to the popular rail so the row is never empty.
-  const trending = (
-    [...allDestinations].filter((d) => d._count.packages > 0).sort((a, b) => b._count.packages - a._count.packages).length
-      ? [...allDestinations].filter((d) => d._count.packages > 0).sort((a, b) => b._count.packages - a._count.packages)
-      : destinations
-  ).slice(0, 8);
+  const priced = allPackages.items.filter((p) => p.pricingStatus !== "PRICE_REVIEW_REQUIRED");
+  const fromPrice = priced.length ? Math.min(...priced.map((p) => p.basePrice)) : null;
+  const promoLive = promoIsActive(settings);
+
+  const tel = telLinkFor(settings);
+  const wa = whatsappLinkFor(settings, `Hello ${settings.brandName}, I would like to plan an Andaman holiday.`);
+  const heroImage = settings.heroImage || gallery[0]?.url || destinations[0]?.heroImage || null;
+  const heroAlt = settings.heroImage ? `${settings.brandName} — Andaman Islands` : gallery[0]?.alt ?? "A white sand Andaman beach meeting turquoise water";
 
   return (
     <>
-      {/* HERO — clean light background, no photo */}
-      <section className="relative overflow-hidden dotted-bg">
-        <div className="absolute inset-0 hero-wash" aria-hidden />
-        <Container className="relative py-16 sm:py-24">
-          <div className="mx-auto max-w-3xl text-center">
-            <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand-orange">
-              India &amp; the world, handpicked for you
-            </p>
-            <h1 className="mt-4 text-5xl font-extrabold leading-[1.05] tracking-tight sm:text-7xl">
-              <span className="text-brand-blue">Your next holiday</span>{" "}
-              <span className="text-brand-orange">starts here.</span>
-            </h1>
-            <p className="mx-auto mt-5 max-w-xl text-lg text-ink-muted">
-              Handpicked holidays, transparent pricing and expert support — from India to the world.
-            </p>
-            <div className="mx-auto mt-9 max-w-2xl">
-              <SearchBox suggestions={heroDestinations} popular={trending.map((d) => d.name)} />
+      {/* ── HERO ─────────────────────────────────────────────── */}
+      <section className="relative isolate overflow-hidden bg-brand-navy">
+        <div className="absolute inset-0">
+          <SmartImage src={heroImage} alt={heroAlt} sizes="100vw" priority className="h-full" />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-br from-brand-navy/90 via-brand-navy/70 to-brand-navy/35 lg:to-transparent" aria-hidden />
+
+        <Container className="relative py-14 sm:py-20 lg:py-24">
+          <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_minmax(0,460px)] lg:gap-14">
+            <div className="animate-fade-in-slow">
+              <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-brand-turquoise sm:text-sm">
+                {settings.heroEyebrow}
+              </p>
+              <h1 className="mt-4 max-w-2xl text-[2.5rem] font-extrabold text-white sm:text-6xl">
+                {settings.heroHeading}
+              </h1>
+              <p className="mt-5 max-w-xl text-base leading-relaxed text-white/85 sm:text-lg">
+                {settings.heroSubheading}
+              </p>
+
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link href={settings.heroCtaPrimaryHref} className={buttonVariants({ variant: "orange", size: "lg" })}>
+                  {settings.heroCtaPrimaryLabel} <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link href={settings.heroCtaSecondaryHref} className={buttonVariants({ variant: "onPhoto", size: "lg" })}>
+                  {settings.heroCtaSecondaryLabel}
+                </Link>
+              </div>
+
+              <ul className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm font-semibold text-white/85">
+                {fromPrice !== null && (
+                  <li className="inline-flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-brand-turquoise" />
+                    Packages from <span className="tabular text-white">{formatINR(fromPrice)}</span> per person
+                  </li>
+                )}
+                <li className="inline-flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-brand-turquoise" /> Port Blair · Havelock · Neil
+                </li>
+                <li className="inline-flex items-center gap-2">
+                  <Headset className="h-4 w-4 text-brand-turquoise" /> Local team on the islands
+                </li>
+              </ul>
             </div>
-            <div className="mt-6 flex justify-center">
-              <Link href="/packages" className={buttonVariants({ variant: "orange", size: "lg" })}>
-                Explore Holidays <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm font-medium text-ink">
-              <span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-brand-blue" /> 100% real packages</span>
-              <span className="hidden text-ink-faint sm:inline">·</span>
-              <span className="inline-flex items-center gap-2"><Wallet className="h-4 w-4 text-brand-blue" /> Transparent pricing</span>
-              <span className="hidden text-ink-faint sm:inline">·</span>
-              <span className="inline-flex items-center gap-2"><Headset className="h-4 w-4 text-brand-blue" /> 24×7 expert support</span>
-            </div>
+
+            <TripPlanner destinations={plannerPlaces} packages={planner} className="lg:sticky lg:top-24" />
           </div>
         </Container>
       </section>
 
-      {/* HOLIDAY CATEGORIES */}
-      <Section className="bg-surface-muted/60 py-12">
-        <Container>
-          <SectionHeading eyebrow="Browse by style" title="Holiday categories" />
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            {CATEGORIES.map((c) => (
-              <Link
-                key={c.theme}
-                href={`/packages?theme=${c.theme}`}
-                className="group flex flex-col items-start gap-3 rounded-2xl border border-surface-border bg-white p-5 transition-shadow hover:shadow-card"
-              >
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-blueLight text-brand-blue transition-colors group-hover:bg-brand-blue group-hover:text-white">
-                  <c.icon className="h-5 w-5" />
+      {/* ── TRUST STRIP ──────────────────────────────────────── */}
+      <section className="border-b border-surface-border bg-white">
+        <Container className="grid gap-x-6 gap-y-6 py-9 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            { icon: CalendarCheck, title: "Personalised holiday planning", body: "Every itinerary is built around your dates, your group and your budget." },
+            { icon: BedDouble, title: "Accommodation options", body: "Budget guesthouses to 4-star resorts, across all three islands." },
+            { icon: Compass, title: "Island sightseeing", body: "The beaches, the reef and the heritage sites, arranged end to end." },
+            { icon: Ship, title: "Transfers & travel assistance", body: "Airport pick-up, ferries and a team on the ground while you are here." },
+          ].map((f) => (
+            <div key={f.title} className="flex gap-3.5">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-turquoiseLight text-brand-turquoiseDark">
+                <f.icon className="h-5 w-5" />
+              </span>
+              <div>
+                <h3 className="text-[15px] font-bold leading-snug">{f.title}</h3>
+                <p className="mt-1 text-sm leading-relaxed text-ink-muted">{f.body}</p>
+              </div>
+            </div>
+          ))}
+        </Container>
+
+        {/* Social proof renders only for figures an administrator actually entered. */}
+        {(settings.reviewScore !== null || settings.travellersServed !== null || settings.registrationInfo) && (
+          <div className="border-t border-surface-border bg-surface-muted">
+            <Container className="flex flex-wrap items-center justify-center gap-x-10 gap-y-3 py-4 text-sm font-semibold text-ink">
+              {settings.reviewScore !== null && (
+                <span className="inline-flex items-center gap-2">
+                  <Star className="h-4 w-4 fill-brand-orange text-brand-orange" />
+                  <span className="tabular">{settings.reviewScore.toFixed(1)}</span> on Google
+                  {settings.reviewCount !== null && <span className="font-normal text-ink-muted">({settings.reviewCount} reviews)</span>}
                 </span>
-                <div>
-                  <p className="font-semibold text-brand-navy">{c.label}</p>
-                  <p className="text-xs text-ink-muted">{c.blurb}</p>
-                </div>
+              )}
+              {settings.travellersServed !== null && (
+                <span className="inline-flex items-center gap-2">
+                  <Palmtree className="h-4 w-4 text-brand-turquoiseDark" />
+                  <span className="tabular">{settings.travellersServed.toLocaleString("en-IN")}</span> travellers hosted
+                </span>
+              )}
+              {settings.registrationInfo && (
+                <span className="inline-flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-brand-turquoiseDark" /> {settings.registrationInfo}
+                </span>
+              )}
+            </Container>
+          </div>
+        )}
+      </section>
+
+      {/* ── FEATURED PACKAGES ────────────────────────────────── */}
+      <Section id="packages">
+        <Container>
+          <SectionHeading
+            eyebrow="Holiday packages"
+            title="Find your perfect Andaman escape"
+            description={`Five nights, six days across Port Blair, Havelock and Neil — pick the hotel category that suits your group. ${settings.priceDisclaimer}`}
+            action={
+              <Link href="/packages" className={buttonVariants({ variant: "outline", size: "sm" })}>
+                All packages <ArrowRight className="h-4 w-4" />
               </Link>
+            }
+          />
+
+          {promoLive && (
+            <p className="mb-6 inline-flex flex-wrap items-center gap-2 rounded-xl bg-brand-orangeLight px-4 py-2.5 text-sm font-semibold text-brand-orangeDark">
+              <CalendarCheck className="h-4 w-4 shrink-0" />
+              Promotional rates valid for travel {formatDate(settings.promoValidFrom)} – {formatDate(settings.promoValidTo)} · minimum {settings.defaultMinTravellers} travellers
+            </p>
+          )}
+
+          {packages.length ? (
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {packages.map((p, i) => (
+                <PackageCard key={p.id} pkg={p} priority={i < 3} />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              title="No packages published yet"
+              description="Our holiday packages will appear here as soon as they are published."
+              action={{ label: "Send us an enquiry", href: "/contact" }}
+            />
+          )}
+        </Container>
+      </Section>
+
+      {/* ── DESTINATIONS ─────────────────────────────────────── */}
+      {destinations.length > 0 && (
+        <Section className="bg-surface-muted">
+          <Container>
+            <SectionHeading
+              eyebrow="Explore the islands"
+              title="Where your Andaman holiday takes you"
+              description="Three islands, a handful of unforgettable beaches, and the heritage that made these islands matter."
+              action={
+                <Link href="/destinations" className={buttonVariants({ variant: "outline", size: "sm" })}>
+                  All destinations <ArrowRight className="h-4 w-4" />
+                </Link>
+              }
+            />
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              {destinations.slice(0, 8).map((d, i) => (
+                <Link
+                  key={d.id}
+                  href={`/destinations/${d.slug}`}
+                  className="group relative block overflow-hidden rounded-2xl shadow-card transition-shadow hover:shadow-cardHover"
+                >
+                  <div className="relative aspect-[4/5]">
+                    <SmartImage
+                      src={d.thumbnail}
+                      alt={`${d.name}, Andaman Islands`}
+                      sizes="(max-width:640px) 45vw, (max-width:1024px) 30vw, 22vw"
+                      priority={i < 4}
+                      imgClassName="transition-transform duration-500 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 photo-scrim" aria-hidden />
+                    <div className="absolute inset-x-0 bottom-0 p-4">
+                      <p className="text-base font-extrabold leading-tight text-white">{d.name}</p>
+                      <p className="mt-0.5 line-clamp-2 text-xs font-medium text-white/80">{d.shortSummary}</p>
+                      {d.packageCount > 0 && (
+                        <p className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-brand-turquoise">
+                          {d.packageCount} package{d.packageCount > 1 ? "s" : ""} <ArrowRight className="h-3 w-3" />
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </Container>
+        </Section>
+      )}
+
+      {/* ── EXPERIENCES ──────────────────────────────────────── */}
+      <Section>
+        <Container>
+          <SectionHeading
+            align="center"
+            eyebrow="What we arrange"
+            title="Everything an island holiday needs"
+            description="These are the services we plan and coordinate. What is included in your trip depends on the package you choose — each package page lists its own inclusions in full."
+          />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {EXPERIENCES.map((e) => (
+              <div key={e.title} className="rounded-2xl border border-surface-border bg-white p-6 transition-shadow hover:shadow-card">
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-blueLight text-brand-blue">
+                  <e.icon className="h-5 w-5" />
+                </span>
+                <h3 className="mt-4 text-base font-bold">{e.title}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-ink-muted">{e.body}</p>
+              </div>
             ))}
           </div>
         </Container>
       </Section>
 
-      {/* FEATURED PACKAGES */}
-      <Section>
-        <Container>
-          <SectionHeading
-            eyebrow="Ready to book"
-            title="Featured packages"
-            description="Complete holidays you can customize to your taste."
-            action={<Link href="/packages" className={buttonVariants({ variant: "outline", size: "sm" })}>View all packages</Link>}
-          />
-          {featured.length ? (
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {featured.map((p, i) => (
-                <PackageCard key={p.id} pkg={p} priority={i < 3} />
+      {/* ── GALLERY PREVIEW ──────────────────────────────────── */}
+      {gallery.length > 0 && (
+        <Section className="bg-brand-navy py-14 sm:py-20">
+          <Container>
+            <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+              <div className="max-w-xl">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-turquoise">Gallery</p>
+                <h2 className="mt-2.5 text-[1.75rem] text-white sm:text-4xl">The Andamans, as you will find them</h2>
+              </div>
+              <Link href="/gallery" className={buttonVariants({ variant: "onPhoto", size: "sm" })}>
+                View the gallery <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+              {gallery.slice(0, 8).map((g, i) => (
+                <Link
+                  key={g.id}
+                  href="/gallery"
+                  className={`group relative overflow-hidden rounded-xl ${i === 0 ? "col-span-2 row-span-2 aspect-square" : "aspect-square"}`}
+                >
+                  <SmartImage
+                    src={g.url}
+                    alt={g.alt}
+                    sizes={i === 0 ? "(max-width:640px) 100vw, 50vw" : "(max-width:640px) 50vw, 25vw"}
+                    imgClassName="transition-transform duration-500 group-hover:scale-105"
+                  />
+                  {g.caption && (
+                    <>
+                      <div className="absolute inset-0 photo-scrim-soft opacity-0 transition-opacity group-hover:opacity-100" aria-hidden />
+                      <p className="absolute inset-x-0 bottom-0 p-3 text-xs font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100">
+                        {g.caption}
+                      </p>
+                    </>
+                  )}
+                </Link>
               ))}
             </div>
-          ) : (
-            <EmptyState title="No packages published yet" description="Once packages are published they'll appear here." action={{ label: "Browse destinations", href: "/destinations" }} />
-          )}
-        </Container>
-      </Section>
+          </Container>
+        </Section>
+      )}
 
-      {/* RECENTLY VIEWED (per-viewer; renders nothing when empty) */}
+      {/* ── RECENTLY VIEWED (per-viewer; renders nothing when empty) ── */}
       <Section className="py-0">
         <Container>
           <RecentlyViewedRail limit={4} />
         </Container>
       </Section>
 
-      {/* CHOOSE YOUR WAY — 3 ways to travel */}
-      <Section>
-        <Container>
-          <SectionHeading eyebrow="Your holiday, your way" title="Three ways to travel" />
-          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-            {[
-              { title: "Ready to book", body: "Find a package and book it online in minutes.", href: "/packages", cta: "Browse holidays" },
-              { title: "Make it yours", body: "Customise hotels, activities, dates and travellers.", href: "/packages", cta: "Customise a trip" },
-              { title: "Need help choosing?", body: "Tell us what you want and get real recommendations.", href: "/ai", cta: "Get recommendations" },
-            ].map((w) => (
-              <Link key={w.title} href={w.href} className="group rounded-2xl border border-surface-border bg-white p-6 transition-shadow hover:shadow-cardHover">
-                <h3 className="text-lg font-bold text-brand-navy">{w.title}</h3>
-                <p className="mt-1.5 text-sm text-ink-muted">{w.body}</p>
-                <span className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-brand-blue group-hover:gap-1.5">{w.cta} <ArrowRight className="h-4 w-4" /></span>
-              </Link>
-            ))}
-          </div>
-        </Container>
-      </Section>
-
-      {/* EXPLORE INDIA + THE WORLD */}
-      {(indiaDestinations.length > 0 || worldDestinations.length > 0) && (
-        <Section className="bg-surface-muted/40">
+      {/* ── TESTIMONIALS — hidden entirely until real ones are published ── */}
+      {testimonials.length > 0 && (
+        <Section className="bg-surface-muted">
           <Container>
-            <div className="mx-auto max-w-2xl text-center">
-              <p className="text-sm font-bold uppercase tracking-[0.16em] text-brand-orange">Handpicked for you</p>
-              <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">India and the world, handpicked for you</h2>
-              <p className="mt-3 text-ink-muted">From the backwaters of Kerala to the beaches of Bali — real, complete holidays curated by our experts.</p>
-            </div>
-
-            {indiaDestinations.length > 0 && (
-              <div className="mt-10">
-                <div className="mb-4 flex items-end justify-between">
-                  <h3 className="flex items-center gap-2 text-xl font-bold text-brand-navy">
-                    <span className="text-2xl">🇮🇳</span> Explore India
-                  </h3>
-                  <Link href="/destinations" className="text-sm font-semibold text-brand-blue hover:underline">View all</Link>
-                </div>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                  {indiaDestinations.slice(0, 10).map((d) => (
-                    <DestinationTile key={d.id} d={d} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {worldDestinations.length > 0 && (
-              <div className="mt-12">
-                <div className="mb-4 flex items-end justify-between">
-                  <h3 className="flex items-center gap-2 text-xl font-bold text-brand-navy">
-                    <span className="text-2xl">🌏</span> Explore the World
-                  </h3>
-                  <Link href="/destinations" className="text-sm font-semibold text-brand-blue hover:underline">View all</Link>
-                </div>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                  {worldDestinations.slice(0, 10).map((d) => (
-                    <DestinationTile key={d.id} d={d} />
-                  ))}
-                </div>
-              </div>
-            )}
-          </Container>
-        </Section>
-      )}
-
-      {/* WHY EXPERTZTRIP / TRUST */}
-      <Section id="why" className="py-14">
-        <Container>
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-sm font-bold uppercase tracking-[0.16em] text-brand-orange">Why ExpertzTrip</p>
-            <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Travel with confidence</h2>
-            <p className="mt-3 text-ink-muted">More than a booking — a better way to travel.</p>
-          </div>
-          <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              { icon: Sparkles, title: "Personalized holidays", body: "Tailor every trip — hotels, dates, activities and more, built around you." },
-              { icon: Wallet, title: "Transparent pricing", body: "The price you see is verified on our servers before you ever pay. No surprises." },
-              { icon: Headset, title: "Expert travel support", body: "Real travel experts help you before, during and after your holiday." },
-              { icon: ShieldCheck, title: "Secure online booking", body: "Book and pay securely online, with confirmation and documents in your account." },
-            ].map((f) => (
-              <div key={f.title} className="rounded-2xl border border-surface-border bg-white p-6 transition-shadow hover:shadow-card">
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-blueLight text-brand-blue">
-                  <f.icon className="h-5 w-5" />
-                </span>
-                <h3 className="mt-4 text-base font-bold">{f.title}</h3>
-                <p className="mt-1.5 text-sm text-ink-muted">{f.body}</p>
-              </div>
-            ))}
-          </div>
-        </Container>
-      </Section>
-
-      {/* HOW IT WORKS */}
-      <Section id="how-it-works">
-        <Container>
-          <SectionHeading eyebrow="Simple & transparent" title="How it works" />
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              { icon: Search, step: "01", title: "Discover", body: "Search destinations or browse curated holiday packages." },
-              { icon: SlidersHorizontal, step: "02", title: "Customize", body: "Make it yours — upgrade hotels, add activities, pick dates." },
-              { icon: ShieldCheck, step: "03", title: "Verify & confirm", body: "Prices are confirmed on our servers before payment. Pay securely when you're ready." },
-              { icon: CreditCard, step: "04", title: "Travel with support", body: "Your travel expert stays with you before, during and after your trip." },
-            ].map((s) => (
-              <div key={s.step} className="relative rounded-2xl border border-surface-border bg-white p-6">
-                <span className="text-sm font-bold text-brand-orange">{s.step}</span>
-                <span className="mt-3 flex h-11 w-11 items-center justify-center rounded-xl bg-brand-blueLight text-brand-blue">
-                  <s.icon className="h-5 w-5" />
-                </span>
-                <h3 className="mt-4 font-semibold">{s.title}</h3>
-                <p className="mt-1.5 text-sm text-ink-muted">{s.body}</p>
-              </div>
-            ))}
-          </div>
-        </Container>
-      </Section>
-
-      {/* EXPERTZTRIP AI */}
-      <Section className="py-6">
-        <Container>
-          <div className="overflow-hidden rounded-3xl border border-surface-border bg-gradient-to-br from-brand-blue to-brand-blueDark p-8 sm:p-12">
-            <div className="grid items-center gap-8 md:grid-cols-2">
-              <div>
-                <span className="inline-flex items-center gap-2 rounded-full bg-white/15 py-1 pl-1 pr-3.5 text-sm font-medium text-white">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white"><AiAvatar size={18} /></span> Need help choosing?
-                </span>
-                <h2 className="mt-4 text-2xl font-bold text-white sm:text-3xl">Describe your dream trip. We&apos;ll find the real match.</h2>
-                <p className="mt-3 text-white/80">
-                  &ldquo;A 6-day Dubai holiday for 2 under ₹1.5 lakh&rdquo; — we search only real, published packages and show you the best match, best value and premium options. No made-up prices, ever.
-                </p>
-                <Link href="/ai" className={buttonVariants({ variant: "orange", className: "mt-6" })}>
-                  Get recommendations <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-              <div className="rounded-2xl bg-white/10 p-5 backdrop-blur">
-                <div className="space-y-3 text-sm">
-                  <div className="ml-auto max-w-[80%] rounded-2xl rounded-tr-sm bg-white px-4 py-2.5 text-ink">
-                    6-day Dubai trip for 2, under ₹1.5 lakh
-                  </div>
-                  <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-white/20 px-4 py-2.5 text-white">
-                    Found 2 real matches. &ldquo;Dubai Extravaganza&rdquo; (5N/6D) fits from {formatINR(45000)}/person — want me to open it?
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </Container>
-      </Section>
-
-      {/* OFFERS */}
-      {offers.length > 0 && (
-        <Section>
-          <Container>
-            <SectionHeading eyebrow="Save more" title="Current offers" action={<Link href="/offers" className={buttonVariants({ variant: "outline", size: "sm" })}>All offers</Link>} />
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-              {offers.slice(0, 3).map((o) => (
-                <Link key={o.id} href={o.ctaHref ?? "/packages"} className="group relative overflow-hidden rounded-2xl border border-surface-border">
-                  <div className="relative aspect-[16/10]">
-                    <SmartImage src={o.image} alt={o.title} sizes="(max-width:640px) 100vw, 33vw" imgClassName="transition-transform duration-500 group-hover:scale-105" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" aria-hidden />
-                  </div>
-                  <div className="absolute bottom-0 p-5 text-white">
-                    {o.badge && <span className="mb-2 inline-block rounded-full bg-brand-orange px-2.5 py-0.5 text-xs font-semibold">{o.badge}</span>}
-                    <h3 className="text-lg font-bold">{o.title}</h3>
-                    <p className="text-sm text-white/85">{o.description}</p>
-                  </div>
-                </Link>
+            <SectionHeading align="center" eyebrow="Traveller stories" title="What our guests say" />
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {testimonials.map((t) => (
+                <figure key={t.id} className="flex flex-col rounded-2xl border border-surface-border bg-white p-6">
+                  <Quote className="h-7 w-7 shrink-0 text-brand-turquoise" aria-hidden />
+                  {t.rating !== null && (
+                    <div className="mt-3 flex gap-0.5" aria-label={`${t.rating} out of 5`}>
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star key={i} className={i < t.rating! ? "h-4 w-4 fill-brand-orange text-brand-orange" : "h-4 w-4 text-surface-border"} />
+                      ))}
+                    </div>
+                  )}
+                  <blockquote className="mt-3 flex-1 text-sm leading-relaxed text-ink-muted">{t.body}</blockquote>
+                  <figcaption className="mt-5 border-t border-surface-border pt-4">
+                    <p className="text-sm font-bold text-brand-navy">{t.displayName}</p>
+                    <p className="text-xs text-ink-muted">
+                      {[t.location, t.packageName, t.reviewDate ? formatDate(t.reviewDate) : null].filter(Boolean).join(" · ")}
+                    </p>
+                  </figcaption>
+                </figure>
               ))}
             </div>
           </Container>
         </Section>
       )}
 
-      {/* REAL REVIEWS — the whole section only shows when genuine reviews exist */}
-      {reviews.length > 0 && (
-        <Section className="bg-surface-muted/60 py-14">
-          <Container>
-            <SectionHeading eyebrow="Traveller stories" title="Real reviews" description="Verified reviews from real ExpertzTrip customers." />
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {reviews.map((r) => (
-                <div key={r.id} className="rounded-2xl border border-surface-border bg-white p-6">
-                  <div className="flex gap-0.5 text-brand-orange">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} className={i < r.rating ? "h-4 w-4 fill-current" : "h-4 w-4 text-surface-border"} />
-                    ))}
-                  </div>
-                  {r.title && <h3 className="mt-3 font-semibold">{r.title}</h3>}
-                  <p className="mt-1.5 text-sm text-ink-muted">{r.body}</p>
-                  <p className="mt-4 text-sm font-medium text-brand-navy">{r.customer.fullName ?? "Verified traveller"}</p>
-                </div>
-              ))}
-            </div>
-          </Container>
-        </Section>
-      )}
-
-      {/* FAQ */}
+      {/* ── FAQ ──────────────────────────────────────────────── */}
       {faqs.length > 0 && (
         <Section id="faq">
           <Container className="max-w-3xl">
-            <SectionHeading eyebrow="Good to know" title="Frequently asked questions" />
-            <Accordion items={faqs.map((f) => ({ question: f.question, answer: f.answer }))} />
+            <SectionHeading
+              align="center"
+              eyebrow="Good to know"
+              title="Frequently asked questions"
+              action={
+                <Link href="/faq" className={buttonVariants({ variant: "outline", size: "sm" })}>
+                  All questions
+                </Link>
+              }
+            />
+            <Accordion items={faqs.slice(0, 6).map((f) => ({ question: f.question, answer: f.answer }))} />
           </Container>
         </Section>
       )}
 
-      {/* NEWSLETTER */}
-      <Section className="pt-0">
+      {/* ── CLOSING CTA ──────────────────────────────────────── */}
+      <Section className="pb-20 pt-0">
         <Container>
-          <Newsletter />
+          <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-brand-blue to-brand-navy px-6 py-12 text-center sm:px-12 sm:py-16">
+            <h2 className="mx-auto max-w-2xl text-2xl text-white sm:text-4xl">Tell us when you want to travel</h2>
+            <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-white/80">
+              Send us your dates and group size and we will come back with an itinerary and a written quotation — no obligation.
+            </p>
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
+              <Link href="/contact" className={buttonVariants({ variant: "orange", size: "lg" })}>
+                Plan my trip <ArrowRight className="h-4 w-4" />
+              </Link>
+              {wa && (
+                <a href={wa} target="_blank" rel="noopener noreferrer" className={buttonVariants({ variant: "onPhoto", size: "lg" })}>
+                  <MessageCircle className="h-4 w-4" /> WhatsApp us
+                </a>
+              )}
+              {tel && (
+                <a href={tel} className={buttonVariants({ variant: "onPhoto", size: "lg" })}>
+                  <Phone className="h-4 w-4" /> {settings.phonePrimary}
+                </a>
+              )}
+            </div>
+          </div>
         </Container>
       </Section>
     </>
-  );
-}
-
-type DestTile = {
-  id: string; slug: string; name: string; country: string;
-  region?: string | null; thumbnail: string | null; shortSummary?: string | null;
-  _count: { packages: number };
-};
-
-function DestinationTile({ d }: { d: DestTile }) {
-  return (
-    <Link
-      href={`/destinations/${d.slug}`}
-      className="group relative block overflow-hidden rounded-2xl shadow-card transition-shadow hover:shadow-cardHover"
-    >
-      <div className="relative aspect-[4/5]">
-        <SmartImage
-          src={d.thumbnail}
-          alt={`${d.name} holiday packages`}
-          sizes="(max-width:640px) 45vw, (max-width:1024px) 30vw, 18vw"
-          imgClassName="transition-transform duration-500 group-hover:scale-110"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" aria-hidden />
-        <div className="absolute inset-x-0 bottom-0 p-3.5">
-          <p className="text-base font-extrabold leading-tight text-white drop-shadow">{d.name}</p>
-          {d._count.packages > 0 && (
-            <p className="mt-0.5 text-xs font-medium text-white/85">
-              {d._count.packages} package{d._count.packages > 1 ? "s" : ""}
-            </p>
-          )}
-        </div>
-      </div>
-    </Link>
   );
 }

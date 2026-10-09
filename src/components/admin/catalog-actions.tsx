@@ -58,7 +58,7 @@ export function SchedulePublish({ id, publishAt, status }: { id: string; publish
   );
 }
 
-/** Labelled switch for "Feature on home", "ExpertzTrip Checked", and "Popular". */
+/** Labelled switch for "Feature on home", "Team reviewed", and "Popular". */
 export function FlagToggle({ id, on: initialOn, kind, label }: { id: string; on: boolean; kind: "featured" | "popular" | "checked"; label: string }) {
   const router = useRouter();
   const [on, setOn] = useState(initialOn);

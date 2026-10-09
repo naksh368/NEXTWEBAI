@@ -1,302 +1,448 @@
 /**
- * ExpertzTrip catalogue seed — 50 ORIGINAL, fully-structured holiday packages.
+ * JST Andaman Travels — catalogue seed.
  *
- * Pricing policy (per spec): we do NOT invent competitor benchmark prices. Since
- * verified benchmarks aren't available in this build, every package is created
- * with complete structure but pricingStatus = PRICE_REVIEW_REQUIRED and no
- * invented price. An admin sets a verified benchmark (+₹550) before publishing a
- * live price. Content is original and generator-built — never copied.
+ * Creates the initial, EDITABLE content an administrator then owns:
+ * destinations, the five promotional holiday packages with their full 6-day
+ * itinerary, the travel gallery, global FAQs, RBAC + a super-admin, and the
+ * website content settings.
+ *
+ * Honesty rules this seed follows:
+ *  · No testimonials and no reviews are seeded. Those sections stay hidden
+ *    until the agency publishes real ones from the admin panel.
+ *  · No review score, traveller count or registration number is invented —
+ *    those settings start empty and the trust strip hides each missing figure.
+ *  · Prices are the agency's own advertised starting rates and are flagged as
+ *    indicative (`pricingStatus = "INDICATIVE"`), never as a confirmed quote.
+ *  · Seed photography is licensed stock that matches the scene described in
+ *    each alt text. It is a placeholder for the agency's own Andaman
+ *    photography, replaceable from Admin → Media Library / Gallery.
  */
 import { PrismaClient } from "@prisma/client";
 import { ADMIN_ROLES } from "../src/lib/constants";
+import { DEFAULT_SITE_SETTINGS, SITE_SETTINGS_KEY } from "../src/lib/site-settings";
 
 const db = new PrismaClient();
-const img = (id: string) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=1600&q=70`;
+
+const img = (id: string, w = 1600) =>
+  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&q=72`;
+
+/**
+ * Verified stock photography. Each `alt` describes what the photograph
+ * actually shows — it never claims a specific Andaman landmark the image does
+ * not depict. Replace with the agency's own shots from the Media Library.
+ */
+const PHOTO = {
+  islandJetty: { id: "photo-1505881502353-a1986add3762", alt: "A wooden jetty running out to a small tree-covered island in clear turquoise shallows" },
+  sunsetBeach: { id: "photo-1507525428034-b723cf961d3e", alt: "Soft waves washing a wide sandy beach at sunset" },
+  palmsOverSea: { id: "photo-1509233725247-49e657c54213", alt: "Coconut palms leaning out over a bright turquoise sea" },
+  palmShoreline: { id: "photo-1512343879784-a960bf40e7f2", alt: "A green palm-fringed shoreline curving around calm turquoise water" },
+  boatsCliff: { id: "photo-1552465011-b4e21bf6e79a", alt: "Wooden boats moored on a beach beneath a tall limestone cliff" },
+  resortPool: { id: "photo-1566073771259-6a8506099945", alt: "A resort pool deck with sun loungers beside the water" },
+  beachUmbrella: { id: "photo-1589979481223-deb893043163", alt: "A white beach umbrella and a palm frond against a clear blue sky" },
+  coralReef: { id: "photo-1583212292454-1fe6229603b7", alt: "Shoals of small tropical fish above a shallow coral reef" },
+  rockyCove: { id: "photo-1518509562904-e7ef99cdcc86", alt: "Small boats anchored in a sheltered rocky cove of clear green water" },
+  covePalms: { id: "photo-1573790387438-4da905039392", alt: "Palm trees above a rocky cove looking down on turquoise water" },
+  sandSpit: { id: "photo-1586500036706-41963de24d8b", alt: "A narrow white sand spit reaching out into pale turquoise shallows" },
+} as const;
+
+type PhotoKey = keyof typeof PHOTO;
+const photoUrl = (k: PhotoKey) => img(PHOTO[k].id);
+const photoAlt = (k: PhotoKey) => PHOTO[k].alt;
+
+// ─────────────────────────────────────────────────────────────
+// DESTINATIONS — the places JST sells, all within Andaman & Nicobar
+// ─────────────────────────────────────────────────────────────
 
 const CATEGORIES = [
-  { name: "Beach", slug: "beach" }, { name: "Honeymoon", slug: "honeymoon" },
-  { name: "Family", slug: "family" }, { name: "Luxury", slug: "luxury" },
-  { name: "Adventure", slug: "adventure" }, { name: "City Break", slug: "city-break" },
+  { name: "Beaches", slug: "beaches" },
+  { name: "Islands", slug: "islands" },
+  { name: "Sightseeing", slug: "sightseeing" },
+  { name: "Water Sports", slug: "water-sports" },
+  { name: "Heritage", slug: "heritage" },
+  { name: "Honeymoon", slug: "honeymoon" },
+  { name: "Family", slug: "family" },
 ];
 
 type DestData = {
-  slug: string; name: string; country: string; region: string; hero: string; thumb: string;
-  shortSummary: string; overview: string; bestTime: string; popular?: boolean;
-  categories: string[]; travelInfo: Record<string, string>;
+  slug: string;
+  name: string;
+  hero: PhotoKey;
+  thumb: PhotoKey;
+  shortSummary: string;
+  overview: string;
+  bestTime: string;
+  popular?: boolean;
+  categories: string[];
+  /**
+   * The island base a stay on this spot runs from. Used to show relevant
+   * packages on sights that are visited on a day trip rather than slept at.
+   */
+  hub: string;
+  travelInfo: Record<string, string>;
 };
 
 const DESTINATIONS: DestData[] = [
-  { slug: "dubai", name: "Dubai", country: "United Arab Emirates", region: "Middle East", hero: img("photo-1512453979798-5ea266f8880c"), thumb: img("photo-1518684079-3c830dcef090"), shortSummary: "Futuristic skylines, golden deserts and world-class shopping.", overview: "Dubai blends ultramodern architecture with Arabian heritage — the Burj Khalifa, desert safaris and pristine beaches in one dazzling city.", bestTime: "November to March", popular: true, categories: ["luxury", "family", "city-break"], travelInfo: { visa: "Tourist visa (e-visa) for Indian passport holders", currency: "AED", language: "Arabic, English", timezone: "GST (UTC+4)", flightTime: "~3.5 hrs from Delhi" } },
-  { slug: "bali", name: "Bali", country: "Indonesia", region: "Asia", hero: img("photo-1537996194471-e657df975ab4"), thumb: img("photo-1518548419970-58e3b4079ab2"), shortSummary: "Emerald rice terraces, temples and surf-kissed beaches.", overview: "The Island of the Gods mixes lush jungle, sacred temples, beach clubs and warm hospitality — perfect for honeymooners and explorers.", bestTime: "April to October", popular: true, categories: ["honeymoon", "beach", "adventure"], travelInfo: { visa: "Visa on arrival for Indian passport holders", currency: "IDR", language: "Indonesian, English", timezone: "WITA (UTC+8)", flightTime: "~7 hrs from Delhi" } },
-  { slug: "maldives", name: "Maldives", country: "Maldives", region: "Asia", hero: img("photo-1514282401047-d79a71a590e8"), thumb: img("photo-1573843981267-be1999ff37cd"), shortSummary: "Overwater villas above a glass-clear turquoise lagoon.", overview: "Coral islands where powder-white sand meets impossibly blue water — snorkel reefs, dine over the ocean and stay in iconic overwater villas.", bestTime: "November to April", popular: true, categories: ["honeymoon", "luxury", "beach"], travelInfo: { visa: "Free visa on arrival (30 days)", currency: "MVR / USD", language: "Dhivehi, English", timezone: "MVT (UTC+5)", flightTime: "~4.5 hrs from Delhi" } },
-  { slug: "thailand", name: "Thailand", country: "Thailand", region: "Asia", hero: img("photo-1528181304800-259b08848526"), thumb: img("photo-1552465011-b4e21bf6e79a"), shortSummary: "Island beaches, buzzing street life and golden temples.", overview: "From Krabi's limestone cliffs to Bangkok's neon energy, Thailand delivers beaches, culture and value in equal measure.", bestTime: "November to March", popular: true, categories: ["beach", "family", "adventure"], travelInfo: { visa: "Visa on arrival / e-visa", currency: "THB", language: "Thai, English", timezone: "ICT (UTC+7)", flightTime: "~4 hrs from Delhi" } },
-  { slug: "singapore", name: "Singapore", country: "Singapore", region: "Asia", hero: img("photo-1525625293386-3f8f99389edd"), thumb: img("photo-1565967511849-76a60a516170"), shortSummary: "A gleaming garden city of food, futuristic parks and fun.", overview: "Compact, clean and endlessly entertaining — Marina Bay, Gardens by the Bay, Sentosa and hawker feasts make Singapore a family favourite.", bestTime: "Year-round", popular: true, categories: ["family", "city-break", "luxury"], travelInfo: { visa: "e-visa required", currency: "SGD", language: "English, Malay, Mandarin, Tamil", timezone: "SGT (UTC+8)", flightTime: "~5.5 hrs from Delhi" } },
-  { slug: "europe", name: "Europe", country: "Multiple", region: "Europe", hero: img("photo-1502602898657-3e91760cbb34"), thumb: img("photo-1523906834658-6e24ef2386f9"), shortSummary: "Iconic cities, alpine scenery and centuries of culture.", overview: "Glide past the Eiffel Tower, cruise Swiss lakes beneath snow-capped peaks and wander Rome's ancient streets on a multi-country tour.", bestTime: "May to September", popular: true, categories: ["luxury", "city-break", "family"], travelInfo: { visa: "Schengen visa (assistance provided)", currency: "EUR / CHF", language: "French, German, Italian, English", timezone: "CET (UTC+1)", flightTime: "~9 hrs from Delhi" } },
-  { slug: "vietnam", name: "Vietnam", country: "Vietnam", region: "Asia", hero: img("photo-1528127269322-539801943592"), thumb: img("photo-1509923292149-4b6a8b3e5a0f"), shortSummary: "Emerald bays, lantern-lit towns and vibrant street food.", overview: "Cruise the karst islands of Halong Bay, wander lantern-lit Hoi An and taste Vietnam's legendary street food across a beautiful, great-value country.", bestTime: "February to April", categories: ["adventure", "beach", "family"], travelInfo: { visa: "e-visa for Indian passport holders", currency: "VND", language: "Vietnamese, English", timezone: "ICT (UTC+7)", flightTime: "~5 hrs from Delhi" } },
-  { slug: "australia", name: "Australia", country: "Australia", region: "Oceania", hero: img("photo-1506973035872-a4ec16b8e8d9"), thumb: img("photo-1523482580672-f109ba8cb9be"), shortSummary: "Harbour cities, golden coasts and the Great Barrier Reef.", overview: "From Sydney's harbour to Melbourne's laneways and the Great Ocean Road, Australia serves world-class cities, beaches and wildlife.", bestTime: "September to November", categories: ["luxury", "family", "adventure"], travelInfo: { visa: "Visitor visa (subclass 600)", currency: "AUD", language: "English", timezone: "AEST (UTC+10)", flightTime: "~12 hrs from Delhi" } },
-  { slug: "kashmir", name: "Kashmir", country: "India", region: "India", hero: img("photo-1566837497312-7be4a47b0f3f"), thumb: img("photo-1595815771614-ade9d652a65d"), shortSummary: "Alpine meadows, shikara rides and snow-clad valleys.", overview: "Paradise on earth — Dal Lake shikaras, the meadows of Gulmarg and Pahalgam, and Mughal gardens in a serene Himalayan valley.", bestTime: "March to October", categories: ["honeymoon", "family", "adventure"], travelInfo: { visa: "Domestic — no visa", currency: "INR", language: "Kashmiri, Urdu, Hindi", timezone: "IST (UTC+5:30)", flightTime: "~1.5 hrs from Delhi" } },
-  { slug: "andaman", name: "Andaman", country: "India", region: "India", hero: img("photo-1589979481223-deb893043163"), thumb: img("photo-1544550581-5f7ceaf7f992"), shortSummary: "Turquoise seas, coral reefs and white-sand islands.", overview: "India's own island paradise — Radhanagar Beach, coral snorkelling off Havelock and Neil, and a poignant colonial history in Port Blair.", bestTime: "October to May", categories: ["beach", "honeymoon", "family"], travelInfo: { visa: "Domestic — no visa", currency: "INR", language: "Hindi, English, Bengali", timezone: "IST (UTC+5:30)", flightTime: "~2.5 hrs from Chennai" } },
-  { slug: "rajasthan", name: "Rajasthan", country: "India", region: "India", hero: img("photo-1477587458883-47145ed94245"), thumb: img("photo-1524492412937-b28074a5d7da"), shortSummary: "Majestic forts, palace hotels and desert colour.", overview: "The land of kings — Amber Fort, the lakes of Udaipur, Jaisalmer's golden dunes and heritage palace stays steeped in royalty.", bestTime: "October to March", categories: ["luxury", "family", "city-break"], travelInfo: { visa: "Domestic — no visa", currency: "INR", language: "Hindi, Rajasthani", timezone: "IST (UTC+5:30)", flightTime: "~1.5 hrs from Delhi" } },
-  { slug: "kerala", name: "Kerala", country: "India", region: "India", hero: img("photo-1602216056096-3b40cc0c9944"), thumb: img("photo-1590050752117-238cb0fb12b1"), shortSummary: "Backwater houseboats, tea hills and Ayurveda.", overview: "God's Own Country — Alleppey houseboats, the tea gardens of Munnar, and restorative Ayurveda along a lush tropical coast.", bestTime: "September to March", categories: ["honeymoon", "family", "adventure"], travelInfo: { visa: "Domestic — no visa", currency: "INR", language: "Malayalam, English", timezone: "IST (UTC+5:30)", flightTime: "~3 hrs from Delhi" } },
-  { slug: "goa", name: "Goa", country: "India", region: "India", hero: img("photo-1512343879784-a960bf40e7f2"), thumb: img("photo-1583531352515-8884af319dc1"), shortSummary: "Golden beaches, Portuguese charm and nightlife.", overview: "India's favourite beach break — sun-soaked north-Goa shacks, quieter southern sands, Latin-quarter cafés and buzzing nightlife.", bestTime: "November to February", categories: ["beach", "family", "adventure"], travelInfo: { visa: "Domestic — no visa", currency: "INR", language: "Konkani, English, Hindi", timezone: "IST (UTC+5:30)", flightTime: "~2.5 hrs from Delhi" } },
+  {
+    slug: "port-blair",
+    name: "Port Blair",
+    hero: "palmShoreline",
+    thumb: "sunsetBeach",
+    popular: true,
+    hub: "port-blair",
+    shortSummary: "The island capital — your arrival point, and the gateway to every Andaman itinerary.",
+    overview:
+      "Port Blair is where almost every Andaman holiday begins and ends. Veer Savarkar International Airport sits minutes from the town, the inter-island ferry jetties are here, and the capital holds the islands' most significant heritage sites — the Cellular Jail, Corbyn's Cove and the harbour that links Ross and North Bay. Most of our packages spend the first and last nights here.",
+    bestTime: "October to May",
+    categories: ["sightseeing", "heritage", "family"],
+    travelInfo: {
+      gettingThere: "Direct flights from Chennai, Kolkata, Delhi, Bengaluru and Hyderabad",
+      ferry: "Inter-island ferries to Havelock and Neil depart from Haddo and Phoenix Bay jetties",
+      permits: "No permit is required by Indian nationals for Port Blair, Havelock or Neil",
+      currency: "INR",
+      language: "Hindi, English, Bengali, Tamil",
+      timezone: "IST (UTC+5:30)",
+    },
+  },
+  {
+    slug: "havelock-island",
+    name: "Havelock Island",
+    hero: "palmsOverSea",
+    thumb: "palmsOverSea",
+    popular: true,
+    hub: "havelock-island",
+    shortSummary: "Swaroop Dweep — the Andamans' best-known island, and home to Radhanagar Beach.",
+    overview:
+      "Officially Swaroop Dweep, Havelock is the island most travellers picture when they picture the Andamans: long stretches of white sand, shallow turquoise water and a relaxed pace. Radhanagar on the west coast catches the sunset; Kalapathar on the east catches the sunrise. It is also the base for most snorkelling, diving and water-sports in the islands.",
+    bestTime: "October to May",
+    categories: ["beaches", "islands", "water-sports", "honeymoon"],
+    travelInfo: {
+      gettingThere: "Approximately 1.5–2 hours by private ferry from Port Blair",
+      ferry: "Private ferry operators sail several times daily; sailings are weather dependent",
+      staying: "Beach resorts and guesthouses concentrated around Beach No. 3 and Govind Nagar",
+      bestFor: "Beaches, snorkelling, scuba diving, sunsets",
+    },
+  },
+  {
+    slug: "neil-island",
+    name: "Neil Island",
+    hero: "rockyCove",
+    thumb: "covePalms",
+    popular: true,
+    hub: "neil-island",
+    shortSummary: "Shaheed Dweep — a small, quiet island of coral shallows, paddy fields and bicycles.",
+    overview:
+      "Officially Shaheed Dweep, Neil is the calm counterpoint to Havelock: a compact island you can cross by bicycle in an afternoon, with three main beaches, a natural coral bridge and some of the clearest shallow water in the group. Most itineraries give it a night, or visit it on the way back from Havelock to Port Blair.",
+    bestTime: "October to May",
+    categories: ["beaches", "islands", "honeymoon"],
+    travelInfo: {
+      gettingThere: "About 1 hour by ferry from Havelock, or 1–1.5 hours from Port Blair",
+      beaches: "Bharatpur, Laxmanpur and Sitapur",
+      bestFor: "Quiet beaches, glass-bottom boat rides, snorkelling",
+    },
+  },
+  {
+    slug: "radhanagar-beach",
+    name: "Radhanagar Beach",
+    hero: "sandSpit",
+    thumb: "sandSpit",
+    popular: true,
+    hub: "havelock-island",
+    shortSummary: "Havelock's famous west-coast beach — a long white crescent facing the sunset.",
+    overview:
+      "Radhanagar (Beach No. 7) is the beach the Andamans are known for: a wide arc of pale sand backed by rainforest, with shallow, gently shelving water and an uninterrupted western horizon for sunset. There are no watersports here — it is a swimming and walking beach, and the lifeguard flags are worth respecting.",
+    bestTime: "October to May · late afternoon for the sunset",
+    categories: ["beaches", "honeymoon", "family"],
+    travelInfo: {
+      location: "West coast of Havelock Island, about 12 km from the jetty",
+      gettingThere: "Around 25–30 minutes by road from Havelock jetty",
+      note: "Swimming only — no motorised water sports operate at Radhanagar",
+    },
+  },
+  {
+    slug: "kalapathar-beach",
+    name: "Kalapathar Beach",
+    hero: "palmsOverSea",
+    thumb: "beachUmbrella",
+    hub: "havelock-island",
+    shortSummary: "The sunrise side of Havelock, named for the black rocks along its shoreline.",
+    overview:
+      "Kalapathar sits on Havelock's eastern shore, a quieter beach of white sand framed by the dark rocks that give it its name and a road lined with tall tropical trees. It faces east, so it is the island's sunrise beach, and it is usually far less busy than Radhanagar.",
+    bestTime: "October to May · early morning for the sunrise",
+    categories: ["beaches", "honeymoon"],
+    travelInfo: {
+      location: "East coast of Havelock Island",
+      gettingThere: "About 10 minutes by road from Havelock jetty",
+      note: "Shallow and rocky in places — footwear is useful",
+    },
+  },
+  {
+    slug: "ross-island",
+    name: "Ross Island",
+    hero: "covePalms",
+    thumb: "rockyCove",
+    hub: "port-blair",
+    shortSummary: "Netaji Subhas Chandra Bose Dweep — colonial ruins slowly reclaimed by the forest.",
+    overview:
+      "Renamed Netaji Subhas Chandra Bose Dweep, Ross Island was the administrative headquarters of the British settlement until an earthquake and the Second World War emptied it. What is left — a church, a bakery, the chief commissioner's residence — stands half-swallowed by banyan roots, with deer and peacocks wandering between them. It is a short boat ride from Port Blair and usually paired with North Bay.",
+    bestTime: "October to May",
+    categories: ["heritage", "sightseeing", "islands"],
+    travelInfo: {
+      gettingThere: "About 20 minutes by boat from Rajiv Gandhi Water Sports Complex, Port Blair",
+      note: "The island is closed to visitors on some days — your final itinerary confirms the day",
+    },
+  },
+  {
+    slug: "north-bay-island",
+    name: "North Bay Island",
+    hero: "coralReef",
+    thumb: "coralReef",
+    hub: "port-blair",
+    shortSummary: "The coral reef closest to Port Blair — snorkelling, glass-bottom boats and sea walks.",
+    overview:
+      "North Bay sits across the harbour from Port Blair and is where most travellers get their first look at a living reef. Glass-bottom boat rides, snorkelling and — for those who want it — sea walking and scuba introductions all run from the beach here. Activities are operated by licensed local providers and are charged separately unless your package says otherwise.",
+    bestTime: "October to May",
+    categories: ["water-sports", "islands", "family"],
+    travelInfo: {
+      gettingThere: "About 20–30 minutes by boat from Port Blair, usually combined with Ross Island",
+      activities: "Glass-bottom boat, snorkelling, sea walking, jet ski, parasailing (operator rates apply)",
+      note: "Water sports run subject to sea conditions and operator availability on the day",
+    },
+  },
+  {
+    slug: "cellular-jail",
+    name: "Cellular Jail",
+    hero: "sunsetBeach",
+    thumb: "palmShoreline",
+    hub: "port-blair",
+    shortSummary: "Kala Pani — the colonial prison in Port Blair, and its evening Light & Sound Show.",
+    overview:
+      "The Cellular Jail is the most important site in the islands: the colonial prison where hundreds of Indian freedom fighters were held in solitary confinement, now a national memorial. Three of the original seven wings survive, along with the central tower and the gallows. The evening Light & Sound Show tells the jail's story in the courtyard and is included in most of our Port Blair itineraries.",
+    bestTime: "October to May · the show runs in the evening",
+    categories: ["heritage", "sightseeing"],
+    travelInfo: {
+      location: "Atlanta Point, Port Blair",
+      show: "Light & Sound Show in the evening; the English and Hindi showings run at different times",
+      note: "The museum and show have separate closing days — your final itinerary confirms the schedule",
+    },
+  },
 ];
 
-type Pool = { city: string; season: string; visa: string; activities: { title: string; desc: string }[] };
-const POOLS: Record<string, Pool> = {
-  dubai: { city: "Dubai", season: "Oct–Mar peak · Apr–Sep value", visa: "UAE tourist visa (add-on available)", activities: [
-    { title: "Dubai city tour", desc: "Jumeirah Mosque, Dubai Museum and the Gold & Spice Souks." },
-    { title: "At the Top — Burj Khalifa", desc: "Sunset views from the observation deck." },
-    { title: "Desert safari with dune bashing", desc: "Camel rides, sandboarding, cultural show and BBQ dinner." },
-    { title: "Dhow dinner cruise", desc: "Dinner cruise along Dubai Marina or the Creek." },
-    { title: "Abu Dhabi day trip", desc: "Sheikh Zayed Grand Mosque and the Corniche." },
-    { title: "Dubai Mall & Fountain", desc: "Aquarium, shopping and the Dubai Fountain show." },
-  ] },
-  bali: { city: "Bali", season: "Apr–Oct dry season", visa: "Visa on arrival", activities: [
-    { title: "Ubud rice terraces & swing", desc: "Tegallalang terraces and the famous Bali swing." },
-    { title: "Sacred Monkey Forest & market", desc: "Ubud's temple sanctuary and art market." },
-    { title: "Uluwatu Temple & Kecak dance", desc: "Cliffside sunset temple with fire dance." },
-    { title: "Nusa Penida day trip", desc: "Kelingking Beach and Broken Beach by speedboat." },
-    { title: "Waterfall trek", desc: "Sekumpul or Tibumana waterfalls." },
-    { title: "Seminyak beach clubs", desc: "Sunset and leisure on the west coast." },
-  ] },
-  maldives: { city: "Malé", season: "Nov–Apr dry season", visa: "Free visa on arrival", activities: [
-    { title: "House-reef snorkelling", desc: "Snorkel the resort's coral reef." },
-    { title: "Sunset dolphin cruise", desc: "Spot dolphins as the sun sets over the atoll." },
-    { title: "Sandbank picnic", desc: "Private lunch on a secluded sandbank." },
-    { title: "Sunset fishing", desc: "Traditional Maldivian line fishing." },
-    { title: "Spa & lagoon leisure", desc: "Overwater spa and time in the lagoon." },
-  ] },
-  thailand: { city: "Bangkok", season: "Nov–Mar cool season", visa: "Visa on arrival / e-visa", activities: [
-    { title: "Phi Phi Islands speedboat tour", desc: "Maya Bay and snorkelling at Pileh Lagoon." },
-    { title: "James Bond Island & sea caves", desc: "Phang Nga Bay by canoe." },
-    { title: "Krabi four-island tour", desc: "Longtail hopping around Krabi's islets." },
-    { title: "Grand Palace & Wat Pho", desc: "Bangkok's royal temples." },
-    { title: "Coral Island (Koh Larn)", desc: "Beach and water sports off Pattaya." },
-    { title: "Floating market & cabaret", desc: "Damnoen Saduak market and an evening show." },
-  ] },
-  singapore: { city: "Singapore", season: "Year-round", visa: "e-visa required", activities: [
-    { title: "Gardens by the Bay", desc: "Cloud Forest, Flower Dome and the light show." },
-    { title: "City tour", desc: "Merlion Park, Chinatown and Little India." },
-    { title: "Sentosa & Universal Studios", desc: "Theme-park day on Sentosa island." },
-    { title: "Night Safari", desc: "The world's first nocturnal wildlife park." },
-    { title: "Kuala Lumpur city tour", desc: "Petronas Towers and Batu Caves (twin-city trips)." },
-    { title: "Genting Highlands", desc: "Cable car and hilltop leisure near KL." },
-  ] },
-  europe: { city: "Paris", season: "May–Sep", visa: "Schengen visa (assistance provided)", activities: [
-    { title: "Eiffel Tower & Seine cruise", desc: "Paris highlights and a river cruise." },
-    { title: "Mount Titlis", desc: "Cable car to the glacier near Lucerne." },
-    { title: "Jungfraujoch — Top of Europe", desc: "Cogwheel train to the high alpine station." },
-    { title: "Colosseum & Vatican City", desc: "Ancient Rome and St Peter's." },
-    { title: "Venice & gondola", desc: "St Mark's Square and a gondola glide." },
-    { title: "Santorini caldera & Athens Acropolis", desc: "Greek island and classical highlights." },
-  ] },
-  vietnam: { city: "Hanoi", season: "Feb–Apr", visa: "e-visa", activities: [
-    { title: "Halong Bay cruise", desc: "Overnight or day cruise among limestone karsts." },
-    { title: "Hanoi Old Quarter", desc: "Hoan Kiem Lake and the bustling old town." },
-    { title: "Hoi An ancient town", desc: "Lantern-lit streets and the Japanese Bridge." },
-    { title: "Da Nang & Marble Mountains", desc: "My Khe Beach and cave temples." },
-    { title: "Ba Na Hills & Golden Bridge", desc: "Cable car to the iconic hand-held bridge." },
-    { title: "Cu Chi Tunnels", desc: "Historic tunnel network near Ho Chi Minh City." },
-  ] },
-  australia: { city: "Sydney", season: "Sep–Nov / Mar–May", visa: "Visitor visa (subclass 600)", activities: [
-    { title: "Sydney city & Bondi", desc: "Opera House, Harbour Bridge and Bondi Beach." },
-    { title: "Blue Mountains day trip", desc: "Three Sisters and Scenic World." },
-    { title: "Great Ocean Road", desc: "Twelve Apostles coastal drive from Melbourne." },
-    { title: "Melbourne city & Phillip Island", desc: "Laneways and the penguin parade." },
-    { title: "Great Barrier Reef cruise", desc: "Snorkel the reef from Cairns." },
-    { title: "Gold Coast theme parks", desc: "Beaches and theme-park fun." },
-  ] },
-  kashmir: { city: "Srinagar", season: "Mar–Oct", visa: "Domestic — no visa", activities: [
-    { title: "Dal Lake shikara ride", desc: "Glide past floating gardens and houseboats." },
-    { title: "Gulmarg & Gondola", desc: "Meadow of flowers and the high cable car." },
-    { title: "Pahalgam valley", desc: "Betaab Valley and Aru meadows." },
-    { title: "Mughal gardens", desc: "Nishat, Shalimar and Chashme Shahi." },
-    { title: "Sonamarg excursion", desc: "The meadow of gold and Thajiwas glacier." },
-  ] },
-  andaman: { city: "Port Blair", season: "Oct–May", visa: "Domestic — no visa", activities: [
-    { title: "Radhanagar Beach, Havelock", desc: "One of Asia's finest white-sand beaches." },
-    { title: "Cellular Jail & light show", desc: "Colonial history and the evening sound-and-light show." },
-    { title: "Coral snorkelling, Elephant Beach", desc: "Reef snorkelling and water sports." },
-    { title: "Neil Island", desc: "Natural bridge and laid-back beaches." },
-    { title: "Ross & North Bay islands", desc: "Glass-bottom boat and heritage ruins." },
-  ] },
-  rajasthan: { city: "Jaipur", season: "Oct–Mar", visa: "Domestic — no visa", activities: [
-    { title: "Amber Fort & City Palace", desc: "Jaipur's hilltop fort and royal palace." },
-    { title: "Udaipur lake tour", desc: "Lake Pichola boat ride and the City Palace." },
-    { title: "Jaisalmer fort & dunes", desc: "Golden fort and a desert camel safari." },
-    { title: "Jodhpur Mehrangarh", desc: "The mighty fort over the blue city." },
-    { title: "Pushkar & local bazaars", desc: "Sacred lake and colourful markets." },
-  ] },
-  kerala: { city: "Kochi", season: "Sep–Mar", visa: "Domestic — no visa", activities: [
-    { title: "Alleppey houseboat", desc: "Overnight cruise through the backwaters." },
-    { title: "Munnar tea gardens", desc: "Rolling tea estates and viewpoints." },
-    { title: "Thekkady spice & wildlife", desc: "Periyar sanctuary and spice plantations." },
-    { title: "Kochi heritage walk", desc: "Fort Kochi, Chinese fishing nets and cafés." },
-    { title: "Ayurveda spa session", desc: "Traditional rejuvenation therapy." },
-  ] },
-  goa: { city: "Goa", season: "Nov–Feb", visa: "Domestic — no visa", activities: [
-    { title: "North Goa beaches", desc: "Baga, Calangute and Anjuna shacks." },
-    { title: "Old Goa churches", desc: "Basilica of Bom Jesus and Se Cathedral." },
-    { title: "Dudhsagar Falls jeep safari", desc: "Four-tier waterfall in the Ghats." },
-    { title: "Sunset river cruise", desc: "Mandovi cruise with music." },
-    { title: "South Goa leisure", desc: "Quieter Palolem and Colva sands." },
-  ] },
+// ─────────────────────────────────────────────────────────────
+// PACKAGES — the agency's five promotional tiers
+// ─────────────────────────────────────────────────────────────
+
+type PkgSpec = {
+  code: string;
+  slug: string;
+  name: string;
+  theme: string;       // doubles as the public category filter
+  tierLabel: string;   // "Budget" / "3 Star" ...
+  price: number;       // starting price per person, whole rupees
+  hotelCategory: string;
+  accommodation: string;
+  transport: string;
+  ferryClass: string;
+  featured?: boolean;
+  /** Cover first, then the rest of the gallery — each tier looks distinct. */
+  images: PhotoKey[];
+  /** Inclusion switches — deliberately NOT identical across tiers. */
+  has: {
+    breakfast: boolean;
+    acTransport: boolean;
+    hotel: boolean;
+    sightseeing: boolean;
+    islandTransfers: boolean;
+    travelAssistance: boolean;
+  };
+  extras: string[];
 };
 
-// Market benchmarks (per person, from India) researched from live 2026 listings.
-// ExpertzTrip price = benchmark + ₹550 (per the pricing rule). "verify" sources
-// are reasoned market estimates the admin should confirm against supplier quotes.
-const CHECKED = "2026-08-16";
-type Benchmark = { perPerson: number; baseNights: number; perNight: number; source: string; note: string };
-const BENCHMARKS: Record<string, Benchmark> = {
-  dubai:     { perPerson: 44000,  baseNights: 4, perNight: 6000,  source: "MakeMyTrip & market listings (Aug 2026)", note: "Comparable 4★ + economy return flights + transfers + key tours" },
-  bali:      { perPerson: 48000,  baseNights: 4, perNight: 6000,  source: "MakeMyTrip / Pickyourtrail & market listings (Aug 2026)", note: "Comparable 4★ + flights + transfers + tours" },
-  thailand:  { perPerson: 42000,  baseNights: 5, perNight: 5000,  source: "MakeMyTrip & market listings (Aug 2026)", note: "Comparable Phuket/Bangkok 4★ + flights + tours" },
-  maldives:  { perPerson: 68000,  baseNights: 4, perNight: 14000, source: "Pickyourtrail / MakeMyTrip & market listings (Aug 2026)", note: "Comparable resort + speedboat/seaplane transfers + breakfast" },
-  singapore: { perPerson: 48000,  baseNights: 4, perNight: 7000,  source: "Market estimate — verify", note: "Comparable 4★ + flights + transfers + tours (estimate)" },
-  vietnam:   { perPerson: 50000,  baseNights: 5, perNight: 6000,  source: "Market estimate — verify", note: "Comparable 4★ + flights + transfers + tours (estimate)" },
-  europe:    { perPerson: 168000, baseNights: 6, perNight: 16000, source: "Flamingo / SOTC & market listings (Aug 2026)", note: "Comparable multi-country + flights + coach + key tours" },
-  australia: { perPerson: 150000, baseNights: 5, perNight: 13000, source: "Market estimate — verify", note: "Comparable 4★ + flights + transfers + tours (estimate)" },
-  kashmir:   { perPerson: 34000,  baseNights: 6, perNight: 4500,  source: "NatureConnect / Yatra & market listings (Aug 2026)", note: "Comparable 3-4★ + transport + sightseeing" },
-  andaman:   { perPerson: 35000,  baseNights: 5, perNight: 5000,  source: "Market estimate — verify", note: "Comparable + flights + transfers + tours (estimate)" },
-  rajasthan: { perPerson: 34000,  baseNights: 6, perNight: 4500,  source: "Market estimate — verify", note: "Comparable heritage stays + transport + tours (estimate)" },
-  kerala:    { perPerson: 33000,  baseNights: 6, perNight: 4500,  source: "Market estimate — verify", note: "Comparable + houseboat + transfers + tours (estimate)" },
-  goa:       { perPerson: 22000,  baseNights: 4, perNight: 4000,  source: "Market estimate — verify", note: "Comparable 4★ + flights + transfers (estimate)" },
-};
+const NIGHTS = 5;
+const DAYS = 6;
+const MIN_PAX = 4;
 
-// Extra gallery images per destination (real Unsplash photos) — every package
-// ends up with 4 images (hero + thumb + these two), so a minimum of 3.
-const EXTRA_IMAGES: Record<string, string[]> = {
-  dubai:     ["photo-1580674285054-bed31e145f59", "photo-1493246507139-91e8fad9978e"],
-  bali:      ["photo-1573790387438-4da905039392", "photo-1604999333679-b86d54738315"],
-  maldives:  ["photo-1590523277543-a94d2e4eb00b", "photo-1505881502353-a1986add3762"],
-  thailand:  ["photo-1509233725247-49e657c54213", "photo-1470004914212-05527e49370b"],
-  singapore: ["photo-1496939376851-89342e90adcd", "photo-1508964942454-1a56651d54ac"],
-  europe:    ["photo-1467269204594-9661b134dd2b", "photo-1499856871958-5b9627545d1a"],
-  vietnam:   ["photo-1583417319070-4a69db38a482", "photo-1528127269322-539801943592"],
-  australia: ["photo-1524293581917-878a6d017c71", "photo-1516426122078-c23e76319801"],
-  kashmir:   ["photo-1605649487212-47bdab064df7", "photo-1626621341517-bbf3d9990a23"],
-  andaman:   ["photo-1586500036706-41963de24d8b", "photo-1583212292454-1fe6229603b7"],
-  rajasthan: ["photo-1599661046289-e31897846e41", "photo-1609920658906-8223bd289001"],
-  kerala:    ["photo-1593693397690-362cb9666fc2", "photo-1580137189272-c9379f8864fd"],
-  goa:       ["photo-1560179707-f14e90ef3623", "photo-1571536802807-30451e3955d8"],
-};
-
-type PkgSpec = { code: string; name: string; dest: string; nights: number; category: string; bestFor: string; featured?: boolean };
 const PACKAGES: PkgSpec[] = [
-  // Dubai / UAE — 8
-  { code: "ETX-DXB-001", name: "Dubai First Escape", dest: "dubai", nights: 4, category: "FIRST_ESCAPE", bestFor: "First-time travellers, short breaks", featured: true },
-  { code: "ETX-DXB-002", name: "Dubai City & Desert", dest: "dubai", nights: 5, category: "SIGNATURE", bestFor: "Couples & friends" },
-  { code: "ETX-DXB-003", name: "Dubai Signature", dest: "dubai", nights: 5, category: "SIGNATURE", bestFor: "All-round sightseeing", featured: true },
-  { code: "ETX-DXB-004", name: "Dubai Family Discovery", dest: "dubai", nights: 5, category: "FAMILY", bestFor: "Families with kids" },
-  { code: "ETX-DXB-005", name: "Dubai Honeymoon Retreat", dest: "dubai", nights: 5, category: "HONEYMOON", bestFor: "Honeymooners" },
-  { code: "ETX-DXB-006", name: "Dubai + Abu Dhabi Highlights", dest: "dubai", nights: 6, category: "SIGNATURE", bestFor: "Twin-city explorers" },
-  { code: "ETX-DXB-007", name: "Dubai Premium Week", dest: "dubai", nights: 6, category: "PREMIUM", bestFor: "Premium travellers" },
-  { code: "ETX-DXB-008", name: "Ultimate UAE Escape", dest: "dubai", nights: 7, category: "PREMIUM", bestFor: "Longer luxury holidays", featured: true },
-  // Bali — 6
-  { code: "ETX-BAL-009", name: "Bali First Escape", dest: "bali", nights: 4, category: "FIRST_ESCAPE", bestFor: "First-timers" },
-  { code: "ETX-BAL-010", name: "Bali Beach & Culture", dest: "bali", nights: 5, category: "SIGNATURE", bestFor: "Culture & beaches" },
-  { code: "ETX-BAL-011", name: "Bali Honeymoon Retreat", dest: "bali", nights: 5, category: "HONEYMOON", bestFor: "Honeymooners", featured: true },
-  { code: "ETX-BAL-012", name: "Bali Family Discovery", dest: "bali", nights: 6, category: "FAMILY", bestFor: "Families" },
-  { code: "ETX-BAL-013", name: "Bali + Nusa Penida", dest: "bali", nights: 6, category: "ADVENTURE", bestFor: "Island-hoppers" },
-  { code: "ETX-BAL-014", name: "Bali Luxury Villa Escape", dest: "bali", nights: 7, category: "LUXURY", bestFor: "Luxury seekers" },
-  // Thailand — 6
-  { code: "ETX-THA-015", name: "Bangkok & Pattaya Highlights", dest: "thailand", nights: 5, category: "FIRST_ESCAPE", bestFor: "First-timers & value" },
-  { code: "ETX-THA-016", name: "Bangkok & Pattaya Signature", dest: "thailand", nights: 6, category: "SIGNATURE", bestFor: "Sightseeing & fun" },
-  { code: "ETX-THA-017", name: "Phuket Beach Escape", dest: "thailand", nights: 5, category: "BEACH", bestFor: "Beach lovers" },
-  { code: "ETX-THA-018", name: "Krabi Escape", dest: "thailand", nights: 5, category: "BEACH", bestFor: "Quieter beaches" },
-  { code: "ETX-THA-019", name: "Krabi + Phuket Discovery", dest: "thailand", nights: 6, category: "SIGNATURE", bestFor: "Twin-beach explorers", featured: true },
-  { code: "ETX-THA-020", name: "Thailand Honeymoon Escape", dest: "thailand", nights: 6, category: "HONEYMOON", bestFor: "Honeymooners" },
-  // Maldives — 5
-  { code: "ETX-MLE-021", name: "Maldives Beach Escape", dest: "maldives", nights: 4, category: "BEACH", bestFor: "Short island breaks" },
-  { code: "ETX-MLE-022", name: "Maldives Couple Retreat", dest: "maldives", nights: 4, category: "HONEYMOON", bestFor: "Couples", featured: true },
-  { code: "ETX-MLE-023", name: "Maldives Premium Water Villa", dest: "maldives", nights: 5, category: "PREMIUM", bestFor: "Water-villa stays" },
-  { code: "ETX-MLE-024", name: "Maldives Family Island Holiday", dest: "maldives", nights: 5, category: "FAMILY", bestFor: "Families" },
-  { code: "ETX-MLE-025", name: "Maldives Luxury Escape", dest: "maldives", nights: 6, category: "LUXURY", bestFor: "Luxury seekers" },
-  // Singapore / Malaysia — 5
-  { code: "ETX-SIN-026", name: "Singapore First Escape", dest: "singapore", nights: 4, category: "FIRST_ESCAPE", bestFor: "First-timers" },
-  { code: "ETX-SIN-027", name: "Singapore Family Explorer", dest: "singapore", nights: 5, category: "FAMILY", bestFor: "Families", featured: true },
-  { code: "ETX-SIN-028", name: "Singapore Premium Escape", dest: "singapore", nights: 5, category: "PREMIUM", bestFor: "Premium city break" },
-  { code: "ETX-SIN-029", name: "Singapore + Kuala Lumpur", dest: "singapore", nights: 6, category: "SIGNATURE", bestFor: "Twin-country trips" },
-  { code: "ETX-SIN-030", name: "Singapore + Malaysia Highlights", dest: "singapore", nights: 7, category: "SIGNATURE", bestFor: "Extended twin-country" },
-  // Vietnam — 5
-  { code: "ETX-VNM-031", name: "Vietnam First Escape", dest: "vietnam", nights: 5, category: "FIRST_ESCAPE", bestFor: "First-timers" },
-  { code: "ETX-VNM-032", name: "Hanoi + Halong Bay", dest: "vietnam", nights: 5, category: "SIGNATURE", bestFor: "Bay cruises" },
-  { code: "ETX-VNM-033", name: "Da Nang + Hoi An", dest: "vietnam", nights: 5, category: "BEACH", bestFor: "Beach & heritage" },
-  { code: "ETX-VNM-034", name: "Vietnam Couple Discovery", dest: "vietnam", nights: 6, category: "HONEYMOON", bestFor: "Couples", featured: true },
-  { code: "ETX-VNM-035", name: "Vietnam Grand Discovery", dest: "vietnam", nights: 8, category: "SIGNATURE", bestFor: "Full-country tours" },
-  // Europe — 6
-  { code: "ETX-EUR-036", name: "Swiss First Journey", dest: "europe", nights: 6, category: "SIGNATURE", bestFor: "Alpine first-timers" },
-  { code: "ETX-EUR-037", name: "Swiss Alps & Cities", dest: "europe", nights: 8, category: "SIGNATURE", bestFor: "Switzerland in depth" },
-  { code: "ETX-EUR-038", name: "Paris + Switzerland", dest: "europe", nights: 8, category: "SIGNATURE", bestFor: "Two-country classic", featured: true },
-  { code: "ETX-EUR-039", name: "Italy Highlights", dest: "europe", nights: 7, category: "SIGNATURE", bestFor: "Italy explorers" },
-  { code: "ETX-EUR-040", name: "Greece Island Escape", dest: "europe", nights: 6, category: "HONEYMOON", bestFor: "Island honeymoons" },
-  { code: "ETX-EUR-041", name: "European Grand Tour", dest: "europe", nights: 10, category: "PREMIUM", bestFor: "Multi-country grand tours" },
-  // Australia — 4
-  { code: "ETX-AUS-042", name: "Sydney First Escape", dest: "australia", nights: 5, category: "FIRST_ESCAPE", bestFor: "First-timers" },
-  { code: "ETX-AUS-043", name: "Sydney + Melbourne Highlights", dest: "australia", nights: 7, category: "SIGNATURE", bestFor: "Twin-city travellers" },
-  { code: "ETX-AUS-044", name: "Australia East Coast Discovery", dest: "australia", nights: 9, category: "SIGNATURE", bestFor: "Coast explorers" },
-  { code: "ETX-AUS-045", name: "Australia Grand Escape", dest: "australia", nights: 10, category: "PREMIUM", bestFor: "Grand holidays" },
-  // India / Premium — 5
-  { code: "ETX-IND-046", name: "Kashmir Signature Escape", dest: "kashmir", nights: 6, category: "SIGNATURE", bestFor: "Valleys & meadows", featured: true },
-  { code: "ETX-IND-047", name: "Andaman Premium Retreat", dest: "andaman", nights: 5, category: "PREMIUM", bestFor: "Island premium" },
-  { code: "ETX-IND-048", name: "Rajasthan Heritage Journey", dest: "rajasthan", nights: 6, category: "LUXURY", bestFor: "Heritage & palaces" },
-  { code: "ETX-IND-049", name: "Kerala Backwaters & Hills", dest: "kerala", nights: 6, category: "HONEYMOON", bestFor: "Backwaters & tea hills" },
-  { code: "ETX-IND-050", name: "Goa Beach Escape", dest: "goa", nights: 4, category: "BEACH", bestFor: "Beaches & nightlife" },
+  {
+    code: "JST-AND-BUD", slug: "andaman-budget-package", name: "Andaman Budget Package",
+    theme: "BUDGET", tierLabel: "Budget", price: 15600,
+    hotelCategory: "Budget hotels & guesthouses",
+    accommodation: "Clean, simple budget hotels and guesthouses in Port Blair, Havelock and Neil, on twin-sharing.",
+    transport: "Shared/seat-in-coach road transfers and sightseeing",
+    ferryClass: "Standard-class private ferry between the islands",
+    images: ["sunsetBeach", "palmsOverSea", "islandJetty", "coralReef", "rockyCove", "palmShoreline"],
+    has: { breakfast: true, acTransport: false, hotel: true, sightseeing: true, islandTransfers: true, travelAssistance: true },
+    extras: ["Airport pick-up and drop", "Entry tickets for the sights listed in the itinerary"],
+  },
+  {
+    code: "JST-AND-STD", slug: "andaman-standard-package", name: "Andaman Standard Package",
+    theme: "STANDARD", tierLabel: "Standard", price: 17400, featured: true,
+    hotelCategory: "Standard hotels",
+    accommodation: "Comfortable standard-category hotels in Port Blair, Havelock and Neil, on twin-sharing.",
+    transport: "Private air-conditioned vehicle for transfers and sightseeing",
+    ferryClass: "Standard-class private ferry between the islands",
+    images: ["palmShoreline", "sandSpit", "boatsCliff", "palmsOverSea", "coralReef", "sunsetBeach"],
+    has: { breakfast: true, acTransport: true, hotel: true, sightseeing: true, islandTransfers: true, travelAssistance: true },
+    extras: ["Airport pick-up and drop", "Entry tickets for the sights listed in the itinerary"],
+  },
+  {
+    code: "JST-AND-2ST", slug: "andaman-2-star-package", name: "Andaman 2 Star Package",
+    theme: "TWO_STAR", tierLabel: "2 Star", price: 20600,
+    hotelCategory: "2-star hotels",
+    accommodation: "2-star category hotels across Port Blair, Havelock and Neil, on twin-sharing.",
+    transport: "Private air-conditioned vehicle for transfers and sightseeing",
+    ferryClass: "Standard-class private ferry between the islands",
+    images: ["rockyCove", "covePalms", "islandJetty", "sandSpit", "coralReef", "beachUmbrella"],
+    has: { breakfast: true, acTransport: true, hotel: true, sightseeing: true, islandTransfers: true, travelAssistance: true },
+    extras: ["Airport pick-up and drop", "Entry tickets for the sights listed in the itinerary", "Dedicated island representative"],
+  },
+  {
+    code: "JST-AND-3ST", slug: "andaman-3-star-package", name: "Andaman 3 Star Package",
+    theme: "THREE_STAR", tierLabel: "3 Star", price: 22600, featured: true,
+    hotelCategory: "3-star hotels & resorts",
+    accommodation: "3-star hotels and beach resorts in Port Blair, Havelock and Neil, on twin-sharing.",
+    transport: "Private air-conditioned vehicle for transfers and sightseeing",
+    ferryClass: "Premium-class private ferry between the islands",
+    images: ["sandSpit", "palmsOverSea", "coralReef", "covePalms", "resortPool", "sunsetBeach"],
+    has: { breakfast: true, acTransport: true, hotel: true, sightseeing: true, islandTransfers: true, travelAssistance: true },
+    extras: ["Airport pick-up and drop", "Entry tickets for the sights listed in the itinerary", "Dedicated island representative"],
+  },
+  {
+    code: "JST-AND-4ST", slug: "andaman-4-star-package", name: "Andaman 4 Star Package",
+    theme: "FOUR_STAR", tierLabel: "4 Star", price: 32800, featured: true,
+    hotelCategory: "4-star resorts",
+    accommodation: "4-star resorts in Port Blair, Havelock and Neil, on twin-sharing.",
+    transport: "Private air-conditioned vehicle throughout, at your disposal on sightseeing days",
+    ferryClass: "Premium-class private ferry between the islands",
+    images: ["resortPool", "beachUmbrella", "sandSpit", "palmsOverSea", "covePalms", "coralReef"],
+    has: { breakfast: true, acTransport: true, hotel: true, sightseeing: true, islandTransfers: true, travelAssistance: true },
+    extras: ["Airport pick-up and drop", "Entry tickets for the sights listed in the itinerary", "Dedicated island representative", "Priority ferry seat allocation, subject to availability"],
+  },
 ];
 
-const CATEGORY_TO_THEME: Record<string, string> = {
-  FIRST_ESCAPE: "GROUP", SIGNATURE: "GROUP", HONEYMOON: "HONEYMOON", FAMILY: "FAMILY", LUXURY: "LUXURY", PREMIUM: "LUXURY", BEACH: "BEACH", ADVENTURE: "ADVENTURE",
-};
-
-function genDays(pool: Pool, nights: number) {
-  const total = nights + 1;
-  const days: { title: string; items: { timeslot: string; kind: string; title: string; description?: string }[] }[] = [];
-  days.push({ title: `Arrival in ${pool.city}`, items: [
-    { timeslot: "AFTERNOON", kind: "FLIGHT", title: `Arrive in ${pool.city}` },
-    { timeslot: "AFTERNOON", kind: "TRANSFER", title: "Transfer to your hotel" },
-    { timeslot: "EVENING", kind: "FREE_TIME", title: "Check-in and evening at leisure" },
-  ] });
-  for (let d = 2; d < total; d++) {
-    const a = pool.activities[(d - 2) % pool.activities.length];
-    const a2 = pool.activities[(d - 1) % pool.activities.length];
-    days.push({ title: a.title, items: [
-      { timeslot: "MORNING", kind: "ACTIVITY", title: a.title, description: a.desc },
-      { timeslot: "AFTERNOON", kind: "ACTIVITY", title: a2.title, description: a2.desc },
-      { timeslot: "EVENING", kind: "FREE_TIME", title: "Evening free for dining and leisure" },
-    ] });
-  }
-  days.push({ title: "Departure", items: [
-    { timeslot: "MORNING", kind: "TRANSFER", title: "Transfer to the airport" },
-    { timeslot: "MORNING", kind: "FLIGHT", title: "Return flight home" },
-  ] });
-  return days;
+/** Inclusion list built from the package's own switches — never assumed. */
+function inclusionsFor(p: PkgSpec): string[] {
+  const out: string[] = [];
+  if (p.has.hotel) out.push(`${NIGHTS} nights' accommodation — ${p.hotelCategory}, twin-sharing`);
+  if (p.has.breakfast) out.push("Daily breakfast at the hotel");
+  out.push(p.has.acTransport ? `${p.transport}` : `${p.transport} (non air-conditioned)`);
+  if (p.has.islandTransfers) out.push(`Inter-island ferry tickets — ${p.ferryClass}`);
+  if (p.has.sightseeing) out.push("Sightseeing as listed in the day-by-day itinerary");
+  if (p.has.travelAssistance) out.push("On-ground travel assistance throughout your stay");
+  return [...out, ...p.extras];
 }
 
-function genOptions(pool: Pool) {
-  const acts = pool.activities.slice(0, 3);
+const COMMON_EXCLUSIONS = [
+  "Airfare to and from Port Blair",
+  "Lunches, dinners and anything not listed under inclusions",
+  "Water sports, scuba diving, sea walking and other optional activities (payable to the operator on site)",
+  "Camera and video fees at monuments",
+  "Personal expenses, tips, laundry and telephone charges",
+  "Any cost arising from a ferry cancellation, flight change or weather disruption",
+  "Goods and Services Tax, unless stated otherwise in your written quotation",
+];
+
+/** The six-day itinerary, shared by all five tiers and fully editable in admin. */
+function itineraryDays(p: PkgSpec) {
+  const ac = p.has.acTransport ? "air-conditioned " : "";
   return [
-    { category: "HOTEL", groupKey: "hotel", label: "Good — 4★ central hotel", description: "Comfortable, well-located 4-star stay.", meta: { stars: 4, tier: "GOOD" }, priceDelta: 0, isDefault: true },
-    { category: "HOTEL", groupKey: "hotel", label: "Better — premium 4★", description: "Upgraded 4-star with better location/rooms.", meta: { stars: 4, tier: "BETTER" }, priceDelta: 6000 },
-    { category: "HOTEL", groupKey: "hotel", label: "Premium — 5★ hotel", description: "Top-tier 5-star property.", meta: { stars: 5, tier: "PREMIUM" }, priceDelta: 15000 },
-    { category: "FLIGHT", groupKey: "flight", label: "Economy return flights", description: "Return economy airfare.", meta: { cabin: "economy" }, priceDelta: 0, isDefault: true },
-    { category: "FLIGHT", groupKey: "flight", label: "Premium economy upgrade", description: "Extra legroom and priority boarding.", meta: { cabin: "premium_economy" }, priceDelta: 14000 },
-    { category: "TRANSFER", groupKey: "transfer", label: "Shared airport transfers", description: "Comfortable shared shuttle.", meta: { private: false }, priceDelta: 0, isDefault: true },
-    { category: "TRANSFER", groupKey: "transfer", label: "Private airport transfers", description: "Private car, door to door.", meta: { private: true }, priceDelta: 3000 },
-    { category: "MEAL", groupKey: "meal", label: "Breakfast included", description: "Daily breakfast.", priceDelta: 0, isDefault: true },
-    { category: "MEAL", groupKey: "meal", label: "Half board (breakfast + dinner)", description: "Add dinner daily.", priceDelta: 6500 },
-    ...acts.map((a, i) => ({ category: "ACTIVITY", groupKey: `activity-${i}`, label: a.title, description: a.desc, priceDelta: 2500 })),
-    { category: "ADDON", groupKey: "addon-insurance", label: "Travel insurance", priceDelta: 1200 },
-    { category: "ADDON", groupKey: "addon-visa", label: "Visa assistance", priceDelta: 2500 },
+    {
+      title: "Arrive in Port Blair",
+      summary: "Airport pick-up, hotel check-in and the Cellular Jail Light & Sound Show in the evening.",
+      items: [
+        { timeslot: "MORNING", kind: "TRANSFER", title: "Arrival at Veer Savarkar International Airport", description: `Our representative meets you outside the terminal and transfers you to your hotel by private ${ac}vehicle.` },
+        { timeslot: "AFTERNOON", kind: "HOTEL", title: "Check in and rest", description: "Check in at your Port Blair hotel. The afternoon is free to settle in after the flight." },
+        { timeslot: "EVENING", kind: "ACTIVITY", title: "Cellular Jail & Light and Sound Show", description: "Visit the Cellular Jail national memorial, then stay for the evening Light & Sound Show in the courtyard. Included where listed in your package; the show runs subject to the day's schedule and weather." },
+        { timeslot: "EVENING", kind: "NOTE", title: "Overnight in Port Blair", description: "Overnight at your hotel in Port Blair." },
+      ],
+    },
+    {
+      title: "Ross Island and North Bay Island",
+      summary: "A full day on the harbour — colonial ruins on Ross, and the coral reef at North Bay.",
+      items: [
+        { timeslot: "MORNING", kind: "MEAL", title: "Breakfast at the hotel", description: p.has.breakfast ? "Breakfast is included at your hotel." : "Breakfast is not included in this package." },
+        { timeslot: "MORNING", kind: "ACTIVITY", title: "Ross Island (Netaji Subhas Chandra Bose Dweep)", description: "A short boat ride across the harbour to the former British administrative headquarters — the church, bakery and residences now held together by banyan roots, with deer and peacocks around them." },
+        { timeslot: "AFTERNOON", kind: "ACTIVITY", title: "North Bay Island", description: "Continue to North Bay, the reef closest to Port Blair. Glass-bottom boat rides, snorkelling, sea walking and jet ski are available here and are paid directly to the licensed operator unless your package states otherwise." },
+        { timeslot: "EVENING", kind: "NOTE", title: "Overnight in Port Blair", description: "Return to Port Blair by boat and overnight at your hotel." },
+      ],
+    },
+    {
+      title: "Port Blair to Havelock Island — Radhanagar and Kalapathar",
+      summary: "Morning ferry to Havelock, then Kalapathar and sunset at Radhanagar Beach.",
+      items: [
+        { timeslot: "MORNING", kind: "TRANSFER", title: "Ferry to Havelock Island", description: `Transfer to the jetty for your morning sailing to Havelock. ${p.ferryClass}. Ferry timings are allotted by the operator and can change with sea conditions.` },
+        { timeslot: "AFTERNOON", kind: "HOTEL", title: "Check in on Havelock", description: `Check in at your Havelock hotel and continue by ${ac}vehicle for the afternoon's sightseeing.` },
+        { timeslot: "AFTERNOON", kind: "ACTIVITY", title: "Kalapathar Beach", description: "The quieter eastern shore of Havelock, named for the black rocks along the waterline and lined with tall tropical trees." },
+        { timeslot: "EVENING", kind: "ACTIVITY", title: "Radhanagar Beach at sunset", description: "Radhanagar (Beach No. 7) faces west, so the late afternoon is the time to be there. A swimming and walking beach — please follow the lifeguard flags." },
+        { timeslot: "EVENING", kind: "NOTE", title: "Overnight on Havelock", description: "Overnight at your hotel on Havelock Island." },
+      ],
+    },
+    {
+      title: "Havelock to Neil Island",
+      summary: "Ferry across to Neil, then Bharatpur, Laxmanpur and the natural coral bridge.",
+      items: [
+        { timeslot: "MORNING", kind: "MEAL", title: "Breakfast and check-out", description: p.has.breakfast ? "Breakfast at the hotel, then check out for the ferry." : "Check out for the ferry. Breakfast is not included in this package." },
+        { timeslot: "MORNING", kind: "TRANSFER", title: "Ferry to Neil Island (Shaheed Dweep)", description: `Sail across to Neil Island. ${p.ferryClass}.` },
+        { timeslot: "AFTERNOON", kind: "ACTIVITY", title: "Bharatpur and Laxmanpur beaches", description: "Bharatpur sits beside the jetty with shallow, glass-clear water and glass-bottom boat rides; Laxmanpur is the long western beach, best in the late afternoon." },
+        { timeslot: "AFTERNOON", kind: "ACTIVITY", title: "Natural Coral Bridge", description: "The natural rock arch near Laxmanpur. It is only reachable at low tide, so the visit depends on the tide table for the day." },
+        { timeslot: "EVENING", kind: "NOTE", title: "Overnight on Neil Island", description: "Overnight at your hotel on Neil Island." },
+      ],
+    },
+    {
+      title: "Neil Island back to Port Blair",
+      summary: "Return ferry to the capital, with Corbyn's Cove and the local markets in the afternoon.",
+      items: [
+        { timeslot: "MORNING", kind: "MEAL", title: "Breakfast and check-out", description: p.has.breakfast ? "Breakfast at the hotel, then check out for the ferry." : "Check out for the ferry. Breakfast is not included in this package." },
+        { timeslot: "MORNING", kind: "TRANSFER", title: "Ferry to Port Blair", description: `Sail back to Port Blair and transfer to your hotel by ${ac}vehicle.` },
+        { timeslot: "AFTERNOON", kind: "ACTIVITY", title: "Corbyn's Cove and local sightseeing", description: "Corbyn's Cove, the palm-lined beach closest to town, plus time at the Samudrika Naval Marine Museum or the local markets, as the day allows." },
+        { timeslot: "EVENING", kind: "NOTE", title: "Overnight in Port Blair", description: "Overnight at your hotel in Port Blair." },
+      ],
+    },
+    {
+      title: "Departure",
+      summary: "Check out and transfer to the airport for your flight home.",
+      items: [
+        { timeslot: "MORNING", kind: "MEAL", title: "Breakfast at the hotel", description: p.has.breakfast ? "Breakfast is included at your hotel." : "Breakfast is not included in this package." },
+        { timeslot: "MORNING", kind: "TRANSFER", title: "Transfer to Veer Savarkar International Airport", description: `Check out and transfer to the airport by private ${ac}vehicle in time for your flight.` },
+        { timeslot: "MORNING", kind: "NOTE", title: "Tour ends", description: "Your Andaman holiday with JST Andaman Travels ends here." },
+      ],
+    },
   ];
 }
 
-function departures(count = 4) {
-  const out: { date: Date; priceDelta: number }[] = [];
-  const now = new Date();
-  for (let i = 1; i <= count; i++) out.push({ date: new Date(now.getFullYear(), now.getMonth() + i, 12), priceDelta: 0 });
-  return out;
-}
+const IMPORTANT_INFO = [
+  "Inter-island ferry timings are allotted by the operators and can be changed or cancelled at short notice because of sea conditions. Where a sailing is cancelled we rearrange the itinerary; any unavoidable supplier charge is advised to you before it is incurred.",
+  "Water sports, scuba diving and sea walking are run by independently licensed operators and depend on the weather and sea conditions on the day. They are not included unless your written quotation says so.",
+  "Ross Island, the Cellular Jail museum and the Light & Sound Show each have their own closing days; your confirmed itinerary states the days that apply to your dates.",
+  "Hotels are confirmed by category, not by name, until your booking is confirmed. If a named property is unavailable we substitute one of the same or a higher category.",
+  "A valid photo ID is required for every traveller at airport check-in, the ferry jetties and hotel check-in.",
+].join("\n");
+
+const CANCELLATION_POLICY = [
+  "Cancellation terms are confirmed in writing with your quotation before you pay anything.",
+  "Ferry tickets, air tickets and some hotel categories are non-refundable once issued; those amounts are deducted from any refund.",
+  "Cancellations made within 7 days of arrival may attract the full accommodation charge, depending on each property's own terms.",
+  "Refunds are returned to the original payment method; bank processing usually takes 5–7 working days.",
+].join(" ");
+
+// ─────────────────────────────────────────────────────────────
+// GALLERY
+// ─────────────────────────────────────────────────────────────
+
+const GALLERY: { key: PhotoKey; category: string; caption: string; location?: string }[] = [
+  { key: "sandSpit", category: "BEACHES", caption: "Shallow turquoise water over a white sand spit", location: "Andaman Islands" },
+  { key: "palmsOverSea", category: "BEACHES", caption: "Coconut palms leaning out over the sea" },
+  { key: "sunsetBeach", category: "BEACHES", caption: "Sunset over a quiet stretch of sand" },
+  { key: "beachUmbrella", category: "BEACHES", caption: "An easy afternoon in the shade" },
+  { key: "islandJetty", category: "ISLANDS", caption: "A jetty running out to a small forested island" },
+  { key: "rockyCove", category: "ISLANDS", caption: "Boats anchored in a sheltered cove" },
+  { key: "covePalms", category: "ISLANDS", caption: "Looking down on clear water from the headland" },
+  { key: "boatsCliff", category: "SIGHTSEEING", caption: "Wooden boats drawn up below a limestone cliff" },
+  { key: "palmShoreline", category: "SIGHTSEEING", caption: "A palm-fringed shoreline curving around calm water" },
+  { key: "coralReef", category: "EXPERIENCES", caption: "Tropical fish over a shallow reef" },
+  { key: "resortPool", category: "RESORTS", caption: "A pool deck a few steps from the sea" },
+];
+
+// ─────────────────────────────────────────────────────────────
 
 async function reset() {
   await db.aiMessage.deleteMany(); await db.aiConversation.deleteMany();
@@ -312,15 +458,35 @@ async function reset() {
   await db.faq.deleteMany(); await db.travelGuide.deleteMany(); await db.package.deleteMany();
   await db.destinationOnCategory.deleteMany(); await db.destination.deleteMany(); await db.destinationCategory.deleteMany();
   await db.offer.deleteMany(); await db.coupon.deleteMany(); await db.supplierMapping.deleteMany(); await db.supplier.deleteMany();
+  await db.galleryItem.deleteMany(); await db.testimonial.deleteMany();
   await db.rolePermission.deleteMany(); await db.adminUser.deleteMany(); await db.permission.deleteMany(); await db.role.deleteMany();
   await db.businessSetting.deleteMany(); await db.auditLog.deleteMany();
 }
 
+export const PERMISSIONS = [
+  "dashboard.view", "booking.view", "booking.update", "booking.cancel", "booking.refund",
+  "package.view", "package.create", "package.edit", "package.publish", "package.archive",
+  "destination.manage", "supplier.manage", "customer.view", "payment.view", "refund.manage",
+  "offer.manage", "coupon.manage", "review.moderate", "content.manage", "gallery.manage",
+  "testimonial.manage", "enquiry.view", "enquiry.manage", "media.manage", "support.manage",
+  "user.manage", "role.manage", "settings.manage", "audit.view", "report.view",
+];
+
+const ROLE_PERMISSIONS: Record<string, string[]> = {
+  SUPER_ADMIN: PERMISSIONS,
+  OPERATIONS: ["dashboard.view", "booking.view", "booking.update", "booking.cancel", "enquiry.view", "enquiry.manage", "supplier.manage", "customer.view", "support.manage", "report.view"],
+  PACKAGE_MANAGER: ["dashboard.view", "package.view", "package.create", "package.edit", "package.publish", "package.archive", "destination.manage", "media.manage", "gallery.manage"],
+  FINANCE: ["dashboard.view", "payment.view", "refund.manage", "booking.refund", "report.view"],
+  SUPPORT: ["dashboard.view", "booking.view", "customer.view", "enquiry.view", "enquiry.manage", "support.manage"],
+  CONTENT_MANAGER: ["dashboard.view", "content.manage", "gallery.manage", "testimonial.manage", "media.manage", "offer.manage", "coupon.manage", "review.moderate", "destination.manage"],
+  ANALYST: ["dashboard.view", "report.view", "audit.view"],
+};
+
 async function main() {
-  // Production-safe: the Vercel build runs this on every deploy, but it must
+  // Production-safe: the deploy build runs this on every deploy, but it must
   // only populate an EMPTY database. If the catalogue already exists we skip
-  // entirely so real bookings/customers are never wiped. Force a full
-  // reset + reseed by setting FORCE_SEED=1.
+  // entirely so real enquiries, bookings and edits are never wiped.
+  // Force a full reset + reseed with FORCE_SEED=1.
   const existing = await db.package.count().catch(() => 0);
   if (existing > 0 && process.env.FORCE_SEED !== "1") {
     console.log(`✅ Database already seeded (${existing} packages) — skipping.`);
@@ -330,117 +496,185 @@ async function main() {
   console.log("🌱 Reset…");
   await reset();
 
+  console.log("🌱 Destination categories & destinations…");
   const catId = new Map<string, string>();
-  for (const [i, c] of CATEGORIES.entries()) catId.set(c.slug, (await db.destinationCategory.create({ data: { name: c.name, slug: c.slug, sortOrder: i } })).id);
+  for (const [i, c] of CATEGORIES.entries()) {
+    catId.set(c.slug, (await db.destinationCategory.create({ data: { name: c.name, slug: c.slug, sortOrder: i } })).id);
+  }
 
   const destId = new Map<string, string>();
-  const destName = new Map<string, string>();
   for (const [i, d] of DESTINATIONS.entries()) {
-    const created = await db.destination.create({ data: {
-      slug: d.slug, name: d.name, country: d.country, region: d.region, heroImage: d.hero, thumbnail: d.thumb,
-      shortSummary: d.shortSummary, overview: d.overview, bestTimeToVisit: d.bestTime, isPopular: !!d.popular,
-      sortOrder: i, travelInfo: d.travelInfo, categories: { create: d.categories.map((s) => ({ categoryId: catId.get(s)! })) },
-    } });
-    destId.set(d.slug, created.id); destName.set(d.slug, d.name);
+    const created = await db.destination.create({
+      data: {
+        slug: d.slug, name: d.name, country: "India", region: "Andaman & Nicobar Islands",
+        heroImage: photoUrl(d.hero), thumbnail: photoUrl(d.thumb),
+        shortSummary: d.shortSummary, overview: d.overview, bestTimeToVisit: d.bestTime,
+        isPopular: !!d.popular, isPublished: true, sortOrder: i,
+        travelInfo: { ...d.travelInfo, hubSlug: d.hub },
+        categories: { create: d.categories.map((s) => ({ categoryId: catId.get(s)! })) },
+      },
+    });
+    destId.set(d.slug, created.id);
   }
 
-  console.log("🌱 50 packages…");
+  console.log("🌱 Holiday packages…");
+  const route = [
+    { city: "Port Blair", nights: 2 },
+    { city: "Havelock Island", nights: 2 },
+    { city: "Neil Island", nights: 1 },
+  ];
+
   for (const p of PACKAGES) {
-    const pool = POOLS[p.dest];
-    const dName = destName.get(p.dest)!;
-    const highlights = pool.activities.slice(0, 4).map((a) => a.title);
-    const bm = BENCHMARKS[p.dest];
-    const benchmarkPrice = bm.perPerson + Math.max(0, p.nights - bm.baseNights) * bm.perNight;
-    const etxPrice = benchmarkPrice + 550; // ExpertzTrip = benchmark + ₹550
-    const pkg = await db.package.create({ data: {
-      code: p.code, slug: p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
-      name: p.name, theme: CATEGORY_TO_THEME[p.category] ?? "GROUP", destinationId: destId.get(p.dest)!,
-      status: "PUBLISHED", isFeatured: !!p.featured,
-    } });
+    const pkg = await db.package.create({
+      data: {
+        code: p.code, slug: p.slug, name: p.name, theme: p.theme,
+        destinationId: destId.get("port-blair")!,
+        status: "PUBLISHED", isFeatured: !!p.featured,
+        // Lead-generation model: prices are starting rates confirmed by the
+        // team, so the public UI offers "Enquire" rather than instant booking.
+        enquiryOnly: true,
+      },
+    });
 
-    const version = await db.packageVersion.create({ data: {
-      packageId: pkg.id, versionNumber: 1, isPublished: true, name: p.name,
-      summary: `${p.nights}N / ${p.nights + 1}D ${dName} holiday — ${p.bestFor.toLowerCase()}.`,
-      overview: `A complete ${p.nights + 1}-day ${dName} holiday covering the destination's must-see highlights with comfortable hotels, transfers and curated experiences. Fully customizable — upgrade hotels, add activities and choose your dates.`,
-      durationDays: p.nights + 1, durationNights: p.nights, currency: "INR",
-      basePrice: etxPrice, perPersonPricing: true,
-      pricingStatus: "PRICED", availabilityStatus: "AVAILABLE", targetPrice: etxPrice,
-      benchmark: { source: bm.source, dateChecked: CHECKED, departureCity: "Delhi", travellerConfig: "2 adults · twin-sharing · 4★ · economy return flights · transfers · breakfast · key tours", comparablePrice: benchmarkPrice, adjustment: 550, note: bm.note },
-      category: p.category, bestFor: p.bestFor,
-      departureCities: ["Delhi", "Mumbai", "Bengaluru", "Hyderabad", "Kolkata", "Chennai"],
-      travelWindows: pool.season, roomCategory: "Deluxe Room", mealPlan: "Breakfast",
-      flightSector: `India ⇄ ${pool.city}`, baggage: "23kg check-in + 7kg cabin", visaInfo: pool.visa,
-      insuranceInfo: "Optional travel insurance available as an add-on",
-      seoTitle: `${p.name} — ${p.nights}N ${dName} Holiday Package | ExpertzTrip`,
-      seoDescription: `Book the ${p.name}: a ${p.nights}N/${p.nights + 1}D ${dName} holiday with hotels, flights, transfers and experiences. Customize and price on request with ExpertzTrip.`,
-      highlights, inclusions: [`${p.nights} nights hotel accommodation`, "Daily breakfast", "Return economy flights", "Airport transfers", "Sightseeing & tours as per itinerary"],
-      exclusions: ["Visa fees unless specified", "Lunches & dinners unless specified", "Personal expenses, tips & optional tours", "Anything not mentioned in inclusions"],
-      cancellationPolicy: "Free cancellation up to 21 days before departure. 25% within 21–8 days. 50% within 7–3 days. No refund within 48 hours of departure. Package-specific supplier terms may apply.",
-      importantInfo: "Per person on twin-sharing. Final price is confirmed on request after a verified benchmark check. Valid passport with 6 months validity required for international travel.",
-      images: { create: [
-        DESTINATIONS.find((d) => d.slug === p.dest)!.hero,
-        DESTINATIONS.find((d) => d.slug === p.dest)!.thumb,
-        ...(EXTRA_IMAGES[p.dest] ?? []).map(img),
-      ].map((url, idx) => ({ url, isCover: idx === 0, sortOrder: idx, alt: `${p.name} ${idx + 1}` })) },
-      days: { create: genDays(pool, p.nights).map((day, di) => ({ dayNumber: di + 1, title: day.title, items: { create: day.items.map((it, ii) => ({ timeslot: it.timeslot, kind: it.kind, title: it.title, description: it.description, sortOrder: ii })) } })) },
-      options: { create: genOptions(pool).map((o, oi) => ({ category: o.category, groupKey: o.groupKey, label: o.label, description: o.description, meta: o.meta, priceDelta: o.priceDelta, perPerson: true, isDefault: !!o.isDefault, sortOrder: oi })) },
-      departures: { create: departures().map((d) => ({ date: d.date, priceDelta: d.priceDelta })) },
-    } });
+    const version = await db.packageVersion.create({
+      data: {
+        packageId: pkg.id, versionNumber: 1, isPublished: true, name: p.name,
+        summary: `${NIGHTS}N / ${DAYS}D across Port Blair, Havelock and Neil — ${p.hotelCategory.toLowerCase()}, sightseeing and all island transfers.`,
+        overview:
+          `A complete ${DAYS}-day Andaman holiday covering Port Blair, Havelock Island and Neil Island. ` +
+          `The itinerary takes in the Cellular Jail and its Light & Sound Show, Ross Island and North Bay, ` +
+          `Radhanagar and Kalapathar on Havelock, and Bharatpur, Laxmanpur and the natural coral bridge on Neil. ` +
+          `Accommodation is ${p.hotelCategory.toLowerCase()} on twin-sharing, with ${p.transport.toLowerCase()} ` +
+          `and ${p.ferryClass.toLowerCase()}. Minimum ${MIN_PAX} travellers.`,
+        durationDays: DAYS, durationNights: NIGHTS, currency: "INR",
+        basePrice: p.price, perPersonPricing: true,
+        minTravellers: MIN_PAX, maxTravellers: 30,
+        // Honest status: the rate is the agency's advertised starting price and
+        // is re-confirmed in writing before any booking. Availability is never
+        // claimed in real time — every booking is confirmed by the team.
+        pricingStatus: "INDICATIVE",
+        availabilityStatus: "ON_REQUEST",
+        category: p.theme, bestFor: `Groups of ${MIN_PAX} or more`,
+        departureCities: ["Chennai", "Kolkata", "Delhi", "Bengaluru", "Hyderabad", "Visakhapatnam"],
+        cityBreakdown: route,
+        travelWindows: "Oct–May is the main season · Jun–Sep sees heavier seas and more ferry disruption",
+        roomCategory: p.hotelCategory,
+        mealPlan: p.has.breakfast ? "Breakfast included" : "Room only",
+        flightSector: null,
+        baggage: null,
+        visaInfo: "Domestic travel — no visa required for Indian nationals. Foreign nationals should check the current permit rules before booking.",
+        insuranceInfo: "Travel insurance is not included. We can suggest a provider on request.",
+        seoTitle: `${p.name} — ${NIGHTS}N/${DAYS}D Andaman Tour | JST Andaman Travels`,
+        seoDescription: `${p.name}: a ${NIGHTS} night, ${DAYS} day Andaman holiday across Port Blair, Havelock and Neil with ${p.hotelCategory.toLowerCase()}, sightseeing and island transfers. From ₹${p.price.toLocaleString("en-IN")} per person, minimum ${MIN_PAX} travellers.`,
+        highlights: [
+          "Cellular Jail and the evening Light & Sound Show",
+          "Ross Island and the North Bay reef",
+          "Radhanagar Beach at sunset",
+          "Kalapathar Beach on Havelock's sunrise coast",
+          "Bharatpur, Laxmanpur and the natural coral bridge on Neil",
+        ],
+        inclusions: inclusionsFor(p),
+        exclusions: COMMON_EXCLUSIONS,
+        cancellationPolicy: CANCELLATION_POLICY,
+        importantInfo: IMPORTANT_INFO,
+        // This is a planned, team-confirmed holiday — not a self-serve configurator.
+        allowHotelChange: true, allowFlightChange: false, allowTransferChange: true,
+        allowActivityChange: true, allowMealChange: false, allowAddons: true, allowDateChange: true,
+        images: {
+          create: p.images.map((k, idx) => ({
+            url: photoUrl(k), alt: photoAlt(k), isCover: idx === 0, sortOrder: idx,
+          })),
+        },
+        days: {
+          create: itineraryDays(p).map((day, di) => ({
+            dayNumber: di + 1, title: day.title, summary: day.summary,
+            items: { create: day.items.map((it, ii) => ({ timeslot: it.timeslot, kind: it.kind, title: it.title, description: it.description, sortOrder: ii })) },
+          })),
+        },
+      },
+    });
+
     await db.package.update({ where: { id: pkg.id }, data: { currentVersionId: version.id } });
+
+    await db.faq.createMany({
+      data: [
+        { scope: "PACKAGE", packageId: pkg.id, question: `What is the minimum group size for the ${p.tierLabel} package?`, answer: `This rate applies to a group of ${MIN_PAX} travellers or more sharing twin rooms. We are happy to quote for smaller groups — the per-person rate changes, so please send us an enquiry.`, sortOrder: 0 },
+        { scope: "PACKAGE", packageId: pkg.id, question: "Are flights to Port Blair included?", answer: "No. Airfare to and from Port Blair is not included in this package. Tell us your departure city in your enquiry and we will quote flights alongside the land package.", sortOrder: 1 },
+        { scope: "PACKAGE", packageId: pkg.id, question: "What happens if a ferry is cancelled?", answer: "Sailings are occasionally cancelled because of sea conditions. If that happens we rearrange the itinerary and the nights affected, and we tell you about any unavoidable supplier charge before it is incurred.", sortOrder: 2 },
+      ],
+    });
   }
 
-  console.log("🌱 Offers, coupons, FAQs, guides…");
-  await db.offer.createMany({ data: [
-    { slug: "monsoon-sale", title: "Monsoon Escape Sale", description: "Seasonal savings on select beach holidays.", badge: "Limited time", image: img("photo-1507525428034-b723cf961d3e"), ctaHref: "/packages", sortOrder: 0 },
-    { slug: "honeymoon-special", title: "Honeymoon Special", description: "Complimentary romantic dinner on honeymoon packages.", badge: "Couples", image: img("photo-1522673607200-164d1b6ce486"), ctaHref: "/packages?theme=HONEYMOON", sortOrder: 1 },
-    { slug: "early-bird", title: "Early Bird Offer", description: "Book 60 days ahead and save more.", badge: "Plan ahead", image: img("photo-1436491865332-7a61a109cc05"), ctaHref: "/packages", sortOrder: 2 },
-  ] });
-  await db.coupon.createMany({ data: [
-    { code: "WELCOME5", description: "5% off your first booking", kind: "PERCENT", value: 5, maxDiscount: 6000, isActive: true },
-    { code: "FLAT4000", description: "Flat ₹4,000 off on bookings above ₹80,000", kind: "FLAT", value: 4000, minAmount: 80000, isActive: true },
-  ] });
-  await db.faq.createMany({ data: [
-    { scope: "GLOBAL", question: "How do I book a holiday with ExpertzTrip?", answer: "Pick a package, customize it, verify your mobile with an OTP, add traveller details and pay securely via Razorpay.", sortOrder: 0 },
-    { scope: "GLOBAL", question: "Why do some packages say ‘Price on request’?", answer: "We price every package against a verified market benchmark before publishing a live rate. Until that check is complete, the package shows Price on request and our team confirms the final price for you.", sortOrder: 1 },
-    { scope: "GLOBAL", question: "Can I customize a package?", answer: "Yes — upgrade hotels, choose private transfers, add activities and pick dates. Your price is always calculated and confirmed on the server.", sortOrder: 2 },
-  ] });
-  const guideDest = ["dubai", "bali", "maldives", "thailand", "europe"];
-  await db.travelGuide.createMany({ data: guideDest.map((s) => ({ slug: `${s}-travel-guide`, destinationId: destId.get(s)!, title: `${destName.get(s)} travel guide: visas, best time & tips`, excerpt: `Everything you need to plan a great ${destName.get(s)} trip.`, coverImage: DESTINATIONS.find((d) => d.slug === s)!.hero, body: `Practical tips for planning your ${destName.get(s)} holiday — visas, the best time to visit, getting around and how to pace your itinerary.` })) });
+  console.log("🌱 Gallery…");
+  await db.galleryItem.createMany({
+    data: GALLERY.map((g, i) => ({
+      url: photoUrl(g.key), alt: photoAlt(g.key), caption: g.caption,
+      location: g.location ?? null, category: g.category, isPublished: true, sortOrder: i,
+    })),
+  });
 
-  console.log("🌱 RBAC, admin, suppliers, settings…");
-  const PERMISSIONS = ["dashboard.view", "booking.view", "booking.update", "booking.cancel", "booking.refund", "package.view", "package.create", "package.edit", "package.publish", "package.archive", "destination.manage", "supplier.manage", "customer.view", "payment.view", "refund.manage", "offer.manage", "coupon.manage", "review.moderate", "content.manage", "support.manage", "user.manage", "role.manage", "settings.manage", "audit.view", "report.view"];
+  console.log("🌱 FAQs…");
+  await db.faq.createMany({
+    data: [
+      { scope: "GLOBAL", question: "When is the best time to visit the Andaman Islands?", answer: "October to May is the main season: calmer seas, reliable ferries and the clearest water. June to September is the monsoon — it is greener and quieter, but sailings are disrupted more often, so we build extra flexibility into monsoon itineraries.", sortOrder: 0 },
+      { scope: "GLOBAL", question: "Do I need a permit to visit?", answer: "Indian nationals do not need a permit for Port Blair, Havelock (Swaroop Dweep) or Neil (Shaheed Dweep). Foreign nationals are issued a Restricted Area Permit on arrival for the permitted islands. Rules change from time to time, so please check the current position before you travel.", sortOrder: 1 },
+      { scope: "GLOBAL", question: "How do I get to the Andaman Islands?", answer: "By air to Veer Savarkar International Airport in Port Blair, with direct flights from Chennai, Kolkata, Delhi, Bengaluru and Hyderabad. Airfare is not included in our land packages — tell us your departure city and we will quote it with your holiday.", sortOrder: 2 },
+      { scope: "GLOBAL", question: "Are the prices on this website final?", answer: "No. The prices shown are starting rates per person for the stated group size and occupancy. Your final quote is confirmed in writing by our team once we know your dates, group and hotel preference, and it tells you exactly what is and is not included.", sortOrder: 3 },
+      { scope: "GLOBAL", question: "Can you customise an itinerary?", answer: "Yes. Every package here is a starting point. We change the number of nights, the islands, the hotel category and the sightseeing to suit you — send us an enquiry with what you have in mind.", sortOrder: 4 },
+      { scope: "GLOBAL", question: "How do I book with JST Andaman Travels?", answer: "Send an enquiry through this website, call us, or message us on WhatsApp. We reply with a written quotation and itinerary; once you are happy with it we confirm the hotels and ferries and send you the booking confirmation.", sortOrder: 5 },
+      { scope: "GLOBAL", question: "Is scuba diving or snorkelling included?", answer: "Snorkelling at North Bay and the glass-bottom boat at Bharatpur are the usual optional activities, and scuba diving is available at Havelock and North Bay. These are run by independently licensed operators and are paid on site unless your written quotation says otherwise.", sortOrder: 6 },
+      { scope: "GLOBAL", question: "How much luggage can I take on the inter-island ferry?", answer: "Private ferry operators generally allow one check-in bag and one cabin bag per passenger, with an excess charge beyond that. The exact allowance is set by the operator and we confirm it with your ferry tickets.", sortOrder: 7 },
+    ],
+  });
+
+  console.log("🌱 RBAC, admin, settings…");
   const permId = new Map<string, string>();
-  for (const key of PERMISSIONS) permId.set(key, (await db.permission.create({ data: { key, name: key.replace(/\./g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) } })).id);
-  const rolePerms: Record<string, string[]> = {
-    SUPER_ADMIN: PERMISSIONS,
-    OPERATIONS: ["dashboard.view", "booking.view", "booking.update", "booking.cancel", "supplier.manage", "customer.view", "support.manage", "report.view"],
-    PACKAGE_MANAGER: ["dashboard.view", "package.view", "package.create", "package.edit", "package.publish", "package.archive", "destination.manage"],
-    FINANCE: ["dashboard.view", "payment.view", "refund.manage", "booking.refund", "report.view"],
-    SUPPORT: ["dashboard.view", "booking.view", "customer.view", "support.manage"],
-    CONTENT_MANAGER: ["dashboard.view", "content.manage", "offer.manage", "coupon.manage", "review.moderate", "destination.manage"],
-    ANALYST: ["dashboard.view", "report.view", "audit.view"],
-  };
+  for (const key of PERMISSIONS) {
+    permId.set(key, (await db.permission.create({ data: { key, name: key.replace(/\./g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) } })).id);
+  }
   const roleId = new Map<string, string>();
-  for (const key of ADMIN_ROLES) roleId.set(key, (await db.role.create({ data: { key, name: key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()), permissions: { create: (rolePerms[key] ?? []).map((pk) => ({ permissionId: permId.get(pk)! })) } } })).id);
-  // Phone-OTP super admin. Owner sets their name + email on first login.
-  // Admin logs in by email OTP. Defaults to the owner's email; override with
-  // ADMIN_EMAIL (must be a real inbox — the login code is sent there).
-  const adminEmail = (process.env.ADMIN_EMAIL || "expertztripofficial@gmail.com").toLowerCase();
-  // Mobile matches ADMIN_MOBILE in the login service so the login upsert reuses
-  // this row instead of creating a duplicate.
-  await db.adminUser.create({ data: { email: adminEmail, mobile: process.env.ADMIN_MOBILE || "8700650467", fullName: "Admin", roleId: roleId.get("SUPER_ADMIN")! } });
-  await db.supplier.createMany({ data: [
-    { name: "SkyLink Aviation", type: "FLIGHT", status: "ACTIVE", credentialRef: "secret://suppliers/skylink" },
-    { name: "StayWell Hotels DMC", type: "HOTEL", status: "ACTIVE", credentialRef: "secret://suppliers/staywell" },
-    { name: "DesertDrive Transfers", type: "TRANSFER", status: "ACTIVE", credentialRef: "secret://suppliers/desertdrive" },
-  ] });
-  await db.businessSetting.createMany({ data: [
-    { key: "brand", value: { name: "ExpertzTrip", supportEmail: "support@expertztrip.com", supportPhone: "+91 72909 11804" } },
-    { key: "checkout", value: { taxRatePct: 5, currency: "INR" } },
-    { key: "pricing", value: { rule: "target = verified benchmark + ₹550", policy: "PRICE_REVIEW_REQUIRED until a verified benchmark is set" } },
-  ] });
+  for (const key of ADMIN_ROLES) {
+    roleId.set(key, (await db.role.create({
+      data: {
+        key, name: key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+        permissions: { create: (ROLE_PERMISSIONS[key] ?? []).map((pk) => ({ permissionId: permId.get(pk)! })) },
+      },
+    })).id);
+  }
 
-  console.log("✅ Seed complete:", { destinations: await db.destination.count(), packages: await db.package.count(), priceReview: await db.packageVersion.count({ where: { pricingStatus: "PRICE_REVIEW_REQUIRED" } }), days: await db.packageDay.count(), options: await db.packageOption.count() });
+  /**
+   * Initial super administrator. The login is a one-time code sent to this
+   * inbox, so it MUST be an address the agency actually controls — set
+   * ADMIN_EMAIL in the environment before the first deploy. No password is
+   * stored and there is no public admin sign-up.
+   */
+  const adminEmail = (process.env.ADMIN_EMAIL || "admin@jstandamantravels.com").toLowerCase();
+  const adminMobile = (process.env.ADMIN_MOBILE || "9434284365").replace(/\D/g, "");
+  await db.adminUser.create({
+    data: { email: adminEmail, mobile: adminMobile, fullName: "JST Administrator", roleId: roleId.get("SUPER_ADMIN")! },
+  });
+
+  await db.businessSetting.createMany({
+    data: [
+      { key: SITE_SETTINGS_KEY, value: DEFAULT_SITE_SETTINGS },
+      { key: "checkout", value: { taxRatePct: 5, currency: "INR" } },
+    ],
+  });
+
+  console.log("✅ Seed complete:", {
+    destinations: await db.destination.count(),
+    packages: await db.package.count(),
+    itineraryDays: await db.packageDay.count(),
+    gallery: await db.galleryItem.count(),
+    faqs: await db.faq.count(),
+    testimonials: await db.testimonial.count(),
+    admin: adminEmail,
+  });
 }
 
-main().catch((e) => { console.error(e); process.exit(1); }).finally(async () => { await db.$disconnect(); });
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(() => db.$disconnect());

@@ -1,168 +1,300 @@
-# ExpertzTrip — Deployment guide
+# Deploying JST Andaman Travels
 
-Production checklist for taking ExpertzTrip live. Everything below is real,
-verified against the codebase — no placeholder steps.
-
-> Verified: `tsc --noEmit` clean · `next lint` clean · `npm test` 8/8 pass ·
-> `prisma validate` passes for PostgreSQL · Prisma client generates. The full
-> DB-connected `next build` runs on Vercel against your Neon database.
-> Target host: **Vercel + Neon** with a custom domain.
+Everything you need to take this from a clone to a live site, plus how to run
+it day to day once it is up.
 
 ---
 
-## 1. Prerequisites
+## 1. What you need
 
-- Node.js 18.18+ (Next.js 15 requirement)
-- A PostgreSQL database (Neon, Supabase, RDS, Railway … any managed Postgres)
-- Accounts: **MSG91** (SMS/OTP), an **email service** (SendGrid, Mailgun, AWS SES, etc.), **Razorpay** (payments)
+| Thing | Why | Cost |
+| --- | --- | --- |
+| **Node.js 20+** and npm | To build and run | free |
+| **A PostgreSQL database** | Packages, enquiries, gallery, settings | free tier available |
+| **A hosting account** (Vercel, Netlify, Railway, Render, or your own server) | To serve the site | free tier available |
+| **A transactional email provider** | So customers get their enquiry confirmation and you get the alert | free tier available |
+| **A domain name** | Your address | ~₹800/year |
+| An AI key (optional) | The trip planner | pay per use |
+| Razorpay keys (optional) | Only if you want online payment | per transaction |
+
+> The site runs **fully without** the optional items. Enquiries, packages, the
+> gallery, the admin panel and the PDF itinerary all work with nothing but a
+> database.
 
 ---
 
-## 2. Environment variables
+## 2. Local development
 
-Copy `.env.example` → `.env` (or set these in your host's dashboard — on Vercel:
-*Project → Settings → Environment Variables*). None of these live in the repo.
+```bash
+git clone <your-repo-url>
+cd NEXTWEBAI
+npm install
+cp .env.example .env
+```
+
+Open `.env` and set, at minimum:
+
+```ini
+DATABASE_URL="postgresql://user:password@host:5432/dbname?schema=public"
+DIRECT_URL="postgresql://user:password@host:5432/dbname?schema=public"
+AUTH_SECRET="<run: openssl rand -base64 32>"
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+ADMIN_EMAIL=you@yourdomain.com
+ADMIN_PASSWORD="a-long-passphrase-you-choose"
+```
+
+> **Quoting matters.** If a value contains `#`, wrap it in double quotes or the
+> parser treats the rest of the line as a comment:
+> `ADMIN_PASSWORD="My#Pass#2026"` ✅ `ADMIN_PASSWORD=My#Pass#2026` ❌
+
+Then:
+
+```bash
+npm run db:push     # create the tables
+npm run db:seed     # load the Andaman catalogue
+npm run dev         # http://localhost:3000
+```
+
+---
+
+## 3. The database
+
+Any PostgreSQL works. Two notes that catch people out:
+
+**Supabase / Neon — use the direct connection string for migrations.** The
+pooled string (it has `-pooler` in the host, or port 6543) cannot run schema
+changes. Put the direct one in `DIRECT_URL`; `DATABASE_URL` may be either.
+
+- Supabase: *Project Settings → Database → Connection string → URI*. Use
+  **Session mode / direct** for `DIRECT_URL`.
+- Neon: copy the string **without** `-pooler` for `DIRECT_URL`.
+- Railway: add a PostgreSQL service, then set
+  `DATABASE_URL=${{Postgres.DATABASE_URL}}` — nothing else to configure.
+
+Apply the schema:
+
+```bash
+npm run db:push
+```
+
+`db:push` is right for this project: the schema is the source of truth and
+there is no migration history to preserve. If you prefer versioned migrations,
+`npx prisma migrate dev --name init` works too.
+
+### Seeding
+
+```bash
+npm run db:seed
+```
+
+The seed **only populates an empty database** — if packages already exist it
+exits without touching anything, so a deploy can never wipe real enquiries.
+To deliberately wipe and reload: `FORCE_SEED=1 npx prisma db seed`.
+
+---
+
+## 4. Create the first administrator
+
+There is **no default password** and no public admin sign-up.
+
+1. Set `ADMIN_EMAIL` to an inbox you control.
+2. Set `ADMIN_PASSWORD` to a passphrase of **12 characters or more**.
+3. Deploy / restart.
+4. Go to `/sign-in` and sign in with those two values. The administrator row is
+   created on that first successful sign-in, with the password stored as a
+   scrypt hash.
+
+If an email provider is configured, a one-time code is sent to `ADMIN_EMAIL` to
+finish signing in. If email is not configured, you are signed in directly — so
+configure email before going live.
+
+Add colleagues afterwards at **Admin → Users**, giving each the narrowest role
+that lets them do their job (Admin → Roles lists what each one can do).
+
+**Rotating the password:** change `ADMIN_PASSWORD` and redeploy. The previously
+stored hash keeps working too, so you are never locked out mid-change.
+
+---
+
+## 5. Storage for images
+
+Uploaded images are stored **in the database** and served through
+`/api/media/[id]`. That means no S3 bucket, no credentials and no CORS to
+configure, and it works identically on every host.
+
+Limits: 6 MB per image; JPEG, PNG, WebP, GIF and AVIF accepted. Uploading
+requires an authenticated administrator — the endpoint returns 403 otherwise.
+
+> One caveat worth knowing: the PDF itinerary can only embed **JPEG** images.
+> A PNG or WebP cover still works everywhere on the website; it is simply left
+> out of the PDF. Upload covers as JPEG if you want them in the document.
+
+---
+
+## 6. Deploy
+
+### Vercel
+
+1. **vercel.com → Add New → Project →** import the repository.
+2. Add the environment variables from §2 under *Settings → Environment
+   Variables*, plus `NEXT_PUBLIC_SITE_URL=https://yourdomain.com`.
+3. **Deploy.** The build runs `prisma generate`, builds, and seeds an empty
+   database automatically.
+4. *Settings → Domains* → add your domain and follow the DNS instructions.
+
+### Railway (database included)
+
+1. **New Project → Deploy from GitHub repo.**
+2. **+ New → Database → PostgreSQL.**
+3. On the app service → *Variables*: `DATABASE_URL=${{Postgres.DATABASE_URL}}`
+   plus the rest from §2.
+4. *Settings → Networking → Custom Domain* → add your domain; HTTPS is
+   automatic.
+
+### Netlify / Render / your own server
+
+`netlify.toml` and `render.yaml` are included. On your own server:
+
+```bash
+npm ci && npm run build && npm run start   # listens on $PORT, default 3000
+```
+Put nginx or Caddy in front for TLS.
+
+---
+
+## 7. Production environment variables
 
 | Variable | Required | Notes |
-|---|---|---|
-| `AUTH_SECRET` | ✅ | 32+ random chars. Signs sessions + OTP tokens. |
-| `DATABASE_URL` | ✅ | The only DB value. Railway provides it automatically; on Neon use the **direct** string (without `-pooler`). |
-| `NEXT_PUBLIC_SITE_URL` | ✅ | e.g. `https://expertztrip.com`. Used in emails/links/SEO. |
-| `EMAIL_PROVIDER` | ✅ | Your email service (e.g. `sendgrid`, `mailgun`). **Login is email OTP — this must work.** |
-| `EMAIL_API_KEY` | ✅ | API key for your email provider. |
-| `EMAIL_FROM` | ✅ | `ExpertzTrip <noreply@yourdomain.com>` (from address for your emails). |
-| `ADMIN_EMAIL` | ➖ | Super Admin login email (defaults to owner email). Real inbox. |
-| `NEXT_PUBLIC_RAZORPAY_KEY_ID` | ✅ | Public key id (browser-safe). |
-| `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | ✅ | Server keys. |
-| `RAZORPAY_WEBHOOK_SECRET` | ➖ | Enables the payment webhook (recommended). |
-| `SMS_PROVIDER` | ➖ | `console` to launch. `msg91` + templates later for SMS alerts. |
-| `MSG91_AUTH_KEY` / `SMS_SENDER_ID` / `MSG91_*_TEMPLATE_ID` | ➖ | Only for optional SMS alerts. |
-| `NEXT_PUBLIC_RAZORPAY_KEY_ID` | ✅ | Public key id (browser-safe). |
-| `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | ✅ | Server keys. |
-| `RAZORPAY_WEBHOOK_SECRET` | ➖ | Enables the payment webhook (recommended). |
-| `AI_API_KEY` | ➖ | OpenAI/OpenRouter key. Without it, AI falls back to grounded keyword search. |
-| `AI_PROVIDER` / `AI_MODEL` / `AI_BASE_URL` | ➖ | Defaults target OpenAI-compatible gateways. |
+| --- | --- | --- |
+| `DATABASE_URL` | ✅ | PostgreSQL connection string |
+| `DIRECT_URL` | ✅ | Non-pooled string, for schema changes |
+| `AUTH_SECRET` | ✅ | `openssl rand -base64 32` |
+| `NEXT_PUBLIC_SITE_URL` | ✅ | `https://yourdomain.com` — canonical URLs, sitemap, email links |
+| `ADMIN_EMAIL` | ✅ | The first administrator's inbox |
+| `ADMIN_PASSWORD` | ✅ | 12+ characters; quote it if it contains `#` |
+| `EMAIL_PROVIDER`, `EMAIL_API_KEY`, `EMAIL_FROM` | strongly recommended | Without these, nobody receives enquiry confirmations or login codes |
+| `BUSINESS_EMAIL` | optional | Where new-enquiry alerts go (defaults to `ADMIN_EMAIL`) |
+| `AI_API_KEY`, `AI_BASE_URL`, `AI_MODEL` | optional | Turns on the trip planner |
+| `SMS_PROVIDER`, `MSG91_*` | optional | SMS OTP for customer login |
+| `RAZORPAY_*` | optional | Only for online payment |
+| `CRON_SECRET` | recommended | Protects the scheduled-job endpoints |
 
-**To change any of these later:** edit the value in the host dashboard and
-redeploy/restart. No code change needed to rotate keys or swap a provider.
+**Never** commit real values. `.env` is gitignored; `.env.example` is the
+template and must stay free of secrets.
 
 ---
 
-## 3. Database (PostgreSQL — auto-provisioned)
+## 8. Custom domain
 
-The schema is already set to `provider = "postgresql"`. **You do not run any
-database commands manually.** The `vercel-build` script runs on every deploy:
-
-```
-prisma generate → prisma db push → seed (only if empty) → next build
-```
-
-- On the **first** deploy it creates all tables and seeds the 50 packages,
-  roles/permissions and the Super Admin.
-- On **later** deploys it syncs the schema and **skips seeding** because data
-  already exists — real bookings/customers are never wiped. (Force a full
-  reseed by setting `FORCE_SEED=1` for one deploy.)
-
-All you provide is `DATABASE_URL` pointing at your Neon database (see §6).
-
-### Create the Neon database
-1. Sign up at neon.tech → **New Project**.
-2. Copy the **connection string** (Dashboard → Connect). Use the **direct**
-   (non-pooled) string — it works for both `db push` and runtime at launch
-   scale. It looks like:
-   `postgresql://USER:PASSWORD@ep-xxxx.region.aws.neon.tech/neondb?sslmode=require`
-3. That whole string is your `DATABASE_URL`.
+1. Add the domain in your host's dashboard.
+2. At your registrar, add the records it shows you — usually an `A` record for
+   the apex and a `CNAME` for `www`.
+3. Wait for DNS (minutes to a few hours). HTTPS is issued automatically.
+4. **Set `NEXT_PUBLIC_SITE_URL` to the final `https://` address and redeploy.**
+   Canonical tags, the sitemap and every link in an outgoing email come from
+   this value; if it is wrong, those all point at the wrong place.
 
 ---
 
-## 4. Provider setup
+## 9. Running the site day to day
 
-### MSG91 (SMS + OTP) — India DLT
-MSG91 cannot send any SMS without DLT-approved templates. In the MSG91 console:
-1. Register your sender id and create DLT templates.
-2. Put their ids in `MSG91_OTP_TEMPLATE_ID`, `MSG91_WELCOME_TEMPLATE_ID`,
-   `MSG91_TXN_TEMPLATE_ID`.
-3. Set `SMS_PROVIDER=msg91`.
+Everything below is done in the admin panel. None of it needs a developer.
 
-Until a template id is present, the matching SMS is **honestly skipped** (logged
-as `SKIPPED` in `MessageLog`) — never faked.
+### Changing prices or packages
+**Admin → Packages →** pick a package → edit the price, duration, hotel
+category, minimum group size, inclusions, exclusions or itinerary → save.
+Changes appear on the public site immediately.
 
-### Email Service — ⚠️ REQUIRED FOR LOGIN
-Login is **email OTP**, so your email service must be able to deliver to real customer inboxes.
-1. Sign up with an email provider (e.g. **SendGrid**, **Mailgun**, **AWS SES**, **Gmail SMTP**, etc.).
-2. Obtain your API key from the provider.
-3. Set `EMAIL_PROVIDER` to your provider name and `EMAIL_API_KEY` to the API key.
-4. Set `EMAIL_FROM` to a valid sender address for your emails.
+### Editing the itinerary
+**Admin → Packages → [package] → Itinerary.** Add days, remove days, reorder
+them, edit the text, attach photographs. The public page and the downloadable
+PDF both update.
 
-You'll need to implement the provider in `src/lib/services/email.ts` if it's not already available.
-See the console provider as an example for how to add a new provider.
+### Handling enquiries
+**Admin → Enquiries.** Search by name, phone, email, reference or package;
+filter by status; call or WhatsApp in one click; set the status (New,
+Contacted, Follow-up required, Quoted, Confirmed, Closed), assign an owner, set
+a follow-up date and keep internal notes.
 
-### SMS (MSG91) — optional
-SMS is not required to log in. Leave `SMS_PROVIDER=console` to launch, and
-add MSG91 + DLT templates later for SMS booking/document alerts.
+*Internal notes are staff-only.* They never appear on the website and are never
+included in anything sent to the customer.
 
-### Razorpay (payments)
-1. Set `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` / `NEXT_PUBLIC_RAZORPAY_KEY_ID`.
-2. (Recommended) Add a webhook pointing at `/api/webhooks/razorpay` and set
-   `RAZORPAY_WEBHOOK_SECRET`. Server-side signature verification is always on;
-   without the webhook, payment success still relies on the verified client
-   callback (`/api/payments/razorpay/verify`).
+**Export:** the *Export CSV* button downloads exactly the rows your current
+filter shows, internal notes included — it is your record, behind the same
+permission as the list.
 
----
+### Photographs
+**Admin → Media Library** to upload. **Admin → Gallery** to choose which appear
+publicly, set alt text and captions, group them by category and order them.
+Hiding a photo takes it off the site instantly without deleting it.
 
-## 5. Admin access
+### Testimonials
+**Admin → Testimonials.** Enter a testimonial from a message you actually
+received, then publish it. The homepage section stays hidden until at least one
+is published. Nothing here is generated.
 
-- Admin login is **email + OTP** (no password). The seeded Super Admin email is
-  the owner email (override with the `ADMIN_EMAIL` env var — it must be a real
-  inbox, since the login code is sent there). Mobile `+91 8700650467` is stored
-  for contact.
-- The admin sets their display name on first login.
-- Tip: the admin email can be your Resend account email, so admin login works
-  even before the sending domain is verified.
+### Website copy, contact details and SEO
+**Admin → Website content.** Brand name, logo, tagline, hero heading, hero
+photograph, button labels, announcement bar, phone numbers, WhatsApp, email,
+address, office hours, social links, promotional dates, the price disclaimer
+and the SEO defaults.
 
----
+> The review score, review count, traveller count and registration number start
+> **empty on purpose**, and each one stays hidden on the site until you enter a
+> real value. Please only enter figures you can evidence.
 
-## 6. Deploy to Vercel
-
-1. Go to **vercel.com** → sign in with GitHub → **Add New → Project** →
-   import `naksh368/NEXTWEBAI`.
-2. Select the branch to deploy (your feature branch, or merge it to `main`
-   first and deploy `main`).
-3. **Environment Variables** — add every required var from §2, including
-   `DATABASE_URL` (your Neon string) and `AUTH_SECRET`. Vercel auto-detects
-   Next.js; the `vercel-build` script handles Prisma + DB + seed, so no build
-   settings to change.
-4. Click **Deploy**. First build provisions the DB and seeds the catalogue.
-
-## 7. Connect your custom domain
-
-1. In the Vercel project → **Settings → Domains** → add your domain
-   (e.g. `expertztrip.com` and `www.expertztrip.com`).
-2. Vercel shows the exact DNS records. At your registrar (GoDaddy/Namecheap/…)
-   add them — typically:
-   | Type | Name | Value |
-   |---|---|---|
-   | `A` | `@` (apex) | `76.76.21.21` |
-   | `CNAME` | `www` | `cname.vercel-dns.com` |
-   > Always use the exact values Vercel displays for your domain.
-3. Wait for DNS to propagate (minutes to a couple of hours). Vercel issues the
-   HTTPS certificate automatically.
-4. Set `NEXT_PUBLIC_SITE_URL=https://your-domain` in Vercel and redeploy so
-   emails, links and SEO use the live domain.
+### When the promotional window ends
+The banner changes by itself to "ask us for current rates" the day after
+`promoValidTo`. To run a new promotion, set new dates in **Admin → Website
+content → Pricing & trust**. Packages and enquiries are untouched.
 
 ---
 
-## 8. Post-deploy smoke test
+## 10. Troubleshooting
 
-- [ ] Home, packages, package detail, destinations pages load.
-- [ ] Customer OTP login works (real SMS received).
-- [ ] Admin OTP login works on **+91 8700650467**.
-- [ ] Create a booking → Razorpay checkout → payment verified.
-- [ ] After payment: customer gets in-app + email + SMS ("payment received").
-- [ ] Admin uploads a document → customer gets "document ready" notification.
-- [ ] Notification center shows unread count; "mark all read" works.
-- [ ] AI assistant answers from real packages only.
+**Build fails: `Environment variable not found: DATABASE_URL`**
+It is not set for the build environment. On Vercel, make sure the variable is
+ticked for *Production* as well as *Preview*.
+
+**Build fails on a schema step with a pooled connection**
+Set `DIRECT_URL` to the non-pooled string (no `-pooler`, port 5432).
+
+**I cannot sign in to /admin**
+`ADMIN_EMAIL` and `ADMIN_PASSWORD` must both be set, and the password must be
+at least 12 characters, or the bootstrap login is disabled by design. The
+server log says so explicitly at startup. Also check the quoting rule in §2 if
+your password contains `#`.
+
+**No emails arrive**
+With `EMAIL_PROVIDER=console` the message is printed to the server log instead
+of being sent — that is the development default. Set a real provider and key.
+
+**Images do not load**
+Remote images need their host allowed in `next.config.mjs` under
+`images.remotePatterns`. Images you upload yourself are served from your own
+domain and always work.
+
+**A package shows the wrong price after an edit**
+Pages are cached for a few minutes. Saving through the admin panel clears the
+cache for that page automatically; if you changed the database directly, wait
+for the cache window or redeploy.
+
+**The site says "No packages published yet"**
+Either the database was never seeded (`npm run db:seed`) or every package is in
+draft. Check **Admin → Packages** and publish one.
 
 ---
 
-_Real packages · clear pricing · expert support._
+## 11. Before you go live — checklist
+
+- [ ] `NEXT_PUBLIC_SITE_URL` is the real `https://` domain
+- [ ] `ADMIN_PASSWORD` is long and unique, and `AUTH_SECRET` is freshly generated
+- [ ] A real email provider is configured and a test enquiry arrived in your inbox
+- [ ] Phone, WhatsApp, email and address are correct in **Admin → Website content**
+- [ ] The seeded stock photography is replaced with your own
+- [ ] Prices, inclusions and the promotional dates are confirmed as correct
+- [ ] **The privacy policy and booking terms have been reviewed by a lawyer.**
+      The supplied text describes how the business works and is a sound
+      starting point, but it has not been legally reviewed — the banner on
+      those pages says so until you replace the text.
+- [ ] Any review score or traveller count you entered is a real, evidenced figure

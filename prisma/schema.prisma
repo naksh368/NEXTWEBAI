@@ -27,7 +27,7 @@ model Customer {
   id           String   @id @default(cuid())
   mobile       String?  @unique // login identifier (email or mobile)
   email        String?  @unique // login identifier + used for docs/e-tickets
-  passwordHash String?           // scrypt hash via lib/password.ts
+  passwordHash String? // scrypt hash via lib/password.ts
   fullName     String?
   isVerified   Boolean  @default(false)
   isRepeat     Boolean  @default(false) // has booked more than once
@@ -35,46 +35,46 @@ model Customer {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  profile      CustomerProfile?
-  travellers   Traveller[]
-  bookings     Booking[]
-  otpSessions  OtpSession[]
-  reviews      Review[]
-  tickets      SupportTicket[]
-  aiSessions   AiConversation[]
+  profile       CustomerProfile?
+  travellers    Traveller[]
+  bookings      Booking[]
+  otpSessions   OtpSession[]
+  reviews       Review[]
+  tickets       SupportTicket[]
+  aiSessions    AiConversation[]
   notifications Notification[]
 
   @@index([mobile])
 }
 
 model CustomerProfile {
-  id           String    @id @default(cuid())
-  customerId   String    @unique
-  customer     Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  dateOfBirth  DateTime?
-  gender       String?
-  city         String?
-  country      String?   @default("India")
-  passportNo   String?
-  avatarUrl    String?
-  marketingOptIn Boolean @default(false)
-  updatedAt    DateTime  @updatedAt
+  id             String    @id @default(cuid())
+  customerId     String    @unique
+  customer       Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  dateOfBirth    DateTime?
+  gender         String?
+  city           String?
+  country        String?   @default("India")
+  passportNo     String?
+  avatarUrl      String?
+  marketingOptIn Boolean   @default(false)
+  updatedAt      DateTime  @updatedAt
 }
 
 /// OTP sessions — code is stored hashed, never plaintext (Phase 13).
 // Email OTP for customer sign-up verification. Holds the pending account until
 // the emailed code is verified; then a Customer row is created.
 model EmailOtp {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   email        String
   mobile       String?
   codeHash     String
   fullName     String
   passwordHash String
-  attempts     Int      @default(0)
+  attempts     Int       @default(0)
   expiresAt    DateTime
   consumedAt   DateTime?
-  createdAt    DateTime @default(now())
+  createdAt    DateTime  @default(now())
 
   @@index([email])
   @@index([expiresAt])
@@ -83,29 +83,29 @@ model EmailOtp {
 // Email OTP for customer LOGIN (2-step). Created after the password is verified;
 // the customer is signed in only after the emailed code is confirmed.
 model PasswordReset {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   customerId String
   email      String
   codeHash   String
-  attempts   Int      @default(0)
+  attempts   Int       @default(0)
   expiresAt  DateTime
   consumedAt DateTime?
-  createdAt  DateTime @default(now())
+  createdAt  DateTime  @default(now())
 
   @@index([email])
   @@index([expiresAt])
 }
 
 model LoginOtp {
-  id          String   @id @default(cuid())
-  customerId  String?  // set for customer login
-  adminUserId String?  // set for admin login
+  id          String    @id @default(cuid())
+  customerId  String? // set for customer login
+  adminUserId String? // set for admin login
   email       String
   codeHash    String
-  attempts    Int      @default(0)
+  attempts    Int       @default(0)
   expiresAt   DateTime
   consumedAt  DateTime?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
 
   @@index([email])
   @@index([expiresAt])
@@ -116,30 +116,30 @@ model LoginOtp {
  * Pay → Booking. FKs are scalar (resolved in code) to keep the graph small.
  */
 model Quote {
-  id            String   @id @default(cuid())
-  reference     String   @unique // QUO-XXXXXX
-  enquiryId     String?  // the lead this quote answers
-  customerId    String?  // linked customer account, if known
-  packageId     String?
+  id               String    @id @default(cuid())
+  reference        String    @unique // QUO-XXXXXX
+  enquiryId        String? // the lead this quote answers
+  customerId       String? // linked customer account, if known
+  packageId        String?
   packageVersionId String?
-  customerName  String
-  customerEmail String?
-  customerPhone String?
-  title         String   // e.g. "Bali Escape — 5N / 6D"
-  travellerCount Int     @default(2)
-  travelDate    String?  // ISO or free text
-  departureCity String?
-  currency      String   @default("INR")
-  amount        Int      // agreed total (whole rupees) — may include a discount
-  notes         String?  // message shown to the customer
-  status        String   @default("DRAFT") // DRAFT | SENT | ACCEPTED | DECLINED | EXPIRED
-  validUntil    DateTime?
-  bookingId     String?  @unique // set once accepted and booked
-  createdById   String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  customerName     String
+  customerEmail    String?
+  customerPhone    String?
+  title            String // e.g. "Bali Escape — 5N / 6D"
+  travellerCount   Int       @default(2)
+  travelDate       String? // ISO or free text
+  departureCity    String?
+  currency         String    @default("INR")
+  amount           Int // agreed total (whole rupees) — may include a discount
+  notes            String? // message shown to the customer
+  status           String    @default("DRAFT") // DRAFT | SENT | ACCEPTED | DECLINED | EXPIRED
+  validUntil       DateTime?
+  bookingId        String?   @unique // set once accepted and booked
+  createdById      String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
-  items         QuoteItem[]
+  items QuoteItem[]
 
   @@index([status])
   @@index([enquiryId])
@@ -155,18 +155,18 @@ model QuoteItem {
 }
 
 model OtpSession {
-  id           String   @id @default(cuid())
-  mobile       String
-  codeHash     String
-  purpose      String   @default("LOGIN") // LOGIN | REGISTER
-  attempts     Int      @default(0)
-  maxAttempts  Int      @default(5)
-  resendCount  Int      @default(0)
-  consumedAt   DateTime?
-  expiresAt    DateTime
-  createdAt    DateTime @default(now())
-  customerId   String?
-  customer     Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  id          String    @id @default(cuid())
+  mobile      String
+  codeHash    String
+  purpose     String    @default("LOGIN") // LOGIN | REGISTER
+  attempts    Int       @default(0)
+  maxAttempts Int       @default(5)
+  resendCount Int       @default(0)
+  consumedAt  DateTime?
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+  customerId  String?
+  customer    Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
 
   @@index([mobile, purpose])
   @@index([expiresAt])
@@ -174,16 +174,16 @@ model OtpSession {
 
 /// A reusable traveller record owned by a customer.
 model Traveller {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   customerId  String
-  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customer    Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
   fullName    String
-  type        String   @default("ADULT") // ADULT | CHILD | INFANT
+  type        String    @default("ADULT") // ADULT | CHILD | INFANT
   dateOfBirth DateTime?
   gender      String?
   passportNo  String?
-  nationality String?  @default("India")
-  createdAt   DateTime @default(now())
+  nationality String?   @default("India")
+  createdAt   DateTime  @default(now())
 
   bookingTravellers BookingTraveller[]
 
@@ -195,30 +195,30 @@ model Traveller {
 // ─────────────────────────────────────────────────────────────
 
 model DestinationCategory {
-  id        String   @id @default(cuid())
-  name      String   @unique // Beach, Honeymoon, Family, Luxury, Adventure...
-  slug      String   @unique
-  sortOrder Int      @default(0)
+  id           String                  @id @default(cuid())
+  name         String                  @unique // Beach, Honeymoon, Family, Luxury, Adventure...
+  slug         String                  @unique
+  sortOrder    Int                     @default(0)
   destinations DestinationOnCategory[]
 }
 
 model Destination {
-  id            String   @id @default(cuid())
-  slug          String   @unique
-  name          String
-  country       String
-  region        String?  // Asia, Middle East, Europe...
-  heroImage     String?
-  thumbnail     String?
-  shortSummary  String?
-  overview      String?  // long-form
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  name            String
+  country         String
+  region          String? // Asia, Middle East, Europe...
+  heroImage       String?
+  thumbnail       String?
+  shortSummary    String?
+  overview        String? // long-form
   bestTimeToVisit String?
-  travelInfo    Json?    // { visa, currency, language, timezone, ... }
-  isPopular     Boolean  @default(false)
-  isPublished   Boolean  @default(true)
-  sortOrder     Int      @default(0)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  travelInfo      Json? // { visa, currency, language, timezone, ... }
+  isPopular       Boolean  @default(false)
+  isPublished     Boolean  @default(true)
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   categories DestinationOnCategory[]
   packages   Package[]
@@ -231,7 +231,7 @@ model Destination {
 model DestinationOnCategory {
   destinationId String
   categoryId    String
-  destination   Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  destination   Destination         @relation(fields: [destinationId], references: [id], onDelete: Cascade)
   category      DestinationCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   @@id([destinationId, categoryId])
@@ -244,29 +244,29 @@ model DestinationOnCategory {
 /// Stable package identity. Content + pricing live in PackageVersion so that
 /// bookings can pin an immutable version (Phase 11).
 model Package {
-  id             String   @id @default(cuid())
-  code           String?  @unique // human package id, e.g. ETX-DXB-001
-  slug           String   @unique
-  destinationId  String
-  destination    Destination @relation(fields: [destinationId], references: [id])
-  name           String
-  theme          String?  // HONEYMOON | FAMILY | LUXURY | GROUP | ...
-  status         String   @default("DRAFT") // DRAFT|IN_REVIEW|PUBLISHED|PAUSED|ARCHIVED
-  isFeatured     Boolean  @default(false)
-  isChecked      Boolean  @default(false) // "ExpertzTrip Checked" — team-reviewed
-  enquiryOnly    Boolean  @default(false) // lead-gen: show "Enquire" instead of "Book now"
-  views          Int      @default(0) // client-recorded page views (top-of-funnel metric)
-  publishAt      DateTime? // when set & in the future, auto-publishes at this time
+  id            String      @id @default(cuid())
+  code          String?     @unique // human package id, e.g. ETX-DXB-001
+  slug          String      @unique
+  destinationId String
+  destination   Destination @relation(fields: [destinationId], references: [id])
+  name          String
+  theme         String? // HONEYMOON | FAMILY | LUXURY | GROUP | ...
+  status        String      @default("DRAFT") // DRAFT|IN_REVIEW|PUBLISHED|PAUSED|ARCHIVED
+  isFeatured    Boolean     @default(false)
+  isChecked     Boolean     @default(false) // "ExpertzTrip Checked" — team-reviewed
+  enquiryOnly   Boolean     @default(false) // lead-gen: show "Enquire" instead of "Book now"
+  views         Int         @default(0) // client-recorded page views (top-of-funnel metric)
+  publishAt     DateTime? // when set & in the future, auto-publishes at this time
   // Internal-only supplier import tracking (never exposed to customers)
-  sourceUrl      String?
-  sourceName     String?
-  importedById   String?
-  scannedAt      DateTime?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  sourceUrl     String?
+  sourceName    String?
+  importedById  String?
+  scannedAt     DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
-  currentVersionId String? @unique
-  currentVersion   PackageVersion? @relation("CurrentVersion", fields: [currentVersionId], references: [id])
+  currentVersionId String?          @unique
+  currentVersion   PackageVersion?  @relation("CurrentVersion", fields: [currentVersionId], references: [id])
   versions         PackageVersion[] @relation("AllVersions")
   bookings         Booking[]
   reviews          Review[]
@@ -277,48 +277,48 @@ model Package {
 }
 
 model PackageVersion {
-  id            String   @id @default(cuid())
+  id            String  @id @default(cuid())
   packageId     String
-  package       Package  @relation("AllVersions", fields: [packageId], references: [id], onDelete: Cascade)
-  versionNumber Int      @default(1)
-  isPublished   Boolean  @default(false)
+  package       Package @relation("AllVersions", fields: [packageId], references: [id], onDelete: Cascade)
+  versionNumber Int     @default(1)
+  isPublished   Boolean @default(false)
 
   // Snapshot-able content
-  name          String
-  summary       String?
-  overview      String?
-  durationDays  Int
-  durationNights Int
-  currency      String   @default("INR")
-  basePrice     Int      // authoritative base price in minor-friendly whole rupees
-  childPrice    Int?     // per-child price if perPerson pricing
-  perPersonPricing Boolean @default(true)
-  highlights    Json?    // string[]
-  inclusions    Json?    // string[]
-  exclusions    Json?    // string[]
+  name               String
+  summary            String?
+  overview           String?
+  durationDays       Int
+  durationNights     Int
+  currency           String  @default("INR")
+  basePrice          Int // authoritative base price in minor-friendly whole rupees
+  childPrice         Int? // per-child price if perPerson pricing
+  perPersonPricing   Boolean @default(true)
+  highlights         Json? // string[]
+  inclusions         Json? // string[]
+  exclusions         Json? // string[]
   cancellationPolicy String?
-  importantInfo String?
+  importantInfo      String?
 
   // ── 50-package catalogue metadata ──
-  category        String?  // FIRST_ESCAPE | SIGNATURE | HONEYMOON | FAMILY | LUXURY | PREMIUM
-  bestFor         String?  // "Couples, first-time travellers"
-  departureCities Json?    // string[]
-  cityBreakdown   Json?    // [{ city, nights }] — the route shown on cards
-  travelWindows   String?  // "Oct–Mar peak · Apr–Sep value"
-  roomCategory    String?
-  mealPlan        String?
-  flightSector    String?
-  baggage         String?
-  visaInfo        String?
-  insuranceInfo   String?
-  seoTitle        String?
-  seoDescription  String?
+  category           String? // FIRST_ESCAPE | SIGNATURE | HONEYMOON | FAMILY | LUXURY | PREMIUM
+  bestFor            String? // "Couples, first-time travellers"
+  departureCities    Json? // string[]
+  cityBreakdown      Json? // [{ city, nights }] — the route shown on cards
+  travelWindows      String? // "Oct–Mar peak · Apr–Sep value"
+  roomCategory       String?
+  mealPlan           String?
+  flightSector       String?
+  baggage            String?
+  visaInfo           String?
+  insuranceInfo      String?
+  seoTitle           String?
+  seoDescription     String?
   // Availability (Phase: never show unavailable as confirmed)
-  availabilityStatus String @default("AVAILABLE") // AVAILABLE | LIMITED | ON_REQUEST | UNAVAILABLE
+  availabilityStatus String  @default("AVAILABLE") // AVAILABLE | LIMITED | ON_REQUEST | UNAVAILABLE
   // Pricing governance — verified benchmark + ₹550, else PRICE_REVIEW_REQUIRED (never invented)
-  pricingStatus   String   @default("PRICED")     // PRICED | PRICE_REVIEW_REQUIRED
-  benchmark       Json?    // { source, dateChecked, departureCity, config, price }
-  targetPrice     Int?
+  pricingStatus      String  @default("PRICED") // PRICED | PRICE_REVIEW_REQUIRED
+  benchmark          Json? // { source, dateChecked, departureCity, config, price }
+  targetPrice        Int?
 
   // Which customizations the admin enabled (Phase 10: only show enabled options)
   allowHotelChange    Boolean @default(true)
@@ -331,37 +331,37 @@ model PackageVersion {
   minTravellers       Int     @default(1)
   maxTravellers       Int     @default(12)
 
-  createdAt     DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  currentOf     Package? @relation("CurrentVersion")
-  images        PackageImage[]
-  days          PackageDay[]
-  options       PackageOption[]
-  departures    PackageDeparture[]
-  pricingRules  PackagePricingRule[]
-  bookings      Booking[]
+  currentOf    Package?             @relation("CurrentVersion")
+  images       PackageImage[]
+  days         PackageDay[]
+  options      PackageOption[]
+  departures   PackageDeparture[]
+  pricingRules PackagePricingRule[]
+  bookings     Booking[]
 
   @@unique([packageId, versionNumber])
   @@index([packageId, isPublished])
 }
 
 model PackageImage {
-  id        String   @id @default(cuid())
+  id        String         @id @default(cuid())
   versionId String
   version   PackageVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
   url       String
   alt       String?
-  isCover   Boolean  @default(false)
-  sortOrder Int      @default(0)
+  isCover   Boolean        @default(false)
+  sortOrder Int            @default(0)
 
   @@index([versionId])
 }
 
 /// A single day of the itinerary. Structured — never stored as raw HTML (Phase 8).
 model PackageDay {
-  id        String   @id @default(cuid())
+  id        String           @id @default(cuid())
   versionId String
-  version   PackageVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  version   PackageVersion   @relation(fields: [versionId], references: [id], onDelete: Cascade)
   dayNumber Int
   title     String
   summary   String?
@@ -372,14 +372,14 @@ model PackageDay {
 }
 
 model PackageDayItem {
-  id        String   @id @default(cuid())
-  dayId     String
-  day       PackageDay @relation(fields: [dayId], references: [id], onDelete: Cascade)
-  timeslot  String   @default("MORNING") // MORNING | AFTERNOON | EVENING
-  kind      String   // FLIGHT|TRANSFER|HOTEL|ACTIVITY|MEAL|FREE_TIME|NOTE
-  title     String
+  id          String     @id @default(cuid())
+  dayId       String
+  day         PackageDay @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  timeslot    String     @default("MORNING") // MORNING | AFTERNOON | EVENING
+  kind        String // FLIGHT|TRANSFER|HOTEL|ACTIVITY|MEAL|FREE_TIME|NOTE
+  title       String
   description String?
-  sortOrder Int      @default(0)
+  sortOrder   Int        @default(0)
 
   @@index([dayId])
 }
@@ -388,44 +388,44 @@ model PackageDayItem {
 /// spec's PackageFlights / PackageHotels / PackageTransfers / PackageActivities /
 /// PackageMeals / PackageAddons. Pricing is driven by `priceDelta` (server side).
 model PackageOption {
-  id         String   @id @default(cuid())
-  versionId  String
-  version    PackageVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
-  category   String   // HOTEL|FLIGHT|TRANSFER|ACTIVITY|MEAL|ADDON
-  groupKey   String   // e.g. "hotel", "outbound-flight" — options within a group are mutually exclusive
-  label      String
+  id          String         @id @default(cuid())
+  versionId   String
+  version     PackageVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  category    String // HOTEL|FLIGHT|TRANSFER|ACTIVITY|MEAL|ADDON
+  groupKey    String // e.g. "hotel", "outbound-flight" — options within a group are mutually exclusive
+  label       String
   description String?
-  meta       Json?    // { stars, roomType, cabin, private, ... }
-  priceDelta Int      @default(0) // per-person delta vs base (whole rupees)
-  perPerson  Boolean  @default(true)
-  isDefault  Boolean  @default(false)
-  isEnabled  Boolean  @default(true)
-  sortOrder  Int      @default(0)
+  meta        Json? // { stars, roomType, cabin, private, ... }
+  priceDelta  Int            @default(0) // per-person delta vs base (whole rupees)
+  perPerson   Boolean        @default(true)
+  isDefault   Boolean        @default(false)
+  isEnabled   Boolean        @default(true)
+  sortOrder   Int            @default(0)
 
   @@index([versionId, category])
 }
 
 /// Selectable departure dates with optional per-date surcharge (Phase 10 date change).
 model PackageDeparture {
-  id         String   @id @default(cuid())
+  id         String         @id @default(cuid())
   versionId  String
   version    PackageVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
   date       DateTime
-  priceDelta Int      @default(0)
-  seatsLeft  Int?     // null = not seat-limited in this build
-  isEnabled  Boolean  @default(true)
+  priceDelta Int            @default(0)
+  seatsLeft  Int? // null = not seat-limited in this build
+  isEnabled  Boolean        @default(true)
 
   @@index([versionId, date])
 }
 
 /// Extensible pricing rules (per-traveller multipliers, discounts, surcharges).
 model PackagePricingRule {
-  id         String   @id @default(cuid())
-  versionId  String
-  version    PackageVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
-  kind       String   // GROUP_DISCOUNT | SEASONAL_SURCHARGE | FLAT_DISCOUNT
-  config     Json     // rule-specific parameters
-  isActive   Boolean  @default(true)
+  id        String         @id @default(cuid())
+  versionId String
+  version   PackageVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  kind      String // GROUP_DISCOUNT | SEASONAL_SURCHARGE | FLAT_DISCOUNT
+  config    Json // rule-specific parameters
+  isActive  Boolean        @default(true)
 
   @@index([versionId])
 }
@@ -435,51 +435,51 @@ model PackagePricingRule {
 // ─────────────────────────────────────────────────────────────
 
 model Booking {
-  id             String   @id @default(cuid())
-  reference      String   @unique // human-friendly, e.g. ETX-2K7QF3
-  customerId     String
-  customer       Customer @relation(fields: [customerId], references: [id])
-  packageId      String
-  package        Package  @relation(fields: [packageId], references: [id])
+  id               String         @id @default(cuid())
+  reference        String         @unique // human-friendly, e.g. ETX-2K7QF3
+  customerId       String
+  customer         Customer       @relation(fields: [customerId], references: [id])
+  packageId        String
+  package          Package        @relation(fields: [packageId], references: [id])
   packageVersionId String
-  packageVersion PackageVersion @relation(fields: [packageVersionId], references: [id])
+  packageVersion   PackageVersion @relation(fields: [packageVersionId], references: [id])
 
   // Assigned travel specialist (admin staff) — the customer's point of contact.
-  assignedToId   String?
-  assignedTo     AdminUser? @relation("AssignedBookings", fields: [assignedToId], references: [id])
+  assignedToId String?
+  assignedTo   AdminUser? @relation("AssignedBookings", fields: [assignedToId], references: [id])
 
-  status         String   @default("DRAFT") // see BOOKING_STATUS in constants
-  travelDate     DateTime?
-  departureCity  String?  // chosen departure city (booking wizard)
-  travellerCount Int      @default(1)
+  status             String    @default("DRAFT") // see BOOKING_STATUS in constants
+  travelDate         DateTime?
+  departureCity      String? // chosen departure city (booking wizard)
+  travellerCount     Int       @default(1)
   // Structured traveller composition { adults, children, childrenAges[], infants, rooms }
   travellerBreakdown Json?
-  currency       String   @default("INR")
+  currency           String    @default("INR")
 
   // Authoritative money (whole rupees), copied from server-side reprice at checkout
-  baseAmount     Int      @default(0)
-  addonsAmount   Int      @default(0)
-  discountAmount Int      @default(0)
-  taxAmount      Int      @default(0)
-  totalAmount    Int      @default(0)
+  baseAmount     Int @default(0)
+  addonsAmount   Int @default(0)
+  discountAmount Int @default(0)
+  taxAmount      Int @default(0)
+  totalAmount    Int @default(0)
 
-  couponCode     String?
-  internalNotes  String?
-  supplierCost   Int?     // internal cost of goods (whole rupees) — finance only
+  couponCode    String?
+  internalNotes String?
+  supplierCost  Int? // internal cost of goods (whole rupees) — finance only
 
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  items          BookingItem[]
-  snapshot       BookingSnapshot?
+  items             BookingItem[]
+  snapshot          BookingSnapshot?
   componentStatuses BookingComponentStatus[]
-  travellers     BookingTraveller[]
-  payments       Payment[]
-  refunds        Refund[]
-  invoices       Invoice[]
-  documents      Document[]
-  events         BookingEvent[]
-  tickets        SupportTicket[]
+  travellers        BookingTraveller[]
+  payments          Payment[]
+  refunds           Refund[]
+  invoices          Invoice[]
+  documents         Document[]
+  events            BookingEvent[]
+  tickets           SupportTicket[]
 
   @@index([customerId, status])
   @@index([status])
@@ -490,9 +490,9 @@ model BookingItem {
   id        String  @id @default(cuid())
   bookingId String
   booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  kind      String  // BASE | HOTEL | FLIGHT | TRANSFER | ACTIVITY | MEAL | ADDON | DISCOUNT | TAX
+  kind      String // BASE | HOTEL | FLIGHT | TRANSFER | ACTIVITY | MEAL | ADDON | DISCOUNT | TAX
   label     String
-  amount    Int     // signed whole rupees (discounts negative)
+  amount    Int // signed whole rupees (discounts negative)
   sortOrder Int     @default(0)
 
   @@index([bookingId])
@@ -500,22 +500,22 @@ model BookingItem {
 
 /// Immutable snapshot of package + itinerary + selected config + pricing (Phase 11).
 model BookingSnapshot {
-  id         String   @id @default(cuid())
-  bookingId  String   @unique
-  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  packageData Json    // frozen package/version content
-  itinerary  Json     // frozen day-by-day
-  selection  Json     // chosen options, travellers, date
-  pricing    Json     // frozen breakdown
-  createdAt  DateTime @default(now())
+  id          String   @id @default(cuid())
+  bookingId   String   @unique
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  packageData Json // frozen package/version content
+  itinerary   Json // frozen day-by-day
+  selection   Json // chosen options, travellers, date
+  pricing     Json // frozen breakdown
+  createdAt   DateTime @default(now())
 }
 
 model BookingComponentStatus {
-  id        String  @id @default(cuid())
+  id        String   @id @default(cuid())
   bookingId String
-  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  component String  // FLIGHT | HOTEL | TRANSFER | ACTIVITY
-  status    String  @default("PENDING") // PENDING | CONFIRMED | FAILED
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  component String // FLIGHT | HOTEL | TRANSFER | ACTIVITY
+  status    String   @default("PENDING") // PENDING | CONFIRMED | FAILED
   reference String? // supplier reference
   note      String?
   updatedAt DateTime @updatedAt
@@ -524,39 +524,39 @@ model BookingComponentStatus {
 }
 
 model BookingTraveller {
-  id          String  @id @default(cuid())
+  id          String     @id @default(cuid())
   bookingId   String
-  booking     Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  booking     Booking    @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   travellerId String?
   traveller   Traveller? @relation(fields: [travellerId], references: [id], onDelete: SetNull)
   // denormalized snapshot so historical bookings stay accurate
   fullName    String
-  type        String  @default("ADULT")
+  type        String     @default("ADULT")
   dateOfBirth DateTime?
   passportNo  String?
 
   // Mandatory traveller details collected at booking (Phase 20)
-  title             String?   // MR | MS | MRS
-  givenName         String?
-  surname           String?
-  passportExpiry    DateTime?
-  passportIssueDate DateTime?
-  passportIssueCity String?
+  title                String? // MR | MS | MRS
+  givenName            String?
+  surname              String?
+  passportExpiry       DateTime?
+  passportIssueDate    DateTime?
+  passportIssueCity    String?
   passportIssueCountry String?
-  panNumber         String?
-  mealPreference    String   @default("VEG") // VEG | NON_VEG
+  panNumber            String?
+  mealPreference       String    @default("VEG") // VEG | NON_VEG
 
   @@index([bookingId])
 }
 
 model BookingEvent {
-  id        String   @id @default(cuid())
-  bookingId String
-  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  id         String   @id @default(cuid())
+  bookingId  String
+  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   fromStatus String?
   toStatus   String
   message    String?
-  actor      String?  // "system" | adminUserId | "customer"
+  actor      String? // "system" | adminUserId | "customer"
   createdAt  DateTime @default(now())
 
   @@index([bookingId])
@@ -567,37 +567,37 @@ model BookingEvent {
 // ─────────────────────────────────────────────────────────────
 
 model Payment {
-  id            String   @id @default(cuid())
-  bookingId     String
-  booking       Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  provider      String   @default("razorpay")
-  providerOrderId String? @unique
-  providerPaymentId String? @unique
-  signatureValid Boolean @default(false)
-  amount        Int
-  currency      String   @default("INR")
-  status        String   @default("PENDING") // PENDING|PAID|FAILED|REFUND_PENDING|REFUNDED|PARTIAL_REFUND
-  method        String?
-  errorReason   String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                String   @id @default(cuid())
+  bookingId         String
+  booking           Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  provider          String   @default("razorpay")
+  providerOrderId   String?  @unique
+  providerPaymentId String?  @unique
+  signatureValid    Boolean  @default(false)
+  amount            Int
+  currency          String   @default("INR")
+  status            String   @default("PENDING") // PENDING|PAID|FAILED|REFUND_PENDING|REFUNDED|PARTIAL_REFUND
+  method            String?
+  errorReason       String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
-  refunds       Refund[]
+  refunds Refund[]
 
   @@index([bookingId, status])
 }
 
 model Refund {
-  id          String   @id @default(cuid())
-  bookingId   String
-  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  paymentId   String?
-  payment     Payment? @relation(fields: [paymentId], references: [id], onDelete: SetNull)
-  amount      Int
-  status      String   @default("PENDING") // PENDING | PROCESSED | FAILED
+  id               String   @id @default(cuid())
+  bookingId        String
+  booking          Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  paymentId        String?
+  payment          Payment? @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+  amount           Int
+  status           String   @default("PENDING") // PENDING | PROCESSED | FAILED
   providerRefundId String?
-  reason      String?
-  createdAt   DateTime @default(now())
+  reason           String?
+  createdAt        DateTime @default(now())
 
   @@index([bookingId])
 }
@@ -610,7 +610,7 @@ model Invoice {
   amount     Int
   currency   String   @default("INR")
   issuedAt   DateTime @default(now())
-  storageKey String?  // where the rendered PDF lives (private)
+  storageKey String? // where the rendered PDF lives (private)
 
   @@index([bookingId])
 }
@@ -620,11 +620,11 @@ model Document {
   id          String   @id @default(cuid())
   bookingId   String
   booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  type        String   // INVOICE | CONFIRMATION | E_TICKET | HOTEL_VOUCHER | TRANSFER_VOUCHER | ACTIVITY_VOUCHER | ITINERARY
+  type        String // INVOICE | CONFIRMATION | E_TICKET | HOTEL_VOUCHER | TRANSFER_VOUCHER | ACTIVITY_VOUCHER | ITINERARY
   title       String
-  storageKey  String?  // legacy on-disk reference (dev only); null when stored in DB
-  data        Bytes?   // file bytes stored in the DB — works on serverless (read-only FS)
-  contentType String?  // e.g. application/pdf
+  storageKey  String? // legacy on-disk reference (dev only); null when stored in DB
+  data        Bytes? // file bytes stored in the DB — works on serverless (read-only FS)
+  contentType String? // e.g. application/pdf
   createdAt   DateTime @default(now())
 
   @@index([bookingId, type])
@@ -635,32 +635,32 @@ model Document {
 // ─────────────────────────────────────────────────────────────
 
 model Offer {
-  id          String   @id @default(cuid())
-  slug        String   @unique
+  id          String    @id @default(cuid())
+  slug        String    @unique
   title       String
   description String?
   image       String?
-  badge       String?  // "Limited time", etc.
+  badge       String? // "Limited time", etc.
   ctaHref     String?
   startsAt    DateTime?
   endsAt      DateTime?
-  isActive    Boolean  @default(true)
-  sortOrder   Int      @default(0)
+  isActive    Boolean   @default(true)
+  sortOrder   Int       @default(0)
 }
 
 model Coupon {
-  id          String   @id @default(cuid())
-  code        String   @unique
+  id          String    @id @default(cuid())
+  code        String    @unique
   description String?
-  kind        String   @default("PERCENT") // PERCENT | FLAT
-  value       Int      // percent (0-100) or flat rupees
+  kind        String    @default("PERCENT") // PERCENT | FLAT
+  value       Int // percent (0-100) or flat rupees
   maxDiscount Int?
   minAmount   Int?
   usageLimit  Int?
-  usedCount   Int      @default(0)
+  usedCount   Int       @default(0)
   startsAt    DateTime?
   endsAt      DateTime?
-  isActive    Boolean  @default(true)
+  isActive    Boolean   @default(true)
 }
 
 /// Reviews are real only — created by verified customers, moderated. Never seeded fake.
@@ -680,30 +680,30 @@ model Review {
 }
 
 model TravelGuide {
-  id            String   @id @default(cuid())
-  slug          String   @unique
+  id            String       @id @default(cuid())
+  slug          String       @unique
   destinationId String?
   destination   Destination? @relation(fields: [destinationId], references: [id], onDelete: SetNull)
   title         String
   excerpt       String?
   body          String?
   coverImage    String?
-  isPublished   Boolean  @default(true)
-  publishedAt   DateTime @default(now())
+  isPublished   Boolean      @default(true)
+  publishedAt   DateTime     @default(now())
 
   @@index([destinationId, isPublished])
 }
 
 model Faq {
-  id            String   @id @default(cuid())
-  scope         String   @default("GLOBAL") // GLOBAL | DESTINATION | PACKAGE
+  id            String       @id @default(cuid())
+  scope         String       @default("GLOBAL") // GLOBAL | DESTINATION | PACKAGE
   destinationId String?
   destination   Destination? @relation(fields: [destinationId], references: [id], onDelete: SetNull)
   packageId     String?
-  package       Package? @relation(fields: [packageId], references: [id], onDelete: SetNull)
+  package       Package?     @relation(fields: [packageId], references: [id], onDelete: SetNull)
   question      String
   answer        String
-  sortOrder     Int      @default(0)
+  sortOrder     Int          @default(0)
 
   @@index([scope])
 }
@@ -719,26 +719,26 @@ model SupportTicket {
   customer   Customer @relation(fields: [customerId], references: [id])
   bookingId  String?
   booking    Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
-  category   String   // BOOKING | PAYMENT | MODIFICATION | CANCELLATION | DOCUMENTS | GENERAL
+  category   String // BOOKING | PAYMENT | MODIFICATION | CANCELLATION | DOCUMENTS | GENERAL
   subject    String
   status     String   @default("OPEN") // OPEN|IN_PROGRESS|WAITING_FOR_CUSTOMER|RESOLVED|CLOSED
   priority   String   @default("NORMAL")
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  messages   SupportMessage[]
+  messages SupportMessage[]
 
   @@index([customerId, status])
 }
 
 model SupportMessage {
-  id        String   @id @default(cuid())
-  ticketId  String
-  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  authorType String  // CUSTOMER | AGENT
-  authorId  String?
-  body      String
-  createdAt DateTime @default(now())
+  id         String        @id @default(cuid())
+  ticketId   String
+  ticket     SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorType String // CUSTOMER | AGENT
+  authorId   String?
+  body       String
+  createdAt  DateTime      @default(now())
 
   @@index([ticketId])
 }
@@ -748,24 +748,24 @@ model SupportMessage {
 // ─────────────────────────────────────────────────────────────
 
 model AiConversation {
-  id         String   @id @default(cuid())
+  id         String      @id @default(cuid())
   customerId String?
-  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customer   Customer?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
   title      String?
-  createdAt  DateTime @default(now())
+  createdAt  DateTime    @default(now())
   messages   AiMessage[]
 
   @@index([customerId])
 }
 
 model AiMessage {
-  id             String   @id @default(cuid())
+  id             String         @id @default(cuid())
   conversationId String
   conversation   AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  role           String   // user | assistant | tool
+  role           String // user | assistant | tool
   content        String
-  toolCalls      Json?    // grounded tool calls against real data
-  createdAt      DateTime @default(now())
+  toolCalls      Json? // grounded tool calls against real data
+  createdAt      DateTime       @default(now())
 
   @@index([conversationId])
 }
@@ -775,25 +775,25 @@ model AiMessage {
 // ─────────────────────────────────────────────────────────────
 
 model Supplier {
-  id        String   @id @default(cuid())
-  name      String
-  type      String   // FLIGHT | HOTEL | TRANSFER | ACTIVITY | DMC
-  status    String   @default("ACTIVE")
+  id            String   @id @default(cuid())
+  name          String
+  type          String // FLIGHT | HOTEL | TRANSFER | ACTIVITY | DMC
+  status        String   @default("ACTIVE")
   // NOTE: no secrets stored here. Credentials live in secret storage keyed by `credentialRef`.
   credentialRef String?
-  createdAt DateTime @default(now())
+  createdAt     DateTime @default(now())
 
-  mappings  SupplierMapping[]
+  mappings SupplierMapping[]
 }
 
 model SupplierMapping {
-  id         String   @id @default(cuid())
-  supplierId String
-  supplier   Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
-  category   String   // HOTEL | FLIGHT | ...
-  internalRef String  // our option/product id
-  externalRef String  // supplier product code
-  createdAt  DateTime @default(now())
+  id          String   @id @default(cuid())
+  supplierId  String
+  supplier    Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  category    String // HOTEL | FLIGHT | ...
+  internalRef String // our option/product id
+  externalRef String // supplier product code
+  createdAt   DateTime @default(now())
 
   @@index([supplierId, category])
 }
@@ -803,27 +803,27 @@ model SupplierMapping {
 // ─────────────────────────────────────────────────────────────
 
 model AdminUser {
-  id           String   @id @default(cuid())
-  email        String?  @unique
-  mobile       String?  @unique // phone-OTP admin login
+  id           String    @id @default(cuid())
+  email        String?   @unique
+  mobile       String?   @unique // phone-OTP admin login
   fullName     String
   passwordHash String?
-  status       String   @default("ACTIVE")
+  status       String    @default("ACTIVE")
   roleId       String?
-  role         Role?    @relation(fields: [roleId], references: [id])
+  role         Role?     @relation(fields: [roleId], references: [id])
   lastLoginAt  DateTime?
-  createdAt    DateTime @default(now())
+  createdAt    DateTime  @default(now())
 
-  auditLogs    AuditLog[]
-  assignedBookings Booking[] @relation("AssignedBookings")
-  assignedEnquiries Enquiry[] @relation("AssignedEnquiries")
+  auditLogs         AuditLog[]
+  assignedBookings  Booking[]  @relation("AssignedBookings")
+  assignedEnquiries Enquiry[]  @relation("AssignedEnquiries")
 
   @@index([roleId])
 }
 
 model Role {
-  id          String   @id @default(cuid())
-  key         String   @unique // SUPER_ADMIN | OPERATIONS | PACKAGE_MANAGER | FINANCE | SUPPORT | CONTENT_MANAGER | ANALYST
+  id          String           @id @default(cuid())
+  key         String           @unique // SUPER_ADMIN | OPERATIONS | PACKAGE_MANAGER | FINANCE | SUPPORT | CONTENT_MANAGER | ANALYST
   name        String
   description String?
   admins      AdminUser[]
@@ -831,8 +831,8 @@ model Role {
 }
 
 model Permission {
-  id    String @id @default(cuid())
-  key   String @unique // e.g. "package.publish", "booking.refund"
+  id    String           @id @default(cuid())
+  key   String           @unique // e.g. "package.publish", "booking.refund"
   name  String
   roles RolePermission[]
 }
@@ -851,19 +851,19 @@ model RolePermission {
 // ─────────────────────────────────────────────────────────────
 
 model Notification {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   customerId String?
   customer   Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  channel    String   @default("IN_APP") // IN_APP | EMAIL | SMS
+  channel    String    @default("IN_APP") // IN_APP | EMAIL | SMS
   type       String
-  event      String?  // canonical app event, e.g. BOOKING_CONFIRMED
+  event      String? // canonical app event, e.g. BOOKING_CONFIRMED
   title      String
   body       String?
-  href       String?  // deep link, e.g. /account/trips/<id>
+  href       String? // deep link, e.g. /account/trips/<id>
   bookingId  String?
-  dedupeKey  String?  @unique // one in-app record per event — guards duplicates
-  isRead     Boolean  @default(false)
-  createdAt  DateTime @default(now())
+  dedupeKey  String?   @unique // one in-app record per event — guards duplicates
+  isRead     Boolean   @default(false)
+  createdAt  DateTime  @default(now())
 
   @@index([customerId, isRead])
 }
@@ -875,11 +875,11 @@ model MessageLog {
   id         String   @id @default(cuid())
   customerId String?
   bookingId  String?
-  channel    String   // EMAIL | SMS
+  channel    String // EMAIL | SMS
   event      String
-  toAddress  String   // email address or mobile
+  toAddress  String // email address or mobile
   status     String   @default("QUEUED") // QUEUED | SENT | FAILED | SKIPPED
-  providerId String?  // provider message id when returned
+  providerId String? // provider message id when returned
   error      String?
   dedupeKey  String?
   createdAt  DateTime @default(now())
@@ -890,16 +890,16 @@ model MessageLog {
 }
 
 model AuditLog {
-  id          String   @id @default(cuid())
-  actorType   String   @default("ADMIN") // ADMIN | SYSTEM | CUSTOMER
+  id          String     @id @default(cuid())
+  actorType   String     @default("ADMIN") // ADMIN | SYSTEM | CUSTOMER
   adminUserId String?
   admin       AdminUser? @relation(fields: [adminUserId], references: [id], onDelete: SetNull)
-  action      String   // e.g. "package.price.update"
-  resource    String   // "Package:cuid"
+  action      String // e.g. "package.price.update"
+  resource    String // "Package:cuid"
   before      Json?
   after       Json?
   ip          String?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime   @default(now())
 
   @@index([resource])
   @@index([action])
@@ -916,39 +916,39 @@ model BusinessSetting {
 // ─────────────────────────────────────────────────────────────
 
 model Enquiry {
-  id            String   @id @default(cuid())
-  reference     String?  @unique // human-friendly, e.g. ENQ-2K7QF3
-  fullName      String
-  email         String?
-  phone         String
-  destination   String?  // free text destination / package name
-  packageSlug   String?  // set when raised from a package page
-  packageName   String?
-  travelDate    String?  // free-text or ISO date the customer typed
-  travellers    Int?
-  adults        Int?
-  children      Int?
-  nights        Int?     // number of nights wanted
-  roomType      String?  // Twin Sharing | Triple Sharing | Single Room
-  flightType    String?  // Domestic | International | Not required
-  budget        String?  // budget band label
-  bookingPlan   String?  // how soon: This week | This month | 1-3 months | Just exploring
-  travelType    String?  // Family | Couple | Honeymoon | Friends | Solo | Luxury | Adventure
-  hotelCategory String?  // Any | 3 Star | 4 Star | 5 Star
-  preferredTime String?  // Anytime | 10 AM - 12 PM | ...
-  wantsDiscount Boolean  @default(false) // opted into the 20% off offer
-  message       String?
-  status        String   @default("NEW") // NEW | CONTACTED | QUOTED | CONVERTED | CLOSED
-  source        String   @default("WEBSITE") // WEBSITE | PACKAGE | WHATSAPP
+  id                String     @id @default(cuid())
+  reference         String?    @unique // human-friendly, e.g. ENQ-2K7QF3
+  fullName          String
+  email             String?
+  phone             String
+  destination       String? // free text destination / package name
+  packageSlug       String? // set when raised from a package page
+  packageName       String?
+  travelDate        String? // free-text or ISO date the customer typed
+  travellers        Int?
+  adults            Int?
+  children          Int?
+  nights            Int? // number of nights wanted
+  roomType          String? // Twin Sharing | Triple Sharing | Single Room
+  flightType        String? // Domestic | International | Not required
+  budget            String? // budget band label
+  bookingPlan       String? // how soon: This week | This month | 1-3 months | Just exploring
+  travelType        String? // Family | Couple | Honeymoon | Friends | Solo | Luxury | Adventure
+  hotelCategory     String? // Any | 3 Star | 4 Star | 5 Star
+  preferredTime     String? // Anytime | 10 AM - 12 PM | ...
+  wantsDiscount     Boolean    @default(false) // opted into the 20% off offer
+  message           String?
+  status            String     @default("NEW") // NEW | CONTACTED | QUOTED | CONVERTED | CLOSED
+  source            String     @default("WEBSITE") // WEBSITE | PACKAGE | WHATSAPP
   // Lead management
-  assignedToId  String?
-  assignedTo    AdminUser? @relation("AssignedEnquiries", fields: [assignedToId], references: [id])
-  followUpAt    DateTime?  // when to chase this lead next
-  firstRespondedAt DateTime? // set when the lead first moves out of NEW (response-time metric)
+  assignedToId      String?
+  assignedTo        AdminUser? @relation("AssignedEnquiries", fields: [assignedToId], references: [id])
+  followUpAt        DateTime? // when to chase this lead next
+  firstRespondedAt  DateTime? // set when the lead first moves out of NEW (response-time metric)
   followUpEmailedAt DateTime? // set when the automatic "still planning?" nudge was sent
-  internalNotes String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  internalNotes     String?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
 
   @@index([status])
   @@index([createdAt])
@@ -961,11 +961,11 @@ model Activity {
   id          String   @id @default(cuid())
   title       String
   summary     String?
-  city        String?  // e.g. "Kuta", "Uluwatu"
+  city        String? // e.g. "Kuta", "Uluwatu"
   country     String?
-  timeslot    String   @default("MORNING")  // MORNING | AFTERNOON | EVENING
+  timeslot    String   @default("MORNING") // MORNING | AFTERNOON | EVENING
   kind        String   @default("ACTIVITY") // ACTIVITY | MEAL | TRANSFER | HOTEL | FLIGHT | FREE_TIME | NOTE
-  priceFrom   Int?     // per-person, whole rupees
+  priceFrom   Int? // per-person, whole rupees
   imageUrl    String?
   sourceUrl   String?
   isActive    Boolean  @default(true)
@@ -990,4 +990,50 @@ model MediaAsset {
   createdAt   DateTime @default(now())
 
   @@index([createdAt])
+}
+
+// ─────────────────────────────────────────────────────────────
+// GALLERY · TESTIMONIALS (admin-curated public content)
+// ─────────────────────────────────────────────────────────────
+
+/// Travel gallery image. Curated by an administrator from the media library or
+/// an external URL. Only `isPublished` rows are ever served publicly.
+model GalleryItem {
+  id          String   @id @default(cuid())
+  url         String
+  alt         String
+  caption     String?
+  location    String? // optional place label, e.g. "Radhanagar Beach, Havelock"
+  category    String   @default("BEACHES") // BEACHES | RESORTS | SIGHTSEEING | ISLANDS | EXPERIENCES
+  isPublished Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isPublished, category, sortOrder])
+}
+
+/// Customer testimonial published by the agency.
+///
+/// Distinct from `Review`, which is written by a signed-in customer against a
+/// booking. A testimonial is entered by an administrator from a message the
+/// agency actually received, and stays invisible until `status = PUBLISHED`.
+/// Never seeded with invented content.
+model Testimonial {
+  id          String    @id @default(cuid())
+  displayName String
+  location    String? // e.g. "Chennai"
+  body        String
+  rating      Int? // 1-5; null when the customer did not give a score
+  photoUrl    String?
+  reviewDate  DateTime?
+  packageName String?
+  status      String    @default("PENDING") // PENDING | PUBLISHED | REJECTED
+  sortOrder   Int       @default(0)
+  createdById String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status, sortOrder])
 }

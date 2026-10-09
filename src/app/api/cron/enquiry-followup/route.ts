@@ -47,13 +47,13 @@ async function handle(request: Request): Promise<NextResponse> {
       : { label: "Explore holidays", href: `${site}/packages` };
     const result = await sendEmail({
       to: e.email,
-      replyTo: "support@expertztrip.com",
+      replyTo: "hello@jstandamantravels.com",
       subject: `Still planning ${interest}? We're here to help ✈️`,
       html: emailLayout(
         `Hi ${first}, still thinking about ${interest}?`,
         `We saw your enquiry${e.reference ? ` (<b>${e.reference}</b>)` : ""} and didn't want you to miss out.<br><br>
          Our travel experts can put together a tailored plan with clear, transparent pricing — no obligation. Just reply to this email or reach us on WhatsApp and we'll take it from there.<br><br>
-         Warm regards,<br>Team ExpertzTrip`,
+         Warm regards,<br>The JST Andaman Travels team`,
         cta,
       ),
     });

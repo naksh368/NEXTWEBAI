@@ -3,15 +3,18 @@
 @tailwind utilities;
 
 /* ─────────────────────────────────────────────────────────────
-   ExpertzTrip design tokens (Phase 4)
-   White foundation · navy/blue type · restrained orange accent.
+   JST Andaman Travels — design tokens
+   White foundation · deep ocean navy type · turquoise highlights ·
+   coral orange reserved for booking/enquiry CTAs.
    ───────────────────────────────────────────────────────────── */
 :root {
-  /* Overridden by next/font (Nunito) on <html>; this is the fallback stack. */
-  --font-sans: "Nunito", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
-  --brand-blue: #2340d9;
-  --brand-navy: #0b1b45;
-  --brand-orange: #ff6a1a;
+  /* Overridden by next/font (Nunito Sans) on <html>; this is the fallback. */
+  --font-sans: "Nunito Sans", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --brand-navy: #102b4e;
+  --brand-blue: #087eba;
+  --brand-turquoise: #18b8ce;
+  --brand-orange: #f26535;
+  --surface-muted: #f6f9fc;
 }
 
 @layer base {
@@ -25,63 +28,91 @@
   body {
     @apply bg-surface text-ink antialiased;
     font-family: var(--font-sans);
+    font-weight: 400;
+    line-height: 1.65;
     text-rendering: optimizeLegibility;
   }
-  h1, h2, h3, h4 {
-    /* Headings are near-black; only the hero tagline + accents use brand blue. */
+  /* Nunito Sans weight scale: 800 display, 700 section titles, 600 UI. */
+  h1 {
+    @apply text-brand-navy font-extrabold tracking-tight;
+    line-height: 1.08;
+    text-wrap: balance;
+  }
+  h2 {
+    @apply text-brand-navy font-extrabold tracking-tight;
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+  h3,
+  h4 {
     @apply text-brand-navy font-bold tracking-tight;
+    line-height: 1.3;
     text-wrap: balance;
   }
   ::selection {
-    background: rgba(35, 64, 217, 0.14);
+    background: rgba(24, 184, 206, 0.22);
+    color: #102b4e;
   }
-  /* Accessible focus ring on every interactive element (Phase 37) */
+  /* Visible focus ring on every interactive element. */
   a:focus-visible,
   button:focus-visible,
   input:focus-visible,
   textarea:focus-visible,
   select:focus-visible,
+  summary:focus-visible,
   [tabindex]:focus-visible {
     outline: 2px solid var(--brand-blue);
     outline-offset: 2px;
     border-radius: 6px;
   }
+  /* Numerals in prices/figures stay aligned across cards. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
 }
 
 @layer components {
-  /* Light hero background — subtle dot pattern instead of a photo. */
+  /* Soft island wash behind light sections — subtle, never muddy. */
+  .ocean-wash {
+    background:
+      radial-gradient(62% 58% at 12% 0%, rgba(8, 126, 186, 0.07), transparent 70%),
+      radial-gradient(48% 52% at 92% 8%, rgba(24, 184, 206, 0.09), transparent 70%);
+  }
+  /* Faint dotted field used on light hero/CTA bands. */
   .dotted-bg {
     background-color: #ffffff;
-    background-image: radial-gradient(rgba(35, 64, 217, 0.09) 1.2px, transparent 1.2px);
+    background-image: radial-gradient(rgba(8, 126, 186, 0.1) 1.2px, transparent 1.2px);
     background-size: 22px 22px;
     background-position: -11px -11px;
   }
-  /* Soft brand wash used behind light heroes. */
-  .hero-wash {
-    background:
-      radial-gradient(60% 60% at 15% 0%, rgba(35, 64, 217, 0.06), transparent 70%),
-      radial-gradient(50% 50% at 90% 10%, rgba(255, 106, 26, 0.07), transparent 70%);
+  /* Legibility scrim for text laid over photography. */
+  .photo-scrim {
+    background: linear-gradient(
+      to top,
+      rgba(10, 30, 56, 0.86) 0%,
+      rgba(10, 30, 56, 0.55) 34%,
+      rgba(10, 30, 56, 0.12) 66%,
+      rgba(10, 30, 56, 0.05) 100%
+    );
+  }
+  .photo-scrim-soft {
+    background: linear-gradient(to top, rgba(10, 30, 56, 0.78), rgba(10, 30, 56, 0.08) 62%, transparent);
   }
 
-  /* Reserve space for images to avoid layout shift (Phase 33) */
+  /* Reserve space for images so nothing shifts while they load. */
   .aspect-frame {
     @apply relative overflow-hidden bg-surface-muted;
   }
-  /* Skeleton shimmer */
   .skeleton {
     @apply relative overflow-hidden bg-surface-muted;
   }
   .skeleton::after {
     content: "";
     @apply absolute inset-0 -translate-x-full animate-shimmer;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.65),
-      transparent
-    );
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
   }
-  /* Hide scrollbars on horizontal mobile rails while keeping scroll */
+
+  /* Horizontal mobile rails keep scrolling without a visible scrollbar. */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
@@ -89,9 +120,15 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* Thin turquoise rule used under section eyebrows. */
+  .rule-turquoise::after {
+    content: "";
+    @apply mt-3 block h-[3px] w-12 rounded-full bg-brand-turquoise;
+  }
 }
 
-/* Respect reduced-motion preferences (Phase 37) */
+/* Respect reduced-motion preferences. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

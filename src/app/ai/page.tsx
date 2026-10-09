@@ -1,29 +1,90 @@
 import type { Metadata } from "next";
-import { ShieldCheck } from "lucide-react";
-import { Container } from "@/components/ui/container";
-import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import Link from "next/link";
+import { MessageCircle, Phone, ShieldCheck, Sparkles } from "lucide-react";
+import { Container, Section } from "@/components/ui/container";
+import { PageHeader } from "@/components/layout/page-header";
+import { BreadcrumbJsonLd } from "@/components/layout/structured-data";
 import { AssistantChat } from "@/components/ai/assistant-chat";
-import { AiAvatar } from "@/components/ui/ai-avatar";
+import { buttonVariants } from "@/components/ui/button";
+import { isAiConfigured } from "@/lib/services/ai-service";
+import { getSiteSettings, telLinkFor, whatsappLinkFor } from "@/lib/site-settings";
 
-export const metadata: Metadata = {
-  title: "ExpertzTrip AI",
-  description: "Describe your dream trip and get matched to real, published holiday packages — never invented prices or availability.",
-};
+export const dynamic = "force-dynamic";
 
-export default function AiPage() {
+export async function generateMetadata(): Promise<Metadata> {
+  const s = await getSiteSettings();
+  return {
+    title: "Trip planner",
+    description: `Describe the Andaman holiday you have in mind and get matched to real, published ${s.brandName} packages — never an invented price or an availability we cannot honour.`,
+    alternates: { canonical: "/ai" },
+  };
+}
+
+export default async function AiPage() {
+  const settings = await getSiteSettings();
+  const aiOn = isAiConfigured();
+  const tel = telLinkFor(settings);
+  const wa = whatsappLinkFor(settings, `Hello ${settings.brandName}, I would like to plan an Andaman holiday.`);
+
+  const crumbs = [
+    { label: "Home", href: "/" },
+    { label: "Trip planner", href: "/ai" },
+  ];
+
   return (
-    <Container className="py-8">
-      <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "ExpertzTrip AI" }]} />
-      <div className="mt-4 flex items-center gap-3">
-        <span className="flex h-11 w-11 items-center justify-center rounded-xl border border-surface-border bg-white shadow-card"><AiAvatar size={28} /></span>
-        <div>
-          <h1 className="text-2xl font-bold">ExpertzTrip AI</h1>
-          <p className="flex items-center gap-1.5 text-sm text-ink-muted"><ShieldCheck className="h-3.5 w-3.5 text-success" /> Grounded in real packages — no invented prices or availability.</p>
-        </div>
-      </div>
-      <div className="mt-6">
-        <AssistantChat />
-      </div>
-    </Container>
+    <>
+      <BreadcrumbJsonLd items={crumbs} />
+      <PageHeader
+        eyebrow="Trip planner"
+        title="Tell us the trip you have in mind"
+        description="Describe your dates, group and budget in your own words. The planner searches our real published Andaman packages and shows you what genuinely fits."
+        breadcrumbs={crumbs}
+      />
+
+      <Section className="pt-8">
+        <Container className="max-w-4xl">
+          <div className="mb-5 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl bg-brand-turquoiseLight px-4 py-3 text-sm font-semibold text-brand-navy">
+            <span className="inline-flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-brand-turquoiseDark" />
+              Answers come from our real published packages
+            </span>
+            <span className="inline-flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-brand-turquoiseDark" />
+              No invented prices, hotels or availability
+            </span>
+          </div>
+
+          <AssistantChat />
+
+          {!aiOn && (
+            <p className="mt-4 rounded-xl bg-surface-muted p-4 text-sm leading-relaxed text-ink-muted">
+              The conversational planner is not switched on yet, so this page is searching our packages directly by
+              keyword. Both routes only ever return real published packages.
+            </p>
+          )}
+
+          <div className="mt-10 rounded-2xl border border-surface-border bg-surface-muted p-6 text-center">
+            <h2 className="text-lg">Would you rather talk to a person?</h2>
+            <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-ink-muted">
+              The planner is good at narrowing things down. For ferry timings, hotel choices and a written quotation,
+              our team on the islands is better.
+            </p>
+            <div className="mt-5 flex flex-wrap justify-center gap-3">
+              <Link href="/contact" className={buttonVariants({ variant: "orange", size: "sm" })}>Send an enquiry</Link>
+              {wa && (
+                <a href={wa} target="_blank" rel="noopener noreferrer" className={buttonVariants({ variant: "outline", size: "sm" })}>
+                  <MessageCircle className="h-4 w-4" /> WhatsApp
+                </a>
+              )}
+              {tel && (
+                <a href={tel} className={buttonVariants({ variant: "outline", size: "sm" })}>
+                  <Phone className="h-4 w-4" /> {settings.phonePrimary}
+                </a>
+              )}
+            </div>
+          </div>
+        </Container>
+      </Section>
+    </>
   );
 }

@@ -24,11 +24,11 @@ export default async function AdminSettingsPage() {
           <form action={updateBrandSettingsAction} className="space-y-4 p-5">
             <label className="block text-sm">
               <span className="mb-1 block font-semibold text-brand-navy">Brand name</span>
-              <input name="name" defaultValue={brand.name ?? "ExpertzTrip"} className={inp} />
+              <input name="name" defaultValue={brand.name ?? "JST Andaman Travels"} className={inp} />
             </label>
             <label className="block text-sm">
               <span className="mb-1 block font-semibold text-brand-navy">Support email</span>
-              <input name="supportEmail" type="email" defaultValue={brand.supportEmail ?? ""} placeholder="support@expertztrip.com" className={inp} />
+              <input name="supportEmail" type="email" defaultValue={brand.supportEmail ?? ""} placeholder="hello@jstandamantravels.com" className={inp} />
             </label>
             <label className="block text-sm">
               <span className="mb-1 block font-semibold text-brand-navy">Support phone</span>

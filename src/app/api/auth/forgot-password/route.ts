@@ -30,12 +30,12 @@ export async function POST(request: Request) {
     });
     await sendEmail({
       to: email,
-      subject: `${code} is your ExpertzTrip password reset code`,
+      subject: `${code} is your JST Andaman Travels password reset code`,
       html: emailLayout(
         "Reset your password",
-        `<p>Use this code to reset your ExpertzTrip password:</p>
+        `<p>Use this code to reset your JST Andaman Travels password:</p>
          <div style="margin:16px 0;text-align:center">
-           <span style="display:inline-block;background:#EEF1FE;border:1px solid #2340D9;border-radius:12px;padding:12px 22px;font-size:30px;font-weight:800;letter-spacing:8px;color:#2340D9">${code}</span>
+           <span style="display:inline-block;background:#E8F3FA;border:1px solid #087EBA;border-radius:12px;padding:12px 22px;font-size:30px;font-weight:800;letter-spacing:8px;color:#087EBA">${code}</span>
          </div>
          <p>This code expires in ${TTL_MIN} minutes. If you didn't request a reset, you can safely ignore this email — your password won't change.</p>`,
       ),

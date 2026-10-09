@@ -8,7 +8,7 @@ export function cn(...inputs: ClassValue[]) {
 
 /**
  * The site's public base URL, always a valid absolute URL. Tolerates a
- * NEXT_PUBLIC_SITE_URL set without a protocol (e.g. "expertztrip.com") by
+ * NEXT_PUBLIC_SITE_URL set without a protocol (e.g. "jstandamantravels.com") by
  * adding https://, and strips any trailing slash — so the build never crashes
  * on `new URL(...)` from a domain typed without "https://".
  */
@@ -65,8 +65,8 @@ export function slugify(input: string): string {
     .replace(/-+/g, "-");
 }
 
-/** Short, human-friendly booking reference, e.g. ETX-2K7QF3. */
-export function makeReference(prefix = "ETX"): string {
+/** Short, human-friendly reference, e.g. JST-2K7QF3. */
+export function makeReference(prefix = "JST"): string {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let out = "";
   for (let i = 0; i < 6; i++) {

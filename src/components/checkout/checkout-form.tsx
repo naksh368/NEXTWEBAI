@@ -142,7 +142,7 @@ export function CheckoutForm({
 
       const rzp = new window.Razorpay({
         key: order.keyId, order_id: order.orderId, amount: order.amount, currency: order.currency,
-        name: "ExpertzTrip", description: `Booking ${booking.reference}`,
+        name: "JST Andaman Travels", description: `Booking ${booking.reference}`,
         handler: async (resp: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
           setStatus("Verifying payment…");
           const verify = await fetch("/api/payments/razorpay/verify", {
@@ -162,7 +162,7 @@ export function CheckoutForm({
           }
         },
         modal: { ondismiss: () => { setLoading(false); setStatus(null); } },
-        theme: { color: "#2340d9" },
+        theme: { color: "#087eba" },
       });
       rzp.open();
     } catch {

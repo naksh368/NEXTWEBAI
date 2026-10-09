@@ -49,12 +49,12 @@ export async function POST(request: Request) {
       await db.loginOtp.create({ data: { adminUserId: adminId, email: adminEmail, codeHash: hashOtp(code), expiresAt: new Date(Date.now() + OTP_TTL_MIN * 60_000) } });
       const sent = await sendEmail({
         to: adminEmail,
-        subject: `${code} is your ExpertzTrip admin login code`,
+        subject: `${code} is your JST Andaman Travels admin login code`,
         html: emailLayout(
           "Your admin login code",
-          `<p>Use this code to finish signing in to the ExpertzTrip admin:</p>
+          `<p>Use this code to finish signing in to the JST Andaman Travels admin:</p>
            <div style="margin:16px 0;text-align:center">
-             <span style="display:inline-block;background:#EEF1FE;border:1px solid #2340D9;border-radius:12px;padding:12px 22px;font-size:30px;font-weight:800;letter-spacing:8px;color:#2340D9">${code}</span>
+             <span style="display:inline-block;background:#E8F3FA;border:1px solid #087EBA;border-radius:12px;padding:12px 22px;font-size:30px;font-weight:800;letter-spacing:8px;color:#087EBA">${code}</span>
            </div>
            <p>This code expires in ${OTP_TTL_MIN} minutes. If this wasn't you, ignore this email.</p>`,
         ),
@@ -100,12 +100,12 @@ export async function POST(request: Request) {
 
     const sent = await sendEmail({
       to: email,
-      subject: `${code} is your ExpertzTrip login code`,
+      subject: `${code} is your JST Andaman Travels login code`,
       html: emailLayout(
         "Your login code",
-        `<p>Use this code to finish signing in to ExpertzTrip:</p>
+        `<p>Use this code to finish signing in to JST Andaman Travels:</p>
          <div style="margin:16px 0;text-align:center">
-           <span style="display:inline-block;background:#EEF1FE;border:1px solid #2340D9;border-radius:12px;padding:12px 22px;font-size:30px;font-weight:800;letter-spacing:8px;color:#2340D9">${code}</span>
+           <span style="display:inline-block;background:#E8F3FA;border:1px solid #087EBA;border-radius:12px;padding:12px 22px;font-size:30px;font-weight:800;letter-spacing:8px;color:#087EBA">${code}</span>
          </div>
          <p>This code expires in ${OTP_TTL_MIN} minutes. If you didn't try to sign in, you can ignore this email.</p>`,
       ),

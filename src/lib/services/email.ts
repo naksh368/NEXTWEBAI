@@ -7,7 +7,7 @@
  */
 const provider = () => process.env.EMAIL_PROVIDER || "console";
 const apiKey = () => process.env.EMAIL_API_KEY || "";
-const from = () => process.env.EMAIL_FROM || "ExpertzTrip <noreply@expertztrip.com>";
+const from = () => process.env.EMAIL_FROM || "JST Andaman Travels <noreply@jstandamantravels.com>";
 
 /** True when a real transactional provider (not the dev console) is configured. */
 export function isEmailConfigured(): boolean {
@@ -23,7 +23,7 @@ export function businessNotifyEmail(): string {
   return (
     process.env.ADMIN_NOTIFY_EMAIL ||
     process.env.ADMIN_EMAIL ||
-    "expertztripofficial@gmail.com"
+    "admin@jstandamantravels.com"
   ).trim().toLowerCase();
 }
 
@@ -90,21 +90,24 @@ export async function sendEmail(opts: { to: string; subject: string; html: strin
 /** Branded HTML wrapper — inline styles for email-client compatibility. */
 export function emailLayout(heading: string, bodyHtml: string, cta?: { label: string; href: string }): string {
   const button = cta
-    ? `<tr><td style="padding:8px 0 4px"><a href="${cta.href}" style="display:inline-block;background:#FF6A1A;color:#fff;text-decoration:none;font-weight:800;font-size:15px;padding:12px 22px;border-radius:12px">${cta.label}</a></td></tr>`
+    ? `<tr><td style="padding:8px 0 4px"><a href="${cta.href}" style="display:inline-block;background:#F26535;color:#fff;text-decoration:none;font-weight:800;font-size:15px;padding:12px 22px;border-radius:12px">${cta.label}</a></td></tr>`
     : "";
-  return `<!doctype html><html><body style="margin:0;background:#F6F7FB;font-family:'Nunito',Segoe UI,system-ui,Arial,sans-serif;color:#16171C">
+  // A text wordmark rather than an <img>: most clients block remote images by
+  // default, so the header must still read correctly with images off.
+  return `<!doctype html><html><body style="margin:0;background:#F6F9FC;font-family:'Nunito Sans',Segoe UI,system-ui,Arial,sans-serif;color:#172B45">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:28px 16px">
-    <table role="presentation" width="100%" style="max-width:520px;background:#fff;border:1px solid #E6E9F1;border-radius:16px;overflow:hidden">
-      <tr><td style="padding:22px 28px;border-bottom:2px solid #2340D9">
-        <span style="font-size:22px;font-weight:800;letter-spacing:-.02em"><span style="color:#2340D9">expertz</span><span style="color:#FF6A1A">trip</span></span>
+    <table role="presentation" width="100%" style="max-width:540px;background:#fff;border:1px solid #E2EAF1;border-radius:16px;overflow:hidden">
+      <tr><td style="padding:22px 28px;border-bottom:3px solid #18B8CE;background:#102B4E">
+        <span style="font-size:21px;font-weight:800;letter-spacing:-.01em;color:#ffffff">JST <span style="color:#18B8CE">Andaman</span> <span style="color:#F26535">Travels</span></span>
+        <div style="margin-top:4px;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.62)">Discover Andaman. Experience More.</div>
       </td></tr>
       <tr><td style="padding:26px 28px 8px">
-        <h1 style="margin:0 0 10px;font-size:20px;font-weight:800;color:#16171C">${heading}</h1>
-        <div style="font-size:15px;line-height:1.6;color:#3a3f4b">${bodyHtml}</div>
+        <h1 style="margin:0 0 10px;font-size:20px;font-weight:800;color:#102B4E">${heading}</h1>
+        <div style="font-size:15px;line-height:1.65;color:#3f4e63">${bodyHtml}</div>
       </td></tr>
       <tr><td style="padding:8px 28px 24px"><table role="presentation">${button}</table></td></tr>
-      <tr><td style="padding:16px 28px;border-top:1px solid #E6E9F1;font-size:12px;color:#8A8F9E">
-        Real holiday packages · clear pricing · expert support.<br>© ${new Date().getFullYear()} ExpertzTrip.
+      <tr><td style="padding:16px 28px;border-top:1px solid #E2EAF1;font-size:12px;line-height:1.6;color:#63748A">
+        Andaman holiday packages · island sightseeing · transfers and travel assistance.<br>© ${new Date().getFullYear()} JST Andaman Travels.
       </td></tr>
     </table>
   </td></tr></table></body></html>`;
@@ -114,11 +117,11 @@ export function emailLayout(heading: string, bodyHtml: string, cta?: { label: st
 export async function sendOtpEmail(to: string, code: string, minutes = 5) {
   return sendEmail({
     to,
-    subject: `${code} is your ExpertzTrip verification code`,
+    subject: `${code} is your JST Andaman Travels verification code`,
     html: emailLayout(
       "Your verification code",
-      `Enter this code to sign in to ExpertzTrip:
-       <div style="font-size:34px;font-weight:800;letter-spacing:10px;color:#2340D9;margin:18px 0">${code}</div>
+      `Enter this code to sign in to JST Andaman Travels:
+       <div style="font-size:34px;font-weight:800;letter-spacing:10px;color:#087EBA;margin:18px 0">${code}</div>
        It's valid for ${minutes} minutes. If you didn't request this, you can safely ignore this email.`
     ),
   });

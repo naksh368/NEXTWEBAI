@@ -69,7 +69,7 @@ export function PackageEditor({ pkg, version, destinations }: { pkg: Data; versi
       <fieldset className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <legend className="mb-2 text-sm font-bold text-brand-navy">Package settings</legend>
         <Field label="Name"><input name="name" defaultValue={pkg.name as string} className={inp} /></Field>
-        <Field label="Package code"><input name="code" defaultValue={(pkg.code as string) ?? ""} className={inp} placeholder="ETX-…" /></Field>
+        <Field label="Package code"><input name="code" defaultValue={(pkg.code as string) ?? ""} className={inp} placeholder="JST-…" /></Field>
         <Field label="Destination">
           <select name="destinationId" defaultValue={pkg.destinationId as string} className={inp}>
             {destinations.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}

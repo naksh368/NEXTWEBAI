@@ -113,7 +113,7 @@ export default async function AdminQuotesPage({ searchParams }: { searchParams: 
                   {q.customerPhone && (
                     <div className="mt-1">
                       <a
-                        href={`https://wa.me/91${q.customerPhone.replace(/\D/g, "").slice(-10)}?text=${encodeURIComponent(`Hi ${q.customerName.split(" ")[0]}, your ExpertzTrip quote ${q.reference} for ${q.title} is ${formatINR(q.amount)}. View & accept: ${getSiteUrl()}/quote/${q.id}`)}`}
+                        href={`https://wa.me/91${q.customerPhone.replace(/\D/g, "").slice(-10)}?text=${encodeURIComponent(`Hi ${q.customerName.split(" ")[0]}, your JST Andaman Travels quote ${q.reference} for ${q.title} is ${formatINR(q.amount)}. View & accept: ${getSiteUrl()}/quote/${q.id}`)}`}
                         target="_blank" rel="noreferrer"
                         className="text-xs font-semibold text-[#128C4B] hover:underline"
                       >

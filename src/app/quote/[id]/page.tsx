@@ -70,7 +70,7 @@ export default async function QuotePage({ params }: { params: Promise<{ id: stri
           <Card className="mt-6"><CardBody className="text-center">
             <Clock className="mx-auto h-10 w-10 text-warning" />
             <h2 className="mt-3 text-xl font-bold">This quote has expired</h2>
-            <p className="mt-1 text-ink-muted">Ask your ExpertzTrip specialist for a fresh quote — prices and availability may have changed.</p>
+            <p className="mt-1 text-ink-muted">Ask your JST Andaman Travels specialist for a fresh quote — prices and availability may have changed.</p>
           </CardBody></Card>
         ) : acceptable ? (
           <Card className="mt-6"><CardBody>
@@ -102,7 +102,7 @@ export default async function QuotePage({ params }: { params: Promise<{ id: stri
           </CardBody></Card>
         ) : (
           <Card className="mt-6"><CardBody className="text-center text-ink-muted">
-            This quote isn&apos;t available for online booking right now. Please contact your ExpertzTrip specialist to proceed.
+            This quote isn&apos;t available for online booking right now. Please contact your JST Andaman Travels specialist to proceed.
           </CardBody></Card>
         )}
       </div>

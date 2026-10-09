@@ -214,7 +214,7 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
             <Card><CardBody>
               <div className="flex items-center gap-2">
                 <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-orangeLight text-brand-orange"><Headset className="h-4 w-4" /></span>
-                <h2 className="text-lg font-bold">Your ExpertzTrip specialist</h2>
+                <h2 className="text-lg font-bold">Your JST Andaman Travels specialist</h2>
               </div>
               <p className="mt-3 text-base font-bold text-brand-navy">{expert.fullName}</p>
               <p className="text-sm text-ink-muted">Looking after your booking — reach out any time.</p>

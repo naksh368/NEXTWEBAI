@@ -5,7 +5,7 @@ import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Card, CardBody } from "@/components/ui/card";
 import { db } from "@/lib/db";
 
-export const metadata: Metadata = { title: "Support", description: "Get help with your ExpertzTrip booking." };
+export const metadata: Metadata = { title: "Support", description: "Get help with your JST Andaman Travels booking." };
 
 export default async function SupportPage() {
   const brand = await db.businessSetting.findUnique({ where: { key: "brand" } }).catch(() => null);
@@ -27,7 +27,7 @@ export default async function SupportPage() {
           <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-orangeLight text-brand-orange"><Mail className="h-5 w-5" /></span>
           <div>
             <p className="text-sm font-semibold">Email us</p>
-            <a href={`mailto:${contact.supportEmail ?? "support@expertztrip.com"}`} className="text-sm text-brand-blue hover:underline">{contact.supportEmail ?? "support@expertztrip.com"}</a>
+            <a href={`mailto:${contact.supportEmail ?? "hello@jstandamantravels.com"}`} className="text-sm text-brand-blue hover:underline">{contact.supportEmail ?? "hello@jstandamantravels.com"}</a>
           </div>
         </CardBody></Card>
         <Card><CardBody className="flex items-center gap-4">

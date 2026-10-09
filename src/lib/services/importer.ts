@@ -7,7 +7,7 @@ import net from "node:net";
  * targets after DNS resolution), size- and time-capped.
  *
  * Extraction returns FACTS only — the admin reviews and rewrites into original
- * ExpertzTrip copy. Nothing here is auto-published.
+ * JST Andaman Travels copy. Nothing here is auto-published.
  */
 
 const MAX_BYTES = 2_000_000; // 2 MB
@@ -70,7 +70,7 @@ export async function safeFetchHtml(rawUrl: string): Promise<FetchResult> {
       signal: controller.signal,
       redirect: "follow",
       headers: {
-        "User-Agent": "ExpertzTripImporter/1.0 (+internal research tool)",
+        "User-Agent": "JST Andaman TravelsImporter/1.0 (+internal research tool)",
         Accept: "text/html,application/xhtml+xml",
       },
     });

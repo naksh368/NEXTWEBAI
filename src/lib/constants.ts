@@ -208,3 +208,46 @@ export const DEPARTURE_CITIES = [
   "Nagpur",
   "Guwahati",
 ] as const;
+
+// ── Enquiry pipeline ─────────────────────────────────────────
+// The canonical lead statuses an administrator can set. Legacy values from
+// earlier builds (QUALIFIED, QUOTE_SENT, NEGOTIATION, WON, LOST) are still
+// displayed if they exist on a row, but are no longer offered as choices —
+// see ENQUIRY_STATUS_META for how each one is labelled.
+export const ENQUIRY_STATUS = [
+  "NEW",
+  "CONTACTED",
+  "FOLLOW_UP",
+  "QUOTED",
+  "CONFIRMED",
+  "CLOSED",
+] as const;
+export const EnquiryStatus = z.enum(ENQUIRY_STATUS);
+export type EnquiryStatus = z.infer<typeof EnquiryStatus>;
+
+/** Statuses that still need someone to act. Used for the "open leads" count. */
+export const ENQUIRY_OPEN_STATUSES = ["NEW", "CONTACTED", "FOLLOW_UP", "QUOTED"] as const;
+
+/** Statuses that mean the lead is finished, including the legacy names. */
+export const ENQUIRY_CLOSED_STATUSES = ["CONFIRMED", "CLOSED", "WON", "LOST"] as const;
+
+export const ENQUIRY_STATUS_META: Record<
+  string,
+  { label: string; tone: "neutral" | "info" | "success" | "warning" | "danger" | "brand" }
+> = {
+  NEW: { label: "New", tone: "brand" },
+  CONTACTED: { label: "Contacted", tone: "info" },
+  FOLLOW_UP: { label: "Follow-up required", tone: "warning" },
+  QUOTED: { label: "Quoted", tone: "warning" },
+  CONFIRMED: { label: "Confirmed", tone: "success" },
+  CLOSED: { label: "Closed", tone: "neutral" },
+  // Legacy values kept so historic rows still render a sensible label.
+  QUALIFIED: { label: "Qualified (legacy)", tone: "info" },
+  QUOTE_SENT: { label: "Quote sent (legacy)", tone: "warning" },
+  NEGOTIATION: { label: "Negotiating (legacy)", tone: "warning" },
+  WON: { label: "Won (legacy)", tone: "success" },
+  LOST: { label: "Lost (legacy)", tone: "danger" },
+};
+
+/** Every status an admin action will accept, new vocabulary plus legacy. */
+export const ENQUIRY_STATUS_ALL = Object.keys(ENQUIRY_STATUS_META);

@@ -110,16 +110,16 @@ function buildContent(event: AppEvent, ctx: Ctx, data: Record<string, string>): 
   switch (event) {
     case "USER_REGISTERED":
       return {
-        title: "Your ExpertzTrip account is ready",
+        title: "Your JST Andaman Travels account is ready",
         body: "Welcome! Your email is verified and your account is set up.",
         href: "/account",
         email: {
-          subject: "Welcome to ExpertzTrip ✈️",
+          subject: "Welcome to JST Andaman Travels ✈️",
           heading: `Welcome, ${ctx.firstName}!`,
           bodyHtml: `We're here to make planning and booking your next holiday simple. You can explore our holiday packages, customize your trip and manage your bookings online — all from <b>My Trips</b>.`,
           cta: { label: "Explore Holidays", href: `${siteUrl()}/packages` },
         },
-        sms: "ExpertzTrip: Welcome! Your account is ready. Explore holidays at expertztrip.com",
+        sms: "JST Andaman Travels: Welcome! Your account is ready. Explore holidays at jstandamantravels.com",
       };
 
     case "BOOKING_CREATED":
@@ -128,7 +128,7 @@ function buildContent(event: AppEvent, ctx: Ctx, data: Record<string, string>): 
         body: `We've received your booking request for ${trip}. It's now being processed.`,
         href: ctx.tripHref,
         email: {
-          subject: `We've received your ExpertzTrip booking — ${ref}`,
+          subject: `We've received your JST Andaman Travels booking — ${ref}`,
           heading: "Booking received",
           bodyHtml: `Hi ${ctx.firstName}, we've received your booking request for <b>${ctx.packageName ?? trip}</b>.<br><br>Booking ID: <b>${ref}</b><br>Status: <b>Booking received</b><br><br>Your booking is now being processed. You can follow its status any time in My Trips.`,
           cta: viewTrip,
@@ -141,12 +141,12 @@ function buildContent(event: AppEvent, ctx: Ctx, data: Record<string, string>): 
         body: `We've received your payment for ${trip}. Your booking is now being processed.`,
         href: ctx.tripHref,
         email: {
-          subject: `Payment received — ExpertzTrip ${ref}`,
+          subject: `Payment received — JST Andaman Travels ${ref}`,
           heading: "Payment received",
           bodyHtml: `Hi ${ctx.firstName}, we've successfully received your payment for <b>${ctx.packageName ?? trip}</b> (booking <b>${ref}</b>).<br><br>Payment status: <b>PAID</b><br><br>Your holiday is now being processed. Please note: payment received does not automatically mean every travel component is confirmed — our team now confirms the required components and we'll share your documents in My Trips.`,
           cta: viewTrip,
         },
-        sms: `ExpertzTrip: Payment received for booking ${ref}. Your holiday is now being processed.`,
+        sms: `JST Andaman Travels: Payment received for booking ${ref}. Your holiday is now being processed.`,
       };
 
     case "BOOKING_PROCESSING":
@@ -163,12 +163,12 @@ function buildContent(event: AppEvent, ctx: Ctx, data: Record<string, string>): 
         body: `Great news! ${trip} (booking ${ref}) is confirmed. Check My Trips for your itinerary and documents.`,
         href: ctx.tripHref,
         email: {
-          subject: "Your ExpertzTrip holiday is confirmed ✓",
+          subject: "Your JST Andaman Travels holiday is confirmed ✓",
           heading: "Your holiday is confirmed",
           bodyHtml: `Hi ${ctx.firstName}, your booking <b>${ref}</b> for <b>${ctx.packageName ?? trip}</b> is now confirmed. Your itinerary and travel documents are available in My Trips. We'll keep you posted on any updates before you travel.`,
           cta: viewTrip,
         },
-        sms: `ExpertzTrip: Your holiday booking ${ref} is confirmed. Check My Trips for your itinerary and travel documents.`,
+        sms: `JST Andaman Travels: Your holiday booking ${ref} is confirmed. Check My Trips for your itinerary and travel documents.`,
       };
 
     case "DOCUMENT_PUBLISHED": {
@@ -178,12 +178,12 @@ function buildContent(event: AppEvent, ctx: Ctx, data: Record<string, string>): 
         body: `Your ${docType} for booking ${ref} is now available in My Trips.`,
         href: ctx.tripHref,
         email: {
-          subject: `Your ExpertzTrip ${docType} is ready`,
+          subject: `Your JST Andaman Travels ${docType} is ready`,
           heading: `Hi ${ctx.firstName}, your ${docType} is ready`,
           bodyHtml: `Your <b>${docType}</b>${data.title ? ` (“${data.title}”)` : ""} for booking <b>${ref}</b> is attached to this email.<br><br>You can also view or download it any time — signed in and secure — in <b>My Trips</b>.`,
           cta: viewTrip,
         },
-        sms: `ExpertzTrip: Your ${docType} for booking ${ref} is now available in My Trips.`,
+        sms: `JST Andaman Travels: Your ${docType} for booking ${ref} is now available in My Trips.`,
       };
     }
 
@@ -193,12 +193,12 @@ function buildContent(event: AppEvent, ctx: Ctx, data: Record<string, string>): 
         body: `Your complete itinerary for ${trip} is ready to view.`,
         href: ctx.tripHref,
         email: {
-          subject: "Your ExpertzTrip itinerary is ready",
+          subject: "Your JST Andaman Travels itinerary is ready",
           heading: `Hi ${ctx.firstName}, your itinerary is ready`,
           bodyHtml: `Your complete holiday itinerary for <b>${trip}</b> is now ready — flights, hotel, transfers, activities and your day-by-day schedule. View it securely in My Trips.`,
           cta: viewTrip,
         },
-        sms: `ExpertzTrip: Your complete itinerary for ${trip} is ready. View it securely in My Trips.`,
+        sms: `JST Andaman Travels: Your complete itinerary for ${trip} is ready. View it securely in My Trips.`,
       };
 
     case "BOOKING_CANCELLED":
@@ -207,7 +207,7 @@ function buildContent(event: AppEvent, ctx: Ctx, data: Record<string, string>): 
         body: `Your booking ${ref} has been cancelled.`,
         href: ctx.tripHref,
         email: {
-          subject: `Your ExpertzTrip booking ${ref} has been cancelled`,
+          subject: `Your JST Andaman Travels booking ${ref} has been cancelled`,
           heading: "Booking cancelled",
           bodyHtml: `Hi ${ctx.firstName}, your booking <b>${ref}</b> for ${ctx.packageName ?? trip} has been cancelled. If a refund applies, we'll process it and keep you updated.`,
           cta: viewTrip,
@@ -220,12 +220,12 @@ function buildContent(event: AppEvent, ctx: Ctx, data: Record<string, string>): 
         body: `We'd love your review of ${trip}.`,
         href: ctx.tripHref,
         email: {
-          subject: "How was your ExpertzTrip holiday? ✨",
+          subject: "How was your JST Andaman Travels holiday? ✨",
           heading: `Welcome back, ${ctx.firstName}!`,
           bodyHtml: `We hope you had a wonderful time on <b>${ctx.packageName ?? trip}</b>. Your feedback helps other travellers and helps us do better — it only takes a minute. And when you're ready for your next holiday, we're here.`,
           cta: { label: "Leave a review", href: `${siteUrl()}${ctx.tripHref}` },
         },
-        sms: `ExpertzTrip: We hope you enjoyed ${trip}! We'd love a quick review — see My Trips.`,
+        sms: `JST Andaman Travels: We hope you enjoyed ${trip}! We'd love a quick review — see My Trips.`,
       };
 
     case "REFUND_PROCESSED":
@@ -234,12 +234,12 @@ function buildContent(event: AppEvent, ctx: Ctx, data: Record<string, string>): 
         body: `Your refund for booking ${ref} has been processed.`,
         href: ctx.tripHref,
         email: {
-          subject: `Your ExpertzTrip refund — ${ref}`,
+          subject: `Your JST Andaman Travels refund — ${ref}`,
           heading: "Refund processed",
           bodyHtml: `Hi ${ctx.firstName}, the refund for booking <b>${ref}</b>${data.amount ? ` of <b>${data.amount}</b>` : ""} has been processed. It may take a few business days to reflect in your account.`,
           cta: viewTrip,
         },
-        sms: `ExpertzTrip: Your refund for booking ${ref} has been processed.`,
+        sms: `JST Andaman Travels: Your refund for booking ${ref} has been processed.`,
       };
   }
 }
@@ -316,7 +316,7 @@ export async function emitEvent(input: EmitInput): Promise<boolean> {
           await sendEmail({
             to: businessNotifyEmail(),
             replyTo: b.customer.email || undefined,
-            subject: `${paid ? "💳 Payment received" : "🔔 New booking"} — ${ctx.reference} — ${ctx.packageName ?? "ExpertzTrip"}`,
+            subject: `${paid ? "💳 Payment received" : "🔔 New booking"} — ${ctx.reference} — ${ctx.packageName ?? "JST Andaman Travels"}`,
             html: emailLayout(
               paid ? "Payment received" : "New booking received",
               `Booking ID: <b>${ctx.reference}</b><br>

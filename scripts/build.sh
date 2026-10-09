@@ -21,9 +21,15 @@ if [ -z "$DATABASE_URL" ]; then
 fi
 
 npx prisma generate
+
+# Bring the database in line with the schema. --accept-data-loss is required
+# for a non-interactive build; it only matters when a schema change removes a
+# column, so review schema.prisma before deploying a destructive change.
 npx prisma db push --accept-data-loss
+
+# Seeds an EMPTY database only. If packages already exist the seed exits
+# without touching anything, so a redeploy can never wipe real enquiries,
+# edited packages or uploaded photographs.
 npx tsx prisma/seed.ts
-# Idempotent top-up — adds India + international destinations on every deploy
-# without wiping existing data (safe to run repeatedly).
-npx tsx prisma/seed-extra.ts
+
 npx next build

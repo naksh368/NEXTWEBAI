@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import {
-  Plane, BedDouble, Ticket, Utensils, Clock, MapPin,
-  Check, X, Info, ShieldCheck, Download, Star, Users, Luggage, Sparkles, ChevronDown,
+  Plane, BedDouble, Ticket, Utensils, Clock, MapPin, Ship, CalendarCheck,
+  Check, X, Info, ShieldCheck, Download, FileText, Star, Users, Luggage, Sparkles, ChevronDown,
 } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
@@ -17,19 +17,38 @@ import { BookNowButton } from "@/components/package/booking-wizard";
 import { EnquireButton } from "@/components/package/enquire-button";
 import { PackageCard } from "@/components/package/package-card";
 import { RecordView, RecentlyViewedRail } from "@/components/package/recently-viewed";
+import { BreadcrumbJsonLd } from "@/components/layout/structured-data";
 import { getPackageBySlug, getSimilarPackages } from "@/lib/queries";
 import { getCurrentCustomer } from "@/lib/auth";
-import { formatINR } from "@/lib/utils";
+import { getSiteSettings, promoIsActive } from "@/lib/site-settings";
+import { TIER_LABEL } from "@/components/package/package-card";
+import { formatINR, formatDate, getSiteUrl } from "@/lib/utils";
 
-const CATEGORY_LABEL: Record<string, string> = {
-  PREMIUM: "Premium", LUXURY: "Luxury", SIGNATURE: "Most Popular",
-  HONEYMOON: "Best for Couples", FAMILY: "Best for Families", FIRST_ESCAPE: "Best Value",
-};
+export const revalidate = 300;
+
+/**
+ * No `loading.tsx` for this route on purpose.
+ *
+ * A loading file wraps the page in a Suspense boundary, which flushes the
+ * response shell — and therefore commits HTTP 200 — before the page can call
+ * `notFound()`. That turned an unpublished or unknown package into a soft 404:
+ * the right content, but a 200 status that search engines would index.
+ * Rendering straight through keeps the status code honest.
+ */
+
 const AVAILABILITY_META: Record<string, { label: string; tone: "success" | "warning" | "info" | "danger" }> = {
   AVAILABLE: { label: "Available", tone: "success" },
   LIMITED: { label: "Limited availability", tone: "warning" },
-  ON_REQUEST: { label: "On request", tone: "info" },
+  ON_REQUEST: { label: "Confirmed on request", tone: "info" },
   UNAVAILABLE: { label: "Currently unavailable", tone: "danger" },
+};
+
+/** schema.org availability that matches what we actually claim on the page. */
+const SCHEMA_AVAILABILITY: Record<string, string> = {
+  AVAILABLE: "https://schema.org/InStock",
+  LIMITED: "https://schema.org/LimitedAvailability",
+  ON_REQUEST: "https://schema.org/PreOrder",
+  UNAVAILABLE: "https://schema.org/OutOfStock",
 };
 
 function asStringArray(v: unknown): string[] {
@@ -42,26 +61,29 @@ function quickFactsOn(kind: string, kinds: Set<string>, cats: Set<string>): bool
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const pkg = await getPackageBySlug(slug);
-  if (!pkg) return { title: "Package not found" };
+  const [pkg, settings] = await Promise.all([getPackageBySlug(slug), getSiteSettings()]);
+  if (!pkg) return { title: "Package not found", robots: { index: false, follow: false } };
   const v = pkg.currentVersion!;
-  const description = v.summary ?? `${pkg.name} — a handpicked ${v.durationNights}N / ${v.durationDays}D holiday to ${pkg.destination.name} with clear pricing and expert support.`;
+  const description =
+    v.seoDescription ??
+    v.summary ??
+    `${pkg.name} — a ${v.durationNights}N / ${v.durationDays}D Andaman holiday covering ${pkg.destination.name}, with accommodation, sightseeing and island transfers arranged by ${settings.brandName}.`;
   const image = v.images[0]?.url;
   const canonical = `/packages/${slug}`;
   return {
-    title: pkg.name,
+    title: v.seoTitle ?? pkg.name,
     description,
     alternates: { canonical },
     openGraph: {
       type: "website",
       url: canonical,
-      title: `${pkg.name} · ExpertzTrip`,
+      title: `${pkg.name} · ${settings.brandName}`,
       description,
       images: image ? [{ url: image, alt: pkg.name }] : undefined,
     },
     twitter: {
       card: "summary_large_image",
-      title: `${pkg.name} · ExpertzTrip`,
+      title: `${pkg.name} · ${settings.brandName}`,
       description,
       images: image ? [image] : undefined,
     },
@@ -70,10 +92,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function PackageDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const pkg = await getPackageBySlug(slug);
+  const [pkg, settings] = await Promise.all([getPackageBySlug(slug), getSiteSettings()]);
   if (!pkg) notFound();
 
   const v = pkg.currentVersion!;
+  const promoLive = promoIsActive(settings);
+  const tierLabel = pkg.theme ? TIER_LABEL[pkg.theme] ?? null : null;
   const reviewRequired = v.pricingStatus === "PRICE_REVIEW_REQUIRED";
   // Enquiry-only OR price-on-request → the CTA is "Enquire", never online booking.
   const enquireOnly = reviewRequired || pkg.enquiryOnly;
@@ -97,8 +121,7 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
   const reviews = pkg.reviews ?? [];
   const reviewCount = reviews.length;
   const avgRating = reviewCount ? Math.round((reviews.reduce((s, r) => s + r.rating, 0) / reviewCount) * 10) / 10 : null;
-  const bestFor = (v.bestFor ?? "").split(",").map((s) => s.trim()).filter(Boolean);
-  const categoryLabel = v.category ? CATEGORY_LABEL[v.category] : null;
+  const bestFor = (v.bestFor ?? "").split(",").map((part) => part.trim()).filter(Boolean);
   const availability = AVAILABILITY_META[v.availabilityStatus] ?? null;
   const similar = await getSimilarPackages(pkg.destinationId, pkg.theme, pkg.id, 3);
 
@@ -108,13 +131,22 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
     ? { defaultName: customer.fullName, defaultEmail: customer.email, defaultPhone: customer.mobile }
     : {};
 
+  // "At a glance" reads only from saved data. Where a package has not been
+  // given a value, we say so rather than implying something is included.
+  const inclusionText = inclusions.join(" · ").toLowerCase();
   const glance = [
     { icon: Clock, label: "Duration", value: `${v.durationNights}N / ${v.durationDays}D` },
-    { icon: Plane, label: "Flights", value: v.flightSector || (quickFactsOn("FLIGHT", kinds, cats) ? "Included" : "Not published") },
-    { icon: BedDouble, label: "Hotel", value: v.roomCategory || `${v.durationNights} nights` },
-    { icon: Utensils, label: "Meals", value: v.mealPlan || (quickFactsOn("MEAL", kinds, cats) ? "Breakfast included" : "Not published") },
-    { icon: Ticket, label: "Sightseeing", value: quickFactsOn("ACTIVITY", kinds, cats) ? "Included" : "Not published" },
-    { icon: Luggage, label: "Baggage", value: v.baggage || "As per airline" },
+    { icon: BedDouble, label: "Accommodation", value: v.roomCategory || `${v.durationNights} nights` },
+    { icon: Utensils, label: "Meals", value: v.mealPlan || (quickFactsOn("MEAL", kinds, cats) ? "As per itinerary" : "Not specified") },
+    { icon: Ticket, label: "Sightseeing", value: quickFactsOn("ACTIVITY", kinds, cats) ? "As per itinerary" : "Not specified" },
+    {
+      icon: Ship,
+      label: "Island transfers",
+      value: /ferry|inter-island/.test(inclusionText) ? "Included" : "Not included",
+    },
+    { icon: Users, label: "Group size", value: `Minimum ${v.minTravellers} ${v.minTravellers === 1 ? "traveller" : "travellers"}` },
+    ...(v.flightSector ? [{ icon: Plane, label: "Flights", value: v.flightSector }] : []),
+    ...(v.baggage ? [{ icon: Luggage, label: "Baggage", value: v.baggage }] : []),
   ];
 
   const jsonLd = {
@@ -123,7 +155,7 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
     name: pkg.name,
     description: v.summary,
     image: images.map((i) => i.url),
-    brand: { "@type": "Brand", name: "ExpertzTrip" },
+    brand: { "@type": "Brand", name: settings.brandName },
     ...(avgRating !== null && reviewCount > 0
       ? { aggregateRating: { "@type": "AggregateRating", ratingValue: avgRating, reviewCount } }
       : {}),
@@ -131,13 +163,23 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
       "@type": "Offer",
       priceCurrency: v.currency,
       price: v.basePrice,
-      availability: "https://schema.org/InStock",
+      url: `${getSiteUrl()}/packages/${pkg.slug}`,
+      // Mirrors what the page claims — never "in stock" for an on-request trip.
+      availability: SCHEMA_AVAILABILITY[v.availabilityStatus] ?? "https://schema.org/PreOrder",
+      ...(promoLive ? { priceValidUntil: settings.promoValidTo } : {}),
     },
   };
 
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <BreadcrumbJsonLd
+        items={[
+          { label: "Home", href: "/" },
+          { label: "Holiday packages", href: "/packages" },
+          { label: pkg.name, href: `/packages/${pkg.slug}` },
+        ]}
+      />
       <Container className="py-6">
         <Breadcrumbs
           items={[
@@ -170,9 +212,10 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
               <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4 text-brand-orange" /> {pkg.destination.name}, {pkg.destination.country}</span>
               <span className="text-ink-faint">·</span>
               <span className="inline-flex items-center gap-1"><Clock className="h-4 w-4" /> {v.durationNights}N / {v.durationDays}D</span>
-              {categoryLabel && (
-                <Badge tone="brand"><Sparkles className="h-3 w-3" /> {categoryLabel}</Badge>
+              {tierLabel && (
+                <Badge tone="brand"><Sparkles className="h-3 w-3" /> {tierLabel}</Badge>
               )}
+              {v.minTravellers > 1 && <Badge tone="warning"><Users className="h-3 w-3" /> Min {v.minTravellers} pax</Badge>}
               {availability && (availability.tone === "warning" || availability.tone === "info") && (
                 <Badge tone={availability.tone}>{availability.label}</Badge>
               )}
@@ -182,8 +225,8 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
             {pkg.isChecked && (
               <div className="mt-2 inline-flex items-center gap-2 rounded-lg border border-success/25 bg-success/[0.06] px-3 py-1.5">
                 <ShieldCheck className="h-4 w-4 text-success" />
-                <span className="text-sm font-semibold text-success">ExpertzTrip Checked</span>
-                <span className="hidden text-xs text-ink-muted sm:inline">· inclusions, itinerary &amp; pricing reviewed by our team</span>
+                <span className="text-sm font-semibold text-success">Reviewed by our team</span>
+                <span className="hidden text-xs text-ink-muted sm:inline">· inclusions, itinerary and pricing checked</span>
               </div>
             )}
 
@@ -215,15 +258,23 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
           <div className="shrink-0 rounded-xl bg-surface-muted px-4 py-3 sm:text-right">
             {reviewRequired ? (
               <>
-                <p className="text-xs uppercase tracking-wide text-ink-faint">Pricing</p>
-                <p className="text-xl font-bold text-brand-navy">Price on request</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-ink-faint">Pricing</p>
+                <p className="text-xl font-extrabold text-brand-navy">Price on request</p>
                 <p className="text-xs text-ink-muted">confirmed by our team</p>
               </>
             ) : (
               <>
-                <p className="text-xs uppercase tracking-wide text-ink-faint">Starting from</p>
-                <p className="text-3xl font-extrabold text-brand-navy">{formatINR(v.basePrice)}</p>
-                <p className="text-xs text-ink-muted">per person · {v.perPersonPricing ? "twin sharing" : "per package"}</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-ink-faint">Starting from</p>
+                <p className="tabular text-3xl font-extrabold text-brand-navy">{formatINR(v.basePrice)}</p>
+                <p className="text-xs text-ink-muted">
+                  {v.perPersonPricing ? "per person · twin sharing" : "for the whole group"}
+                  {v.minTravellers > 1 ? ` · min ${v.minTravellers} pax` : ""}
+                </p>
+                {v.pricingStatus === "INDICATIVE" && (
+                  <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-brand-orangeDark">
+                    Indicative rate
+                  </p>
+                )}
               </>
             )}
           </div>
@@ -240,20 +291,46 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
           ))}
         </div>
 
+        {/* Validity + pricing basis — stated before anyone enquires, never after. */}
+        <div className="mt-4 flex flex-col gap-2.5 rounded-xl border border-surface-border bg-surface-muted p-4 text-sm sm:flex-row sm:items-start sm:gap-5">
+          {promoLive ? (
+            <p className="flex items-start gap-2 font-semibold text-brand-orangeDark">
+              <CalendarCheck className="mt-0.5 h-4 w-4 shrink-0" />
+              Valid for travel {formatDate(settings.promoValidFrom)} – {formatDate(settings.promoValidTo)}
+            </p>
+          ) : (
+            <p className="flex items-start gap-2 font-semibold text-ink-muted">
+              <CalendarCheck className="mt-0.5 h-4 w-4 shrink-0" />
+              This promotional window has closed — ask us for current rates on your dates.
+            </p>
+          )}
+          <p className="flex-1 leading-relaxed text-ink-muted">{settings.priceDisclaimer}</p>
+        </div>
+
         {/* Not sure yet? Talk to an expert — high-intent enquiry, right on the package page */}
         <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-brand-blue/20 bg-brand-blueLight/40 p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="font-bold text-brand-navy">Not sure yet?</p>
-            <p className="text-sm text-ink-muted">Talk to an ExpertzTrip travel expert about dates, hotels, upgrades and special requests.</p>
+            <p className="text-sm text-ink-muted">Talk to our team about dates, hotels, upgrades and anything special you need.</p>
           </div>
           <div className="shrink-0 sm:w-56">
             <EnquireButton packageName={pkg.name} packageSlug={pkg.slug} {...enquiryDefaults} label="Talk to an expert" />
           </div>
         </div>
 
-        <div className="mt-3">
-          <Link href={`/packages/${pkg.slug}/itinerary`} className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-blue hover:underline">
-            <Download className="h-4 w-4" /> View &amp; download full itinerary
+        <div className="mt-3 flex flex-wrap items-center gap-2.5">
+          <a
+            href={`/packages/${pkg.slug}/itinerary.pdf`}
+            download
+            className="inline-flex h-10 items-center gap-2 rounded-xl border border-brand-blue/30 bg-brand-blueLight px-4 text-sm font-bold text-brand-blueDark transition-colors hover:bg-brand-blue hover:text-white"
+          >
+            <Download className="h-4 w-4" /> Download itinerary (PDF)
+          </a>
+          <Link
+            href={`/packages/${pkg.slug}/itinerary`}
+            className="inline-flex h-10 items-center gap-2 rounded-xl border border-surface-border px-4 text-sm font-bold text-ink transition-colors hover:border-brand-blue hover:text-brand-blue"
+          >
+            <FileText className="h-4 w-4" /> View the full itinerary
           </Link>
         </div>
 
@@ -283,7 +360,7 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
 
             <section id="itinerary">
               <h2 className="text-xl font-bold">Day-by-day itinerary</h2>
-              <p className="mt-1 text-sm text-ink-muted">{v.days.length} days of curated experiences.</p>
+              <p className="mt-1 text-sm text-ink-muted">{v.days.length} days across Port Blair, Havelock and Neil.</p>
               <div className="mt-5">
                 <Itinerary days={v.days} images={images.map((i) => i.url)} />
               </div>
@@ -424,11 +501,11 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
                         <Badge tone="warning">On request</Badge>
                       </div>
                       <p className="text-sm text-ink-muted">
-                        This holiday is confirmed by our travel experts before booking. Share your dates and travellers — we&apos;ll come back with a verified quote, usually within a few hours.
+                        This holiday is priced by our team before booking. Share your dates and group size and we will come back with an itinerary and a written quotation.
                       </p>
                       <ul className="mt-4 space-y-2 text-sm text-ink">
                         <li className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-brand-blue" /> Fully customizable itinerary</li>
-                        <li className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-brand-blue" /> Transparent pricing — no hidden costs</li>
+                        <li className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-brand-blue" /> Written quotation before you pay anything</li>
                         <li className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-brand-blue" /> Expert support, no obligation</li>
                       </ul>
                       <div className="mt-5">
@@ -447,11 +524,11 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
                         </div>
                         <Badge tone="brand">Enquire</Badge>
                       </div>
-                      <p className="mb-4 text-xs text-ink-muted">Tell us your dates &amp; travellers — we&apos;ll confirm availability and the final price, then help you book.</p>
+                      <p className="mb-4 text-xs leading-relaxed text-ink-muted">Tell us your dates and group size. We confirm the hotels and ferries by hand, then send you an itinerary and a written quotation — an enquiry books nothing.</p>
                       <EnquireButton packageName={pkg.name} packageSlug={pkg.slug} {...enquiryDefaults} variant="solid" size="lg" label="Enquire now" className="!bg-brand-orange hover:!bg-brand-orangeDark" />
                       <ul className="mt-4 space-y-2 text-sm text-ink">
                         <li className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-brand-blue" /> Fully customizable itinerary</li>
-                        <li className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-brand-blue" /> Best price, personally confirmed</li>
+                        <li className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-brand-blue" /> Final price confirmed in writing</li>
                         <li className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-brand-blue" /> Expert support, no obligation</li>
                       </ul>
                     </div>
@@ -504,7 +581,7 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
                       </details>
                       <div className="mt-4 border-t border-surface-border pt-4">
                         <p className="mb-2 text-center text-xs text-ink-muted">Prefer to speak to an expert first?</p>
-                        <EnquireButton packageName={pkg.name} packageSlug={pkg.slug} {...enquiryDefaults} label="Enquire on WhatsApp" />
+                        <EnquireButton packageName={pkg.name} packageSlug={pkg.slug} {...enquiryDefaults} label="Talk to our team" />
                       </div>
                     </>
                   )}
@@ -517,8 +594,8 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
         {/* Similar holidays */}
         {similar.length > 0 && (
           <section className="mt-14">
-            <h2 className="text-xl font-bold sm:text-2xl">Similar holidays</h2>
-            <p className="mt-1 text-sm text-ink-muted">More handpicked trips you may love.</p>
+            <h2 className="text-xl font-bold sm:text-2xl">Other Andaman packages</h2>
+            <p className="mt-1 text-sm text-ink-muted">Other Andaman itineraries from our team.</p>
             <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {similar.map((p) => <PackageCard key={p.id} pkg={p} />)}
             </div>
@@ -529,42 +606,55 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
         <RecentlyViewedRail exclude={pkg.slug} />
       </Container>
 
-      {/* Mobile sticky CTA */}
+      {/* Mobile sticky CTA — fluid so it never overflows a 320px screen. */}
       <div className="sticky bottom-0 z-30 border-t border-surface-border bg-white/95 p-3 shadow-sticky backdrop-blur lg:hidden">
-        <div className="flex items-center justify-between gap-3">
-          <div>
+        <div className="flex items-center gap-2.5">
+          <div className="min-w-0 shrink">
             {reviewRequired ? (
-              <p className="text-lg font-bold text-brand-navy">Price on request</p>
+              <p className="text-sm font-extrabold leading-tight text-brand-navy">On request</p>
             ) : (
               <>
-                <p className="text-xs text-ink-muted">From</p>
-                <p className="text-lg font-bold text-brand-navy">{formatINR(v.basePrice)} <span className="text-xs font-normal text-ink-muted">/person</span></p>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-faint">From</p>
+                <p className="tabular whitespace-nowrap text-base font-extrabold leading-tight text-brand-navy">
+                  {formatINR(v.basePrice)}
+                  <span className="text-[10px] font-semibold text-ink-muted">/pp</span>
+                </p>
               </>
             )}
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-[128px]">
-              <EnquireButton packageName={pkg.name} packageSlug={pkg.slug} {...enquiryDefaults} label="Enquire" />
-            </div>
+
+          <div className="flex min-w-0 flex-1 items-center gap-2">
             {enquireOnly ? (
-              <Link href="#customize" className="inline-flex h-11 items-center justify-center rounded-xl bg-brand-orange px-5 font-semibold text-white transition-colors hover:bg-brand-orangeDark">
-                {reviewRequired ? "Get a quote" : "Enquire"}
-              </Link>
-            ) : (
-              <div className="w-[150px]">
-                <BookNowButton
-                  packageSlug={pkg.slug}
+              <div className="min-w-0 flex-1">
+                <EnquireButton
                   packageName={pkg.name}
-                  versionId={v.id}
-                  basePrice={v.basePrice}
-                  minTravellers={v.minTravellers}
-                  maxTravellers={v.maxTravellers}
-                  departureCities={departureCities}
-                  departures={wizardDepartures}
-                  nights={v.durationNights}
-                  days={v.durationDays}
+                  packageSlug={pkg.slug}
+                  {...enquiryDefaults}
+                  variant="solid"
+                  label={reviewRequired ? "Get a quote" : "Enquire now"}
+                  className="!h-11 !bg-brand-orange text-sm hover:!bg-brand-orangeDark"
                 />
               </div>
+            ) : (
+              <>
+                <div className="min-w-0 flex-1">
+                  <EnquireButton packageName={pkg.name} packageSlug={pkg.slug} {...enquiryDefaults} label="Enquire" className="!h-11 text-sm" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <BookNowButton
+                    packageSlug={pkg.slug}
+                    packageName={pkg.name}
+                    versionId={v.id}
+                    basePrice={v.basePrice}
+                    minTravellers={v.minTravellers}
+                    maxTravellers={v.maxTravellers}
+                    departureCities={departureCities}
+                    departures={wizardDepartures}
+                    nights={v.durationNights}
+                    days={v.durationDays}
+                  />
+                </div>
+              </>
             )}
           </div>
         </div>

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { MessageCircle, Phone, X, Send, CheckCircle2, Loader2, ArrowLeft, ArrowRight, User } from "lucide-react";
-import { EXPERT_PHONE, whatsappLink, telLink } from "@/lib/contact";
+import { whatsappLink, telLink } from "@/lib/contact";
 import { cn } from "@/lib/utils";
 
 interface EnquireButtonProps {
@@ -68,14 +68,15 @@ export function EnquireButton({
   const [travellers, setTravellers] = useState("");
   const [bookingPlan, setBookingPlan] = useState("");
   const [travelDate, setTravelDate] = useState("");
+  const [consent, setConsent] = useState(false);
 
   const waMessage = packageName
-    ? `Hi ExpertzTrip 👋\n\nI'm interested in the "${packageName}" holiday. Please help me with dates, pricing and what's included.`
-    : `Hi ExpertzTrip 👋\n\nI'd like help planning a holiday. Please share options and pricing.`;
+    ? `Hello JST Andaman Travels 👋\n\nI am interested in the "${packageName}". Please share dates, pricing and what is included.`
+    : `Hello JST Andaman Travels 👋\n\nI would like help planning an Andaman holiday. Please share options and pricing.`;
 
   function close() {
     setOpen(false);
-    setTimeout(() => { setSent(false); setError(null); setStep(known ? 2 : 1); setReference(null); }, 300);
+    setTimeout(() => { setSent(false); setError(null); setStep(known ? 2 : 1); setReference(null); setConsent(false); }, 300);
   }
 
   function goNext(e: React.FormEvent) {
@@ -94,6 +95,8 @@ export function EnquireButton({
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (loading) return; // guards a double submit
+    if (!consent) { setError("Please accept the privacy notice so we can contact you."); return; }
     setLoading(true);
     setError(null);
     try {
@@ -109,12 +112,17 @@ export function EnquireButton({
           travelType,
           travellers: travellers ? Number(travellers) : undefined,
           bookingPlan, travelDate,
+          consent: true,
           source: packageSlug ? "PACKAGE" : "WEBSITE",
         }),
       });
-      const data = await res.json();
-      if (!data.ok) { setError(data.error ?? "Could not submit. Please try again."); return; }
-      setReference(data.reference ?? null);
+      const data = (await res.json().catch(() => null)) as { ok?: boolean; reference?: string; error?: string } | null;
+      // Success is only ever claimed when the server really saved the enquiry.
+      if (!res.ok || !data?.ok || !data.reference) {
+        setError(data?.error ?? "Could not submit just now. Please try WhatsApp or call us.");
+        return;
+      }
+      setReference(data.reference);
       setSent(true);
     } catch {
       setError("Network error. Please try WhatsApp or call us.");
@@ -173,7 +181,7 @@ export function EnquireButton({
                 </span>
                 <h4 className="mt-5 text-xl font-bold text-brand-navy">💬 Enquiry received!</h4>
                 <p className="mt-2 max-w-sm text-sm text-ink-muted">
-                  Thanks, {fullName.split(" ")[0] || "traveller"}. We&apos;ve received your request{packageName ? ` for ${packageName}` : ""}.
+                  Thank you, {fullName.split(" ")[0] || "traveller"}. We have received your request{packageName ? ` for ${packageName}` : ""}.
                 </p>
                 {reference && (
                   <div className="mt-4 rounded-xl bg-brand-blueLight/60 px-4 py-2.5">
@@ -182,14 +190,14 @@ export function EnquireButton({
                   </div>
                 )}
                 <p className="mt-3 max-w-sm text-sm text-ink-muted">
-                  An ExpertzTrip travel specialist will review your request and contact you on {phone}{email ? ` and ${email}` : ""}.
+                  A JST Andaman Travels specialist will review your request and contact you on {phone}{email ? ` and ${email}` : ""} with an itinerary and a written quotation. Nothing is booked or held until we confirm it with you in writing.
                 </p>
 
                 {packageSlug && (
                   <div className="mt-5 w-full rounded-2xl border border-brand-orange/25 bg-brand-orangeLight/40 p-3.5">
-                    <p className="text-sm font-semibold text-brand-navy">Want to book instead?</p>
+                    <p className="text-sm font-semibold text-brand-navy">Want to look at the itinerary again?</p>
                     <Link href={`/packages/${packageSlug}`} onClick={close} className="mt-2 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-brand-orange px-5 text-sm font-bold text-white transition-colors hover:bg-brand-orangeDark">
-                      Book this holiday <ArrowRight className="h-4 w-4" />
+                      View the full itinerary <ArrowRight className="h-4 w-4" />
                     </Link>
                   </div>
                 )}
@@ -229,7 +237,7 @@ export function EnquireButton({
                 </button>
 
                 <p className="text-center text-xs text-ink-muted">
-                  Our travel experts will call or WhatsApp you back with real options — usually within a few hours.
+                  Our team will call or WhatsApp you back with real options and a written quotation.
                 </p>
               </form>
             ) : (
@@ -283,7 +291,23 @@ export function EnquireButton({
                   <input required type="date" min={new Date().toLocaleDateString("en-CA")} value={travelDate} onChange={(e) => setTravelDate(e.target.value)} className={inputCls} />
                 </div>
 
-                {error && <p className="text-sm font-medium text-danger">{error}</p>}
+                <label className="flex cursor-pointer items-start gap-2.5 text-sm text-ink-muted">
+                  <input
+                    type="checkbox"
+                    checked={consent}
+                    onChange={(e) => setConsent(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-surface-border text-brand-blue focus:ring-brand-blue"
+                  />
+                  <span>
+                    I agree that{" "}
+                    <Link href="/privacy-policy" className="font-semibold text-brand-blue underline-offset-2 hover:underline">
+                      JST Andaman Travels may contact me
+                    </Link>{" "}
+                    about this enquiry.
+                  </span>
+                </label>
+
+                {error && <p role="alert" className="text-sm font-medium text-danger">{error}</p>}
 
                 <div className="flex items-center gap-3">
                   <button type="button" onClick={() => { setStep(1); setError(null); }} className="inline-flex h-12 flex-1 items-center justify-center gap-1.5 rounded-xl border-2 border-surface-border font-semibold text-ink transition-colors hover:bg-surface-muted">
@@ -299,7 +323,7 @@ export function EnquireButton({
                     <Send className="h-4 w-4" /> WhatsApp
                   </a>
                   <a href={telLink()} className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border-2 border-brand-blue/30 text-sm font-semibold text-brand-blue transition-colors hover:bg-brand-blueLight">
-                    <Phone className="h-4 w-4" /> Call {EXPERT_PHONE}
+                    <Phone className="h-4 w-4" /> Call us
                   </a>
                 </div>
               </form>

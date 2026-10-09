@@ -1,57 +1,43 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
-import { Container } from "@/components/ui/container";
-import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { SearchX, CalendarCheck, Info } from "lucide-react";
+import { Container, Section } from "@/components/ui/container";
+import { PageHeader } from "@/components/layout/page-header";
+import { BreadcrumbJsonLd } from "@/components/layout/structured-data";
 import { Pagination } from "@/components/ui/pagination";
 import { EmptyState } from "@/components/ui/states";
 import { Skeleton } from "@/components/ui/skeleton";
+import { buttonVariants } from "@/components/ui/button";
 import { PackageCard } from "@/components/package/package-card";
 import { PackageFilters } from "@/components/package/package-filters";
-import { listPackages, type PackageFilters as Filters, type PackageListItem } from "@/lib/queries";
-import { SearchX, Check } from "lucide-react";
+import { parseRange } from "@/lib/filters";
+import { getAndamanDestinations, listPackages, type PackageFilters as Filters } from "@/lib/queries";
+import { getSiteSettings, promoIsActive } from "@/lib/site-settings";
+import { formatDate } from "@/lib/utils";
 
-type BuildCriteria = { budgetMax: number | null; theme?: string; destination?: string } | null;
+export const revalidate = 300;
 
-function matchScore(pkg: PackageListItem, c: NonNullable<BuildCriteria>): number {
-  let score = 55;
-  if (c.destination && pkg.destination.name.toLowerCase().includes(c.destination.toLowerCase())) score += 15;
-  if (c.theme && pkg.theme === c.theme) score += 15;
-  if (c.budgetMax != null) {
-    if (pkg.pricingStatus === "PRICE_REVIEW_REQUIRED") score += 5;
-    else if (pkg.basePrice <= c.budgetMax) score += 20;
-    else if (pkg.basePrice <= c.budgetMax * 1.15) score += 8;
-  } else {
-    score += 10;
-  }
-  return Math.min(100, score);
+/**
+ * No `loading.tsx` in this segment on purpose.
+ *
+ * A loading file applies to the whole `/packages` segment INCLUDING
+ * `/packages/[slug]`, and the Suspense boundary it creates flushes the
+ * response shell — committing HTTP 200 — before a package page can call
+ * `notFound()`. That turned every unknown or unpublished package into a soft
+ * 404 that search engines would happily index. The listing below has its own
+ * Suspense boundaries for the parts that actually need them.
+ */
+
+export async function generateMetadata(): Promise<Metadata> {
+  const s = await getSiteSettings();
+  return {
+    title: "Andaman holiday packages",
+    description: `Andaman holiday packages from ${s.brandName} — 5 nights and 6 days across Port Blair, Havelock and Neil, in hotel categories from budget to 4 star.`,
+    alternates: { canonical: "/packages" },
+    openGraph: { title: `Andaman holiday packages · ${s.brandName}`, url: "/packages" },
+  };
 }
-
-const THEME_LABEL: Record<string, string> = {
-  HONEYMOON: "Honeymoon", FAMILY: "Family-friendly", LUXURY: "Luxury",
-  BEACH: "Beach", ADVENTURE: "Adventure", GROUP: "Group",
-};
-
-/** Plain-language reasons this package fits the customer's brief. */
-function matchReasons(pkg: PackageListItem, c: NonNullable<BuildCriteria>): string[] {
-  const reasons: string[] = [];
-  if (c.destination && pkg.destination.name.toLowerCase().includes(c.destination.toLowerCase())) {
-    reasons.push(`Goes to ${pkg.destination.name}`);
-  }
-  if (c.budgetMax != null && pkg.pricingStatus !== "PRICE_REVIEW_REQUIRED") {
-    if (pkg.basePrice <= c.budgetMax) reasons.push("Within your budget");
-    else if (pkg.basePrice <= c.budgetMax * 1.15) reasons.push("Close to your budget");
-  }
-  if (c.theme && pkg.theme === c.theme && THEME_LABEL[pkg.theme]) {
-    reasons.push(`${THEME_LABEL[pkg.theme]} holiday`);
-  }
-  if (reasons.length === 0) reasons.push("Handpicked & verified");
-  return reasons;
-}
-
-export const metadata: Metadata = {
-  title: "Holiday packages",
-  description: "Browse and customize complete holiday packages with clear, server-verified pricing.",
-};
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -61,110 +47,136 @@ function first(v: string | string[] | undefined): string | undefined {
 
 export default async function PackagesPage({ searchParams }: { searchParams: SearchParams }) {
   const sp = await searchParams;
+  const duration = parseRange(first(sp.duration));
+  const price = parseRange(first(sp.price));
+  const group = Number(first(sp.group));
+
   const filters: Filters = {
     page: Number(first(sp.page) ?? 1) || 1,
     destination: first(sp.destination),
     theme: first(sp.theme),
     q: first(sp.q),
     sort: (first(sp.sort) as Filters["sort"]) ?? "popular",
+    minNights: duration.min,
+    maxNights: duration.max,
+    minPrice: price.min,
+    maxPrice: price.max,
+    groupSize: Number.isFinite(group) && group > 0 ? group : undefined,
   };
 
-  const isBuild = first(sp.build) === "1";
-  const budgetRaw = Number(first(sp.budget));
-  const build: BuildCriteria = isBuild
-    ? { budgetMax: Number.isFinite(budgetRaw) && budgetRaw > 0 && budgetRaw < 999_000_000 ? budgetRaw : null, theme: filters.theme, destination: filters.destination }
-    : null;
+  const [settings, destinations] = await Promise.all([getSiteSettings(), getAndamanDestinations()]);
+  const promoLive = promoIsActive(settings);
 
+  // Preserve the whole filter state across pagination links.
   const buildHref = (page: number) => {
     const params = new URLSearchParams();
-    if (filters.destination) params.set("destination", filters.destination);
-    if (filters.theme) params.set("theme", filters.theme);
-    if (filters.q) params.set("q", filters.q);
-    if (filters.sort && filters.sort !== "popular") params.set("sort", filters.sort);
-    if (isBuild) { params.set("build", "1"); const bud = first(sp.budget); if (bud) params.set("budget", bud); }
+    for (const key of ["destination", "theme", "duration", "price", "group", "q"] as const) {
+      const v = first(sp[key]);
+      if (v) params.set(key, v);
+    }
+    const sort = first(sp.sort);
+    if (sort && sort !== "popular") params.set("sort", sort);
     if (page > 1) params.set("page", String(page));
     const qs = params.toString();
     return qs ? `/packages?${qs}` : "/packages";
   };
 
+  const crumbs = [
+    { label: "Home", href: "/" },
+    { label: "Holiday packages", href: "/packages" },
+  ];
+
+  // Only islands that actually have packages are offered as a filter.
+  const filterDestinations = destinations
+    .filter((d) => d.packageCount > 0)
+    .map((d) => ({ slug: d.slug, name: d.name }));
+
   return (
-    <Container className="py-8">
-      <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Packages" }]} />
-      <div className="mt-4">
-        <h1 className="text-3xl font-bold">Holiday packages</h1>
-        <p className="mt-1.5 text-ink-muted">Complete holidays you can tailor to your taste — priced transparently.</p>
-      </div>
+    <>
+      <BreadcrumbJsonLd items={crumbs} />
+      <PageHeader
+        eyebrow="Holiday packages"
+        title="Find your perfect Andaman escape"
+        description="Five nights and six days across Port Blair, Havelock and Neil. Choose the hotel category that suits your group — every itinerary is ours to adjust."
+        breadcrumbs={crumbs}
+      />
 
-      <div className="mt-6">
-        <Suspense fallback={<div className="h-10" />}>
-          <PackageFilters />
-        </Suspense>
-      </div>
+      <Section className="pt-8">
+        <Container>
+          {promoLive ? (
+            <p className="mb-5 flex flex-wrap items-center gap-2 rounded-xl bg-brand-orangeLight px-4 py-3 text-sm font-semibold text-brand-orangeDark">
+              <CalendarCheck className="h-4 w-4 shrink-0" />
+              Promotional rates valid for travel {formatDate(settings.promoValidFrom)} – {formatDate(settings.promoValidTo)} · minimum {settings.defaultMinTravellers} travellers
+            </p>
+          ) : (
+            <p className="mb-5 flex flex-wrap items-center gap-2 rounded-xl bg-surface-muted px-4 py-3 text-sm font-semibold text-ink-muted">
+              <Info className="h-4 w-4 shrink-0" />
+              Our promotional window has closed. Send us an enquiry for current rates on your dates.
+            </p>
+          )}
 
-      <Suspense key={JSON.stringify({ filters, build })} fallback={<GridSkeleton />}>
-        <Results filters={filters} buildHref={buildHref} build={build} />
-      </Suspense>
-    </Container>
+          <Suspense fallback={<div className="h-24 rounded-2xl bg-surface-muted" />}>
+            <PackageFilters destinations={filterDestinations} />
+          </Suspense>
+
+          <Suspense key={JSON.stringify(filters)} fallback={<GridSkeleton />}>
+            <Results filters={filters} buildHref={buildHref} disclaimer={settings.priceDisclaimer} />
+          </Suspense>
+        </Container>
+      </Section>
+    </>
   );
 }
 
-async function Results({ filters, buildHref, build }: { filters: Filters; buildHref: (p: number) => string; build: BuildCriteria }) {
+async function Results({
+  filters,
+  buildHref,
+  disclaimer,
+}: {
+  filters: Filters;
+  buildHref: (p: number) => string;
+  disclaimer: string;
+}) {
   const { items, total, page, totalPages } = await listPackages(filters);
-
-  // Build-my-holiday: score the current page and show the best matches first,
-  // each with plain-language reasons it fits the brief.
-  const scored = build
-    ? items
-        .map((p) => ({ p, m: matchScore(p, build), reasons: matchReasons(p, build) }))
-        .sort((a, b) => b.m - a.m)
-    : items.map((p) => ({ p, m: undefined as number | undefined, reasons: undefined as string[] | undefined }));
 
   if (!items.length) {
     return (
       <div className="mt-8">
         <EmptyState
           icon={<SearchX className="h-5 w-5" />}
-          title="No packages found"
-          description="Try clearing filters or searching a different destination."
-          action={{ label: "Clear filters", href: "/packages" }}
+          title="No packages match those filters"
+          description="Try widening the price range or the hotel category — or tell us what you have in mind and we will build it."
+          action={{ label: "Clear all filters", href: "/packages" }}
         />
+        <p className="mt-5 text-center text-sm text-ink-muted">
+          Prefer to just ask?{" "}
+          <Link href="/contact" className="font-bold text-brand-blue underline-offset-2 hover:underline">
+            Send us an enquiry
+          </Link>
+          .
+        </p>
       </div>
     );
   }
 
-  const top = build && scored.length ? scored[0] : null;
-
   return (
     <>
-      {top && (
-        <div className="mt-6 rounded-2xl border border-success/30 bg-[#E7F6EC]/60 p-4 sm:flex sm:items-center sm:justify-between sm:gap-4">
-          <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-wide text-success">Best match for you</p>
-            <p className="mt-0.5 truncate text-sm font-semibold text-brand-navy">
-              {top.p.name} · {top.p.nights}N / {top.p.days}D
-            </p>
-            <div className="mt-1.5 flex flex-wrap gap-1.5">
-              {top.reasons?.slice(0, 3).map((r) => (
-                <span key={r} className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-success">
-                  <Check className="h-3 w-3" /> {r}
-                </span>
-              ))}
-            </div>
-          </div>
-          <a href={`/packages/${top.p.slug}`} className="mt-3 inline-flex h-10 shrink-0 items-center justify-center rounded-xl bg-success px-5 text-sm font-semibold text-white hover:brightness-95 sm:mt-0">
-            View best match
-          </a>
-        </div>
-      )}
-      <p className="mt-6 text-sm text-ink-muted">
-        {build ? "Best matches for your trip — " : ""}{total} package{total === 1 ? "" : "s"} found{filters.q ? ` for “${filters.q}”` : ""}
+      <p className="mt-6 text-sm font-semibold text-ink-muted">
+        <span className="tabular">{total}</span> package{total === 1 ? "" : "s"}
+        {filters.q ? ` matching “${filters.q}”` : ""}
       </p>
+
       <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {scored.map(({ p, m, reasons }, i) => (
-          <PackageCard key={p.id} pkg={p} priority={i < 3} matchPct={m} reasons={reasons} />
+        {items.map((p, i) => (
+          <PackageCard key={p.id} pkg={p} priority={i < 3} />
         ))}
       </div>
+
       <Pagination page={page} totalPages={totalPages} buildHref={buildHref} />
+
+      <p className="mt-10 rounded-xl bg-surface-muted p-5 text-sm leading-relaxed text-ink-muted">
+        <strong className="font-bold text-ink">About these prices.</strong> {disclaimer}
+      </p>
     </>
   );
 }

@@ -28,9 +28,9 @@ export function WhatHappensNext({ status }: { status: string }) {
       <div className="mt-5 rounded-xl bg-surface-muted/60 p-4 text-sm text-ink-muted">
         <p className="font-semibold text-brand-navy">When will I receive my documents?</p>
         <ul className="mt-2 space-y-1.5">
-          <li>✈️ <strong>Domestic trips:</strong> tickets &amp; documents are usually shared within 1–2 hours after confirmation.</li>
-          <li>🌍 <strong>International trips:</strong> our expert may contact you within 1–2 hours if extra confirmation or traveller details are needed; vouchers follow once components are confirmed.</li>
-          <li>🛂 <strong>Visa-required trips:</strong> visa processing is handled separately and depends on the consulate — timelines vary.</li>
+          <li>🏨 <strong>Hotel and ferry vouchers:</strong> shared once each hotel and inter-island ferry is confirmed — usually within a working day of your payment.</li>
+          <li>⛴️ <strong>Ferries:</strong> sailings between Port Blair, Havelock and Neil depend on sea conditions; if one changes, we re-arrange it and tell you.</li>
+          <li>🪪 <strong>Carry photo ID:</strong> a government photo ID for every traveller is needed for ferries and some sights. Foreign nationals should check entry rules for the Andamans before travelling.</li>
         </ul>
         <p className="mt-3 text-xs">You don&apos;t need to contact us repeatedly — we&apos;ll notify you when your documents are ready.</p>
       </div>

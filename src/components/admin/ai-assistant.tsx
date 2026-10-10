@@ -8,12 +8,12 @@ type Task = { key: string; label: string; hint: string; placeholder: string };
 
 // Mirrors the server task specs (labels only — prompts live server-side).
 const TASKS: Task[] = [
-  { key: "summary", label: "Package summary", hint: "Turn key facts into a short, punchy marketing summary.", placeholder: "e.g. 6N/7D Bali honeymoon — private pool villa in Ubud, Nusa Penida day trip, candlelight dinner, flights from Delhi" },
+  { key: "summary", label: "Package summary", hint: "Turn key facts into a short, punchy marketing summary.", placeholder: "e.g. 5N/6D Andaman 3 Star — Port Blair 2N, Havelock 2N, Neil 1N, Radhanagar Beach, Cellular Jail show, ferries and transfers" },
   { key: "improve", label: "Improve text", hint: "Polish a draft without changing the facts.", placeholder: "Paste the description or paragraph you want improved…" },
-  { key: "itinerary", label: "Day-by-day itinerary", hint: "Draft a day-wise plan from a destination and highlights.", placeholder: "e.g. Thailand 5 nights — Bangkok 2N (city, temples), Phuket 3N (beach, Phi Phi island tour), airport transfers" },
-  { key: "inclusions", label: "Inclusions & exclusions", hint: "Suggest a clean inclusions / exclusions list.", placeholder: "e.g. 4N Dubai — 4★ hotel with breakfast, city tour, desert safari, Burj Khalifa, transfers, visa" },
+  { key: "itinerary", label: "Day-by-day itinerary", hint: "Draft a day-wise plan from a destination and highlights.", placeholder: "e.g. Andaman 5 nights — Port Blair 2N (Cellular Jail, Ross & North Bay), Havelock 2N (Radhanagar, Kalapathar), Neil 1N" },
+  { key: "inclusions", label: "Inclusions & exclusions", hint: "Suggest a clean inclusions / exclusions list.", placeholder: "e.g. 5N Andaman 4 Star — hotels with breakfast, private ferries, airport and jetty transfers, sightseeing by AC cab" },
   { key: "reply", label: "Customer reply", hint: "Draft a warm, professional reply to an enquiry.", placeholder: "Paste the customer's enquiry. Add any facts to include (dates, what's available)…" },
-  { key: "faq", label: "FAQ answer", hint: "Write a concise, accurate answer to a common question.", placeholder: "e.g. Do you help with visa? What is the cancellation policy?" },
+  { key: "faq", label: "FAQ answer", hint: "Write a concise, accurate answer to a common question.", placeholder: "e.g. Do I need a permit for the Andamans? What is the cancellation policy?" },
 ];
 
 export function AiAssistant({ configured }: { configured: boolean }) {

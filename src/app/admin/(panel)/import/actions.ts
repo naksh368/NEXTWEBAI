@@ -8,6 +8,7 @@ import { slugify } from "@/lib/utils";
 import { safeFetchHtml, extractFacts, extractMainText, discoverPackageLinks, type ExtractedFacts } from "@/lib/services/importer";
 import { aiComplete, isAiConfigured } from "@/lib/services/ai-service";
 import { IMPORT_PRICE_MARKUP } from "@/lib/constants";
+import { deduceTier, tierOf } from "@/lib/package-deduce";
 
 type R<T extends object = object> = ({ ok: true } & T) | { ok: false; error: string };
 
@@ -71,7 +72,7 @@ function normItems(v: unknown): AiDayItem[] {
 }
 
 const EXTRACT_SYSTEM =
-  "You are a data-extraction and copywriting assistant for JST Andaman Travels, a premium Indian holiday brand. " +
+  "You are a data-extraction and copywriting assistant for JST Andaman Travels, an Andaman Islands holiday specialist. " +
   "You convert a scraped travel-package web page into STRUCTURED FACTS plus ORIGINAL JST Andaman Travels copy. " +
   "Absolute rules: (1) NEVER invent facts — prices, hotels, inclusions, durations, reviews. Use null when the page doesn't state it. " +
   "(2) Do NOT copy the supplier's marketing sentences verbatim — REWRITE summary and overview into fresh, concise, original copy while keeping every fact accurate. " +
@@ -94,7 +95,7 @@ async function aiExtractPackage(text: string, verbatim = false): Promise<AiPacka
     : "summary <= 280 chars; overview 2-3 short original paragraphs. Rewrite descriptions in original words.";
   const prompt = `Extract this travel package page into STRICT JSON with exactly these keys:
 {"name":string|null,"destinationName":string|null,"country":string|null,"durationNights":number|null,"durationDays":number|null,"category":string|null,"bestFor":string|null,"startingPrice":number|null,"travelWindow":string|null,"flightSector":string|null,"roomCategory":string|null,"mealPlan":string|null,"baggage":string|null,"summary":string|null,"overview":string|null,"highlights":string[],"inclusions":string[],"exclusions":string[],"cityBreakdown":[{"city":string,"nights":number}],"itinerary":[{"day":number,"title":string,"description":string,"items":[{"timeslot":"MORNING"|"AFTERNOON"|"EVENING","kind":"FLIGHT"|"TRANSFER"|"HOTEL"|"ACTIVITY"|"MEAL"|"FREE_TIME"|"NOTE","title":string,"description":string}]}],"cancellationPolicy":string|null,"importantTerms":string|null}
-category must be one of FIRST_ESCAPE, SIGNATURE, HONEYMOON, FAMILY, LUXURY, PREMIUM or null.
+category must be one of BUDGET, STANDARD, TWO_STAR, THREE_STAR, FOUR_STAR (the hotel tier; 5-star or luxury maps to FOUR_STAR) or null.
 In cityBreakdown, list each city/place stayed with its number of nights, in travel order (e.g. [{"city":"Tromsø","nights":2},{"city":"Bergen","nights":2}]).
 For EACH itinerary day, break the day into 2-4 time-slotted items (morning/afternoon/evening) with the right kind — this powers the day-by-day view. Only use activities actually mentioned on the page; if a slot is genuinely free, use kind FREE_TIME.
 For any FLIGHT item, include the route and any flight times stated on the page in its description (e.g. "Delhi → Oslo, dep 02:15 arr 07:40"). Put the overall flight route in flightSector.
@@ -226,20 +227,19 @@ const draftSchema = z.object({
  * Find a destination by slug/name, or create it (published) so imported packages
  * always get a real destination without the admin picking from a limited list.
  */
-async function resolveDestinationId(name?: string | null, country?: string | null): Promise<string | null> {
+async function resolveDestinationId(name?: string | null, _country?: string | null): Promise<string | null> {
+  // We only sell the Andamans: match one of our own destinations, never create
+  // a new one, and fall back to the Port Blair hub every itinerary starts from.
   const n = (name ?? "").trim();
-  if (!n) return null;
-  const slug = slugify(n);
-  const existing = await db.destination.findFirst({
-    where: { OR: [{ slug }, { name: { equals: n, mode: "insensitive" } }] },
-    select: { id: true },
-  });
-  if (existing) return existing.id;
-  const created = await db.destination.create({
-    data: { slug, name: n, country: (country ?? "").trim() || "—", isPublished: true },
-    select: { id: true },
-  });
-  return created.id;
+  if (n) {
+    const existing = await db.destination.findFirst({
+      where: { OR: [{ slug: slugify(n) }, { name: { equals: n, mode: "insensitive" } }] },
+      select: { id: true },
+    });
+    if (existing) return existing.id;
+  }
+  const hub = await db.destination.findFirst({ where: { slug: "port-blair" }, select: { id: true } });
+  return hub?.id ?? null;
 }
 
 async function createDraft(admin: { id: string }, d: z.infer<typeof draftSchema> & { destinationId: string }): Promise<{ packageId: string; slug: string }> {
@@ -248,8 +248,9 @@ async function createDraft(admin: { id: string }, d: z.infer<typeof draftSchema>
 
   const pkg = await db.package.create({
     data: {
-      slug, name: d.name, theme: "GROUP", destinationId: d.destinationId,
-      status: "DRAFT",
+      slug, name: d.name, destinationId: d.destinationId, status: "DRAFT", enquiryOnly: true,
+      // The hotel tier is the public category; read it from the details when not given.
+      theme: tierOf(d.category)?.theme ?? deduceTier(`${d.name} ${d.roomCategory ?? ""}`, d.basePrice || null).theme,
       sourceUrl: d.sourceUrl ?? null, sourceName: d.sourceName ?? null,
       importedById: admin.id, scannedAt: new Date(),
       versions: {
@@ -263,10 +264,10 @@ async function createDraft(admin: { id: string }, d: z.infer<typeof draftSchema>
           flightSector: d.flightSector ?? null, baggage: d.baggage ?? null,
           travelWindows: d.travelWindows ?? null,
           cancellationPolicy: d.cancellationPolicy ?? null, importantInfo: d.importantInfo ?? null,
-          pricingStatus: d.basePrice > 0 ? "PRICED" : "PRICE_REVIEW_REQUIRED",
-          availabilityStatus: "AVAILABLE",
+          pricingStatus: d.basePrice > 0 ? "INDICATIVE" : "PRICE_REVIEW_REQUIRED",
+          availabilityStatus: "ON_REQUEST",
           highlights: d.highlights, inclusions: d.inclusions, exclusions: d.exclusions,
-          departureCities: ["Delhi", "Mumbai", "Bengaluru"],
+          departureCities: ["Chennai", "Kolkata", "Delhi", "Bengaluru", "Hyderabad", "Visakhapatnam"],
           cityBreakdown: d.cityBreakdown?.length ? d.cityBreakdown : undefined,
           images: d.imageUrls.length
             ? { create: d.imageUrls.map((url, i) => ({ url, alt: d.name, isCover: i === 0, sortOrder: i })) }
@@ -361,7 +362,7 @@ export async function batchImport(urls: string[], destinationId = "", verbatim =
 
 // ── AI Package Builder: generate a full DRAFT from a brief (no source URL) ──
 const BUILDER_SYSTEM =
-  "You are a senior holiday product designer for JST Andaman Travels, a premium Indian holiday brand. " +
+  "You are a senior holiday product designer for JST Andaman Travels, which sells Andaman Islands holidays only. " +
   "You design complete, realistic and appealing DRAFT holiday packages that a human editor reviews before publishing. " +
   "Rules: (1) Write original, premium, concise copy in Indian English. " +
   "(2) Build a realistic day-by-day itinerary — every day split into 2-4 morning/afternoon/evening items, each with the correct kind (FLIGHT/TRANSFER/HOTEL/ACTIVITY/MEAL/FREE_TIME/NOTE). " +
@@ -394,7 +395,7 @@ export async function buildPackage(input: unknown): Promise<R<{ packageId: strin
 ${b.category ? `Theme / category: ${b.category}.` : ""}${b.departureCity ? ` Departing from: ${b.departureCity}.` : ""}${b.style ? ` Traveller style / must-haves: ${b.style}.` : ""}
 Return STRICT JSON with exactly these keys:
 {"name":string,"destinationName":string|null,"country":string|null,"durationNights":${b.nights},"durationDays":${days},"category":string|null,"bestFor":string|null,"startingPrice":null,"travelWindow":string|null,"flightSector":string|null,"roomCategory":string|null,"mealPlan":string|null,"baggage":string|null,"summary":string,"overview":string,"highlights":string[],"inclusions":string[],"exclusions":string[],"cityBreakdown":[{"city":string,"nights":number}],"itinerary":[{"day":number,"title":string,"description":string,"items":[{"timeslot":"MORNING"|"AFTERNOON"|"EVENING","kind":"FLIGHT"|"TRANSFER"|"HOTEL"|"ACTIVITY"|"MEAL"|"FREE_TIME"|"NOTE","title":string,"description":string}]}],"cancellationPolicy":string|null,"importantTerms":string|null}
-category must be one of FIRST_ESCAPE, SIGNATURE, HONEYMOON, FAMILY, LUXURY, PREMIUM or null.
+category must be one of BUDGET, STANDARD, TWO_STAR, THREE_STAR, FOUR_STAR (the hotel tier; 5-star or luxury maps to FOUR_STAR) or null.
 cityBreakdown lists each city stayed with its nights, in order (summing to ${b.nights}).
 The itinerary MUST have exactly ${days} days, each with 2-4 time-slotted items. startingPrice MUST be null.
 Return ONLY the JSON object, no prose.`;

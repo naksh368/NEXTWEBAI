@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Facebook, Instagram, Youtube, Linkedin, Phone, Mail, MapPin, MessageCircle, Globe } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
+import { GoogleRating } from "@/components/ui/google-rating";
 import { Container } from "@/components/ui/container";
 import { getSiteSettings, telLinkFor, whatsappLinkFor } from "@/lib/site-settings";
 import { mapsHref } from "@/lib/brand";
@@ -139,9 +140,17 @@ export async function Footer() {
           </div>
         )}
 
-        <div className="mt-8 flex flex-col gap-2 border-t border-white/10 pb-20 pt-6 text-sm text-white/55 sm:flex-row sm:pb-0 sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} {s.brandName}. All rights reserved.</p>
-          <p>{s.registrationInfo || s.tagline}</p>
+        <div className="mt-8 flex flex-col gap-5 border-t border-white/10 pb-20 pt-6 text-sm text-white/55 sm:pb-0 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-1.5">
+            <p>© {new Date().getFullYear()} {s.brandName}. All rights reserved.</p>
+            {s.poweredBy && (
+              <p>
+                Powered by <span className="font-bold uppercase tracking-wide text-white">{s.poweredBy}</span>
+              </p>
+            )}
+            {(s.registrationInfo || s.tagline) && <p className="text-white/45">{s.registrationInfo || s.tagline}</p>}
+          </div>
+          <GoogleRating score={s.reviewScore} count={s.reviewCount} url={s.reviewUrl} tone="dark" className="self-start md:self-auto" />
         </div>
       </Container>
     </footer>

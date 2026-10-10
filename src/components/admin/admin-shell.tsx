@@ -29,7 +29,7 @@ const NAV: { section: string; items: { label: string; href: string; icon: React.
     { label: "Packages", href: "/admin/packages", icon: Package },
     { label: "Destinations", href: "/admin/destinations", icon: MapPin },
     { label: "Activities", href: "/admin/activities", icon: Compass },
-    { label: "Import Package", href: "/admin/import", icon: DownloadCloud },
+    { label: "Add with AI", href: "/admin/import", icon: DownloadCloud },
     { label: "Offers", href: "/admin/offers", icon: Tag },
     { label: "Coupons", href: "/admin/coupons", icon: Ticket },
     { label: "Suppliers", href: "/admin/suppliers", icon: Truck },

@@ -86,6 +86,7 @@ export async function saveBrandContentAction(formData: FormData): Promise<Conten
       tagline: str(formData.get("tagline")),
       logoUrl: str(formData.get("logoUrl")) || DEFAULT_SITE_SETTINGS.logoUrl,
       logoUrlLight: str(formData.get("logoUrlLight")),
+      poweredBy: str(formData.get("poweredBy")),
       footerBlurb: str(formData.get("footerBlurb")),
     },
     "settings.brand.update",
@@ -143,10 +144,17 @@ export async function savePricingContentAction(formData: FormData): Promise<Cont
   const count = optionalNumber(formData.get("reviewCount"));
   const travellers = optionalNumber(formData.get("travellersServed"));
 
-  // A score without a count (or vice versa) is not publishable social proof —
-  // we would be showing half a claim. Reject it rather than render a half-truth.
-  if ((score === null) !== (count === null)) {
-    return { ok: false, error: "Enter both the review score and the number of reviews, or leave both blank." };
+  // A score must be checkable: it needs a review count or a link to the
+  // Google reviews themselves. A count on its own has no score to describe.
+  const reviewUrl = str(formData.get("reviewUrl"));
+  if (score !== null && count === null && !reviewUrl) {
+    return { ok: false, error: "Add the number of reviews or the link to your Google reviews, so visitors can check the score." };
+  }
+  if (score === null && count !== null) {
+    return { ok: false, error: "Enter the review score as well as the number of reviews, or leave both blank." };
+  }
+  if (reviewUrl && !/^https:\/\//.test(reviewUrl)) {
+    return { ok: false, error: "The reviews link must start with https://" };
   }
   if (score !== null && (score < 0 || score > 5)) {
     return { ok: false, error: "The review score must be between 0 and 5." };
@@ -160,7 +168,7 @@ export async function savePricingContentAction(formData: FormData): Promise<Cont
       priceDisclaimer: str(formData.get("priceDisclaimer")) || DEFAULT_SITE_SETTINGS.priceDisclaimer,
       reviewScore: score,
       reviewCount: count === null ? null : Math.round(count),
-      reviewUrl: str(formData.get("reviewUrl")),
+      reviewUrl,
       travellersServed: travellers === null ? null : Math.round(travellers),
       registrationInfo: str(formData.get("registrationInfo")),
     },

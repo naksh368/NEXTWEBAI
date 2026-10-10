@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/ui/states";
 import { PackageCard } from "@/components/package/package-card";
 import { TripPlanner } from "@/components/enquiry/trip-planner";
 import { RecentlyViewedRail } from "@/components/package/recently-viewed";
+import { GoogleRating } from "@/components/ui/google-rating";
 import { IslandMap } from "@/components/home/island-map";
 import { AskAshaButton } from "@/components/ai/ask-asha-button";
 import {
@@ -195,13 +196,7 @@ export default async function HomePage() {
         {(settings.reviewScore !== null || settings.travellersServed !== null || settings.registrationInfo) && (
           <div className="border-t border-surface-border bg-surface-muted">
             <Container className="flex flex-wrap items-center justify-center gap-x-10 gap-y-3 py-4 text-sm font-semibold text-ink">
-              {settings.reviewScore !== null && (
-                <span className="inline-flex items-center gap-2">
-                  <Star className="h-4 w-4 fill-brand-orange text-brand-orange" />
-                  <span className="tabular">{settings.reviewScore.toFixed(1)}</span> on Google
-                  {settings.reviewCount !== null && <span className="font-normal text-ink-muted">({settings.reviewCount} reviews)</span>}
-                </span>
-              )}
+              <GoogleRating score={settings.reviewScore} count={settings.reviewCount} url={settings.reviewUrl} />
               {settings.travellersServed !== null && (
                 <span className="inline-flex items-center gap-2">
                   <Palmtree className="h-4 w-4 text-brand-turquoiseDark" />

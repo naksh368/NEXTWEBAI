@@ -174,6 +174,24 @@ retrain. Free OpenRouter models work — see `AI_MODEL` in `.env.example`.
 The floating call and WhatsApp buttons (bottom left) use the phone and
 WhatsApp numbers from **Admin → Content**.
 
+### Adding packages with AI
+
+**Admin → Add with AI → Paste details** reads a supplier message, a WhatsApp
+forward or your own notes and works out the hotel tier, nights, route, price
+per person, minimum group, inclusions and day-by-day plan. A built-in reader
+(`src/lib/package-deduce.ts`, unit-tested) handles the literal facts and works
+without an AI key; the AI fills gaps and tidies the itinerary, and is never
+allowed to invent a price. Each decision is explained beside the form. Saving
+creates a **draft** that borrows photos and policies from your existing package
+of the same tier — nothing is published until you publish it.
+
+### Google rating and "Powered by"
+
+The Google rating badge (homepage and footer) and the "Powered by" line are
+edited in **Admin → Content**. The badge shows only when a score and a link to
+your Google reviews are set — paste your exact Google Business profile link
+there so visitors can check the score.
+
 ### Homepage map
 
 The illustrated island map is generated from approximate coastline points:

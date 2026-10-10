@@ -41,6 +41,8 @@ export const siteSettingsSchema = z.object({
   tagline: z.string().default(BRAND_TAGLINE),
   logoUrl: z.string().default(BRAND_LOGO),
   logoUrlLight: z.string().default(""),
+  /** Parent company shown as "Powered by …" at the foot of every page. Blank = hidden. */
+  poweredBy: z.string().default("Jai Sritha Tours and Travels"),
 
   // Hero
   heroEyebrow: z.string().default("Your next island escape"),

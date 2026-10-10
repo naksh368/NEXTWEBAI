@@ -47,6 +47,7 @@ export default async function AdminPackagesPage({ searchParams }: { searchParams
         action={
           <div className="flex items-center gap-2">
             {canEdit && <RunDuePublish />}
+            {canCreate && <Link href="/admin/import" className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-brand-blue/30 bg-white px-4 text-sm font-bold text-brand-blue hover:bg-brand-blueLight">✨ Add with AI</Link>}
             {canCreate && <Link href="/admin/packages/new" className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-brand-blue px-4 text-sm font-bold text-white hover:bg-brand-blueDark">+ New package</Link>}
           </div>
         }

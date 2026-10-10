@@ -656,7 +656,17 @@ async function main() {
 
   await db.businessSetting.createMany({
     data: [
-      { key: SITE_SETTINGS_KEY, value: DEFAULT_SITE_SETTINGS },
+      {
+        key: SITE_SETTINGS_KEY,
+        value: {
+          ...DEFAULT_SITE_SETTINGS,
+          // The owner's Google rating, as supplied by the business. The link lets
+          // any visitor check it; replace it with the exact Google Business
+          // profile link in Admin → Content, where the score is also edited.
+          reviewScore: 4.8,
+          reviewUrl: "https://www.google.com/maps/search/?api=1&query=JST+Andaman+Travels+Sri+Vijaya+Puram",
+        },
+      },
       { key: "checkout", value: { taxRatePct: 5, currency: "INR" } },
     ],
   });

@@ -128,6 +128,9 @@ export function ContentEditor({ settings }: { settings: SiteSettings }) {
                 <Field label="Logo for dark backgrounds" hint="Optional. Leave blank to keep using the main logo on a white chip.">
                   <input name="logoUrlLight" className={inp} defaultValue={settings.logoUrlLight} placeholder="/api/media/…" />
                 </Field>
+                <Field label="Powered by" hint={'Shown as "Powered by …" at the bottom of every page. Leave blank to hide it.'}>
+                  <input name="poweredBy" className={inp} defaultValue={settings.poweredBy} />
+                </Field>
                 <Field label="Footer introduction" hint="The short paragraph under the logo in the footer.">
                   <textarea name="footerBlurb" rows={3} className={area} defaultValue={settings.footerBlurb} />
                 </Field>
@@ -300,14 +303,14 @@ export function ContentEditor({ settings }: { settings: SiteSettings }) {
                 estimate a rating, a review count or a traveller number.
               </p>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <Field label="Google review score" hint="0–5. Requires a review count too.">
+                <Field label="Google review score" hint="0–5. Needs a review count or the reviews link.">
                   <input name="reviewScore" type="number" step="0.1" min={0} max={5} className={inp} defaultValue={settings.reviewScore ?? ""} placeholder="Blank = hidden" />
                 </Field>
                 <Field label="Number of reviews">
                   <input name="reviewCount" type="number" min={0} className={inp} defaultValue={settings.reviewCount ?? ""} placeholder="Blank = hidden" />
                 </Field>
                 <Field label="Link to your reviews">
-                  <input name="reviewUrl" className={inp} defaultValue={settings.reviewUrl} placeholder="https://g.page/…" />
+                  <input name="reviewUrl" className={inp} defaultValue={settings.reviewUrl} placeholder="https://maps.app.goo.gl/…" />
                 </Field>
                 <Field label="Travellers hosted">
                   <input name="travellersServed" type="number" min={0} className={inp} defaultValue={settings.travellersServed ?? ""} placeholder="Blank = hidden" />

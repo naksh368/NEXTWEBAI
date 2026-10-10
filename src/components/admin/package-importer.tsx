@@ -5,21 +5,26 @@ import { useRouter } from "next/navigation";
 import { Search, Loader2, AlertTriangle, ExternalLink, ShieldCheck, Sparkles, CheckCircle2, ImageIcon, ListChecks } from "lucide-react";
 import { scanSource, scanListing, batchImport, createDraftFromImport, buildPackage, type AiPackage } from "@/app/admin/(panel)/import/actions";
 import { IMPORT_PRICE_MARKUP } from "@/lib/constants";
+import { PackageReader } from "@/components/admin/package-reader";
+import { TIERS } from "@/lib/package-deduce";
 
 type Destination = { id: string; name: string; country: string };
-const CATEGORIES = ["", "FIRST_ESCAPE", "SIGNATURE", "HONEYMOON", "FAMILY", "LUXURY", "PREMIUM"];
+// Hotel tiers double as the package category on this site.
+const CATEGORIES = ["", ...TIERS.map((t) => t.theme)];
 const inp = "w-full rounded-lg border border-surface-border px-3 py-2 text-sm focus:border-brand-blue focus:outline-none focus:ring-2 focus:ring-brand-blue/15";
 
 export function PackageImporter({ destinations }: { destinations: Destination[] }) {
-  const [mode, setMode] = useState<"single" | "batch" | "build">("single");
+  const [mode, setMode] = useState<"read" | "single" | "batch" | "build">("read");
   return (
     <div className="space-y-5">
       <div className="inline-flex flex-wrap rounded-xl border border-surface-border bg-white p-1">
-        <button onClick={() => setMode("single")} className={tab(mode === "single")}>Single package</button>
+        <button onClick={() => setMode("read")} className={tab(mode === "read")}>Paste details (AI)</button>
+        <button onClick={() => setMode("single")} className={tab(mode === "single")}>From a web page</button>
         <button onClick={() => setMode("batch")} className={tab(mode === "batch")}>Import whole site</button>
         <button onClick={() => setMode("build")} className={tab(mode === "build")}>Build with AI</button>
       </div>
-      {mode === "single" ? <SingleImport destinations={destinations} />
+      {mode === "read" ? <PackageReader />
+        : mode === "single" ? <SingleImport destinations={destinations} />
         : mode === "batch" ? <BatchImport destinations={destinations} />
         : <BuildWithAI destinations={destinations} />}
     </div>

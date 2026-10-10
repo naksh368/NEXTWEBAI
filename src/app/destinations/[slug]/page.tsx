@@ -27,7 +27,7 @@ const TRAVEL_INFO_LABEL: Record<string, string> = {
   location: "Location",
   activities: "Activities",
   show: "Light & Sound Show",
-  note: "Good to know",
+  note: "Please note",
   currency: "Currency",
   language: "Languages",
   timezone: "Time zone",
@@ -60,6 +60,11 @@ export default async function DestinationPage({ params }: { params: Promise<{ sl
   const travelInfo = Object.entries((d.travelInfo ?? {}) as Record<string, string>).filter(
     ([k, v]) => !INTERNAL_TRAVEL_INFO_KEYS.has(k) && typeof v === "string" && v.trim()
   );
+
+  // Islands you sleep on are their own hub; sights point at the island they are visited from.
+  const hubSlug = (d.travelInfo as Record<string, unknown> | null)?.hubSlug;
+  const stayHere = !hubSlug || hubSlug === d.slug;
+  const hubName = stayHere ? null : (await getDestinationBySlug(String(hubSlug)))?.name ?? null;
 
   // Derived from the real catalogue — never a guessed "from" price.
   const priced = packages.filter((p) => p.pricingStatus !== "PRICE_REVIEW_REQUIRED");
@@ -95,7 +100,7 @@ export default async function DestinationPage({ params }: { params: Promise<{ sl
 
       <Section className="pt-10">
         <Container>
-          <div className="grid gap-9 lg:grid-cols-3">
+          <div className="grid gap-8 lg:grid-cols-3 lg:gap-10">
             <div className="lg:col-span-2">
               {d.overview && (
                 <>
@@ -116,12 +121,39 @@ export default async function DestinationPage({ params }: { params: Promise<{ sl
                   ))}
                 </ul>
               )}
+
+              {/* Facts sit beside the overview, so a short description never leaves a gap. */}
+              {(d.bestTimeToVisit || travelInfo.length > 0) && (
+                <div className="mt-8">
+                  <h3 className="flex items-center gap-2 text-lg font-extrabold text-brand-navy">
+                    <Info className="h-5 w-5 text-brand-blue" /> Good to know
+                  </h3>
+                  <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+                    {d.bestTimeToVisit && (
+                      <div className="rounded-2xl border border-surface-border bg-white p-4">
+                        <dt className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-ink-faint">
+                          <CalendarDays className="h-3.5 w-3.5 text-brand-orange" /> Best time to visit
+                        </dt>
+                        <dd className="mt-1 text-sm leading-relaxed text-ink">{d.bestTimeToVisit}</dd>
+                      </div>
+                    )}
+                    {travelInfo.map(([k, v]) => (
+                      <div key={k} className="rounded-2xl border border-surface-border bg-white p-4">
+                        <dt className="text-xs font-bold uppercase tracking-wide text-ink-faint">
+                          {TRAVEL_INFO_LABEL[k] ?? k.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase())}
+                        </dt>
+                        <dd className="mt-1 text-sm leading-relaxed text-ink">{v}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              )}
             </div>
 
-            <aside className="space-y-4">
-              {(fromPrice !== null || nightRange) && (
-                <div className="rounded-2xl border border-brand-blue/20 bg-brand-blueLight p-5">
-                  <h3 className="text-sm font-bold text-brand-navy">Plan a trip here</h3>
+            <aside>
+              <div className="rounded-2xl border border-brand-blue/20 bg-brand-blueLight p-5 lg:sticky lg:top-28">
+                <h3 className="text-base font-extrabold text-brand-navy">Plan a trip to {d.name}</h3>
+                {(fromPrice !== null || nightRange) && (
                   <dl className="mt-3 space-y-2.5 text-sm">
                     {nightRange && (
                       <div className="flex items-start gap-2.5 text-ink">
@@ -145,38 +177,21 @@ export default async function DestinationPage({ params }: { params: Promise<{ sl
                       </div>
                     )}
                   </dl>
-                  <Link href="/contact" className={buttonVariants({ variant: "orange", size: "sm", className: "mt-4 w-full" })}>
+                )}
+                <div className="mt-4 grid gap-2">
+                  {packages.length > 0 && (
+                    <Link href="#packages" className={buttonVariants({ variant: "orange", size: "sm", className: "w-full" })}>
+                      See {packages.length} package{packages.length > 1 ? "s" : ""}
+                    </Link>
+                  )}
+                  <Link
+                    href="/#plan"
+                    className={buttonVariants({ variant: packages.length ? "outline" : "orange", size: "sm", className: "w-full" })}
+                  >
                     Plan my trip
                   </Link>
                 </div>
-              )}
-
-              {d.bestTimeToVisit && (
-                <div className="rounded-2xl border border-surface-border bg-white p-5">
-                  <h3 className="flex items-center gap-2 text-sm font-bold">
-                    <CalendarDays className="h-4 w-4 text-brand-orange" /> Best time to visit
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-ink-muted">{d.bestTimeToVisit}</p>
-                </div>
-              )}
-
-              {travelInfo.length > 0 && (
-                <div className="rounded-2xl border border-surface-border bg-white p-5">
-                  <h3 className="flex items-center gap-2 text-sm font-bold">
-                    <Info className="h-4 w-4 text-brand-blue" /> Travel information
-                  </h3>
-                  <dl className="mt-3 space-y-3 text-sm">
-                    {travelInfo.map(([k, v]) => (
-                      <div key={k}>
-                        <dt className="text-xs font-bold uppercase tracking-wide text-ink-faint">
-                          {TRAVEL_INFO_LABEL[k] ?? k.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase())}
-                        </dt>
-                        <dd className="mt-0.5 leading-relaxed text-ink">{v}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                </div>
-              )}
+              </div>
             </aside>
           </div>
         </Container>
@@ -189,7 +204,9 @@ export default async function DestinationPage({ params }: { params: Promise<{ sl
             title={viaRoute ? `Packages that visit ${d.name}` : `${d.name} packages`}
             description={
               viaRoute
-                ? `${d.name} is part of these itineraries rather than a place you stay, so these are the packages whose route covers it.`
+                ? stayHere
+                  ? `Every one of these itineraries includes nights on ${d.name}.`
+                  : `${d.name} is visited on a day out${hubName ? ` from ${hubName}` : ""}, so these are the packages that include it.`
                 : undefined
             }
             action={

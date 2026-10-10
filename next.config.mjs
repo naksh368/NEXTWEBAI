@@ -29,6 +29,15 @@ const nextConfig = {
     ];
     return [{ source: "/:path*", headers: securityHeaders }];
   },
+  async redirects() {
+    // Retired pages from the original multi-destination template. Old links
+    // land on the Andaman equivalent instead of a dead end.
+    return [
+      { source: "/travel-guide", destination: "/destinations", permanent: true },
+      { source: "/offers", destination: "/packages", permanent: true },
+      { source: "/wishlist", destination: "/saved", permanent: true },
+    ];
+  },
 };
 
 export default nextConfig;

@@ -127,7 +127,7 @@ export function GalleryGrid({
           role="dialog"
           aria-modal="true"
           aria-label={current.alt}
-          className="fixed inset-0 z-[100] flex flex-col bg-brand-navyDark/97 backdrop-blur-sm"
+          className="fixed inset-0 z-[100] flex flex-col bg-brand-navyDark/95 backdrop-blur-sm"
           onClick={close}
         >
           <div className="flex items-center justify-between gap-4 px-4 py-3 text-white/80">

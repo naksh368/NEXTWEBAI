@@ -142,7 +142,9 @@ export default async function HomePage() {
         <div className="absolute inset-0">
           <SmartImage src={heroImage} alt={heroAlt} sizes="100vw" className="h-full" />
         </div>
-        <div className="absolute inset-0 bg-gradient-to-r from-brand-navy/92 via-brand-navy/72 to-brand-navy/40" aria-hidden />
+        {/* Phones stack the text over the brightest part of the photo, so they get a near-solid wash. */}
+        <div className="absolute inset-0 bg-gradient-to-b from-brand-navy/95 via-brand-navy/90 to-brand-navy/80 lg:hidden" aria-hidden />
+        <div className="absolute inset-0 hidden bg-gradient-to-r from-brand-navy/95 via-brand-navy/70 to-brand-navy/40 lg:block" aria-hidden />
         <Container className="relative grid items-center gap-10 py-14 sm:py-20 lg:grid-cols-[1fr_minmax(0,460px)] lg:gap-14">
           <div>
             <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-brand-turquoise sm:text-sm">Plan my trip</p>

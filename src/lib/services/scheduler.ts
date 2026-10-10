@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { refreshPublicSite } from "@/lib/revalidate-site";
 
 /**
  * Publishes any packages whose scheduled `publishAt` time has arrived.
@@ -21,8 +22,7 @@ export async function publishDuePackages(): Promise<number> {
     });
 
     // Refresh the surfaces where the newly-live packages should now appear.
-    revalidatePath("/");
-    revalidatePath("/packages");
+    refreshPublicSite();
     revalidatePath("/admin/packages");
     for (const p of due) revalidatePath(`/packages/${p.slug}`);
     return due.length;

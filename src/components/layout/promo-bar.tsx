@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { Palmtree } from "lucide-react";
-import { getSiteSettings } from "@/lib/site-settings";
+import { fillPrice, getSiteSettings } from "@/lib/site-settings";
+import { getLowestPublishedPrice } from "@/lib/queries";
+
+
 
 /**
  * Site-wide announcement bar. The text, link and on/off switch all come from
@@ -10,11 +13,13 @@ import { getSiteSettings } from "@/lib/site-settings";
 export async function PromoBar() {
   const s = await getSiteSettings();
   if (!s.announcementEnabled || !s.announcementText.trim()) return null;
+  const text = fillPrice(s.announcementText, s.announcementText.includes("{price}") ? await getLowestPublishedPrice() : null);
+  if (!text) return null;
 
   const body = (
     <span className="inline-flex items-center gap-2 text-center">
       <Palmtree className="hidden h-4 w-4 shrink-0 text-brand-turquoise sm:block" aria-hidden />
-      {s.announcementText}
+      {text}
     </span>
   );
 

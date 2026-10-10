@@ -1,3 +1,4 @@
+import { formatINR } from "./utils";
 import { cache } from "react";
 import { z } from "zod";
 import { db } from "./db";
@@ -81,7 +82,7 @@ export const siteSettingsSchema = z.object({
   announcementEnabled: z.boolean().default(true),
   announcementText: z
     .string()
-    .default("Andaman holiday packages from ₹15,600 per person · 5 nights / 6 days · Min 4 pax"),
+    .default("Andaman holiday packages from {price} per person · 5 nights / 6 days · Min 4 pax"),
   announcementHref: z.string().default("/packages"),
 
   /**
@@ -169,4 +170,17 @@ export function promoIsActive(s: SiteSettings, now = new Date()): boolean {
   const end = to + 24 * 60 * 60 * 1000 - 1;
   if (Number.isFinite(from) && now.getTime() < from) return false;
   return now.getTime() <= end;
+}
+
+/**
+ * "{price}" becomes the lowest live package price. With no priced package the
+ * phrase around it is dropped rather than showing a stale or empty figure.
+ */
+export function fillPrice(text: string, price: number | null): string {
+  if (!text.includes("{price}")) return text;
+  if (price !== null) return text.replaceAll("{price}", formatINR(price));
+  return text
+    .replace(/\s*(?:from|starting at|starting from)?\s*\{price\}(?:\s*(?:per person|pp|\/person))?/gi, "")
+    .replace(/^\s*[·|,-]\s*|\s*[·|,-]\s*$/g, "")
+    .trim();
 }

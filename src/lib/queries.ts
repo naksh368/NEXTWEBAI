@@ -563,3 +563,22 @@ export async function getStartingPrice(): Promise<number | null> {
     return row?.basePrice ?? null;
   }, null);
 }
+
+/**
+ * The lowest advertised per-person price across published packages, or null.
+ * Feeds the "{price}" placeholder in the announcement bar, so the top line
+ * follows the catalogue instead of a number typed in by hand.
+ */
+export const getLowestPublishedPrice = unstable_cache(
+  async (): Promise<number | null> =>
+    safe(async () => {
+      const row = await db.packageVersion.findFirst({
+        where: { currentOf: { status: "PUBLISHED" }, pricingStatus: { not: "PRICE_REVIEW_REQUIRED" }, basePrice: { gt: 0 } },
+        orderBy: { basePrice: "asc" },
+        select: { basePrice: true },
+      });
+      return row?.basePrice ?? null;
+    }, null),
+  ["lowest-published-price"],
+  { revalidate: 3600, tags: ["packages"] }
+);

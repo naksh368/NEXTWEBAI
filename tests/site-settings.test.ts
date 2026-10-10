@@ -87,3 +87,13 @@ test("parseRange ignores junk instead of producing NaN bounds", () => {
   assert.equal(r.min, undefined);
   assert.equal(r.max, undefined);
 });
+
+test("the announcement {price} placeholder follows the catalogue", async () => {
+  const { fillPrice } = await import("../src/lib/site-settings");
+  const text = "Andaman holiday packages from {price} per person · 5 nights / 6 days";
+  assert.equal(fillPrice(text, 15600), "Andaman holiday packages from ₹15,600 per person · 5 nights / 6 days");
+  assert.equal(fillPrice(text, 16900), "Andaman holiday packages from ₹16,900 per person · 5 nights / 6 days");
+  // No priced package: the phrase goes, never "from ₹0" or a stale number.
+  assert.equal(fillPrice(text, null), "Andaman holiday packages · 5 nights / 6 days");
+  assert.equal(fillPrice("Book now", null), "Book now");
+});

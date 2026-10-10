@@ -15,13 +15,13 @@ export function GoogleG({ className }: { className?: string }) {
 const STAR = "M10 1.5l2.6 5.3 5.9.9-4.25 4.15 1 5.85L10 14.95 4.75 17.7l1-5.85L1.5 7.7l5.9-.9z";
 
 /** Five stars filled to the exact score, e.g. 4.8 → four and four-fifths. */
-function Stars({ score, className }: { score: number; className?: string }) {
+function Stars({ score, className, small }: { score: number; className?: string; small?: boolean }) {
   return (
     <span className={cn("inline-flex gap-0.5", className)} aria-hidden="true">
       {[0, 1, 2, 3, 4].map((i) => {
         const fill = Math.max(0, Math.min(1, score - i));
         return (
-          <svg key={i} viewBox="0 0 20 20" className="h-4 w-4">
+          <svg key={i} viewBox="0 0 20 20" className={small ? "h-3.5 w-3.5" : "h-4 w-4"}>
             <path d={STAR} fill="#D9DEE5" />
             {fill > 0 && (
               <path d={STAR} fill="#FBBC05" style={{ clipPath: `inset(0 ${(1 - fill) * 100}% 0 0)` }} />
@@ -42,17 +42,37 @@ export function GoogleRating({
   count,
   url,
   tone = "light",
+  size = "card",
   className,
 }: {
   score: number | null;
   count?: number | null;
   url?: string;
   tone?: "light" | "dark";
+  /** "chip" sits in a row of pill-shaped badges, e.g. the homepage hero. */
+  size?: "card" | "chip";
   className?: string;
 }) {
   if (score === null || !url) return null;
   const dark = tone === "dark";
   const label = `Rated ${score.toFixed(1)} out of 5 on Google${count ? ` from ${count} reviews` : ""} — read the reviews`;
+
+  if (size === "chip") {
+    return (
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={label}
+        className={cn("inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1.5 text-brand-navy ring-1 ring-surface-border transition-colors hover:bg-white", className)}
+      >
+        <GoogleG className="h-4 w-4 shrink-0" />
+        <span className="tabular">{score.toFixed(1)}</span>
+        <Stars score={score} small />
+        <span className="font-semibold text-ink-muted">Google</span>
+      </a>
+    );
+  }
 
   return (
     <a

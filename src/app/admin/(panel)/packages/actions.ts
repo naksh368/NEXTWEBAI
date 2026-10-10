@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { refreshPublicSite } from "@/lib/revalidate-site";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
@@ -15,7 +16,7 @@ type R<T extends object = object> = ({ ok: true } & T) | { ok: false; error: str
 function revalidateAll(packageId: string, slug?: string) {
   revalidatePath("/admin/packages");
   revalidatePath(`/admin/packages/${packageId}/edit`);
-  revalidatePath("/packages");
+  refreshPublicSite();
   if (slug) { revalidatePath(`/packages/${slug}`); revalidatePath(`/packages/${slug}/itinerary`); }
 }
 
@@ -134,7 +135,7 @@ export async function deletePackageAction(packageId: string): Promise<R> {
   await writeAudit({ adminUserId: admin.id, action: "package.delete", resource: `Package:${packageId}`, before: { name: pkg.name } });
   revalidatePath("/admin/packages");
   revalidatePath("/packages");
-  revalidatePath("/");
+  refreshPublicSite();
   revalidatePath(`/packages/${pkg.slug}`);
   return { ok: true };
 }
@@ -188,7 +189,7 @@ export async function bulkPackageAction(rawIds: string[], op: BulkOp): Promise<R
   await writeAudit({ adminUserId: admin.id, action: `package.bulk.${op}`, resource: "Package", after: { ids: ids.length, affected, skipped } });
   revalidatePath("/admin/packages");
   revalidatePath("/packages");
-  revalidatePath("/");
+  refreshPublicSite();
   return { ok: true, affected, skipped };
 }
 

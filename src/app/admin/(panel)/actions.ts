@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { refreshPublicSite } from "@/lib/revalidate-site";
 import { db } from "@/lib/db";
 import { authorize } from "@/lib/admin-auth";
 import { writeAudit } from "@/lib/services/audit-service";
@@ -116,6 +117,7 @@ export async function setPackageStatusAction(packageId: string, status: string):
   await db.package.update({ where: { id: packageId }, data: { status } });
   await writeAudit({ adminUserId: admin.id, action: "package.status.update", resource: `Package:${packageId}`, before, after: { status } });
   revalidatePath("/admin/packages");
+  refreshPublicSite();
   return { ok: true };
 }
 
@@ -126,7 +128,7 @@ export async function toggleFeaturedAction(packageId: string, isFeatured: boolea
   await db.package.update({ where: { id: packageId }, data: { isFeatured } });
   await writeAudit({ adminUserId: admin.id, action: "package.feature", resource: `Package:${packageId}`, after: { isFeatured } });
   revalidatePath("/admin/packages");
-  revalidatePath("/");
+  refreshPublicSite();
   return { ok: true };
 }
 
@@ -150,6 +152,7 @@ export async function schedulePublishAction(packageId: string, whenISO: string |
   await db.package.update({ where: { id: packageId }, data: { publishAt } });
   await writeAudit({ adminUserId: admin.id, action: "package.schedule", resource: `Package:${packageId}`, after: { publishAt: publishAt?.toISOString() ?? null } });
   revalidatePath("/admin/packages");
+  refreshPublicSite();
   return { ok: true };
 }
 
@@ -159,6 +162,7 @@ export async function runDuePublishAction(): Promise<ActionResult & { published?
   if (!admin) return { ok: false, error: "You don't have permission to publish packages." };
   const { publishDuePackages } = await import("@/lib/services/scheduler");
   const published = await publishDuePackages();
+  if (published > 0) refreshPublicSite();
   if (published > 0) await writeAudit({ adminUserId: admin.id, action: "package.schedule.run", resource: "Package", after: { published } });
   return { ok: true, published };
 }
@@ -170,6 +174,7 @@ export async function toggleCheckedAction(packageId: string, isChecked: boolean)
   await db.package.update({ where: { id: packageId }, data: { isChecked } });
   await writeAudit({ adminUserId: admin.id, action: "package.checked", resource: `Package:${packageId}`, after: { isChecked } });
   revalidatePath("/admin/packages");
+  refreshPublicSite();
   return { ok: true };
 }
 
@@ -180,7 +185,7 @@ export async function toggleDestinationPopularAction(destinationId: string, isPo
   await db.destination.update({ where: { id: destinationId }, data: { isPopular } });
   await writeAudit({ adminUserId: admin.id, action: "destination.popular", resource: `Destination:${destinationId}`, after: { isPopular } });
   revalidatePath("/admin/destinations");
-  revalidatePath("/");
+  refreshPublicSite();
   return { ok: true };
 }
 

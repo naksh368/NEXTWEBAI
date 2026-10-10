@@ -105,6 +105,11 @@ export default async function HomePage() {
                   <Sparkles className="h-4 w-4 text-brand-orange" /> From <span className="tabular">{formatINR(fromPrice)}</span> pp
                 </li>
               )}
+              {settings.reviewScore !== null && settings.reviewUrl && (
+                <li>
+                  <GoogleRating score={settings.reviewScore} count={settings.reviewCount} url={settings.reviewUrl} size="chip" />
+                </li>
+              )}
               <li className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1.5 ring-1 ring-surface-border">
                 <MapPin className="h-4 w-4 text-brand-turquoiseDark" /> Port Blair · Havelock · Neil
               </li>

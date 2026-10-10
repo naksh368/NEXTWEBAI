@@ -59,27 +59,30 @@ npm run dev         # http://localhost:3000
 
 ## 3. The database
 
-Any PostgreSQL works. Two notes that catch people out:
+Any PostgreSQL works, and **the database sets itself up on every deploy**: the
+build (`scripts/build.sh`) creates or updates the tables and, on an empty
+database only, loads the five Andaman packages, islands, gallery, FAQs and
+settings. You never run a command by hand.
 
-**Supabase / Neon — use the direct connection string for migrations.** The
-pooled string (it has `-pooler` in the host, or port 6543) cannot run schema
-changes. Put the direct one in `DIRECT_URL`; `DATABASE_URL` may be either.
+**Easiest: Vercel + Neon (free).** In your Vercel project open
+**Storage → Create Database → Neon (Postgres)** and connect it to the project.
+Vercel adds `DATABASE_URL` (and an unpooled copy) for you; the build picks the
+right one automatically. Nothing else to configure.
 
-- Supabase: *Project Settings → Database → Connection string → URI*. Use
-  **Session mode / direct** for `DIRECT_URL`.
-- Neon: copy the string **without** `-pooler` for `DIRECT_URL`.
-- Railway: add a PostgreSQL service, then set
-  `DATABASE_URL=${{Postgres.DATABASE_URL}}` — nothing else to configure.
+**Supabase** also works. Use **Project Settings → Database → Connection string
+→ Session pooler** (host `…pooler.supabase.com`, port **5432**) as
+`DATABASE_URL`. Do not use the *Direct connection* — it is IPv6-only and Vercel
+cannot reach it — or the *Transaction pooler* on port 6543, which cannot create
+tables.
 
-Apply the schema:
+**Railway:** add a PostgreSQL service and set
+`DATABASE_URL=${{Postgres.DATABASE_URL}}`.
+
+To set up a database by hand instead (local development):
 
 ```bash
 npm run db:push
 ```
-
-`db:push` is right for this project: the schema is the source of truth and
-there is no migration history to preserve. If you prefer versioned migrations,
-`npx prisma migrate dev --name init` works too.
 
 ### Seeding
 
@@ -135,12 +138,19 @@ requires an authenticated administrator — the endpoint returns 403 otherwise.
 
 ### Vercel
 
-1. **vercel.com → Add New → Project →** import the repository.
-2. Add the environment variables from §2 under *Settings → Environment
-   Variables*, plus `NEXT_PUBLIC_SITE_URL=https://yourdomain.com`.
-3. **Deploy.** The build runs `prisma generate`, builds, and seeds an empty
-   database automatically.
-4. *Settings → Domains* → add your domain and follow the DNS instructions.
+1. **vercel.com → Add New → Project →** import the GitHub repository.
+2. **Storage → Create Database → Neon** and connect it (see §3). Skip this if
+   you are using Supabase or another Postgres — add its `DATABASE_URL` instead.
+3. *Settings → Environment Variables*: add the required ones from §7.
+4. **Deploy.** The build creates the tables, loads the packages into the empty
+   database and builds the site. Redeploys never overwrite your data.
+5. Open `/sign-in`, sign in with `ADMIN_EMAIL` / `ADMIN_PASSWORD`, then check
+   **Admin → Content** (phone numbers, Google rating link, top line).
+6. *Settings → Domains* → add your domain and follow the DNS instructions.
+
+The two daily jobs in `vercel.json` (publishing scheduled packages, enquiry
+follow-ups) fit the free Hobby plan. Set `CRON_SECRET` and Vercel sends it
+automatically.
 
 ### Railway (database included)
 
@@ -167,7 +177,7 @@ Put nginx or Caddy in front for TLS.
 | Variable | Required | Notes |
 | --- | --- | --- |
 | `DATABASE_URL` | ✅ | PostgreSQL connection string |
-| `DIRECT_URL` | ✅ | Non-pooled string, for schema changes |
+| `DIRECT_URL` | — | Not needed. The build prefers an unpooled URL when the host provides one |
 | `AUTH_SECRET` | ✅ | `openssl rand -base64 32` |
 | `NEXT_PUBLIC_SITE_URL` | ✅ | `https://yourdomain.com` — canonical URLs, sitemap, email links |
 | `ADMIN_EMAIL` | ✅ | The first administrator's inbox |
@@ -177,7 +187,7 @@ Put nginx or Caddy in front for TLS.
 | `AI_API_KEY`, `AI_BASE_URL`, `AI_MODEL` | optional | Turns on Asha, the AI trip planner. `AI_MODEL` may be a comma-separated fallback list (free OpenRouter models work) |
 | `SMS_PROVIDER`, `MSG91_*` | optional | SMS OTP for customer login |
 | `RAZORPAY_*` | optional | Only for online payment |
-| `CRON_SECRET` | recommended | Protects the scheduled-job endpoints |
+| `CRON_SECRET` | recommended | Protects the scheduled-job endpoints; Vercel sends it automatically |
 
 **Never** commit real values. `.env` is gitignored; `.env.example` is the
 template and must stay free of secrets.

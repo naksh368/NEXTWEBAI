@@ -202,7 +202,7 @@ export function ContentEditor({ settings }: { settings: SiteSettings }) {
                 Show the bar at the top of every public page
               </label>
               <div className="mt-4 grid gap-4 sm:grid-cols-[2fr_1fr]">
-                <Field label="Message">
+                <Field label="Message" hint="Write {price} where the lowest package price should go — it updates itself whenever you change a price.">
                   <input name="announcementText" className={inp} defaultValue={settings.announcementText} maxLength={200} />
                 </Field>
                 <Field label="Link">

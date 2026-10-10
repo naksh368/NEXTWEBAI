@@ -26,7 +26,9 @@ export async function Footer() {
   const address = s.addressLines.filter(Boolean);
   const socials = SOCIAL.filter(({ key }) => (s.social as Record<string, string>)[key]);
   const siteUrl = getSiteUrl();
-  const siteHost = siteUrl.replace(/^https?:\/\//, "");
+  const siteHost = siteUrl.replace(/^https?:\/\//, "").replace(/\/$/, "");
+  // A dev or unset address is never shown to customers.
+  const showSite = !/^(localhost|127\.0\.0\.1)(:|$)/.test(siteHost);
 
   return (
     <footer className="mt-20 border-t border-surface-border bg-brand-navy text-white/80 print:hidden">
@@ -72,10 +74,12 @@ export async function Footer() {
                   <a href={wa} target="_blank" rel="noopener noreferrer" className="hover:text-white">Message us on WhatsApp</a>
                 </li>
               )}
-              <li className="flex items-center gap-3">
-                <Globe className="h-4 w-4 shrink-0 text-brand-turquoise" />
-                <a href={siteUrl} className="hover:text-white">{siteHost}</a>
-              </li>
+              {showSite && (
+                <li className="flex items-center gap-3">
+                  <Globe className="h-4 w-4 shrink-0 text-brand-turquoise" />
+                  <a href={siteUrl} className="hover:text-white">{siteHost}</a>
+                </li>
+              )}
               {s.officeHours && <li className="pl-7 text-white/60">{s.officeHours}</li>}
             </ul>
           </div>
@@ -135,7 +139,7 @@ export async function Footer() {
           </div>
         )}
 
-        <div className="mt-8 flex flex-col gap-2 border-t border-white/10 pt-6 text-sm text-white/55 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-8 flex flex-col gap-2 border-t border-white/10 pb-20 pt-6 text-sm text-white/55 sm:flex-row sm:pb-0 sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} {s.brandName}. All rights reserved.</p>
           <p>{s.registrationInfo || s.tagline}</p>
         </div>

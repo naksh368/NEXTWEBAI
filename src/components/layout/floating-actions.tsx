@@ -35,6 +35,9 @@ function WhatsAppGlyph({ className }: { className?: string }) {
  * Hidden on admin, account and sign-in screens. On a package page the mobile
  * buttons sit above the sticky "Enquire" bar instead of covering it.
  */
+/** Keeps the buttons clear of the iPhone home indicator. */
+const SAFE_BOTTOM = { marginBottom: "env(safe-area-inset-bottom, 0px)" } as const;
+
 export function FloatingActions({
   telHref,
   phoneDisplay,
@@ -112,17 +115,18 @@ export function FloatingActions({
 
   if (hiddenAll) return null;
 
-  const bottom = raised ? "bottom-[88px] lg:bottom-6" : "bottom-5 sm:bottom-6";
+  // Phones: tucked into the bottom corners so they cover as little as possible.
+  const bottom = raised ? "bottom-[84px] lg:bottom-6" : "bottom-3 sm:bottom-6";
 
   return (
     <>
       {/* ── Left: call + WhatsApp ───────────────────────── */}
-      <div className={cn("fixed left-4 z-40 flex flex-col gap-3 print:hidden sm:left-6", bottom)}>
+      <div className={cn("fixed left-3 z-40 flex flex-row gap-2 print:hidden sm:left-6 sm:flex-col sm:gap-3", bottom)} style={SAFE_BOTTOM} data-floating="">
         {telHref && (
           <a
             href={telHref}
             aria-label={`Call us on ${phoneDisplay}`}
-            className="group relative flex h-12 w-12 items-center justify-center rounded-full bg-brand-orange text-white shadow-lift transition-transform hover:scale-105 sm:h-14 sm:w-14"
+            className="group relative flex h-11 w-11 items-center justify-center rounded-full bg-brand-orange text-white shadow-lift transition-transform hover:scale-105 sm:h-14 sm:w-14"
           >
             <Phone className="h-5 w-5 sm:h-6 sm:w-6" />
             <span className="pointer-events-none absolute left-full ml-3 hidden whitespace-nowrap rounded-lg bg-brand-navy px-3 py-1.5 text-sm font-bold text-white opacity-0 shadow-card transition-opacity group-hover:opacity-100 sm:block">
@@ -136,7 +140,7 @@ export function FloatingActions({
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Chat with us on WhatsApp"
-            className="group relative flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lift transition-transform hover:scale-105 sm:h-14 sm:w-14"
+            className="group relative flex h-11 w-11 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lift transition-transform hover:scale-105 sm:h-14 sm:w-14"
           >
             <WhatsAppGlyph className="h-6 w-6 sm:h-7 sm:w-7" />
             <span className="pointer-events-none absolute left-full ml-3 hidden whitespace-nowrap rounded-lg bg-brand-navy px-3 py-1.5 text-sm font-bold text-white opacity-0 shadow-card transition-opacity group-hover:opacity-100 sm:block">
@@ -148,7 +152,7 @@ export function FloatingActions({
 
       {/* ── Right: Asha, the AI trip planner ────────────── */}
       {!onPlannerPage && (
-        <div className={cn("fixed right-4 z-40 flex items-end gap-3 print:hidden sm:right-6", bottom, open && "hidden sm:flex")}>
+        <div className={cn("fixed right-3 z-40 flex items-end gap-3 print:hidden sm:right-6", bottom, open && "hidden sm:flex")} style={SAFE_BOTTOM} data-floating="">
           {teaser && !open && (
             <div className="relative mb-1 hidden max-w-[240px] rounded-2xl rounded-br-md bg-white p-3.5 pr-8 text-sm shadow-lift animate-fade-in sm:block">
               <button

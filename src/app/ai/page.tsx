@@ -4,7 +4,8 @@ import { MessageCircle, Phone, ShieldCheck, Sparkles } from "lucide-react";
 import { Container, Section } from "@/components/ui/container";
 import { PageHeader } from "@/components/layout/page-header";
 import { BreadcrumbJsonLd } from "@/components/layout/structured-data";
-import { AssistantChat } from "@/components/ai/assistant-chat";
+import { PlannerChat } from "@/components/ai/planner-chat";
+import { PlannerAvatar } from "@/components/ai/planner-avatar";
 import { buttonVariants } from "@/components/ui/button";
 import { isAiConfigured } from "@/lib/services/ai-service";
 import { getSiteSettings, telLinkFor, whatsappLinkFor } from "@/lib/site-settings";
@@ -23,6 +24,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function AiPage() {
   const settings = await getSiteSettings();
   const aiOn = isAiConfigured();
+  const waDigits = (settings.whatsappE164 || "").replace(/\D/g, "");
   const tel = telLinkFor(settings);
   const wa = whatsappLinkFor(settings, `Hello ${settings.brandName}, I would like to plan an Andaman holiday.`);
 
@@ -35,9 +37,9 @@ export default async function AiPage() {
     <>
       <BreadcrumbJsonLd items={crumbs} />
       <PageHeader
-        eyebrow="Trip planner"
-        title="Tell us the trip you have in mind"
-        description="Describe your dates, group and budget in your own words. The planner searches our real published Andaman packages and shows you what genuinely fits."
+        eyebrow="AI trip planner"
+        title="Plan your Andaman trip with Asha"
+        description="Tell Asha your dates, group and budget in your own words. She matches you to our real Andaman packages, or sketches a customised day-by-day plan for our team to quote."
         breadcrumbs={crumbs}
       />
 
@@ -54,7 +56,19 @@ export default async function AiPage() {
             </span>
           </div>
 
-          <AssistantChat />
+          <div className="overflow-hidden rounded-3xl border border-surface-border bg-white shadow-card">
+            <div className="flex items-center gap-3 bg-brand-navy px-5 py-3.5 text-white">
+              <PlannerAvatar size={46} />
+              <div>
+                <p className="font-extrabold leading-tight">Asha</p>
+                <p className="text-xs text-white/70">AI trip planner for JST Andaman Travels</p>
+              </div>
+            </div>
+            <PlannerChat
+              whatsappE164={settings.whatsappEnabled && waDigits ? waDigits : null}
+              className="h-[min(640px,calc(100vh-220px))] min-h-[460px]"
+            />
+          </div>
 
           {!aiOn && (
             <p className="mt-4 rounded-xl bg-surface-muted p-4 text-sm leading-relaxed text-ink-muted">

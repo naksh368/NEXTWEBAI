@@ -139,3 +139,51 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* ── Illustrated island map ─────────────────────────────── */
+.map-boat {
+  offset-rotate: auto;
+  animation-name: map-sail;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+@keyframes map-sail {
+  from { offset-distance: 0%; }
+  to { offset-distance: 100%; }
+}
+.map-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: map-pulse 2.6s ease-out infinite;
+}
+@keyframes map-pulse {
+  0% { transform: scale(0.6); opacity: 0.9; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+.map-smoke {
+  animation: map-smoke 4s ease-in-out infinite;
+}
+@keyframes map-smoke {
+  0%, 100% { opacity: 0.35; transform: translateY(0); }
+  50% { opacity: 0.8; transform: translateY(-3px); }
+}
+.map-label {
+  text-shadow: 0 0 3px #ffffff, 0 0 6px #ffffff;
+}
+.sea-waves {
+  background-image:
+    radial-gradient(120% 70% at 85% 0%, rgba(255, 255, 255, 0.7), transparent 60%),
+    repeating-radial-gradient(circle at 70% 45%, rgba(8, 126, 186, 0.06) 0 1px, transparent 1px 22px),
+    linear-gradient(180deg, #eef9fc 0%, #dcf2f8 55%, #cfeef5 100%);
+}
+.cloud-drift {
+  animation: cloud-drift 38s linear infinite alternate;
+}
+@keyframes cloud-drift {
+  from { transform: translateX(-24px); }
+  to { transform: translateX(24px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .map-boat { animation: none; offset-distance: 35%; }
+  .map-pulse, .map-smoke, .cloud-drift { animation: none; }
+}

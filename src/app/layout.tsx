@@ -4,7 +4,7 @@ import "./globals.css";
 import { PromoBar } from "@/components/layout/promo-bar";
 import { HeaderWrapper } from "@/components/layout/header-wrapper";
 import { Footer } from "@/components/layout/footer";
-import { ContactFabWrapper } from "@/components/layout/contact-fab-wrapper";
+import { FloatingActionsWrapper } from "@/components/layout/floating-actions-wrapper";
 import { HideOnAdmin } from "@/components/layout/hide-on-admin";
 import { getSiteUrl } from "@/lib/utils";
 import { getSiteSettings } from "@/lib/site-settings";
@@ -72,7 +72,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
         </main>
         <HideOnAdmin><Footer /></HideOnAdmin>
-        <HideOnAdmin><ContactFabWrapper /></HideOnAdmin>
+        <HideOnAdmin><FloatingActionsWrapper /></HideOnAdmin>
       </body>
     </html>
   );

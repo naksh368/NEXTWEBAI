@@ -11,6 +11,8 @@ import { EmptyState } from "@/components/ui/states";
 import { PackageCard } from "@/components/package/package-card";
 import { TripPlanner } from "@/components/enquiry/trip-planner";
 import { RecentlyViewedRail } from "@/components/package/recently-viewed";
+import { IslandMap } from "@/components/home/island-map";
+import { AskAshaButton } from "@/components/ai/ask-asha-button";
 import {
   getAndamanDestinations, getFeaturedPackages, getGlobalFaqs,
   getPublishedTestimonials, getGalleryItems, listPackages,
@@ -19,6 +21,26 @@ import { getSiteSettings, promoIsActive, telLinkFor, whatsappLinkFor } from "@/l
 import { formatINR, formatDate } from "@/lib/utils";
 
 export const revalidate = 300;
+
+/** Soft, slowly drifting clouds over the sea. Purely decorative. */
+function Clouds() {
+  const cloud = "M10 30 Q10 16 26 16 Q30 4 46 6 Q60 0 70 12 Q86 10 90 24 Q100 26 98 34 Q96 40 86 40 L18 40 Q8 40 10 30 Z";
+  return (
+    <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
+      {[
+        { top: "8%", left: "4%", w: 150, o: 0.75 },
+        { top: "30%", left: "46%", w: 110, o: 0.55 },
+        { top: "64%", left: "8%", w: 120, o: 0.5 },
+        { top: "14%", left: "84%", w: 170, o: 0.7 },
+        { top: "78%", left: "70%", w: 140, o: 0.45 },
+      ].map((c, i) => (
+        <svg key={i} viewBox="0 0 100 44" className="cloud-drift absolute" style={{ top: c.top, left: c.left, width: c.w, opacity: c.o, animationDelay: `${-i * 7}s` }}>
+          <path d={cloud} fill="#ffffff" />
+        </svg>
+      ))}
+    </div>
+  );
+}
 
 /** What JST arranges. Shown as capability, never as a per-package promise. */
 const EXPERIENCES = [
@@ -56,53 +78,93 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* ── HERO ─────────────────────────────────────────────── */}
-      <section className="relative isolate overflow-hidden bg-brand-navy">
-        <div className="absolute inset-0">
-          <SmartImage src={heroImage} alt={heroAlt} sizes="100vw" priority className="h-full" />
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-br from-brand-navy/90 via-brand-navy/70 to-brand-navy/35 lg:to-transparent" aria-hidden />
+      {/* ── HERO: illustrated island map ─────────────────────── */}
+      <section className="sea-waves relative isolate overflow-hidden border-b border-surface-border">
+        <Clouds />
+        <Container className="relative grid items-center gap-6 pb-6 pt-10 sm:pt-14 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-10 lg:py-10">
+          <div className="animate-fade-in-slow lg:max-w-xl">
+            <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-brand-turquoiseDark sm:text-sm">
+              {settings.heroEyebrow}
+            </p>
+            <h1 className="mt-4 text-[2.4rem] font-extrabold text-brand-navy sm:text-6xl">{settings.heroHeading}</h1>
+            <p className="mt-5 max-w-lg text-base leading-relaxed text-ink-muted sm:text-lg">{settings.heroSubheading}</p>
 
-        <Container className="relative py-14 sm:py-20 lg:py-24">
-          <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_minmax(0,460px)] lg:gap-14">
-            <div className="animate-fade-in-slow">
-              <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-brand-turquoise sm:text-sm">
-                {settings.heroEyebrow}
-              </p>
-              <h1 className="mt-4 max-w-2xl text-[2.5rem] font-extrabold text-white sm:text-6xl">
-                {settings.heroHeading}
-              </h1>
-              <p className="mt-5 max-w-xl text-base leading-relaxed text-white/85 sm:text-lg">
-                {settings.heroSubheading}
-              </p>
-
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Link href={settings.heroCtaPrimaryHref} className={buttonVariants({ variant: "orange", size: "lg" })}>
-                  {settings.heroCtaPrimaryLabel} <ArrowRight className="h-4 w-4" />
-                </Link>
-                <Link href={settings.heroCtaSecondaryHref} className={buttonVariants({ variant: "onPhoto", size: "lg" })}>
-                  {settings.heroCtaSecondaryLabel}
-                </Link>
-              </div>
-
-              <ul className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm font-semibold text-white/85">
-                {fromPrice !== null && (
-                  <li className="inline-flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-brand-turquoise" />
-                    Packages from <span className="tabular text-white">{formatINR(fromPrice)}</span> per person
-                  </li>
-                )}
-                <li className="inline-flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-brand-turquoise" /> Port Blair · Havelock · Neil
-                </li>
-                <li className="inline-flex items-center gap-2">
-                  <Headset className="h-4 w-4 text-brand-turquoise" /> Local team on the islands
-                </li>
-              </ul>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <Link href={settings.heroCtaPrimaryHref} className={buttonVariants({ variant: "orange", size: "lg" })}>
+                {settings.heroCtaPrimaryLabel} <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link href="#plan" className={buttonVariants({ variant: "outline", size: "lg" })}>
+                {settings.heroCtaSecondaryLabel}
+              </Link>
             </div>
 
-            <TripPlanner destinations={plannerPlaces} packages={planner} className="lg:sticky lg:top-24" />
+            <ul className="mt-7 flex flex-wrap gap-2.5 text-sm font-bold text-brand-navy">
+              {fromPrice !== null && (
+                <li className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1.5 ring-1 ring-surface-border">
+                  <Sparkles className="h-4 w-4 text-brand-orange" /> From <span className="tabular">{formatINR(fromPrice)}</span> pp
+                </li>
+              )}
+              <li className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1.5 ring-1 ring-surface-border">
+                <MapPin className="h-4 w-4 text-brand-turquoiseDark" /> Port Blair · Havelock · Neil
+              </li>
+              <li className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1.5 ring-1 ring-surface-border">
+                <Headset className="h-4 w-4 text-brand-turquoiseDark" /> Local team on the islands
+              </li>
+            </ul>
+
+            <div className="mt-7 flex flex-wrap items-center gap-3">
+              <AskAshaButton prompt="Can you plan a customised Andaman trip for us?" />
+              <span className="text-xs font-semibold text-ink-muted">or tap any place on the map</span>
+            </div>
           </div>
+
+          <div
+            className="relative mx-auto w-full"
+            style={{
+              // The left-hand labels hang outside the map's box; the 72px keeps them on screen on phones.
+              width: "min(calc(100% - 72px), 470px, calc((100svh - 150px) * 0.56))",
+              minWidth: "min(calc(100% - 72px), 300px)",
+            }}
+          >
+            <IslandMap />
+            <p className="mt-1 flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 text-[11px] font-semibold text-ink-muted">
+              <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                <span className="inline-block h-0 w-6 border-t-2 border-dashed border-brand-blue/60" aria-hidden="true" /> Ferry &amp; boat routes
+              </span>
+              <span className="whitespace-nowrap text-ink-faint">· map simplified, not to scale for navigation</span>
+            </p>
+          </div>
+        </Container>
+      </section>
+
+      {/* ── PLAN MY TRIP: photo + enquiry ────────────────────── */}
+      <section id="plan" className="relative isolate scroll-mt-24 overflow-hidden bg-brand-navy">
+        <div className="absolute inset-0">
+          <SmartImage src={heroImage} alt={heroAlt} sizes="100vw" className="h-full" />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-r from-brand-navy/92 via-brand-navy/72 to-brand-navy/40" aria-hidden />
+        <Container className="relative grid items-center gap-10 py-14 sm:py-20 lg:grid-cols-[1fr_minmax(0,460px)] lg:gap-14">
+          <div>
+            <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-brand-turquoise sm:text-sm">Plan my trip</p>
+            <h2 className="mt-3 max-w-xl text-3xl text-white sm:text-5xl">Tell us your dates. We&apos;ll plan the rest.</h2>
+            <p className="mt-4 max-w-lg text-base leading-relaxed text-white/80 sm:text-lg">
+              Hotels, ferries, sightseeing and transfers arranged by a team based in Port Blair. You get a written itinerary and
+              quotation — nothing is booked until you say yes.
+            </p>
+            <div className="mt-7 flex flex-wrap gap-3">
+              {wa && (
+                <a href={wa} target="_blank" rel="noopener noreferrer" className={buttonVariants({ variant: "onPhoto", size: "lg" })}>
+                  <MessageCircle className="h-4 w-4" /> WhatsApp us
+                </a>
+              )}
+              {tel && (
+                <a href={tel} className={buttonVariants({ variant: "onPhoto", size: "lg" })}>
+                  <Phone className="h-4 w-4" /> {settings.phonePrimary}
+                </a>
+              )}
+            </div>
+          </div>
+          <TripPlanner destinations={plannerPlaces} packages={planner} />
         </Container>
       </section>
 

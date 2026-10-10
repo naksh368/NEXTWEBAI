@@ -162,6 +162,25 @@ this database, and it is instructed to decline anything outside the Andamans.
 With no key set, `/ai` falls back to grounded keyword search over the same
 data — there is no "creative" mode where prices could be invented.
 
+The planner appears as **Asha**, an illustrated AI assistant (she says plainly
+that she is an AI): a launcher at the bottom right of every public page, the
+full-page `/ai`, and the place names on the homepage map, which open her with
+a question about that place. She can sketch a customised day-by-day plan, but
+only ever prices it via the closest real package — the team quotes the rest.
+Because she searches the live database on every question, anything an admin
+publishes or edits is in her answers straight away; there is nothing to
+retrain. Free OpenRouter models work — see `AI_MODEL` in `.env.example`.
+
+The floating call and WhatsApp buttons (bottom left) use the phone and
+WhatsApp numbers from **Admin → Content**.
+
+### Homepage map
+
+The illustrated island map is generated from approximate coastline points:
+edit `scripts/generate-andaman-map.py` and run
+`python3 scripts/generate-andaman-map.py` to rewrite
+`src/components/home/andaman-map-data.ts`. It is a picture, not a chart.
+
 ---
 
 ## Seed data and photography

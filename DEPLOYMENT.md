@@ -174,7 +174,7 @@ Put nginx or Caddy in front for TLS.
 | `ADMIN_PASSWORD` | ✅ | 12+ characters; quote it if it contains `#` |
 | `EMAIL_PROVIDER`, `EMAIL_API_KEY`, `EMAIL_FROM` | strongly recommended | Without these, nobody receives enquiry confirmations or login codes |
 | `BUSINESS_EMAIL` | optional | Where new-enquiry alerts go (defaults to `ADMIN_EMAIL`) |
-| `AI_API_KEY`, `AI_BASE_URL`, `AI_MODEL` | optional | Turns on the trip planner |
+| `AI_API_KEY`, `AI_BASE_URL`, `AI_MODEL` | optional | Turns on Asha, the AI trip planner. `AI_MODEL` may be a comma-separated fallback list (free OpenRouter models work) |
 | `SMS_PROVIDER`, `MSG91_*` | optional | SMS OTP for customer login |
 | `RAZORPAY_*` | optional | Only for online payment |
 | `CRON_SECRET` | recommended | Protects the scheduled-job endpoints |

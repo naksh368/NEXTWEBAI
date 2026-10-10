@@ -144,12 +144,8 @@ export async function savePricingContentAction(formData: FormData): Promise<Cont
   const count = optionalNumber(formData.get("reviewCount"));
   const travellers = optionalNumber(formData.get("travellersServed"));
 
-  // A score must be checkable: it needs a review count or a link to the
-  // Google reviews themselves. A count on its own has no score to describe.
+  // The badge is display-only; the reviews link is optional and kept for reference.
   const reviewUrl = str(formData.get("reviewUrl"));
-  if (score !== null && count === null && !reviewUrl) {
-    return { ok: false, error: "Add the number of reviews or the link to your Google reviews, so visitors can check the score." };
-  }
   if (score === null && count !== null) {
     return { ok: false, error: "Enter the review score as well as the number of reviews, or leave both blank." };
   }

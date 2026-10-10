@@ -303,13 +303,13 @@ export function ContentEditor({ settings }: { settings: SiteSettings }) {
                 estimate a rating, a review count or a traveller number.
               </p>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <Field label="Google review score" hint="0–5. Needs a review count or the reviews link.">
+                <Field label="Google review score" hint="0–5, exactly as Google shows it. Blank = hidden.">
                   <input name="reviewScore" type="number" step="0.1" min={0} max={5} className={inp} defaultValue={settings.reviewScore ?? ""} placeholder="Blank = hidden" />
                 </Field>
                 <Field label="Number of reviews">
                   <input name="reviewCount" type="number" min={0} className={inp} defaultValue={settings.reviewCount ?? ""} placeholder="Blank = hidden" />
                 </Field>
-                <Field label="Link to your reviews">
+                <Field label="Link to your reviews (optional, not shown)">
                   <input name="reviewUrl" className={inp} defaultValue={settings.reviewUrl} placeholder="https://maps.app.goo.gl/…" />
                 </Field>
                 <Field label="Travellers hosted">

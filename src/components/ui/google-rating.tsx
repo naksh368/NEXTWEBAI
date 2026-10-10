@@ -34,55 +34,51 @@ function Stars({ score, className, small }: { score: number; className?: string;
 }
 
 /**
- * The business's Google rating. Renders nothing unless an administrator has
- * entered a score, and always links to the reviews so it can be checked.
+ * The business's Google rating, shown as a plain badge (not a link). Renders
+ * nothing unless an administrator has entered a score.
  */
 export function GoogleRating({
   score,
   count,
-  url,
   tone = "light",
   size = "card",
   className,
 }: {
   score: number | null;
   count?: number | null;
+  /** Kept for the settings shape; the badge itself is not clickable. */
   url?: string;
   tone?: "light" | "dark";
   /** "chip" sits in a row of pill-shaped badges, e.g. the homepage hero. */
   size?: "card" | "chip";
   className?: string;
 }) {
-  if (score === null || !url) return null;
+  if (score === null) return null;
   const dark = tone === "dark";
-  const label = `Rated ${score.toFixed(1)} out of 5 on Google${count ? ` from ${count} reviews` : ""} — read the reviews`;
+  const label = `Rated ${score.toFixed(1)} out of 5 on Google${count ? ` from ${count} reviews` : ""}`;
 
   if (size === "chip") {
     return (
-      <a
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
+      <span
+        role="img"
         aria-label={label}
-        className={cn("inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1.5 text-brand-navy ring-1 ring-surface-border transition-colors hover:bg-white", className)}
+        className={cn("inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1.5 text-brand-navy ring-1 ring-surface-border", className)}
       >
         <GoogleG className="h-4 w-4 shrink-0" />
         <span className="tabular">{score.toFixed(1)}</span>
         <Stars score={score} small />
         <span className="font-semibold text-ink-muted">Google</span>
-      </a>
+      </span>
     );
   }
 
   return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
+    <span
+      role="img"
       aria-label={label}
       className={cn(
-        "group inline-flex items-center gap-3 rounded-2xl px-4 py-2.5 transition-shadow",
-        dark ? "bg-white text-brand-navy hover:shadow-lift" : "border border-surface-border bg-white text-brand-navy shadow-card hover:shadow-cardHover",
+        "inline-flex items-center gap-3 rounded-2xl px-4 py-2.5",
+        dark ? "bg-white text-brand-navy" : "border border-surface-border bg-white text-brand-navy shadow-card",
         className
       )}
     >
@@ -92,10 +88,10 @@ export function GoogleRating({
           <span className="tabular text-lg font-extrabold">{score.toFixed(1)}</span>
           <Stars score={score} />
         </span>
-        <span className="text-xs font-semibold text-ink-muted group-hover:text-brand-blue">
+        <span className="text-xs font-semibold text-ink-muted">
           Google rating{count ? ` · ${count.toLocaleString("en-IN")} reviews` : ""}
         </span>
       </span>
-    </a>
+    </span>
   );
 }

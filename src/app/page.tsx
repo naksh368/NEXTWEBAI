@@ -105,7 +105,7 @@ export default async function HomePage() {
                   <Sparkles className="h-4 w-4 text-brand-orange" /> From <span className="tabular">{formatINR(fromPrice)}</span> pp
                 </li>
               )}
-              {settings.reviewScore !== null && settings.reviewUrl && (
+              {settings.reviewScore !== null && (
                 <li>
                   <GoogleRating score={settings.reviewScore} count={settings.reviewCount} url={settings.reviewUrl} size="chip" />
                 </li>

@@ -37,10 +37,10 @@ const PLACES: Place[] = [
   { key: "rangat", label: "Rangat", side: "right", reach: 58, ask: "What is there to see around Rangat?" },
   { key: "longIsland", label: "Long Island", side: "right", reach: 34, ask: "Can I visit Long Island and Lalaji Bay?" },
   { key: "baratang", label: "Baratang", side: "left", reach: 40, ask: "Can you plan a day trip to the Baratang limestone caves?" },
-  { key: "havelock", label: "Havelock Island", side: "right", reach: 40, href: "/destinations/havelock-island", major: true },
-  { key: "neil", label: "Neil Island", side: "right", reach: 36, href: "/destinations/neil-island", major: true },
-  { key: "northBay", label: "Ross & North Bay", side: "left", reach: 52, dy: -22, href: "/destinations/north-bay-island" },
-  { key: "portBlair", label: "Port Blair", side: "left", reach: 44, dy: 8, href: "/destinations/port-blair", major: true },
+  { key: "havelock", label: "Havelock Island", side: "right", reach: 40, href: "/packages?destination=havelock-island", major: true },
+  { key: "neil", label: "Neil Island", side: "right", reach: 36, href: "/packages?destination=neil-island", major: true },
+  { key: "northBay", label: "Ross & North Bay", side: "left", reach: 52, dy: -22, href: "/packages?destination=north-bay-island" },
+  { key: "portBlair", label: "Port Blair", side: "left", reach: 44, dy: 8, href: "/packages?destination=port-blair", major: true },
   { key: "barren", label: "Barren Island", side: "below", reach: 26, ask: "Can we see Barren Island, India's active volcano?" },
   { key: "littleAndaman", label: "Little Andaman", side: "right", reach: 34, ask: "Can you plan a trip to Little Andaman?" },
 ];
@@ -204,7 +204,7 @@ export function IslandMap({ className }: { className?: string }) {
         const style = { left: pct(lx, W), top: pct(ly, H) };
 
         return p.href ? (
-          <Link key={p.key} href={p.href} className={cls} style={style}>
+          <Link key={p.key} href={p.href} className={cls} style={style} title={`See packages visiting ${p.label}`}>
             {p.label}
           </Link>
         ) : (

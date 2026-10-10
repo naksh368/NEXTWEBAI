@@ -160,9 +160,23 @@ export async function listPackages(filters: PackageFilters) {
   const page = Math.max(1, filters.page ?? 1);
   const empty = { items: [] as PackageListItem[], total: 0, page, pageSize: PACKAGE_PAGE_SIZE, totalPages: 1 };
   return safe(async () => {
+    // A package is stored against its base island, so filtering on that alone
+    // finds nothing for Havelock or Neil. Use the same route-aware matching as
+    // the island pages, so the filter and the island page always agree.
+    let destinationIds: string[] | undefined;
+    if (filters.destination) {
+      const dest = await db.destination.findFirst({
+        where: { slug: filters.destination, isPublished: true },
+        select: { slug: true, name: true, travelInfo: true },
+      });
+      destinationIds = dest
+        ? (await getPackagesForDestinationOrHub(dest.slug, dest.travelInfo, dest.name)).items.map((p) => p.id)
+        : [];
+    }
+
     const where: Prisma.PackageWhereInput = {
       status: "PUBLISHED",
-      ...(filters.destination ? { destination: { slug: filters.destination } } : {}),
+      ...(destinationIds ? { id: { in: destinationIds } } : {}),
       ...(filters.theme ? { theme: filters.theme } : {}),
       ...(filters.minNights || filters.maxNights || filters.minPrice || filters.maxPrice || filters.groupSize
         ? {

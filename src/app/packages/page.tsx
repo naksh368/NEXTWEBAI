@@ -91,12 +91,14 @@ export default async function PackagesPage({ searchParams }: { searchParams: Sea
     .filter((d) => d.packageCount > 0)
     .map((d) => ({ slug: d.slug, name: d.name }));
 
+  const activeDestination = filters.destination ? destinations.find((d) => d.slug === filters.destination) : undefined;
+
   return (
     <>
       <BreadcrumbJsonLd items={crumbs} />
       <PageHeader
         eyebrow="Holiday packages"
-        title="Find your perfect Andaman escape"
+        title={activeDestination ? `Packages visiting ${activeDestination.name}` : "Find your perfect Andaman escape"}
         description="Five nights and six days across Port Blair, Havelock and Neil. Choose the hotel category that suits your group — every itinerary is ours to adjust."
         breadcrumbs={crumbs}
       />

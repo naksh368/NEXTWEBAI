@@ -36,6 +36,7 @@ const NAV: { section: string; items: { label: string; href: string; icon: React.
   ] },
   { section: "Website", items: [
     { label: "Website Content", href: "/admin/content", icon: Globe },
+    { label: "Pages & Terms", href: "/admin/pages", icon: FileText },
     { label: "Gallery", href: "/admin/gallery", icon: Images },
     { label: "Media Library", href: "/admin/media", icon: ImageIcon },
     { label: "Testimonials", href: "/admin/testimonials", icon: Quote },

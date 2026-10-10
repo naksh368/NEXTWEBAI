@@ -185,6 +185,17 @@ allowed to invent a price. Each decision is explained beside the form. Saving
 creates a **draft** that borrows photos and policies from your existing package
 of the same tier — nothing is published until you publish it.
 
+### Editing pages, Terms and FAQs
+
+**Admin → Pages & Terms** edits the words on the homepage sections, About us,
+Terms & Conditions, Privacy Policy and the FAQs. Saving updates the live site
+immediately; "Restore original text" puts a page back as it shipped. In text,
+a blank line starts a new paragraph and "- " starts a bullet; `{brand}`,
+`{phone}`, `{email}`, `{contact}` and `{address}` are filled from Website Content.
+Everything else — brand, hero, top line, contact details, prices, Google rating
+and SEO — is in **Admin → Website Content**; packages, islands, gallery and
+testimonials have their own sections.
+
 ### Google rating and "Powered by"
 
 The Google rating badge (homepage and footer) and the "Powered by" line are

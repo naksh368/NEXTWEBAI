@@ -12,6 +12,7 @@ import { PackageCard } from "@/components/package/package-card";
 import { TripPlanner } from "@/components/enquiry/trip-planner";
 import { RecentlyViewedRail } from "@/components/package/recently-viewed";
 import { GoogleRating } from "@/components/ui/google-rating";
+import { fillTokens, getPageContent } from "@/lib/page-content";
 import { IslandMap } from "@/components/home/island-map";
 import { AskAshaButton } from "@/components/ai/ask-asha-button";
 import {
@@ -44,14 +45,9 @@ function Clouds() {
 }
 
 /** What JST arranges. Shown as capability, never as a per-package promise. */
-const EXPERIENCES = [
-  { icon: Waves, title: "Beautiful beaches", body: "Radhanagar, Kalapathar, Bharatpur and Laxmanpur — the sand the islands are known for." },
-  { icon: Compass, title: "Snorkelling & water sports", body: "Reef snorkelling, glass-bottom boats, sea walking and scuba, through licensed operators." },
-  { icon: Palmtree, title: "Island hopping", body: "Port Blair, Havelock and Neil on one trip, with every connection planned for you." },
-  { icon: BedDouble, title: "Resort & hotel stays", body: "Budget guesthouses through to 4-star beach resorts, chosen to fit your group." },
-  { icon: Camera, title: "Sightseeing", body: "Cellular Jail and the Light & Sound Show, Ross Island, North Bay and Corbyn's Cove." },
-  { icon: Ship, title: "Inter-island transfers", body: "Ferry seats booked and re-booked for you when the sea changes the schedule." },
-];
+/** Icons for the editable lists, reused in order for however many items there are. */
+const SERVICE_ICONS = [Waves, Compass, Palmtree, BedDouble, Camera, Ship];
+const FEATURE_ICONS = [CalendarCheck, BedDouble, Compass, Ship];
 
 export default async function HomePage() {
   const [settings, destinations, featured, allPackages, faqs, testimonials, gallery] = await Promise.all([
@@ -64,6 +60,8 @@ export default async function HomePage() {
     getGalleryItems(),
   ]);
 
+  const home = await getPageContent("home");
+  const fill = (t: string) => fillTokens(t, settings);
   const packages = featured.length ? featured : allPackages.items;
   const planner = allPackages.items.map((p) => ({ slug: p.slug, name: p.name }));
   const plannerPlaces = ["Andaman Islands", ...destinations.map((d) => d.name)];
@@ -153,12 +151,9 @@ export default async function HomePage() {
         <div className="absolute inset-0 hidden bg-gradient-to-r from-brand-navy/95 via-brand-navy/70 to-brand-navy/40 lg:block" aria-hidden />
         <Container className="relative grid items-center gap-10 py-14 sm:py-20 lg:grid-cols-[1fr_minmax(0,460px)] lg:gap-14">
           <div>
-            <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-brand-turquoise sm:text-sm">Plan my trip</p>
-            <h2 className="mt-3 max-w-xl text-3xl text-white sm:text-5xl">Tell us your dates. We&apos;ll plan the rest.</h2>
-            <p className="mt-4 max-w-lg text-base leading-relaxed text-white/80 sm:text-lg">
-              Hotels, ferries, sightseeing and transfers arranged by a team based in Port Blair. You get a written itinerary and
-              quotation — nothing is booked until you say yes.
-            </p>
+            <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-brand-turquoise sm:text-sm">{fill(home.planEyebrow)}</p>
+            <h2 className="mt-3 max-w-xl text-3xl text-white sm:text-5xl">{fill(home.planTitle)}</h2>
+            <p className="mt-4 max-w-lg text-base leading-relaxed text-white/80 sm:text-lg">{fill(home.planText)}</p>
             <div className="mt-7 flex flex-wrap gap-3">
               {wa && (
                 <a href={wa} target="_blank" rel="noopener noreferrer" className={buttonVariants({ variant: "onPhoto", size: "lg" })}>
@@ -179,19 +174,14 @@ export default async function HomePage() {
       {/* ── TRUST STRIP ──────────────────────────────────────── */}
       <section className="border-b border-surface-border bg-white">
         <Container className="grid gap-x-6 gap-y-6 py-9 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            { icon: CalendarCheck, title: "Personalised holiday planning", body: "Every itinerary is built around your dates, your group and your budget." },
-            { icon: BedDouble, title: "Accommodation options", body: "Budget guesthouses to 4-star resorts, across all three islands." },
-            { icon: Compass, title: "Island sightseeing", body: "The beaches, the reef and the heritage sites, arranged end to end." },
-            { icon: Ship, title: "Transfers & travel assistance", body: "Airport pick-up, ferries and a team on the ground while you are here." },
-          ].map((f) => (
-            <div key={f.title} className="flex gap-3.5">
+          {home.features.map((f, i) => ({ ...f, icon: FEATURE_ICONS[i % FEATURE_ICONS.length] })).map((f, i) => (
+            <div key={i} className="flex gap-3.5">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-turquoiseLight text-brand-turquoiseDark">
                 <f.icon className="h-5 w-5" />
               </span>
               <div>
-                <h3 className="text-[15px] font-bold leading-snug">{f.title}</h3>
-                <p className="mt-1 text-sm leading-relaxed text-ink-muted">{f.body}</p>
+                <h3 className="text-[15px] font-bold leading-snug">{fill(f.title)}</h3>
+                <p className="mt-1 text-sm leading-relaxed text-ink-muted">{fill(f.body)}</p>
               </div>
             </div>
           ))}
@@ -222,9 +212,9 @@ export default async function HomePage() {
       <Section id="packages">
         <Container>
           <SectionHeading
-            eyebrow="Holiday packages"
-            title="Find your perfect Andaman escape"
-            description={`Five nights, six days across Port Blair, Havelock and Neil — pick the hotel category that suits your group. ${settings.priceDisclaimer}`}
+            eyebrow={fill(home.packagesEyebrow)}
+            title={fill(home.packagesTitle)}
+            description={`${fill(home.packagesText)} ${settings.priceDisclaimer}`.trim()}
             action={
               <Link href="/packages" className={buttonVariants({ variant: "outline", size: "sm" })}>
                 All packages <ArrowRight className="h-4 w-4" />
@@ -260,9 +250,9 @@ export default async function HomePage() {
         <Section className="bg-surface-muted">
           <Container>
             <SectionHeading
-              eyebrow="Explore the islands"
-              title="Where your Andaman holiday takes you"
-              description="Three islands, a handful of unforgettable beaches, and the heritage that made these islands matter."
+              eyebrow={fill(home.islandsEyebrow)}
+              title={fill(home.islandsTitle)}
+              description={fill(home.islandsText) || undefined}
               action={
                 <Link href="/destinations" className={buttonVariants({ variant: "outline", size: "sm" })}>
                   All destinations <ArrowRight className="h-4 w-4" />
@@ -307,18 +297,18 @@ export default async function HomePage() {
         <Container>
           <SectionHeading
             align="center"
-            eyebrow="What we arrange"
-            title="Everything an island holiday needs"
-            description="These are the services we plan and coordinate. What is included in your trip depends on the package you choose — each package page lists its own inclusions in full."
+            eyebrow={fill(home.servicesEyebrow)}
+            title={fill(home.servicesTitle)}
+            description={fill(home.servicesText) || undefined}
           />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {EXPERIENCES.map((e) => (
-              <div key={e.title} className="rounded-2xl border border-surface-border bg-white p-6 transition-shadow hover:shadow-card">
+            {home.services.map((e, i) => ({ ...e, icon: SERVICE_ICONS[i % SERVICE_ICONS.length] })).map((e, i) => (
+              <div key={i} className="rounded-2xl border border-surface-border bg-white p-6 transition-shadow hover:shadow-card">
                 <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-blueLight text-brand-blue">
                   <e.icon className="h-5 w-5" />
                 </span>
-                <h3 className="mt-4 text-base font-bold">{e.title}</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-ink-muted">{e.body}</p>
+                <h3 className="mt-4 text-base font-bold">{fill(e.title)}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-ink-muted">{fill(e.body)}</p>
               </div>
             ))}
           </div>
@@ -331,8 +321,8 @@ export default async function HomePage() {
           <Container>
             <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
               <div className="max-w-xl">
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-turquoise">Gallery</p>
-                <h2 className="mt-2.5 text-[1.75rem] text-white sm:text-4xl">The Andamans, as you will find them</h2>
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-turquoise">{fill(home.galleryEyebrow)}</p>
+                <h2 className="mt-2.5 text-[1.75rem] text-white sm:text-4xl">{fill(home.galleryTitle)}</h2>
               </div>
               <Link href="/gallery" className={buttonVariants({ variant: "onPhoto", size: "sm" })}>
                 View the gallery <ArrowRight className="h-4 w-4" />
@@ -377,7 +367,7 @@ export default async function HomePage() {
       {testimonials.length > 0 && (
         <Section className="bg-surface-muted">
           <Container>
-            <SectionHeading align="center" eyebrow="Traveller stories" title="What our guests say" />
+            <SectionHeading align="center" eyebrow={fill(home.testimonialsEyebrow)} title={fill(home.testimonialsTitle)} />
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {testimonials.map((t) => (
                 <figure key={t.id} className="flex flex-col rounded-2xl border border-surface-border bg-white p-6">
@@ -409,8 +399,8 @@ export default async function HomePage() {
           <Container className="max-w-3xl">
             <SectionHeading
               align="center"
-              eyebrow="Good to know"
-              title="Frequently asked questions"
+              eyebrow={fill(home.faqEyebrow)}
+              title={fill(home.faqTitle)}
               action={
                 <Link href="/faq" className={buttonVariants({ variant: "outline", size: "sm" })}>
                   All questions
@@ -426,10 +416,8 @@ export default async function HomePage() {
       <Section className="pb-20 pt-0">
         <Container>
           <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-brand-blue to-brand-navy px-6 py-12 text-center sm:px-12 sm:py-16">
-            <h2 className="mx-auto max-w-2xl text-2xl text-white sm:text-4xl">Tell us when you want to travel</h2>
-            <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-white/80">
-              Send us your dates and group size and we will come back with an itinerary and a written quotation — no obligation.
-            </p>
+            <h2 className="mx-auto max-w-2xl text-2xl text-white sm:text-4xl">{fill(home.ctaTitle)}</h2>
+            <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-white/80">{fill(home.ctaText)}</p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Link href="/contact" className={buttonVariants({ variant: "orange", size: "lg" })}>
                 Plan my trip <ArrowRight className="h-4 w-4" />

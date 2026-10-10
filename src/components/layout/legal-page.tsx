@@ -1,34 +1,27 @@
 import { Container, Section } from "@/components/ui/container";
 import { PageHeader } from "@/components/layout/page-header";
 import { BreadcrumbJsonLd } from "@/components/layout/structured-data";
-import { formatDate } from "@/lib/utils";
-
-export type LegalSection = { id?: string; heading: string; paragraphs: string[]; bullets?: string[] };
+import { RichBlocks } from "@/components/ui/rich-blocks";
+import { fillTokens, type LegalContent } from "@/lib/page-content";
+import type { SiteSettings } from "@/lib/site-settings";
+import { formatDate, slugify } from "@/lib/utils";
 
 /**
- * Shared layout for the policy pages.
- *
- * The copy is written from how the business actually operates and is edited
- * like any other content. The page shows the date it was last updated so a
- * reader can see how current it is.
+ * Shared layout for the policy pages. The words come from Admin → Pages; this
+ * component only lays them out and fills in the business details.
  */
 export function LegalPage({
-  title,
-  intro,
-  sections,
-  lastUpdated,
+  content,
+  settings,
   crumbLabel,
   crumbHref,
-  contactLine,
 }: {
-  title: string;
-  intro: string;
-  sections: LegalSection[];
-  lastUpdated: string;
+  content: LegalContent;
+  settings: SiteSettings;
   crumbLabel: string;
   crumbHref: string;
-  contactLine: string;
 }) {
+  const fill = (t: string) => fillTokens(t, settings);
   const crumbs = [
     { label: "Home", href: "/" },
     { label: crumbLabel, href: crumbHref },
@@ -37,36 +30,24 @@ export function LegalPage({
   return (
     <>
       <BreadcrumbJsonLd items={crumbs} />
-      <PageHeader eyebrow="Legal" title={title} description={intro} breadcrumbs={crumbs} />
+      <PageHeader eyebrow="Legal" title={fill(content.title)} description={fill(content.intro)} breadcrumbs={crumbs} />
 
       <Section>
         <Container className="max-w-3xl">
-          <p className="text-sm font-semibold text-ink-muted">Last updated {formatDate(lastUpdated)}</p>
+          {content.updatedAt && <p className="text-sm font-semibold text-ink-muted">Last updated {formatDate(content.updatedAt)}</p>}
 
           <div className="mt-8 space-y-10">
-            {sections.map((s) => (
-              <section key={s.heading} id={s.id}>
-                <h2 className="text-xl sm:text-2xl">{s.heading}</h2>
-                {s.paragraphs.map((p, i) => (
-                  <p key={i} className="mt-3 text-[15px] leading-relaxed text-ink-muted">{p}</p>
-                ))}
-                {s.bullets && s.bullets.length > 0 && (
-                  <ul className="mt-4 space-y-2">
-                    {s.bullets.map((b) => (
-                      <li key={b} className="flex gap-3 text-[15px] leading-relaxed text-ink-muted">
-                        <span aria-hidden className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-turquoise" />
-                        <span>{b}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+            {content.sections.map((s, i) => (
+              <section key={`${i}-${s.heading}`} id={s.id || slugify(s.heading.replace(/^\d+\.\s*/, ""))}>
+                <h2 className="text-xl sm:text-2xl">{fill(s.heading)}</h2>
+                <RichBlocks text={fill(s.body)} className="mt-3" />
               </section>
             ))}
           </div>
 
-          <p className="mt-12 rounded-xl bg-surface-muted p-5 text-[15px] leading-relaxed text-ink">
-            {contactLine}
-          </p>
+          {content.contactLine.trim() && (
+            <p className="mt-12 rounded-xl bg-surface-muted p-5 text-[15px] leading-relaxed text-ink">{fill(content.contactLine)}</p>
+          )}
         </Container>
       </Section>
     </>

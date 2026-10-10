@@ -8,6 +8,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { SmartImage } from "@/components/ui/smart-image";
 import { getAndamanDestinations, getGalleryItems } from "@/lib/queries";
 import { getSiteSettings } from "@/lib/site-settings";
+import { fillTokens, getPageContent } from "@/lib/page-content";
+import { RichBlocks } from "@/components/ui/rich-blocks";
 
 export const revalidate = 600;
 
@@ -20,21 +22,17 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-const PRINCIPLES = [
-  { icon: MapPin, title: "We are based here", body: "Our office is in Sri Vijaya Puram (Port Blair), not on the mainland. When a ferry is cancelled or a hotel changes a room, someone local is already on it." },
-  { icon: Wallet, title: "Written quotations, no surprises", body: "Every quotation sets out what is included and what is not, before you pay anything. If a cost changes, we tell you before it is incurred." },
-  { icon: Compass, title: "Itineraries built around you", body: "The packages on this site are a starting point. We change the nights, the islands and the hotel category to suit your group." },
-  { icon: Ship, title: "The logistics are ours, not yours", body: "Airport pick-up, ferry seats, hotel check-ins and sightseeing are booked and re-booked by us, so you are not managing it from the jetty." },
-  { icon: Headset, title: "A person on the ground", body: "You travel with a number that reaches someone on the islands, for the whole of your stay." },
-  { icon: ShieldCheck, title: "Honest about what we control", body: "We do not promise weather, sea conditions or a sailing that has not been allotted. What we promise is a plan, and a team that fixes it when it moves." },
-];
+/** Icons for the "how we work" points, reused in order for however many there are. */
+const PRINCIPLE_ICONS = [MapPin, Wallet, Compass, Ship, Headset, ShieldCheck];
 
 export default async function AboutPage() {
-  const [settings, destinations, gallery] = await Promise.all([
+  const [settings, destinations, gallery, about] = await Promise.all([
     getSiteSettings(),
     getAndamanDestinations(),
     getGalleryItems(),
+    getPageContent("about"),
   ]);
+  const fill = (t: string) => fillTokens(t, settings);
 
   const crumbs = [
     { label: "Home", href: "/" },
@@ -59,29 +57,8 @@ export default async function AboutPage() {
         <Container>
           <div className="grid gap-10 lg:grid-cols-2 lg:gap-14">
             <div>
-              <h2 className="text-2xl sm:text-3xl">An Andaman specialist, and only Andaman</h2>
-              <div className="mt-5 space-y-4 text-[15px] leading-relaxed text-ink-muted">
-                <p>
-                  {settings.brandName} plans holidays in one place: the Andaman &amp; Nicobar Islands. We do not sell
-                  Dubai, Bali or Europe. Everything we know is about getting the ferry timings right between Port Blair,
-                  Havelock and Neil, which beach is worth the drive in the late afternoon, and which hotel actually
-                  delivers what its photographs promise.
-                </p>
-                <p>
-                  That focus is the whole point. An agency selling forty destinations is reading the same listings you
-                  are. We are on the islands, so we book the sailings, confirm the rooms and send someone to the airport
-                  — and when a sailing is cancelled, we are rearranging your day before you have finished reading the
-                  message.
-                </p>
-                <p>
-                  Our packages start at {" "}
-                  <Link href="/packages" className="font-semibold text-brand-blue underline-offset-2 hover:underline">
-                    five nights and six days
-                  </Link>{" "}
-                  across all three islands, in hotel categories from budget guesthouses to 4-star resorts. Each one is a
-                  starting point we will happily rebuild around your dates, your group and your budget.
-                </p>
-              </div>
+              <h2 className="text-2xl sm:text-3xl">{fill(about.heading)}</h2>
+              <RichBlocks text={fill(about.body)} className="mt-5 space-y-4" />
 
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link href="/contact" className={buttonVariants({ variant: "orange" })}>
@@ -104,20 +81,23 @@ export default async function AboutPage() {
         <Container>
           <SectionHeading
             align="center"
-            eyebrow="How we work"
-            title="What you can expect from us"
-            description="Six things we hold ourselves to on every booking."
+            eyebrow={fill(about.principlesEyebrow)}
+            title={fill(about.principlesTitle)}
+            description={fill(about.principlesText) || undefined}
           />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {PRINCIPLES.map((p) => (
-              <div key={p.title} className="rounded-2xl border border-surface-border bg-white p-6">
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-turquoiseLight text-brand-turquoiseDark">
-                  <p.icon className="h-5 w-5" />
-                </span>
-                <h3 className="mt-4 text-base font-bold">{p.title}</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-ink-muted">{p.body}</p>
-              </div>
-            ))}
+            {about.principles.map((p, i) => {
+              const Icon = PRINCIPLE_ICONS[i % PRINCIPLE_ICONS.length];
+              return (
+                <div key={i} className="rounded-2xl border border-surface-border bg-white p-6">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-turquoiseLight text-brand-turquoiseDark">
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <h3 className="mt-4 text-base font-bold">{fill(p.title)}</h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-ink-muted">{fill(p.body)}</p>
+                </div>
+              );
+            })}
           </div>
         </Container>
       </Section>
@@ -146,10 +126,8 @@ export default async function AboutPage() {
       <Section className="pt-0">
         <Container>
           <div className="rounded-3xl bg-brand-navy px-6 py-12 text-center sm:px-12">
-            <h2 className="text-2xl text-white sm:text-3xl">Come and see them</h2>
-            <p className="mx-auto mt-3 max-w-xl text-white/80">
-              Send us your dates and we will come back with an itinerary and a written quotation.
-            </p>
+            <h2 className="text-2xl text-white sm:text-3xl">{fill(about.ctaTitle)}</h2>
+            <p className="mx-auto mt-3 max-w-xl text-white/80">{fill(about.ctaText)}</p>
             <Link href="/contact" className={buttonVariants({ variant: "orange", size: "lg", className: "mt-7" })}>
               Plan my trip <ArrowRight className="h-4 w-4" />
             </Link>

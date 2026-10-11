@@ -413,15 +413,15 @@ const IMPORTANT_INFO = [
   "Inter-island ferry timings are allotted by the operators and can be changed or cancelled at short notice because of sea conditions. Where a sailing is cancelled we rearrange the itinerary; any unavoidable supplier charge is advised to you before it is incurred.",
   "Water sports, scuba diving and sea walking are run by independently licensed operators and depend on the weather and sea conditions on the day. They are not included unless your written quotation says so.",
   "Ross Island, the Cellular Jail museum and the Light & Sound Show each have their own closing days; your confirmed itinerary states the days that apply to your dates.",
-  "Hotels are confirmed by category, not by name, until your booking is confirmed. If a named property is unavailable we substitute one of the same or a higher category.",
+  "Hotels are subject to availability. If a listed property is unavailable, a similar alternative is offered, and any change in price is told to you before it is confirmed. Check-in and check-out times follow each hotel's own policy.",
   "A valid photo ID is required for every traveller at airport check-in, the ferry jetties and hotel check-in.",
 ].join("\n");
 
 const CANCELLATION_POLICY = [
-  "Cancellation terms are confirmed in writing with your quotation before you pay anything.",
-  "Ferry tickets, air tickets and some hotel categories are non-refundable once issued; those amounts are deducted from any refund.",
-  "Cancellations made within 7 days of arrival may attract the full accommodation charge, depending on each property's own terms.",
-  "Refunds are returned to the original payment method; bank processing usually takes 5–7 working days.",
+  "Cancellations must be requested in writing and take effect once our booking team acknowledges them.",
+  "Charges follow the hotel, ferry, transport and activity operators' own terms for your booking; any non-refundable supplier cost is disclosed before you pay.",
+  "Any refund is calculated after those disclosed charges and returned to the original payment method where practicable; the processing time depends on the supplier and the bank.",
+  "See section 2 of our Terms & Conditions for the full cancellation and refund policy.",
 ].join(" ");
 
 // ─────────────────────────────────────────────────────────────
@@ -621,7 +621,7 @@ async function main() {
       { scope: "GLOBAL", question: "How do I get to the Andaman Islands?", answer: "By air to Veer Savarkar International Airport in Port Blair, with direct flights from Chennai, Kolkata, Delhi, Bengaluru and Hyderabad. Airfare is not included in our land packages — tell us your departure city and we will quote it with your holiday.", sortOrder: 2 },
       { scope: "GLOBAL", question: "Are the prices on this website final?", answer: "No. The prices shown are starting rates per person for the stated group size and occupancy. Your final quote is confirmed in writing by our team once we know your dates, group and hotel preference, and it tells you exactly what is and is not included.", sortOrder: 3 },
       { scope: "GLOBAL", question: "Can you customise an itinerary?", answer: "Yes. Every package here is a starting point. We change the number of nights, the islands, the hotel category and the sightseeing to suit you — send us an enquiry with what you have in mind.", sortOrder: 4 },
-      { scope: "GLOBAL", question: "How do I book with JST Andaman Travels?", answer: "Send an enquiry through this website, call us, or message us on WhatsApp. We reply with a written quotation and itinerary; once you are happy with it we confirm the hotels and ferries and send you the booking confirmation.", sortOrder: 5 },
+      { scope: "GLOBAL", question: "How do I book with JST Andaman Travels?", answer: "Send an enquiry through this website, call us, or message us on WhatsApp. We reply with a written quotation and itinerary. To confirm, pay the 30% advance; we then confirm the hotels and ferries in writing, and the remaining 70% is payable on arrival unless your quotation says otherwise.", sortOrder: 5 },
       { scope: "GLOBAL", question: "Is scuba diving or snorkelling included?", answer: "Snorkelling at North Bay and the glass-bottom boat at Bharatpur are the usual optional activities, and scuba diving is available at Havelock and North Bay. These are run by independently licensed operators and are paid on site unless your written quotation says otherwise.", sortOrder: 6 },
       { scope: "GLOBAL", question: "How much luggage can I take on the inter-island ferry?", answer: "Private ferry operators generally allow one check-in bag and one cabin bag per passenger, with an excess charge beyond that. The exact allowance is set by the operator and we confirm it with your ferry tickets.", sortOrder: 7 },
     ],
@@ -660,11 +660,12 @@ async function main() {
         key: SITE_SETTINGS_KEY,
         value: {
           ...DEFAULT_SITE_SETTINGS,
-          // The owner's Google rating, as supplied by the business. The link lets
+          // The Google rating of Jai Sritha Tours & Travels (4.8 from 54 reviews), as supplied by the business. The link lets
           // any visitor check it; replace it with the exact Google Business
           // profile link in Admin → Content, where the score is also edited.
           reviewScore: 4.8,
-          reviewUrl: "https://www.google.com/maps/search/?api=1&query=JST+Andaman+Travels+Sri+Vijaya+Puram",
+          reviewCount: 54,
+          reviewUrl: "https://www.google.com/maps/search/?api=1&query=Jai+Sritha+Tours+and+Travels+Port+Blair",
         },
       },
       { key: "checkout", value: { taxRatePct: 5, currency: "INR" } },

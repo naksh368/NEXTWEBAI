@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { throttle } from "@/lib/rate-limit";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { hashPassword } from "@/lib/password";
@@ -17,6 +18,8 @@ const schema = z.object({
 const OTP_TTL_MIN = 10;
 
 export async function POST(request: Request) {
+  const limited = throttle(request, "signup-otp", { limit: 5, windowMs: 15 * 60_000 });
+  if (limited) return limited;
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ ok: false, error: parsed.error.issues[0]?.message ?? "Invalid request." }, { status: 422 });

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { throttle } from "@/lib/rate-limit";
 import { z } from "zod";
 import { setAdminCookie } from "@/lib/admin-session";
 import { tryAdminLogin } from "@/lib/services/admin-login";
@@ -15,6 +16,8 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ ok: false, error: parsed.error.issues[0]?.message ?? "Invalid request." }, { status: 422 });
   }
+  const limited = throttle(request, "admin-login", { limit: 10, windowMs: 15 * 60_000, account: parsed.data.identifier });
+  if (limited) return limited;
 
   // Single source of truth for admin credentials + provisioning (collision-safe,
   // never throws). This legacy endpoint signs in directly (no OTP step).

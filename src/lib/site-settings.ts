@@ -43,7 +43,7 @@ export const siteSettingsSchema = z.object({
   logoUrl: z.string().default(BRAND_LOGO),
   logoUrlLight: z.string().default(""),
   /** Parent company shown as "Powered by …" at the foot of every page. Blank = hidden. */
-  poweredBy: z.string().default("Jai Sritha Tours and Travels"),
+  poweredBy: z.string().default("Jai Sritha Tours & Travels"),
 
   // Hero
   heroEyebrow: z.string().default("Your next island escape"),
@@ -62,7 +62,8 @@ export const siteSettingsSchema = z.object({
   // Contact
   phonePrimary: z.string().default(BRAND_PHONE_DISPLAY),
   phonePrimaryE164: z.string().default(BRAND_PHONE_E164),
-  phoneSecondary: z.string().default(""),
+  /** Further numbers, shown after the main one. Separate several with "/" — each becomes a call link. */
+  phoneSecondary: z.string().default("+91 99332 65482 / +91 94742 03128"),
   phoneSecondaryE164: z.string().default(""),
   email: z.string().default(BRAND_EMAIL),
   whatsappEnabled: z.boolean().default(true),
@@ -76,7 +77,7 @@ export const siteSettingsSchema = z.object({
     .default(
       "JST Andaman Travels plans island holidays across Port Blair, Havelock and Neil — accommodation, sightseeing, inter-island transfers and travel assistance, arranged end to end."
     ),
-  social: socialSchema.default({ facebook: "", instagram: "", youtube: "", x: "", linkedin: "" }),
+  social: socialSchema.default({ facebook: "", instagram: "https://www.instagram.com/jai_sritha_tours_travels/", youtube: "", x: "", linkedin: "" }),
 
   // Announcement bar
   announcementEnabled: z.boolean().default(true),
@@ -183,4 +184,16 @@ export function fillPrice(text: string, price: number | null): string {
     .replace(/\s*(?:from|starting at|starting from)?\s*\{price\}(?:\s*(?:per person|pp|\/person))?/gi, "")
     .replace(/^\s*[·|,-]\s*|\s*[·|,-]\s*$/g, "")
     .trim();
+}
+
+/** The extra phone numbers as call links: "+91 99332 65482 / +91 94742 03128" → two entries. */
+export function extraPhones(value: string): { display: string; href: string }[] {
+  return value
+    .split(/\s*[\/,·|]\s*/)
+    .map((display) => display.trim())
+    .filter((display) => display.replace(/\D/g, "").length >= 10)
+    .map((display) => {
+      const digits = display.replace(/\D/g, "");
+      return { display, href: `tel:+${digits.length === 10 ? `91${digits}` : digits}` };
+    });
 }

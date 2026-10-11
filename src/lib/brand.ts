@@ -39,7 +39,7 @@ export const BRAND_PHONE_DISPLAY = "+91 94342 84365";
 export const BRAND_PHONE_E164 = "919434284365";
 
 /** Public enquiry inbox. Overridden by the admin "Contact details" settings. */
-export const BRAND_EMAIL = "";
+export const BRAND_EMAIL = "jaiaditya24@gmail.com";
 
 /** Brand palette — mirrors tailwind.config.ts so non-Tailwind surfaces match. */
 export const BRAND_COLORS = {

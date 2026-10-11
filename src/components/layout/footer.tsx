@@ -2,8 +2,9 @@ import Link from "next/link";
 import { Facebook, Instagram, Youtube, Linkedin, Phone, Mail, MapPin, MessageCircle, Globe } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import { GoogleRating } from "@/components/ui/google-rating";
+import { getRatingSummary } from "@/lib/reviews";
 import { Container } from "@/components/ui/container";
-import { getSiteSettings, telLinkFor, whatsappLinkFor } from "@/lib/site-settings";
+import { extraPhones, getSiteSettings, telLinkFor, whatsappLinkFor } from "@/lib/site-settings";
 import { mapsHref } from "@/lib/brand";
 import { getFeaturedPackages, getAndamanDestinations } from "@/lib/queries";
 import { getSiteUrl } from "@/lib/utils";
@@ -27,6 +28,7 @@ export async function Footer() {
   const address = s.addressLines.filter(Boolean);
   const socials = SOCIAL.filter(({ key }) => (s.social as Record<string, string>)[key]);
   const siteUrl = getSiteUrl();
+  const rating = await getRatingSummary(s);
   const siteHost = siteUrl.replace(/^https?:\/\//, "").replace(/\/$/, "");
   // A dev or unset address is never shown to customers.
   const showSite = !/^(localhost|127\.0\.0\.1)(:|$)/.test(siteHost);
@@ -59,8 +61,13 @@ export async function Footer() {
                 <li className="flex items-center gap-3">
                   <Phone className="h-4 w-4 shrink-0 text-brand-turquoise" />
                   <a href={tel} className="font-semibold text-white hover:text-brand-turquoise">{s.phonePrimary}</a>
-                  {s.phoneSecondary && <span className="text-white/50">·</span>}
-                  {s.phoneSecondary && <span className="text-white/70">{s.phoneSecondary}</span>}
+                </li>
+              )}
+              {extraPhones(s.phoneSecondary).length > 0 && (
+                <li className="flex flex-wrap items-center gap-x-3 gap-y-1 pl-7">
+                  {extraPhones(s.phoneSecondary).map((p) => (
+                    <a key={p.href} href={p.href} className="text-white/75 hover:text-brand-turquoise">{p.display}</a>
+                  ))}
                 </li>
               )}
               {s.email && (
@@ -148,9 +155,12 @@ export async function Footer() {
                 Powered by <span className="font-bold uppercase tracking-wide text-white">{s.poweredBy}</span>
               </p>
             )}
+            {s.poweredBy && rating.score !== null && (
+              <p className="text-xs text-white/45">All ratings and reviews shown are for {s.poweredBy} on Google.</p>
+            )}
             {(s.registrationInfo || s.tagline) && <p className="text-white/45">{s.registrationInfo || s.tagline}</p>}
           </div>
-          <GoogleRating score={s.reviewScore} count={s.reviewCount} url={s.reviewUrl} tone="dark" className="self-start md:self-auto" />
+          <GoogleRating score={rating.score} count={rating.count} tone="dark" className="self-start md:self-auto" />
         </div>
       </Container>
     </footer>

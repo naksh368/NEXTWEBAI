@@ -17,6 +17,8 @@ export type TestimonialRow = {
   rating: number | null;
   photoUrl: string | null;
   packageName: string | null;
+  source: string;
+  sourceUrl: string | null;
   reviewDate: string | null;
   status: string;
   sortOrder: number;
@@ -99,6 +101,7 @@ export function TestimonialsManager({ items }: { items: TestimonialRow[] }) {
                   <span className="font-bold text-brand-navy">{t.displayName}</span>
                   {t.location && <span className="text-sm text-ink-muted">· {t.location}</span>}
                   <Pill tone={STATUS_TONE[t.status] ?? "neutral"}>{t.status.toLowerCase()}</Pill>
+                  {t.source === "GOOGLE" && <Pill tone="info">from Google</Pill>}
                   {t.rating !== null && (
                     <span className="inline-flex items-center gap-0.5 text-brand-orange" aria-label={`${t.rating} out of 5`}>
                       {Array.from({ length: 5 }).map((_, i) => (
@@ -250,6 +253,20 @@ function TestimonialForm({
           <div>
             <label className={label} htmlFor="t-order">Display order</label>
             <input id="t-order" name="sortOrder" type="number" min={0} max={9999} className={input} defaultValue={item?.sortOrder ?? 0} />
+          </div>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className={label} htmlFor="t-source">Where was it written?</label>
+            <select id="t-source" name="source" className={input} defaultValue={item?.source ?? "DIRECT"}>
+              <option value="DIRECT">Sent to us directly</option>
+              <option value="GOOGLE">Google review (copy it exactly)</option>
+            </select>
+          </div>
+          <div>
+            <label className={label} htmlFor="t-source-url">Link to the review <span className="font-normal normal-case text-ink-faint">(optional)</span></label>
+            <input id="t-source-url" name="sourceUrl" className={input} defaultValue={item?.sourceUrl ?? ""} maxLength={2000} placeholder="https://maps.app.goo.gl/…" />
           </div>
         </div>
 

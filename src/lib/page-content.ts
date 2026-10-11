@@ -121,118 +121,126 @@ export const DEFAULT_ABOUT = {
 };
 
 export const DEFAULT_TERMS = {
-  "title": "Booking terms & conditions",
-  "intro": "How {brand} quotes, confirms and runs your Andaman holiday — and what happens when the islands have other ideas.",
-  "contactLine": "Anything here you would like explained before you book? Ask us on {contact} — we would rather answer it now than after you have paid.",
+  "title": "Terms & Conditions",
+  "intro": "How JST Andaman Travels, powered by Jai Sritha Tours & Travels, quotes, confirms and runs your Andaman holiday — including cancellations, refunds and what happens when the weather or a ferry changes the plan.",
+  "contactLine": "Questions about these terms? Contact us on 9434284365 / 9933265482 / 9474203128 or jaiaditya24@gmail.com, with your booking reference if you have one.",
+  "updatedAt": "2026-10-11",
   "sections": [
     {
-      "heading": "1. These terms",
-      "body": "These terms apply to holiday packages, transfers, accommodation and sightseeing arranged by {brand}. They sit alongside your written quotation: where the two differ, your written quotation wins, because it describes your specific trip.\n\nAn enquiry is not a booking. Nothing is reserved, held or confirmed until we confirm it to you in writing and you have paid what the quotation asks for."
+      "heading": "1.1 About us",
+      "body": "JST Andaman Travels is the travel brand powered by Jai Sritha Tours & Travels, Port Blair, South Andaman, Andaman & Nicobar Islands, India.\n\nThese Terms & Conditions govern the use of our website, enquiries, tour packages and travel-booking services. By making a booking, you agree to the conditions disclosed in your quotation and booking confirmation."
     },
     {
-      "heading": "2. Prices shown on this website",
-      "body": "Every price on this site is a starting rate per person, on the stated occupancy and minimum group size. It is indicative — it tells you roughly what a trip of that shape costs, not what yours will cost.\n\nYour actual price depends on your dates, your group, the hotels available when you book and the season. We confirm it in writing before you pay anything. If a cost changes after that, we tell you before it is incurred — we do not quietly increase a confirmed price.\n\nPromotional rates apply only within the validity window shown on the package. Once that window closes the promotion no longer applies, and we will quote you the current rate."
+      "heading": "1.2 Enquiries and booking confirmation",
+      "body": "All tour packages, hotel listings, itineraries, photographs and prices displayed on the website are subject to availability and confirmation.\n\nAn enquiry or quotation does not constitute a confirmed reservation. A booking becomes confirmed only after the required advance payment, availability checks and written booking confirmation, subject to the applicable hotel, ferry and service-provider conditions.\n\nCustomers should verify the passenger details, travel dates, hotel arrangements, inclusions and final price before confirming a booking."
     },
     {
-      "heading": "3. What is and is not included",
-      "body": "Each package page lists its own inclusions and exclusions, and they differ between packages — a package without air-conditioned transport says so. Do not assume an inclusion carries across from one package to another.\n\nUnless your quotation says otherwise, airfare to and from Port Blair, meals other than the stated breakfasts, optional water sports and activities, camera fees at monuments and personal expenses are not included."
+      "heading": "1.3 Package prices and offers",
+      "body": "All prices are communicated in Indian Rupees (INR), unless otherwise stated.\n\nPackage prices may vary according to travel dates, passenger count, room occupancy, hotel availability, ferry availability, seasonal demand and the services selected.\n\nSpecial offers, including WhatsApp booking offers, apply only to the dates, passengers and services specified in the relevant quotation. An offer is not guaranteed for future bookings.\n\nAny change in the agreed package price must be communicated to the customer before confirmation of the affected services.\n\nTaxes or other charges, where applicable, will be disclosed in the quotation or invoice."
     },
     {
-      "heading": "4. Payments",
-      "body": "An advance is required to confirm hotels and ferry seats. The amount and the balance due date are stated in your quotation.\n\nYour booking is confirmed only once the advance has been received and we have sent you a written confirmation. A payment on its own does not confirm a booking if the supplier cannot deliver — in that case we offer an alternative or refund the amount in full."
+      "heading": "1.4 Payment terms",
+      "body": "Unless different terms are confirmed in writing or required by the applicable hotel or service-provider policy:\n- 30% advance payment is required at the time of booking.\n- The remaining 70% is payable on arrival.\n\nCertain hotels, ferries or other suppliers may require different payment schedules. Such requirements will be communicated before booking confirmation.\n\nCustomers must use only payment details or payment links officially provided by Jai Sritha Tours & Travels. Customers should retain their payment receipts and transaction references."
+    },
+    {
+      "heading": "1.5 Hotel accommodation",
+      "body": "For applicable Andaman packages, the proposed hotels may include:\n- Hotel Ariees Grand — Port Blair\n- El Dorado Beach Resort — Havelock Island\n- Coral Garden Resort — Neil Island\n\nThe actual hotel allocation will be stated in the confirmed itinerary or booking voucher.\n\nHotel reservations are subject to availability. If a listed property is unavailable, a similar alternative property may be offered. Any known change in price must be communicated before the alternative is confirmed.\n\nHotel facilities, room categories, check-in and check-out times, meal plans and other services are subject to the respective property's policies. Early check-out may apply; the itinerary brochure specifies a 9:00 AM check-out arrangement for the listed island stays, so customers should reconfirm timings for their particular booking."
+    },
+    {
+      "heading": "1.6 Itinerary and transportation",
+      "body": "Airport transfers, sightseeing, private AC vehicle services, entry tickets and inter-island ferry or cruise transfers are included only to the extent expressly stated in the confirmed itinerary.\n\nThe itinerary may need to be adjusted because of ferry schedules, weather, government instructions, local operating conditions or other circumstances beyond reasonable control.\n\nAirfare to and from Port Blair, optional water sports, personal expenses, additional vehicle usage and services not listed in the confirmed inclusions are excluded unless expressly agreed in writing.\n\nJai Sritha Tours & Travels will communicate material itinerary changes and available alternatives as reasonably practicable."
+    },
+    {
+      "heading": "1.7 Meals and optional services",
+      "body": "Meal arrangements are determined by the confirmed package.\n\nWhere specified in the relevant package quotation:\n- Breakfast: included in the package.\n- Lunch: ₹300 per person per day.\n- Dinner: ₹400 per person per day.\n\nLunch and dinner should be requested and confirmed in advance. The applicable meal charges and arrangements will be recorded in the booking confirmation.\n\nNo additional service, excursion or add-on is included unless it is expressly listed in the quotation or confirmation."
+    },
+    {
+      "heading": "1.8 Optional activities and water sports",
+      "body": "Activities such as scuba diving, sea walking, kayaking, parasailing, jet skiing and other water sports are not included unless expressly stated in the confirmed package.\n\nActivities are subject to availability, weather, sea conditions, safety requirements, operator rules and any applicable age, health or fitness restrictions.\n\nActivity prices must be reconfirmed before booking. Customers should follow the activity operator's safety instructions and disclose any information requested for safe participation."
     },
     {
       "id": "cancellation",
-      "heading": "5. Cancellation and refunds",
-      "body": "Cancellation terms are set out in writing in your quotation before you pay, because they depend on the hotels and ferry operators your itinerary uses. In general:\n\n- Ferry tickets, air tickets and certain discounted hotel rates are non-refundable once issued. Those amounts are deducted from any refund.\n- Cancellations close to arrival may attract the full accommodation charge, depending on each property's own terms.\n- Refunds are returned to the original payment method; bank processing usually takes 5–7 working days after we release them.\n- Where you cut a trip short after it has started, unused services are generally not refundable, because the supplier has already been paid."
+      "heading": "2.1 Cancellation requests",
+      "body": "Customers requesting cancellation must contact Jai Sritha Tours & Travels using the official contact details in section 7.\n\nCancellation requests should be submitted in writing by email or through the official booking communication channel. Customers should include their booking reference, name, travel dates and requested cancellation details.\n\nA cancellation will be treated as received when it has been acknowledged by our booking team."
     },
     {
-      "heading": "6. Ferries, weather and things outside our control",
-      "body": "Inter-island sailings are allotted by the operators and are regularly changed or cancelled at short notice because of sea conditions. This is normal in the Andamans and is not something any agency controls.\n\nIf a sailing is cancelled we rearrange your itinerary and your nights at no charge for our own time. Any unavoidable supplier cost — a changed hotel night, a re-issued ticket — is advised to you before it is incurred.\n\nWe are not liable for losses caused by weather, sea conditions, flight delays, strikes, government restrictions or other events beyond our reasonable control. We will always do what we can to get your holiday back on track."
+      "heading": "2.2 Cancellation charges",
+      "body": "Cancellation charges depend on the terms applicable to the confirmed booking, including the policies of the hotels, ferry or cruise operators, transport providers and activity operators.\n\nAny supplier cancellation charges and other applicable deductions will be assessed against the customer's confirmed booking terms. Where a supplier requires non-refundable payment, the applicable condition should be disclosed to the customer before confirmation or payment.\n\nThe cancellation conditions provided in the customer's written quotation or booking confirmation will apply, subject to applicable law."
     },
     {
-      "heading": "7. Accommodation",
-      "body": "Hotels are confirmed by category until your booking is confirmed. If a named property becomes unavailable, we substitute one of the same or a higher category and tell you.\n\nStandard check-in and check-out times apply and are set by each property, not by us. Early check-in and late check-out are requests, never guarantees."
+      "heading": "2.3 Refund processing",
+      "body": "If a refund is due, the refundable amount will be calculated after applicable and properly disclosed cancellation charges or non-refundable supplier costs.\n\nThe customer will be informed of the refund calculation and the expected processing period once the relevant supplier and payment details have been confirmed.\n\nProcessing time may depend on the hotel, ferry operator, payment provider or banking system involved. Refunds will be made using the original payment method wherever reasonably practicable, or another mutually agreed method."
     },
     {
-      "heading": "8. Activities and water sports",
-      "body": "Snorkelling, scuba diving, sea walking, glass-bottom boats and similar activities are operated by independently licensed providers. They run subject to sea conditions, operator availability and the operator's own safety rules, including health and age restrictions.\n\nUnless your quotation states otherwise, these are paid directly to the operator on site and are not part of your package price. You take part in them under the operator's terms."
+      "heading": "2.4 Changes, postponements and no-shows",
+      "body": "Requests to change travel dates, passenger names, hotels or package services are subject to availability and supplier approval.\n\nAdditional charges may apply where a supplier imposes amendment fees or where the change increases the cost of the booking. The revised cost will be communicated before the change is confirmed.\n\nFailure to arrive on time, failure to board a scheduled ferry or flight, or failure to use a booked service may result in the loss of that service or applicable supplier charges. Any refund will depend on the relevant booking terms and applicable law."
     },
     {
-      "heading": "9. Your responsibilities",
-      "body": "A holiday runs smoothly when the basics are right. Please make sure that:\n\n- Every traveller carries valid photo identification. It is required at airport check-in, at the ferry jetties and at hotel check-in.\n- The names you give us exactly match those documents. A mismatch can mean a denied boarding, and reissuing a ticket costs money.\n- You tell us about medical conditions, mobility needs, dietary requirements or anything else that affects the plan, before we book.\n- You arrive at pick-up points and jetties at the times your itinerary gives. A missed sailing is not refundable.\n- Foreign nationals check the current permit requirements for the islands before booking."
+      "heading": "2.5 Refunds for disrupted services",
+      "body": "Where a cancellation or interruption is caused by a service provider or an event beyond reasonable control, any refund or rebooking will be assessed according to the relevant supplier's terms, the services actually delivered and applicable law.\n\nNo refund amount or timeline is guaranteed until the relevant supplier's position has been established."
     },
     {
-      "heading": "10. Travel insurance",
-      "body": "Travel insurance is not included in our packages. We strongly recommend it — it is what covers you for a cancelled flight, a medical problem or a missed connection, and it is far cheaper than the alternative."
+      "heading": "3. Weather, ferry and force majeure policy",
+      "body": "Ferry and cruise operations in the Andaman & Nicobar Islands are subject to government clearance, weather conditions, sea conditions, operational restrictions and the decisions of the relevant authorities and operators.\n\nSevere weather, vessel breakdowns, government restrictions, political unrest, strikes, natural events or other circumstances beyond reasonable control may cause delays, cancellations, schedule changes or itinerary modifications.\n\nWhere available and permitted, passengers may be transferred to an alternative government-operated ferry or another suitable service.\n\nJai Sritha Tours & Travels will assist with communication and reasonable alternative arrangements. Additional expenses, rebooking and refunds will depend on supplier decisions, applicable booking terms and applicable law.\n\nCustomers are advised to allow sufficient flexibility in their travel plans, particularly when connecting with flights or other onward journeys."
     },
     {
-      "heading": "11. Complaints",
-      "body": "If something goes wrong while you are on the islands, tell us immediately — while we can still fix it. Most problems are solvable on the day and almost impossible to put right a week later.\n\nReach us on {contact}."
+      "heading": "4. Customer responsibilities",
+      "body": "Customers are responsible for:\n- Providing accurate passenger names, contact details and booking information.\n- Carrying valid government-issued photo identification and any documents required for the journey.\n- Following local laws, applicable travel restrictions, hotel rules and instructions issued by authorised personnel.\n- Arriving at airports, ferry terminals and meeting points at the times communicated.\n- Checking the final itinerary, accommodation, meal arrangements and exclusions before departure.\n- Informing the booking team promptly of any errors or requested changes.\n\nCustomers should keep copies of their booking confirmation, tickets, identification documents and payment receipts available during the trip."
     },
     {
-      "heading": "12. Liability",
-      "body": "We arrange services provided by independent hotels, transport operators and activity providers, and we select them with care. We are responsible for arranging your holiday properly; we are not liable for the acts or omissions of those independent suppliers, or for events beyond our reasonable control.\n\nNothing in these terms limits any liability that cannot be limited by law."
+      "heading": "5. Privacy",
+      "body": "How we collect, use and protect personal information is set out in our Privacy Policy, which forms part of these terms."
     },
     {
-      "heading": "13. Governing law",
-      "body": "These terms are governed by the laws of India, and the courts at Sri Vijaya Puram (Port Blair), Andaman & Nicobar Islands have jurisdiction over any dispute."
+      "heading": "6. Third-party services and website disclaimer",
+      "body": "Hotels, ferry operators, transport providers and activity operators may independently control their operating schedules, availability, facilities and service conditions.\n\nDescriptions and photographs on the website are provided to help customers understand the available travel experiences. Actual room layouts, views, facilities and operating conditions may vary by property and date.\n\nWe will take reasonable care when communicating package details, but information supplied by third-party operators may change. Material changes affecting a confirmed booking will be communicated where reasonably practicable.\n\nNothing in these terms excludes or limits a customer's rights or remedies that cannot lawfully be excluded under applicable law."
+    },
+    {
+      "heading": "7. Complaints and customer support",
+      "body": "Customers may contact us regarding bookings, cancellations, refunds, itinerary changes or privacy concerns using the following official contact details:\n- JST Andaman Travels, powered by Jai Sritha Tours & Travels\n- Port Blair, South Andaman, Andaman & Nicobar Islands, India\n- Phone: 9434284365 / 9933265482 / 9474203128\n- Email: jaiaditya24@gmail.com\n- Website: www.jstandamantravels.com\n\nPlease include your booking reference and relevant details so our team can review the matter.\n\nComplaints will be reviewed and addressed as reasonably practicable. This policy does not restrict any rights available under applicable consumer protection or other laws."
+    },
+    {
+      "heading": "8. Governing law and updates",
+      "body": "These terms are governed by the laws of India, subject to applicable consumer protection requirements and the jurisdiction of competent authorities and courts.\n\nJST Andaman Travels may update these policies when its services, supplier arrangements or legal obligations change. Updated policies will be published on the website with a revised effective date.\n\nFor a confirmed booking, any material change to the agreed services or booking terms will be handled in accordance with the booking confirmation and applicable law."
     }
-  ],
-  "updatedAt": "2026-10-09"
+  ]
 };
 
 export const DEFAULT_PRIVACY = {
-  "title": "Privacy policy",
-  "intro": "What {brand} does with the information you give us, and what you can ask us to do with it.",
-  "contactLine": "Questions about your data, or want it corrected or deleted? Contact us on {contact} and we will respond.",
+  "title": "Privacy Policy",
+  "intro": "What JST Andaman Travels, powered by Jai Sritha Tours & Travels, collects when you enquire or book, how it is used and protected, and the requests you can make.",
+  "contactLine": "Privacy questions or requests: contact us on 9434284365 / 9933265482 / 9474203128 or jaiaditya24@gmail.com.",
+  "updatedAt": "2026-10-11",
   "sections": [
     {
-      "heading": "Who we are",
-      "body": "{brand} is a travel agency arranging holidays in the Andaman & Nicobar Islands. In this policy, \"we\" and \"us\" mean {brand}, and \"you\" means anyone who uses this website or sends us an enquiry.\n\nOur office is at {address}."
+      "heading": "5.1 Information we may collect",
+      "body": "To respond to enquiries and coordinate travel services, JST Andaman Travels may collect information such as:\n- Customer name and contact details.\n- Passenger details needed for reservations.\n- Travel dates, itinerary preferences and accommodation requests.\n- Identification details where required by a supplier or applicable law.\n- Payment status, transaction references and booking history.\n- Information submitted through forms, email or other official communication channels.\n\nCustomers should provide only information reasonably required for their enquiry or booking."
     },
     {
-      "heading": "What we collect",
-      "body": "We only ask for what we need to answer your enquiry and run your holiday.\n\n- Enquiry details you type into a form: your name, phone number, optional email address, travel dates, group size, preferred package and anything you write in the message box.\n- Booking details, if you go on to book: traveller names, ages where a supplier requires them, and the identity document numbers that hotels, ferry operators and airlines are legally required to record.\n- Technical information your browser sends automatically, such as your IP address and device type. We use it to keep the site working and to stop automated form abuse.\n- We do not collect card or bank details through this website. Where an online payment is offered, it is handled by a licensed payment provider and the card data never reaches our servers."
+      "heading": "5.2 How we use information",
+      "body": "Customer information may be used to:\n- Respond to enquiries and prepare quotations.\n- Confirm and manage reservations.\n- Arrange accommodation, ferry transfers, transport and sightseeing.\n- Send booking updates and travel-related communications.\n- Process payments, cancellations and refunds.\n- Address complaints, prevent fraud and comply with legal obligations.\n\nMarketing communications, where offered, will be handled in accordance with applicable consent and communication requirements."
     },
     {
-      "heading": "Why we use it, and on what basis",
-      "body": "We use your enquiry details to prepare an itinerary and quotation and to contact you about it — by phone, WhatsApp, SMS or email, using the details you gave us. That is the whole purpose of the form, and the tick-box on it is your consent.\n\nIf you book, we use your details to make the reservations: passing the names and document numbers to the hotels, ferry operators and activity providers who need them to issue your tickets and check you in. We share the minimum each one requires, and nothing more.\n\nWe keep a record of enquiries and bookings so that we can answer later questions, handle refunds and disputes, and meet our accounting and tax obligations."
+      "heading": "5.3 Sharing of information",
+      "body": "We may share the minimum information reasonably necessary with relevant hotels, ferry and cruise operators, transport providers, activity operators, booking partners, payment providers and authorised representatives to deliver the booked services.\n\nInformation may also be disclosed to competent authorities where required by law.\n\nWe do not sell customer personal information to third parties for their own marketing purposes."
     },
     {
-      "heading": "Who we share it with",
-      "body": "We never sell your personal information, and we never pass it to anyone for their own marketing.\n\n- Travel suppliers — the hotels, ferry operators, transport providers and activity operators your itinerary requires, with only the details they need.\n- Service providers who run this website on our behalf: our hosting platform, our database host, and the email and SMS providers that deliver your confirmations. They act on our instructions and may not use your data for anything else.\n- Authorities, where the law requires it — for example the identity records that island accommodation providers must keep."
+      "heading": "5.4 Payments and security",
+      "body": "Payments may be processed through the payment method or provider specified during booking. Payment credentials should be handled through authorised and secure payment channels.\n\nWe take reasonable measures to protect the personal information we handle. However, no website, electronic communication channel or data transmission can be guaranteed to be completely secure.\n\nCustomers should not share banking passwords, payment PINs or one-time passwords with anyone claiming to represent the travel business."
     },
     {
-      "heading": "Internal notes",
-      "body": "Our team keeps internal notes against an enquiry — a reminder to call back, a note of what you are looking for. These are for our staff only. They are never shown on this website and never included in anything we send you."
+      "heading": "5.5 Data retention",
+      "body": "Personal information will be retained for as long as reasonably required for booking administration, customer support, financial records, legal obligations and dispute resolution, subject to applicable law.\n\nWhere information is no longer required, it will be securely deleted or anonymised where appropriate and legally permitted."
     },
     {
-      "heading": "How long we keep it",
-      "body": "Enquiries that do not become bookings are kept while they are still useful to you and us, and are reviewed periodically and removed when they are not.\n\nBooking records are kept for as long as our accounting and tax obligations require, and then deleted."
+      "heading": "5.6 Privacy requests",
+      "body": "Customers may contact us to request correction of inaccurate personal information, raise a privacy concern or make another request available under applicable law.\n\nWe may need to verify the customer's identity before acting on such a request."
     },
     {
-      "heading": "Your choices",
-      "body": "You can ask us at any time to:\n\n- Tell you what personal information we hold about you.\n- Correct anything that is wrong.\n- Delete your enquiry and your details, where we are not required to keep them for accounting or legal reasons.\n- Stop contacting you. Reply STOP to a message, or simply tell us, and we will close the enquiry."
-    },
-    {
-      "heading": "Security",
-      "body": "This site is served over HTTPS, enquiry data is stored in an access-controlled database, and the administration area requires an authenticated, authorised staff account — there is no public sign-up for it. No system is perfect, but we take reasonable technical and organisational measures to protect what you give us."
-    },
-    {
-      "heading": "Cookies",
-      "body": "This website uses only what it needs to function: a session cookie if you sign in, and your browser's local storage to remember things like the packages you saved. We do not run third-party advertising or cross-site tracking cookies. Where a page embeds a Google map, Google may set its own cookies under its own policy."
-    },
-    {
-      "heading": "Children",
-      "body": "This website is not aimed at children. We only hold a child's details when a parent or guardian gives them to us as part of a family booking."
-    },
-    {
-      "heading": "Changes to this policy",
-      "body": "If we change how we handle your information we will update this page and change the date at the top. Material changes will be explained here rather than made quietly."
+      "heading": "5.7 Cookies and website technologies",
+      "body": "This website uses only essential cookies and browser storage needed for it to work — for example to keep an administrator signed in and to remember the packages you saved. It does not use advertising or cross-site tracking cookies.\n\nWhere a page shows an embedded Google map, Google may set its own cookies under its own policy. Any non-essential tracking added in future will be disclosed here first."
     }
-  ],
-  "updatedAt": "2026-10-09"
+  ]
 };
 
 export const homeSchema = z.object({

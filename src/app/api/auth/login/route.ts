@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { throttle } from "@/lib/rate-limit";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { verifyPassword } from "@/lib/password";
@@ -28,6 +29,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: parsed.error.issues[0]?.message ?? "Invalid request." }, { status: 422 });
   }
   const { identifier, password } = parsed.data;
+  const limited = throttle(request, "customer-login", { limit: 10, windowMs: 15 * 60_000, account: identifier });
+  if (limited) return limited;
 
   // Admin credentials → email OTP as well (falls back to direct login if email
   // isn't configured or the send fails, so the admin is never locked out).

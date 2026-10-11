@@ -187,3 +187,23 @@
   .map-boat { animation: none; offset-distance: 35%; }
   .map-pulse, .map-smoke, .cloud-drift { animation: none; }
 }
+
+/* ── Endless reviews strip ─────────────────────────────── */
+@keyframes marquee-slide {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.marquee-track {
+  animation: marquee-slide 60s linear infinite;
+}
+.marquee:hover .marquee-track,
+.marquee:focus-within .marquee-track,
+.marquee:focus .marquee-track {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee { overflow-x: auto; scroll-snap-type: x mandatory; }
+  .marquee-track { animation: none; }
+  .marquee-track > [aria-hidden="true"], .marquee-track figure[aria-hidden="true"] { display: none; }
+  .marquee-track figure { scroll-snap-align: start; }
+}

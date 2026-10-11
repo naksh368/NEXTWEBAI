@@ -227,7 +227,7 @@ export function ContentEditor({ settings }: { settings: SiteSettings }) {
               <Field label="Phone digits for tel: links" hint="Country code and number, digits only — e.g. 919434284365.">
                 <input name="phonePrimaryE164" className={inp} defaultValue={settings.phonePrimaryE164} inputMode="numeric" />
               </Field>
-              <Field label="Second phone (optional)">
+              <Field label="More phone numbers (optional)" hint="Separate numbers with /. Each one becomes a call link.">
                 <input name="phoneSecondary" className={inp} defaultValue={settings.phoneSecondary} />
               </Field>
               <Field label="Second phone digits (optional)">

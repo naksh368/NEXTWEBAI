@@ -1029,6 +1029,8 @@ model Testimonial {
   photoUrl    String?
   reviewDate  DateTime?
   packageName String?
+  source      String    @default("DIRECT") // DIRECT | GOOGLE — where the review was written
+  sourceUrl   String? // link to the original review, e.g. on Google
   status      String    @default("PENDING") // PENDING | PUBLISHED | REJECTED
   sortOrder   Int       @default(0)
   createdById String?

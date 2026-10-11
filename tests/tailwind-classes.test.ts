@@ -26,3 +26,13 @@ test("every Tailwind opacity modifier is one Tailwind actually generates", () =>
   }
   assert.deepEqual(bad, []);
 });
+
+test("server-action files export only functions (anything else breaks every action in the file)", () => {
+  const bad: string[] = [];
+  for (const file of sourceFiles(join(__dirname, "..", "src"))) {
+    const text = readFileSync(file, "utf8");
+    if (!/^\s*["']use server["'];?/.test(text)) continue;
+    for (const m of text.matchAll(/^export\s+(const|let|var|class|enum)\s+(\w+)/gm)) bad.push(`${file}: export ${m[1]} ${m[2]}`);
+  }
+  assert.deepEqual(bad, []);
+});

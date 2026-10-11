@@ -97,3 +97,12 @@ test("the announcement {price} placeholder follows the catalogue", async () => {
   assert.equal(fillPrice(text, null), "Andaman holiday packages · 5 nights / 6 days");
   assert.equal(fillPrice("Book now", null), "Book now");
 });
+
+test("extra phone numbers each become a call link", async () => {
+  const { extraPhones } = await import("../src/lib/site-settings");
+  assert.deepEqual(extraPhones("+91 99332 65482 / 9474203128"), [
+    { display: "+91 99332 65482", href: "tel:+919933265482" },
+    { display: "9474203128", href: "tel:+919474203128" },
+  ]);
+  assert.deepEqual(extraPhones(""), []);
+});

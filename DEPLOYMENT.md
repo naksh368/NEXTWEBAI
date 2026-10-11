@@ -187,6 +187,7 @@ Put nginx or Caddy in front for TLS.
 | `AI_API_KEY`, `AI_BASE_URL`, `AI_MODEL` | optional | Turns on Asha, the AI trip planner. `AI_MODEL` may be a comma-separated fallback list (free OpenRouter models work) |
 | `SMS_PROVIDER`, `MSG91_*` | optional | SMS OTP for customer login |
 | `RAZORPAY_*` | optional | Only for online payment |
+| `GOOGLE_PLACES_API_KEY`, `GOOGLE_PLACE_ID` | optional | Live Google rating, review count and latest reviews (see `.env.example`) |
 | `CRON_SECRET` | recommended | Protects the scheduled-job endpoints; Vercel sends it automatically |
 
 **Never** commit real values. `.env` is gitignored; `.env.example` is the

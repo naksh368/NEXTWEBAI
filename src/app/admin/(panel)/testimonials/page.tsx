@@ -27,6 +27,8 @@ export default async function AdminTestimonialsPage() {
           rating: t.rating,
           photoUrl: t.photoUrl,
           packageName: t.packageName,
+          source: t.source,
+          sourceUrl: t.sourceUrl,
           reviewDate: t.reviewDate ? t.reviewDate.toISOString() : null,
           status: t.status,
           sortOrder: t.sortOrder,

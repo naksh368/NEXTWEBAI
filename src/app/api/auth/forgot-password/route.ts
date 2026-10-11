@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { throttle } from "@/lib/rate-limit";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { generateOtp, hashOtp } from "@/lib/otp";
@@ -10,6 +11,8 @@ const schema = z.object({ email: z.string().email().max(160) });
 const TTL_MIN = 15;
 
 export async function POST(request: Request) {
+  const limited = throttle(request, "forgot-password", { limit: 5, windowMs: 15 * 60_000 });
+  if (limited) return limited;
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ ok: false, error: "Enter a valid email address." }, { status: 422 });

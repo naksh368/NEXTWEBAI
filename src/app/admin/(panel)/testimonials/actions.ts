@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath, revalidateTag } from "next/cache";
+import { refreshPublicSite } from "@/lib/revalidate-site";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { authorize } from "@/lib/admin-auth";
@@ -17,7 +18,8 @@ import { writeAudit } from "@/lib/services/audit-service";
 
 type Result = { ok: true; message?: string } | { ok: false; error: string };
 
-export const TESTIMONIAL_STATUSES = ["PENDING", "PUBLISHED", "REJECTED"] as const;
+// Not exported: a "use server" file may only export async functions.
+const TESTIMONIAL_STATUSES = ["PENDING", "PUBLISHED", "REJECTED"] as const;
 
 const schema = z.object({
   displayName: z.string().min(2, "Please enter the traveller's name as it should appear.").max(120),
@@ -29,6 +31,13 @@ const schema = z.object({
     .transform((v) => (v === "" || v === undefined ? null : Number(v))),
   photoUrl: z.string().max(2000).optional().transform((v) => v?.trim() || null),
   packageName: z.string().max(200).optional().transform((v) => v?.trim() || null),
+  source: z.enum(["DIRECT", "GOOGLE"]).catch("DIRECT"),
+  sourceUrl: z
+    .string()
+    .max(2000)
+    .optional()
+    .transform((v) => v?.trim() || null)
+    .refine((v) => v === null || /^https:\/\//.test(v), "The review link must start with https://"),
   reviewDate: z
     .string()
     .optional()
@@ -49,6 +58,8 @@ function readForm(formData: FormData) {
     rating: String(formData.get("rating") ?? ""),
     photoUrl: String(formData.get("photoUrl") ?? ""),
     packageName: String(formData.get("packageName") ?? ""),
+    source: String(formData.get("source") ?? "DIRECT"),
+    sourceUrl: String(formData.get("sourceUrl") ?? ""),
     reviewDate: String(formData.get("reviewDate") ?? ""),
     status: String(formData.get("status") ?? "PENDING"),
     sortOrder: formData.get("sortOrder") ?? 0,
@@ -57,6 +68,7 @@ function readForm(formData: FormData) {
 
 function refresh() {
   revalidateTag("testimonials");
+  refreshPublicSite();
   revalidatePath("/admin/testimonials");
   revalidatePath("/");
 }

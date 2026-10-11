@@ -6,8 +6,8 @@ import { DEFAULT_SITE_SETTINGS } from "../src/lib/site-settings";
 test("an empty saved page reads as the original site text", () => {
   assert.equal(homeSchema.parse({}).planTitle, "Tell us your dates. We'll plan the rest.");
   assert.equal(aboutSchema.parse({}).principles.length, 6);
-  assert.equal(termsSchema.parse({}).sections.length, 13);
-  assert.ok(privacySchema.parse({}).sections.length >= 10);
+  assert.equal(termsSchema.parse({}).sections.length, 19);
+  assert.equal(privacySchema.parse({}).sections.length, 7);
 });
 
 test("a partly saved or damaged page keeps every other field", () => {
@@ -18,7 +18,7 @@ test("a partly saved or damaged page keeps every other field", () => {
 });
 
 test("the cancellation section keeps the anchor the footer links to", () => {
-  assert.equal(DEFAULT_TERMS.sections.find((s) => s.id === "cancellation")?.heading, "5. Cancellation and refunds");
+  assert.equal(DEFAULT_TERMS.sections.find((s) => s.id === "cancellation")?.heading, "2.1 Cancellation requests");
 });
 
 test("placeholders are filled from the business details", () => {

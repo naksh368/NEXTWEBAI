@@ -6,7 +6,7 @@ import { BreadcrumbJsonLd, TravelAgencyJsonLd } from "@/components/layout/struct
 import { TripPlanner } from "@/components/enquiry/trip-planner";
 import { Accordion } from "@/components/ui/accordion";
 import { getAndamanDestinations, getGlobalFaqs, listPackages } from "@/lib/queries";
-import { getSiteSettings, telLinkFor, whatsappLinkFor } from "@/lib/site-settings";
+import { extraPhones, getSiteSettings, telLinkFor, whatsappLinkFor } from "@/lib/site-settings";
 import { mapsHref } from "@/lib/brand";
 import { getSiteUrl } from "@/lib/utils";
 
@@ -68,9 +68,9 @@ export default async function ContactPage() {
                     <a href={tel} className="text-lg font-extrabold text-brand-navy hover:text-brand-blue">
                       {settings.phonePrimary}
                     </a>
-                    {settings.phoneSecondary && (
-                      <span className="mt-0.5 block text-sm text-ink-muted">{settings.phoneSecondary}</span>
-                    )}
+                    {extraPhones(settings.phoneSecondary).map((p) => (
+                      <a key={p.href} href={p.href} className="mt-0.5 block text-sm font-semibold text-ink-muted hover:text-brand-blue">{p.display}</a>
+                    ))}
                   </ContactRow>
                 )}
 

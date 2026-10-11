@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { throttle } from "@/lib/rate-limit";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { verifyOtp } from "@/lib/otp";
@@ -16,6 +17,8 @@ const schema = z.object({
 const MAX_ATTEMPTS = 5;
 
 export async function POST(request: Request) {
+  const limited = throttle(request, "reset-password", { limit: 10, windowMs: 15 * 60_000 });
+  if (limited) return limited;
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ ok: false, error: parsed.error.issues[0]?.message ?? "Invalid request." }, { status: 422 });

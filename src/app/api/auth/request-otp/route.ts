@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { throttle } from "@/lib/rate-limit";
 import { z } from "zod";
 import { requestEmailOtp } from "@/lib/services/otp-service";
 
@@ -7,6 +8,8 @@ export const runtime = "nodejs";
 const schema = z.object({ email: z.string().email() });
 
 export async function POST(request: Request) {
+  const limited = throttle(request, "request-otp", { limit: 5, windowMs: 15 * 60_000 });
+  if (limited) return limited;
   const body = await request.json().catch(() => null);
   const parsed = schema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ ok: false, error: "Enter a valid email address." }, { status: 422 });

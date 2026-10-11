@@ -185,6 +185,17 @@ allowed to invent a price. Each decision is explained beside the form. Saving
 creates a **draft** that borrows photos and policies from your existing package
 of the same tier — nothing is published until you publish it.
 
+### Google reviews
+
+The homepage reviews section shows the Google rating, a "Read all reviews on
+Google" button and the reviews themselves gliding past endlessly (pausing on
+hover; a swipeable row for visitors who prefer reduced motion). Reviews come
+from two places: live from Google when `GOOGLE_PLACES_API_KEY` and
+`GOOGLE_PLACE_ID` are set (the rating and count then update themselves), and
+from **Admin → Testimonials**, where any review can be added and marked
+"Google review". Reviews are never invented: with neither source, only the
+rating badge and the link appear.
+
 ### Editing pages, Terms and FAQs
 
 **Admin → Pages & Terms** edits the words on the homepage sections, About us,

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {
   ArrowRight, Ship, Palmtree, Waves, Compass, BedDouble, Headset, CalendarCheck,
-  Camera, Star, MapPin, Quote, Phone, MessageCircle, ShieldCheck, Sparkles,
+  Camera, MapPin, Phone, MessageCircle, ShieldCheck, Sparkles,
 } from "lucide-react";
 import { Container, Section, SectionHeading } from "@/components/ui/container";
 import { buttonVariants } from "@/components/ui/button";
@@ -12,12 +12,14 @@ import { PackageCard } from "@/components/package/package-card";
 import { TripPlanner } from "@/components/enquiry/trip-planner";
 import { RecentlyViewedRail } from "@/components/package/recently-viewed";
 import { GoogleRating } from "@/components/ui/google-rating";
+import { ReviewsMarquee } from "@/components/home/reviews-marquee";
+import { getReviews } from "@/lib/reviews";
 import { fillTokens, getPageContent } from "@/lib/page-content";
 import { IslandMap } from "@/components/home/island-map";
 import { AskAshaButton } from "@/components/ai/ask-asha-button";
 import {
   getAndamanDestinations, getFeaturedPackages, getGlobalFaqs,
-  getPublishedTestimonials, getGalleryItems, listPackages,
+  getGalleryItems, listPackages,
 } from "@/lib/queries";
 import { getSiteSettings, promoIsActive, telLinkFor, whatsappLinkFor } from "@/lib/site-settings";
 import { formatINR, formatDate } from "@/lib/utils";
@@ -50,17 +52,16 @@ const SERVICE_ICONS = [Waves, Compass, Palmtree, BedDouble, Camera, Ship];
 const FEATURE_ICONS = [CalendarCheck, BedDouble, Compass, Ship];
 
 export default async function HomePage() {
-  const [settings, destinations, featured, allPackages, faqs, testimonials, gallery] = await Promise.all([
+  const [settings, destinations, featured, allPackages, faqs, gallery] = await Promise.all([
     getSiteSettings(),
     getAndamanDestinations(),
     getFeaturedPackages(6),
     listPackages({ page: 1, sort: "price-asc" }),
     getGlobalFaqs(),
-    getPublishedTestimonials(6),
     getGalleryItems(),
   ]);
 
-  const home = await getPageContent("home");
+  const [home, reviews] = await Promise.all([getPageContent("home"), getReviews(settings)]);
   const fill = (t: string) => fillTokens(t, settings);
   const packages = featured.length ? featured : allPackages.items;
   const planner = allPackages.items.map((p) => ({ slug: p.slug, name: p.name }));
@@ -103,9 +104,9 @@ export default async function HomePage() {
                   <Sparkles className="h-4 w-4 text-brand-orange" /> From <span className="tabular">{formatINR(fromPrice)}</span> pp
                 </li>
               )}
-              {settings.reviewScore !== null && (
+              {reviews.score !== null && (
                 <li>
-                  <GoogleRating score={settings.reviewScore} count={settings.reviewCount} url={settings.reviewUrl} size="chip" />
+                  <GoogleRating score={reviews.score} count={reviews.count} size="chip" />
                 </li>
               )}
               <li className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1.5 ring-1 ring-surface-border">
@@ -188,10 +189,10 @@ export default async function HomePage() {
         </Container>
 
         {/* Social proof renders only for figures an administrator actually entered. */}
-        {(settings.reviewScore !== null || settings.travellersServed !== null || settings.registrationInfo) && (
+        {(reviews.score !== null || settings.travellersServed !== null || settings.registrationInfo) && (
           <div className="border-t border-surface-border bg-surface-muted">
             <Container className="flex flex-wrap items-center justify-center gap-x-10 gap-y-3 py-4 text-sm font-semibold text-ink">
-              <GoogleRating score={settings.reviewScore} count={settings.reviewCount} url={settings.reviewUrl} />
+              <GoogleRating score={reviews.score} count={reviews.count} />
               {settings.travellersServed !== null && (
                 <span className="inline-flex items-center gap-2">
                   <Palmtree className="h-4 w-4 text-brand-turquoiseDark" />
@@ -363,32 +364,25 @@ export default async function HomePage() {
         </Container>
       </Section>
 
-      {/* ── TESTIMONIALS — hidden entirely until real ones are published ── */}
-      {testimonials.length > 0 && (
-        <Section className="bg-surface-muted">
+      {/* ── REVIEWS — the Google rating, a link to every review, and the
+          reviews themselves gliding past. Nothing shows until there is a real
+          rating or a published review. */}
+      {(reviews.score !== null || reviews.items.length > 0) && (
+        <Section id="reviews" className="overflow-hidden bg-surface-muted">
           <Container>
             <SectionHeading align="center" eyebrow={fill(home.testimonialsEyebrow)} title={fill(home.testimonialsTitle)} />
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {testimonials.map((t) => (
-                <figure key={t.id} className="flex flex-col rounded-2xl border border-surface-border bg-white p-6">
-                  <Quote className="h-7 w-7 shrink-0 text-brand-turquoise" aria-hidden />
-                  {t.rating !== null && (
-                    <div className="mt-3 flex gap-0.5" aria-label={`${t.rating} out of 5`}>
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star key={i} className={i < t.rating! ? "h-4 w-4 fill-brand-orange text-brand-orange" : "h-4 w-4 text-surface-border"} />
-                      ))}
-                    </div>
-                  )}
-                  <blockquote className="mt-3 flex-1 text-sm leading-relaxed text-ink-muted">{t.body}</blockquote>
-                  <figcaption className="mt-5 border-t border-surface-border pt-4">
-                    <p className="text-sm font-bold text-brand-navy">{t.displayName}</p>
-                    <p className="text-xs text-ink-muted">
-                      {[t.location, t.packageName, t.reviewDate ? formatDate(t.reviewDate) : null].filter(Boolean).join(" · ")}
-                    </p>
-                  </figcaption>
-                </figure>
-              ))}
+            <div className="-mt-2 mb-8 flex flex-wrap items-center justify-center gap-4">
+              <GoogleRating score={reviews.score} count={reviews.count} />
+              {reviews.url && (
+                <a href={reviews.url} target="_blank" rel="noopener noreferrer" className={buttonVariants({ variant: "outline" })}>
+                  {reviews.count ? `Read all ${reviews.count} reviews on Google` : "Read our reviews on Google"} <ArrowRight className="h-4 w-4" />
+                </a>
+              )}
             </div>
+            {reviews.items.length > 0 && <ReviewsMarquee items={reviews.items} />}
+            {settings.poweredBy && reviews.score !== null && (
+              <p className="mt-6 text-center text-xs text-ink-muted">Ratings and reviews are for {settings.poweredBy} on Google.</p>
+            )}
           </Container>
         </Section>
       )}

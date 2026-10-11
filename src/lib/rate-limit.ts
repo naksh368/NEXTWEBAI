@@ -54,3 +54,20 @@ export function clientIp(request: Request): string {
     "unknown"
   );
 }
+
+/**
+ * Throttle a sensitive endpoint (sign-in, one-time codes). Returns a 429
+ * response to send back when the caller is over the limit, else null.
+ * Counted per address and, when given, per account — so one address cannot
+ * try many accounts and many addresses cannot hammer one account.
+ */
+export function throttle(request: Request, name: string, opts: { limit: number; windowMs: number; account?: string }): Response | null {
+  const checks = [hit(`${name}:ip:${clientIp(request)}`, opts.limit, opts.windowMs)];
+  if (opts.account) checks.push(hit(`${name}:acct:${opts.account.trim().toLowerCase()}`, opts.limit, opts.windowMs));
+  const blocked = checks.find((c) => !c.ok);
+  if (!blocked) return null;
+  return new Response(JSON.stringify({ ok: false, error: "Too many attempts. Please wait a few minutes and try again." }), {
+    status: 429,
+    headers: { "Content-Type": "application/json", "Retry-After": String(blocked.retryAfterSeconds) },
+  });
+}

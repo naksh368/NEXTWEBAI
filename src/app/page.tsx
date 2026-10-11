@@ -381,7 +381,9 @@ export default async function HomePage() {
             </div>
             {reviews.items.length > 0 && <ReviewsMarquee items={reviews.items} />}
             {settings.poweredBy && reviews.score !== null && (
-              <p className="mt-6 text-center text-xs text-ink-muted">Ratings and reviews are for {settings.poweredBy} on Google.</p>
+              <p className="mx-auto mt-6 max-w-xl text-center text-xs leading-relaxed text-ink-muted">
+                {settings.brandName} is powered by <b className="font-semibold text-ink">{settings.poweredBy}</b>. All ratings and reviews shown are from the Google Business Profile of {settings.poweredBy}.
+              </p>
             )}
           </Container>
         </Section>

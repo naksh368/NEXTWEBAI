@@ -7,8 +7,8 @@
  * website content settings.
  *
  * Honesty rules this seed follows:
- *  · No testimonials and no reviews are seeded. Those sections stay hidden
- *    until the agency publishes real ones from the admin panel.
+ *  · The only reviews seeded are the business's real Google reviews, copied
+ *    by the owner from its Google Business Profile (prisma/google-reviews.ts).
  *  · No review score, traveller count or registration number is invented —
  *    those settings start empty and the trust strip hides each missing figure.
  *  · Prices are the agency's own advertised starting rates and are flagged as
@@ -18,6 +18,7 @@
  *    photography, replaceable from Admin → Media Library / Gallery.
  */
 import { PrismaClient } from "@prisma/client";
+import { GOOGLE_REVIEWS } from "./google-reviews";
 import { ADMIN_ROLES } from "../src/lib/constants";
 import { DEFAULT_SITE_SETTINGS, SITE_SETTINGS_KEY } from "../src/lib/site-settings";
 
@@ -670,6 +671,13 @@ async function main() {
       },
       { key: "checkout", value: { taxRatePct: 5, currency: "INR" } },
     ],
+  });
+
+  // Real Google reviews supplied by the business (name and text only).
+  await db.testimonial.createMany({
+    data: GOOGLE_REVIEWS.map((r, i) => ({
+      displayName: r.name, body: r.text, rating: null, source: "GOOGLE", status: "PUBLISHED", sortOrder: i,
+    })),
   });
 
   console.log("✅ Seed complete:", {

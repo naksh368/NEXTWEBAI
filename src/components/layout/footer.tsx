@@ -156,7 +156,7 @@ export async function Footer() {
               </p>
             )}
             {s.poweredBy && rating.score !== null && (
-              <p className="text-xs text-white/45">All ratings and reviews shown are for {s.poweredBy} on Google.</p>
+              <p className="text-xs text-white/45">All ratings and reviews shown are from the Google Business Profile of {s.poweredBy}.</p>
             )}
             {(s.registrationInfo || s.tagline) && <p className="text-white/45">{s.registrationInfo || s.tagline}</p>}
           </div>

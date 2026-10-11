@@ -5,5 +5,13 @@
   command = "sh scripts/build.sh"
   publish = ".next"
 
+[build.environment]
+  # Netlify's secret scanner fails the build when an environment variable's
+  # value appears in the site. These four are not secrets — the admin email is
+  # also the public business email shown on the Contact page and in the Terms,
+  # and the AI address, model and site URL are public settings. Real secrets
+  # (ADMIN_PASSWORD, AUTH_SECRET, AI_API_KEY, DATABASE_URL) are still scanned.
+  SECRETS_SCAN_OMIT_KEYS = "ADMIN_EMAIL,AI_BASE_URL,AI_MODEL,NEXT_PUBLIC_SITE_URL"
+
 [[plugins]]
   package = "@netlify/plugin-nextjs"

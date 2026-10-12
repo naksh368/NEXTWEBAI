@@ -553,7 +553,11 @@ async function main() {
         // Honest status: the rate is the agency's advertised starting price and
         // is re-confirmed in writing before any booking. Availability is never
         // claimed in real time — every booking is confirmed by the team.
-        pricingStatus: "INDICATIVE",
+        // Prices are shown on request for now — the public UI renders "On
+        // request" and never publishes a figure. basePrice is kept only as
+        // the team's internal reference; set a tier's pricingStatus back to
+        // "INDICATIVE" in Admin → Packages to advertise its starting rate.
+        pricingStatus: "PRICE_REVIEW_REQUIRED",
         availabilityStatus: "ON_REQUEST",
         category: p.theme, bestFor: `Groups of ${MIN_PAX} or more`,
         departureCities: ["Chennai", "Kolkata", "Delhi", "Bengaluru", "Hyderabad", "Visakhapatnam"],
@@ -566,7 +570,7 @@ async function main() {
         visaInfo: "Domestic travel — no visa required for Indian nationals. Foreign nationals should check the current permit rules before booking.",
         insuranceInfo: "Travel insurance is not included. We can suggest a provider on request.",
         seoTitle: `${p.name} — ${NIGHTS}N/${DAYS}D Andaman Tour | JST Andaman Travels`,
-        seoDescription: `${p.name}: a ${NIGHTS} night, ${DAYS} day Andaman holiday across Port Blair, Havelock and Neil with ${p.hotelCategory.toLowerCase()}, sightseeing and island transfers. From ₹${p.price.toLocaleString("en-IN")} per person, minimum ${MIN_PAX} travellers.`,
+        seoDescription: `${p.name}: a ${NIGHTS} night, ${DAYS} day Andaman holiday across Port Blair, Havelock and Neil with ${p.hotelCategory.toLowerCase()}, sightseeing and island transfers. Price on request — send an enquiry for a written quotation. Minimum ${MIN_PAX} travellers.`,
         highlights: [
           "Cellular Jail and the evening Light & Sound Show",
           "Ross Island and the North Bay reef",

@@ -1039,3 +1039,25 @@ model Testimonial {
 
   @@index([status, sortOrder])
 }
+
+// ─────────────────────────────────────────────────────────────
+// WEBSITE ANALYTICS
+// ─────────────────────────────────────────────────────────────
+
+/// One recorded visit to a public page of the website.
+///
+/// Privacy-friendly: no IP address, no personal data and no third-party
+/// tracker is stored. `visitor` is a random, first-party, anonymous id kept in
+/// a cookie so the same browser can be counted once ("unique visitors") without
+/// identifying anyone. Admin pages are never recorded. Powers the Website
+/// traffic panel in Admin → Analytics ("how many people came to the website").
+model PageView {
+  id        String   @id @default(cuid())
+  path      String // the public page visited, e.g. "/packages"
+  visitor   String // anonymous first-party id (cookie), for unique-visitor counts
+  referrer  String? // where the visit came from, when the browser shares it
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([visitor])
+}

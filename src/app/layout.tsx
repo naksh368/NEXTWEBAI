@@ -6,6 +6,7 @@ import { HeaderWrapper } from "@/components/layout/header-wrapper";
 import { Footer } from "@/components/layout/footer";
 import { FloatingActionsWrapper } from "@/components/layout/floating-actions-wrapper";
 import { HideOnAdmin } from "@/components/layout/hide-on-admin";
+import { VisitorTracker } from "@/components/layout/visitor-tracker";
 import { getSiteUrl } from "@/lib/utils";
 import { getSiteSettings } from "@/lib/site-settings";
 import { BRAND_COLORS } from "@/lib/brand";
@@ -73,6 +74,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </main>
         <HideOnAdmin><Footer /></HideOnAdmin>
         <HideOnAdmin><FloatingActionsWrapper /></HideOnAdmin>
+        <VisitorTracker />
       </body>
     </html>
   );

@@ -9,10 +9,12 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 // Accept the database URL under any of the names hosts provide (manual
-// DATABASE_URL, Railway, or Vercel Postgres' POSTGRES_* variables), so the app
-// connects without hand-setting a specific variable name.
+// DATABASE_URL, Railway, Vercel Postgres' POSTGRES_* variables, or Netlify DB's
+// NETLIFY_DATABASE_URL), so the app connects without hand-setting a name.
 const databaseUrl =
   process.env.DATABASE_URL ||
+  process.env.NETLIFY_DATABASE_URL ||
+  process.env.NETLIFY_DATABASE_URL_UNPOOLED ||
   process.env.POSTGRES_URL_NON_POOLING ||
   process.env.DATABASE_URL_UNPOOLED ||
   process.env.POSTGRES_URL ||

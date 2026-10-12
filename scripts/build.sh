@@ -11,12 +11,17 @@ npm install --include=dev --no-audit --no-fund --legacy-peer-deps
 # Accept the DB connection under any host's variable name. Prefer a DIRECT
 # (non-pooled) connection first, because `prisma db push` fails over a pooler.
 # (Vercel Storage provides both; Railway/Neon usually just DATABASE_URL.)
-DATABASE_URL="${POSTGRES_URL_NON_POOLING:-${DATABASE_URL_UNPOOLED:-${DATABASE_URL:-${POSTGRES_URL:-$POSTGRES_PRISMA_URL}}}}"
+# Netlify DB (Neon) provides NETLIFY_DATABASE_URL / NETLIFY_DATABASE_URL_UNPOOLED.
+DATABASE_URL="${POSTGRES_URL_NON_POOLING:-${DATABASE_URL_UNPOOLED:-${NETLIFY_DATABASE_URL_UNPOOLED:-${DATABASE_URL:-${NETLIFY_DATABASE_URL:-${POSTGRES_URL:-$POSTGRES_PRISMA_URL}}}}}}"
 export DATABASE_URL
 
 if [ -z "$DATABASE_URL" ]; then
-  echo "✖ No database found. Attach a Postgres database (Railway PostgreSQL plugin,"
-  echo "  or Vercel Storage), or set DATABASE_URL, then redeploy."
+  echo "✖ No database found — the build needs a PostgreSQL database."
+  echo "  Netlify: Site configuration → Environment variables → add DATABASE_URL"
+  echo "           (your Neon or Supabase connection string), or add Netlify DB."
+  echo "  Vercel:  Storage → Create Database → Neon → Connect."
+  echo "  Railway: add a PostgreSQL service and set DATABASE_URL=\${{Postgres.DATABASE_URL}}."
+  echo "  Then redeploy."
   exit 1
 fi
 

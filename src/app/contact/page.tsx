@@ -5,7 +5,8 @@ import { PageHeader } from "@/components/layout/page-header";
 import { BreadcrumbJsonLd, TravelAgencyJsonLd } from "@/components/layout/structured-data";
 import { TripPlanner } from "@/components/enquiry/trip-planner";
 import { Accordion } from "@/components/ui/accordion";
-import { getAndamanDestinations, getGlobalFaqs, listPackages } from "@/lib/queries";
+import { getGlobalFaqs, listPackages } from "@/lib/queries";
+import { getPageContent } from "@/lib/page-content";
 import { extraPhones, getSiteSettings, telLinkFor, whatsappLinkFor } from "@/lib/site-settings";
 import { mapsHref } from "@/lib/brand";
 import { getSiteUrl } from "@/lib/utils";
@@ -22,9 +23,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function ContactPage() {
-  const [settings, destinations, packages, faqs] = await Promise.all([
+  const [settings, plannerForm, packages, faqs] = await Promise.all([
     getSiteSettings(),
-    getAndamanDestinations(),
+    getPageContent("planner"),
     listPackages({ page: 1, sort: "price-asc" }),
     getGlobalFaqs(),
   ]);
@@ -138,7 +139,7 @@ export default async function ContactPage() {
             {/* Enquiry form */}
             <div>
               <TripPlanner
-                destinations={["Andaman Islands", ...destinations.map((d) => d.name)]}
+                content={plannerForm}
                 packages={packages.items.map((p) => ({ slug: p.slug, name: p.name }))}
                 className="lg:sticky lg:top-24"
               />

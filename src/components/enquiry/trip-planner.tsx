@@ -5,6 +5,7 @@ import { CalendarDays, Loader2, MapPin, Send, Users, CheckCircle2, Copy, Check }
 import { Input, Select, Field } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { PlannerContent } from "@/lib/page-content";
 
 /**
  * The hero trip-enquiry panel.
@@ -19,16 +20,19 @@ export type PlannerPackage = { slug: string; name: string };
 const TODAY = () => new Date().toISOString().slice(0, 10);
 
 export function TripPlanner({
-  destinations,
+  content,
   packages,
   className,
   compact,
 }: {
-  destinations: string[];
+  /** Texts and option lists, edited in Admin → Pages & Terms → Trip form. */
+  content: PlannerContent;
   packages: PlannerPackage[];
   className?: string;
   compact?: boolean;
 }) {
+  const destinations = content.destinations.filter((d) => d.trim());
+  const travellerOptions = Array.from({ length: Math.max(1, content.maxTravellers) }, (_, i) => i + 1);
   const uid = useId();
   const [state, setState] = useState<"idle" | "sending" | "sent">("idle");
   const [reference, setReference] = useState<string | null>(null);
@@ -36,10 +40,11 @@ export function TripPlanner({
   const [copied, setCopied] = useState(false);
 
   const [form, setForm] = useState({
-    destination: destinations[0] ?? "Andaman Islands",
+    // Nothing is pre-chosen: the visitor picks, so the enquiry says what they meant.
+    destination: "",
     startDate: "",
     endDate: "",
-    travellers: "4",
+    travellers: "",
     packageSlug: "",
     fullName: "",
     phone: "",
@@ -72,7 +77,7 @@ export function TripPlanner({
           fullName: form.fullName.trim(),
           phone: form.phone.trim(),
           email: form.email.trim() || undefined,
-          destination: form.destination,
+          destination: form.destination || undefined,
           packageSlug: chosen?.slug,
           packageName: chosen?.name,
           travelDate: [form.startDate, form.endDate].filter(Boolean).join(" to ") || undefined,
@@ -80,7 +85,7 @@ export function TripPlanner({
           adults: Number(form.travellers) || undefined,
           consent: true,
           source: "WEBSITE",
-          message: `Trip planner — ${form.destination}${form.startDate ? `, from ${form.startDate}` : ""}${form.endDate ? ` to ${form.endDate}` : ""}.`,
+          message: `Trip planner — ${form.destination || "destination not chosen yet"}${form.startDate ? `, from ${form.startDate}` : ""}${form.endDate ? ` to ${form.endDate}` : ""}.`,
         }),
       });
       const data = (await res.json().catch(() => null)) as { ok?: boolean; reference?: string; error?: string } | null;
@@ -151,25 +156,24 @@ export function TripPlanner({
       aria-labelledby={`${uid}-title`}
     >
       <div className="mb-4">
-        <h2 id={`${uid}-title`} className="text-lg font-extrabold text-brand-navy">Plan my trip</h2>
-        <p className="mt-0.5 text-sm text-ink-muted">
-          Tell us the basics and we will send you an itinerary and a written quotation.
-        </p>
+        <h2 id={`${uid}-title`} className="text-lg font-extrabold text-brand-navy">{content.title}</h2>
+        {content.subtitle && <p className="mt-0.5 text-sm text-ink-muted">{content.subtitle}</p>}
       </div>
 
       <div className={cn("grid gap-3.5", compact ? "sm:grid-cols-2" : "sm:grid-cols-2")}>
-        <Field label="Destination" htmlFor={`${uid}-dest`}>
+        <Field label={content.destinationLabel} htmlFor={`${uid}-dest`}>
           <div className="relative">
             <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-faint" />
-            <Select id={`${uid}-dest`} className="pl-9" value={form.destination} onChange={(e) => set("destination", e.target.value)}>
+            <Select id={`${uid}-dest`} className={cn("pl-9", !form.destination && "text-ink-faint")} value={form.destination} onChange={(e) => set("destination", e.target.value)}>
+              <option value="">{content.destinationPlaceholder}</option>
               {destinations.map((d) => (
-                <option key={d} value={d}>{d}</option>
+                <option key={d} value={d} className="text-ink">{d}</option>
               ))}
             </Select>
           </div>
         </Field>
 
-        <Field label="Preferred package" htmlFor={`${uid}-pkg`}>
+        <Field label={content.packageLabel} htmlFor={`${uid}-pkg`}>
           <Select id={`${uid}-pkg`} value={form.packageSlug} onChange={(e) => set("packageSlug", e.target.value)}>
             <option value="">Not sure yet</option>
             {packages.map((p) => (
@@ -192,12 +196,13 @@ export function TripPlanner({
           </div>
         </Field>
 
-        <Field label="Travellers" htmlFor={`${uid}-pax`}>
+        <Field label={content.travellersLabel} htmlFor={`${uid}-pax`}>
           <div className="relative">
             <Users className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-faint" />
-            <Select id={`${uid}-pax`} className="pl-9" value={form.travellers} onChange={(e) => set("travellers", e.target.value)}>
-              {[1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 15, 20].map((n) => (
-                <option key={n} value={n}>{n} {n === 1 ? "traveller" : "travellers"}</option>
+            <Select id={`${uid}-pax`} className={cn("pl-9", !form.travellers && "text-ink-faint")} value={form.travellers} onChange={(e) => set("travellers", e.target.value)}>
+              <option value="">{content.travellersPlaceholder}</option>
+              {travellerOptions.map((n) => (
+                <option key={n} value={n} className="text-ink">{n} {n === 1 ? "traveller" : "travellers"}</option>
               ))}
             </Select>
           </div>
@@ -239,12 +244,10 @@ export function TripPlanner({
       )}
 
       <Button type="submit" variant="orange" size="lg" className="mt-4 w-full" loading={state === "sending"}>
-        {state === "sending" ? <>Sending<Loader2 className="h-4 w-4 animate-spin" /></> : <>Send enquiry <Send className="h-4 w-4" /></>}
+        {state === "sending" ? <>Sending<Loader2 className="h-4 w-4 animate-spin" /></> : <>{content.submitLabel} <Send className="h-4 w-4" /></>}
       </Button>
 
-      <p className="mt-2.5 text-center text-xs text-ink-muted">
-        We reply with an itinerary and a written quotation. Sending an enquiry does not book or hold anything.
-      </p>
+      {content.footnote && <p className="mt-2.5 text-center text-xs text-ink-muted">{content.footnote}</p>}
     </form>
   );
 }

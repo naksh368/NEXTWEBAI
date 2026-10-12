@@ -61,11 +61,10 @@ export default async function HomePage() {
     getGalleryItems(),
   ]);
 
-  const [home, reviews] = await Promise.all([getPageContent("home"), getReviews(settings)]);
+  const [home, reviews, plannerForm] = await Promise.all([getPageContent("home"), getReviews(settings), getPageContent("planner")]);
   const fill = (t: string) => fillTokens(t, settings);
   const packages = featured.length ? featured : allPackages.items;
   const planner = allPackages.items.map((p) => ({ slug: p.slug, name: p.name }));
-  const plannerPlaces = ["Andaman Islands", ...destinations.map((d) => d.name)];
 
   const priced = allPackages.items.filter((p) => p.pricingStatus !== "PRICE_REVIEW_REQUIRED");
   const fromPrice = priced.length ? Math.min(...priced.map((p) => p.basePrice)) : null;
@@ -168,7 +167,7 @@ export default async function HomePage() {
               )}
             </div>
           </div>
-          <TripPlanner destinations={plannerPlaces} packages={planner} />
+          <TripPlanner content={plannerForm} packages={planner} />
         </Container>
       </section>
 

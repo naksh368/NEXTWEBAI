@@ -243,6 +243,48 @@ export const DEFAULT_PRIVACY = {
   ]
 };
 
+export const DEFAULT_PLANNER = {
+  title: "Plan my trip",
+  subtitle: "Tell us the basics and we will send you an itinerary and a written quotation.",
+  destinationLabel: "Destination",
+  destinationPlaceholder: "Select a destination",
+  destinations: [
+    "Port Blair",
+    "Havelock Island (Swaraj Dweep)",
+    "Neil Island (Shaheed Dweep)",
+    "Ross & North Bay",
+    "Baratang Island",
+    "Rangat",
+    "Long Island",
+    "Diglipur Island",
+    "Ross & Smith Island",
+    "Little Andaman",
+    "Barren Island",
+    "Not sure yet — help me choose",
+  ],
+  travellersLabel: "Travellers",
+  travellersPlaceholder: "Select travellers",
+  maxTravellers: 30,
+  packageLabel: "Preferred package",
+  submitLabel: "Send enquiry",
+  footnote: "We reply with an itinerary and a written quotation. Sending an enquiry does not book or hold anything.",
+};
+
+export const plannerSchema = z.object({
+  title: text(DEFAULT_PLANNER.title, 80),
+  subtitle: text(DEFAULT_PLANNER.subtitle, 300),
+  destinationLabel: text(DEFAULT_PLANNER.destinationLabel, 40),
+  destinationPlaceholder: text(DEFAULT_PLANNER.destinationPlaceholder, 60),
+  destinations: z.array(z.string().max(80)).max(40).catch(DEFAULT_PLANNER.destinations).default(DEFAULT_PLANNER.destinations),
+  travellersLabel: text(DEFAULT_PLANNER.travellersLabel, 40),
+  travellersPlaceholder: text(DEFAULT_PLANNER.travellersPlaceholder, 60),
+  maxTravellers: z.number().int().min(1).max(200).catch(DEFAULT_PLANNER.maxTravellers).default(DEFAULT_PLANNER.maxTravellers),
+  packageLabel: text(DEFAULT_PLANNER.packageLabel, 40),
+  submitLabel: text(DEFAULT_PLANNER.submitLabel, 40),
+  footnote: text(DEFAULT_PLANNER.footnote, 300),
+});
+export type PlannerContent = z.infer<typeof plannerSchema>;
+
 export const homeSchema = z.object({
   planEyebrow: text(DEFAULT_HOME.planEyebrow, 60),
   planTitle: text(DEFAULT_HOME.planTitle, 120),
@@ -295,7 +337,7 @@ const legalSchema = (d: typeof DEFAULT_TERMS) =>
 export const termsSchema = legalSchema(DEFAULT_TERMS);
 export const privacySchema = legalSchema(DEFAULT_PRIVACY);
 
-export const PAGE_SCHEMAS = { home: homeSchema, about: aboutSchema, terms: termsSchema, privacy: privacySchema } as const;
+export const PAGE_SCHEMAS = { home: homeSchema, about: aboutSchema, terms: termsSchema, privacy: privacySchema, planner: plannerSchema } as const;
 export type PageKey = keyof typeof PAGE_SCHEMAS;
 export type PageContent<K extends PageKey> = z.infer<(typeof PAGE_SCHEMAS)[K]>;
 export type LegalContent = PageContent<"terms">;

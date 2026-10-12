@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Plane } from "lucide-react";
-import { ISLAND_HIGHLANDS, ISLAND_PATHS, MAP_VIEWBOX, PLACE_POINTS } from "./andaman-map-data";
+import { ISLAND_HIGHLANDS, ISLAND_PATHS, MAP_ROUTES, MAP_VIEWBOX, PLACE_POINTS } from "./andaman-map-data";
 import { openPlanner } from "@/components/ai/planner-events";
 import { cn } from "@/lib/utils";
 
@@ -41,19 +41,12 @@ const PLACES: Place[] = [
   { key: "neil", label: "Neil Island", side: "right", reach: 36, href: "/packages?destination=neil-island", major: true },
   { key: "northBay", label: "Ross & North Bay", side: "left", reach: 52, dy: -22, href: "/packages?destination=north-bay-island" },
   { key: "portBlair", label: "Port Blair", side: "left", reach: 44, dy: 8, href: "/packages?destination=port-blair", major: true },
-  { key: "barren", label: "Barren Island", side: "below", reach: 26, ask: "Can we see Barren Island, India's active volcano?" },
+  { key: "barren", label: "Barren Island", side: "below", reach: 24, ask: "Can we see Barren Island, India's active volcano?" },
   { key: "littleAndaman", label: "Little Andaman", side: "right", reach: 34, ask: "Can you plan a trip to Little Andaman?" },
 ];
 
-/** Ferry and boat routes (viewBox units). Simplified for illustration. */
-const ROUTES = {
-  pbHavelock: "M160 618 Q198 585 226 538",
-  havelockNeil: "M234 538 Q256 556 243 574",
-  neilPb: "M237 581 Q201 612 165 628",
-  pbLittle: "M150 642 Q118 770 104 888",
-  havelockBarren: "M240 524 Q362 438 470 446",
-  pbDiglipur: "M146 612 Q86 410 206 168",
-};
+/** Ferry and boat routes, generated from real coordinates with the coastlines. */
+const ROUTES = MAP_ROUTES;
 
 const { width: W, height: H } = MAP_VIEWBOX;
 const pct = (v: number, of: number) => `${(v / of) * 100}%`;

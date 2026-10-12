@@ -44,7 +44,15 @@ const STRICT = {
       .max(40, "At most 40 sections."),
   }),
 };
-const STRICT_SCHEMAS: Record<PageKey, z.ZodTypeAny> = { home: STRICT.home, about: STRICT.about, terms: STRICT.terms, privacy: STRICT.terms };
+const plannerStrict = z.object({
+  title: line("Form title", 80), subtitle: optional("Form introduction", 300),
+  destinationLabel: line("Destination label", 40), destinationPlaceholder: line("Destination placeholder", 60),
+  destinations: z.array(z.string().trim().min(1).max(80, "A destination is too long (max 80 characters).")).min(1, "Add at least one destination.").max(40, "At most 40 destinations."),
+  travellersLabel: line("Travellers label", 40), travellersPlaceholder: line("Travellers placeholder", 60),
+  maxTravellers: z.coerce.number().int().min(1, "Allow at least 1 traveller.").max(200, "At most 200 travellers."),
+  packageLabel: line("Package label", 40), submitLabel: line("Button text", 40), footnote: optional("Note under the button", 300),
+});
+const STRICT_SCHEMAS: Record<PageKey, z.ZodTypeAny> = { home: STRICT.home, about: STRICT.about, terms: STRICT.terms, privacy: STRICT.terms, planner: plannerStrict };
 
 const isLegal = (key: PageKey) => key === "terms" || key === "privacy";
 const today = () => new Date().toISOString().slice(0, 10);

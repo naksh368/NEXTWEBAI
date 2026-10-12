@@ -18,6 +18,7 @@ const TABS: { key: Tab; label: string; href: string }[] = [
   { key: "terms", label: "Terms & Conditions", href: "/terms" },
   { key: "privacy", label: "Privacy Policy", href: "/privacy-policy" },
   { key: "faqs", label: "FAQs", href: "/faq" },
+  { key: "planner", label: "Trip form", href: "/#plan" },
 ];
 
 /** Field layouts for the two free-form pages. `list` fields are editable cards. */
@@ -223,6 +224,64 @@ function LegalForm({ pageKey, initial, defaults }: { pageKey: "terms" | "privacy
   );
 }
 
+type Planner = PageContent<"planner">;
+
+/** The "Plan my trip" enquiry form: wording, destination list and traveller count. */
+function PlannerForm({ initial, defaults }: { initial: Planner; defaults: Planner }) {
+  const [data, setData] = useState<Planner>(initial);
+  const [list, setList] = useState(initial.destinations.join("\n"));
+  const { busy, status, run } = useSaver();
+  const field = (key: keyof Planner, label: string, area = false) => (
+    <label className={cn("block text-sm font-semibold", area && "sm:col-span-2")}>
+      {label}
+      {area ? (
+        <textarea rows={2} className={cn(inp, "mt-1")} value={String(data[key] ?? "")} onChange={(e) => setData({ ...data, [key]: e.target.value })} />
+      ) : (
+        <input className={cn(inp, "mt-1")} value={String(data[key] ?? "")} onChange={(e) => setData({ ...data, [key]: e.target.value })} />
+      )}
+    </label>
+  );
+  const destinations = list.split("\n").map((l) => l.trim()).filter(Boolean);
+
+  return (
+    <div className="space-y-5">
+      <p className="text-sm text-ink-muted">The enquiry form on the homepage and the Contact page. Nothing is pre-selected for visitors — they choose.</p>
+      <fieldset className="grid gap-4 rounded-2xl border border-surface-border bg-white p-5 sm:grid-cols-2">
+        <legend className="px-1 text-sm font-extrabold text-brand-navy">Wording</legend>
+        {field("title", "Form title")}
+        {field("submitLabel", "Button text")}
+        {field("subtitle", "Introduction", true)}
+        {field("packageLabel", "Package question")}
+        {field("footnote", "Note under the button", true)}
+      </fieldset>
+      <fieldset className="grid gap-4 rounded-2xl border border-surface-border bg-white p-5 sm:grid-cols-2">
+        <legend className="px-1 text-sm font-extrabold text-brand-navy">Destination</legend>
+        {field("destinationLabel", "Question")}
+        {field("destinationPlaceholder", "Shown before a choice is made")}
+        <label className="block text-sm font-semibold sm:col-span-2">
+          Destinations <span className="font-normal text-ink-muted">(one per line, in the order to show them — {destinations.length} now)</span>
+          <textarea rows={12} className={cn(inp, "mt-1")} value={list} onChange={(e) => setList(e.target.value)} />
+        </label>
+      </fieldset>
+      <fieldset className="grid gap-4 rounded-2xl border border-surface-border bg-white p-5 sm:grid-cols-3">
+        <legend className="px-1 text-sm font-extrabold text-brand-navy">Travellers</legend>
+        {field("travellersLabel", "Question")}
+        {field("travellersPlaceholder", "Shown before a choice is made")}
+        <label className="block text-sm font-semibold">
+          Largest group in the list
+          <input type="number" min={1} max={200} className={cn(inp, "mt-1")} value={data.maxTravellers} onChange={(e) => setData({ ...data, maxTravellers: Number(e.target.value) || 1 })} />
+        </label>
+      </fieldset>
+      <SaveBar
+        busy={busy}
+        status={status}
+        onSave={() => run(() => savePageAction("planner", { ...data, destinations }))}
+        onReset={() => { if (confirm("Put the form back to its original wording and destinations?")) run(() => resetPageAction("planner"), () => { setData(defaults); setList(defaults.destinations.join("\n")); }); }}
+      />
+    </div>
+  );
+}
+
 function FaqForm({ initial }: { initial: Faq[] }) {
   const [list, setList] = useState<Faq[]>(initial);
   const { busy, status, run } = useSaver();
@@ -253,8 +312,8 @@ export function PagesEditor({
   defaults,
   faqs,
 }: {
-  pages: { home: PageContent<"home">; about: PageContent<"about">; terms: Legal; privacy: Legal };
-  defaults: { home: PageContent<"home">; about: PageContent<"about">; terms: Legal; privacy: Legal };
+  pages: { home: PageContent<"home">; about: PageContent<"about">; terms: Legal; privacy: Legal; planner: Planner };
+  defaults: { home: PageContent<"home">; about: PageContent<"about">; terms: Legal; privacy: Legal; planner: Planner };
   faqs: Faq[];
 }) {
   const [tab, setTab] = useState<Tab>("home");
@@ -282,6 +341,7 @@ export function PagesEditor({
       <div hidden={tab !== "terms"}><LegalForm pageKey="terms" initial={pages.terms} defaults={defaults.terms} /></div>
       <div hidden={tab !== "privacy"}><LegalForm pageKey="privacy" initial={pages.privacy} defaults={defaults.privacy} /></div>
       <div hidden={tab !== "faqs"}><FaqForm initial={faqs} /></div>
+      <div hidden={tab !== "planner"}><PlannerForm initial={pages.planner} defaults={defaults.planner} /></div>
     </div>
   );
 }

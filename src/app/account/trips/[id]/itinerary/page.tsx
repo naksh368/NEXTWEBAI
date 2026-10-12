@@ -119,9 +119,10 @@ export default async function TripItineraryPage({ params }: { params: Promise<{ 
         </Section>
       )}
 
-      <Section title="Flight & transfers">
+      <Section title={v.flightSector ? "Flight & transfers" : "Transfers"}>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <div className="flex items-center gap-2 rounded-lg border border-surface-border p-3"><Plane className="h-4 w-4 text-brand-blue" /> Return economy flights included</div>
+          {/* Flights only appear when this booking's package actually includes them. */}
+          {v.flightSector && <div className="flex items-center gap-2 rounded-lg border border-surface-border p-3"><Plane className="h-4 w-4 text-brand-blue" /> Flights as per your confirmation</div>}
           <div className="flex items-center gap-2 rounded-lg border border-surface-border p-3"><Car className="h-4 w-4 text-brand-blue" /> Airport ⇄ hotel &amp; sightseeing transfers</div>
           <Fact label="Sector" value={v.flightSector} />
           <Fact label="Baggage" value={v.baggage} />

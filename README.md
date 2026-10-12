@@ -199,7 +199,8 @@ rating badge and the link appear.
 ### Editing pages, Terms and FAQs
 
 **Admin → Pages & Terms** edits the words on the homepage sections, About us,
-Terms & Conditions, Privacy Policy and the FAQs. Saving updates the live site
+Terms & Conditions, Privacy Policy, the FAQs and the trip enquiry form (its
+wording, destination list and traveller count). Saving updates the live site
 immediately; "Restore original text" puts a page back as it shipped. In text,
 a blank line starts a new paragraph and "- " starts a bullet; `{brand}`,
 `{phone}`, `{email}`, `{contact}` and `{address}` are filled from Website Content.
@@ -216,10 +217,13 @@ there so visitors can check the score.
 
 ### Homepage map
 
-The illustrated island map is generated from approximate coastline points:
-edit `scripts/generate-andaman-map.py` and run
-`python3 scripts/generate-andaman-map.py` to rewrite
-`src/components/home/andaman-map-data.ts`. It is a picture, not a chart.
+The island map is drawn from real coastline data (Natural Earth 1:10m, public
+domain, stored in `scripts/data/andaman-coastline.json`); islands too small for
+that dataset are placed at their true position and size, and every place and
+ferry route uses real latitude/longitude. To change it, edit
+`scripts/generate-andaman-map.py` and run `python3 scripts/generate-andaman-map.py`
+(needs `pip install shapely`) to rewrite `src/components/home/andaman-map-data.ts`.
+It is a picture, not a navigation chart.
 
 ---
 

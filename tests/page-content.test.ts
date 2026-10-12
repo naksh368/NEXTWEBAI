@@ -36,3 +36,12 @@ test("edited text becomes paragraphs and bullet lists in order", () => {
     { type: "p", text: "Last." },
   ]);
 });
+
+test("the trip form lists every island the business covers", async () => {
+  const { plannerSchema } = await import("../src/lib/page-content");
+  const form = plannerSchema.parse({});
+  for (const place of ["Baratang Island", "Rangat", "Long Island", "Diglipur Island", "Ross & Smith Island", "Little Andaman", "Barren Island"]) {
+    assert.ok(form.destinations.includes(place), place);
+  }
+  assert.equal(form.maxTravellers, 30);
+});

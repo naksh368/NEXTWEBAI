@@ -232,40 +232,56 @@ const DESTINATIONS: DestData[] = [
 // PACKAGES — the agency's five promotional tiers
 // ─────────────────────────────────────────────────────────────
 
-type PkgSpec = {
-  code: string;
-  slug: string;
-  name: string;
-  theme: string;       // doubles as the public category filter
-  tierLabel: string;   // "Budget" / "3 Star" ...
-  price: number;       // starting price per person, whole rupees
+type Has = {
+  breakfast: boolean;
+  acTransport: boolean;
+  hotel: boolean;
+  sightseeing: boolean;
+  islandTransfers: boolean;
+  travelAssistance: boolean;
+};
+
+/** A quality tier. The same tier is sold at three trip lengths. */
+type Tier = {
+  theme: string;      // doubles as the public category filter
+  tierLabel: string;  // "Budget" / "3 Star" ...
+  codeSuffix: string;
+  slugBase: string;
   hotelCategory: string;
   accommodation: string;
   transport: string;
   ferryClass: string;
-  featured?: boolean;
-  /** Cover first, then the rest of the gallery — each tier looks distinct. */
-  images: PhotoKey[];
-  /** Inclusion switches — deliberately NOT identical across tiers. */
-  has: {
-    breakfast: boolean;
-    acTransport: boolean;
-    hotel: boolean;
-    sightseeing: boolean;
-    islandTransfers: boolean;
-    travelAssistance: boolean;
-  };
+  images: PhotoKey[]; // cover first
+  has: Has;
   extras: string[];
+  /** Starting price per person, per trip length — taken from the agency posters. */
+  prices: { "4N5D": number; "5N6D": number; "6N7D": number };
 };
 
-const NIGHTS = 5;
-const DAYS = 6;
-const MIN_PAX = 4;
+type DurKey = "4N5D" | "5N6D" | "6N7D";
 
-const PACKAGES: PkgSpec[] = [
+/** The three trip lengths the agency advertises, with their island nights. */
+const DUR: Record<DurKey, { nights: number; days: number; label: string; short: string; route: { city: string; nights: number }[]; baratang: boolean }> = {
+  "4N5D": { nights: 4, days: 5, label: "4 Nights / 5 Days", short: "4N/5D", baratang: false,
+    route: [{ city: "Port Blair", nights: 2 }, { city: "Havelock Island", nights: 1 }, { city: "Neil Island", nights: 1 }] },
+  "5N6D": { nights: 5, days: 6, label: "5 Nights / 6 Days", short: "5N/6D", baratang: false,
+    route: [{ city: "Port Blair", nights: 2 }, { city: "Havelock Island", nights: 2 }, { city: "Neil Island", nights: 1 }] },
+  "6N7D": { nights: 6, days: 7, label: "6 Nights / 7 Days", short: "6N/7D", baratang: true,
+    route: [{ city: "Port Blair", nights: 3 }, { city: "Havelock Island", nights: 2 }, { city: "Neil Island", nights: 1 }] },
+};
+const DUR_ORDER: DurKey[] = ["4N5D", "5N6D", "6N7D"];
+
+const MIN_PAX = 2;
+
+/**
+ * The five quality tiers. Each is offered at all three trip lengths, so the
+ * catalogue is 5 tiers × 3 lengths = 15 packages. Prices per person come from
+ * the agency's own seasonal posters. Photography is placeholder stock — the
+ * agency replaces each package's images from Admin → Packages.
+ */
+const TIERS: Tier[] = [
   {
-    code: "JST-AND-BUD", slug: "andaman-budget-package", name: "Andaman Budget Package",
-    theme: "BUDGET", tierLabel: "Budget", price: 15600,
+    theme: "BUDGET", tierLabel: "Budget", codeSuffix: "BUD", slugBase: "andaman-budget",
     hotelCategory: "Budget hotels & guesthouses",
     accommodation: "Clean, simple budget hotels and guesthouses in Port Blair, Havelock and Neil, on twin-sharing.",
     transport: "Shared/seat-in-coach road transfers and sightseeing",
@@ -273,10 +289,10 @@ const PACKAGES: PkgSpec[] = [
     images: ["sunsetBeach", "palmsOverSea", "islandJetty", "coralReef", "rockyCove", "palmShoreline"],
     has: { breakfast: true, acTransport: false, hotel: true, sightseeing: true, islandTransfers: true, travelAssistance: true },
     extras: ["Airport pick-up and drop", "Entry tickets for the sights listed in the itinerary"],
+    prices: { "4N5D": 14600, "5N6D": 15600, "6N7D": 16800 },
   },
   {
-    code: "JST-AND-STD", slug: "andaman-standard-package", name: "Andaman Standard Package",
-    theme: "STANDARD", tierLabel: "Standard", price: 17400, featured: true,
+    theme: "STANDARD", tierLabel: "Standard", codeSuffix: "STD", slugBase: "andaman-standard",
     hotelCategory: "Standard hotels",
     accommodation: "Comfortable standard-category hotels in Port Blair, Havelock and Neil, on twin-sharing.",
     transport: "Private air-conditioned vehicle for transfers and sightseeing",
@@ -284,10 +300,10 @@ const PACKAGES: PkgSpec[] = [
     images: ["palmShoreline", "sandSpit", "boatsCliff", "palmsOverSea", "coralReef", "sunsetBeach"],
     has: { breakfast: true, acTransport: true, hotel: true, sightseeing: true, islandTransfers: true, travelAssistance: true },
     extras: ["Airport pick-up and drop", "Entry tickets for the sights listed in the itinerary"],
+    prices: { "4N5D": 16400, "5N6D": 17400, "6N7D": 18600 },
   },
   {
-    code: "JST-AND-2ST", slug: "andaman-2-star-package", name: "Andaman 2 Star Package",
-    theme: "TWO_STAR", tierLabel: "2 Star", price: 20600,
+    theme: "TWO_STAR", tierLabel: "2 Star", codeSuffix: "2ST", slugBase: "andaman-2-star",
     hotelCategory: "2-star hotels",
     accommodation: "2-star category hotels across Port Blair, Havelock and Neil, on twin-sharing.",
     transport: "Private air-conditioned vehicle for transfers and sightseeing",
@@ -295,10 +311,10 @@ const PACKAGES: PkgSpec[] = [
     images: ["rockyCove", "covePalms", "islandJetty", "sandSpit", "coralReef", "beachUmbrella"],
     has: { breakfast: true, acTransport: true, hotel: true, sightseeing: true, islandTransfers: true, travelAssistance: true },
     extras: ["Airport pick-up and drop", "Entry tickets for the sights listed in the itinerary", "Dedicated island representative"],
+    prices: { "4N5D": 18900, "5N6D": 20600, "6N7D": 22600 },
   },
   {
-    code: "JST-AND-3ST", slug: "andaman-3-star-package", name: "Andaman 3 Star Package",
-    theme: "THREE_STAR", tierLabel: "3 Star", price: 22600, featured: true,
+    theme: "THREE_STAR", tierLabel: "3 Star", codeSuffix: "3ST", slugBase: "andaman-3-star",
     hotelCategory: "3-star hotels & resorts",
     accommodation: "3-star hotels and beach resorts in Port Blair, Havelock and Neil, on twin-sharing.",
     transport: "Private air-conditioned vehicle for transfers and sightseeing",
@@ -306,10 +322,10 @@ const PACKAGES: PkgSpec[] = [
     images: ["sandSpit", "palmsOverSea", "coralReef", "covePalms", "resortPool", "sunsetBeach"],
     has: { breakfast: true, acTransport: true, hotel: true, sightseeing: true, islandTransfers: true, travelAssistance: true },
     extras: ["Airport pick-up and drop", "Entry tickets for the sights listed in the itinerary", "Dedicated island representative"],
+    prices: { "4N5D": 20800, "5N6D": 22600, "6N7D": 24600 },
   },
   {
-    code: "JST-AND-4ST", slug: "andaman-4-star-package", name: "Andaman 4 Star Package",
-    theme: "FOUR_STAR", tierLabel: "4 Star", price: 32800, featured: true,
+    theme: "FOUR_STAR", tierLabel: "4 Star", codeSuffix: "4ST", slugBase: "andaman-4-star",
     hotelCategory: "4-star resorts",
     accommodation: "4-star resorts in Port Blair, Havelock and Neil, on twin-sharing.",
     transport: "Private air-conditioned vehicle throughout, at your disposal on sightseeing days",
@@ -317,13 +333,56 @@ const PACKAGES: PkgSpec[] = [
     images: ["resortPool", "beachUmbrella", "sandSpit", "palmsOverSea", "covePalms", "coralReef"],
     has: { breakfast: true, acTransport: true, hotel: true, sightseeing: true, islandTransfers: true, travelAssistance: true },
     extras: ["Airport pick-up and drop", "Entry tickets for the sights listed in the itinerary", "Dedicated island representative", "Priority ferry seat allocation, subject to availability"],
+    prices: { "4N5D": 28900, "5N6D": 32800, "6N7D": 36800 },
   },
 ];
+
+/** A concrete package = one tier at one trip length. */
+type PkgSpec = {
+  code: string;
+  slug: string;
+  name: string;
+  theme: string;
+  tierLabel: string;
+  price: number;
+  nights: number;
+  days: number;
+  label: string;
+  short: string;
+  route: { city: string; nights: number }[];
+  baratang: boolean;
+  featured: boolean;
+  hotelCategory: string;
+  accommodation: string;
+  transport: string;
+  ferryClass: string;
+  images: PhotoKey[];
+  has: Has;
+  extras: string[];
+};
+
+const PACKAGES: PkgSpec[] = TIERS.flatMap((t) =>
+  DUR_ORDER.map((key): PkgSpec => {
+    const d = DUR[key];
+    return {
+      code: `JST-AND-${t.codeSuffix}-${key}`,
+      slug: `${t.slugBase}-${key.toLowerCase()}`,
+      name: `Andaman ${t.tierLabel} Package — ${d.label}`,
+      theme: t.theme, tierLabel: t.tierLabel, price: t.prices[key],
+      nights: d.nights, days: d.days, label: d.label, short: d.short, route: d.route, baratang: d.baratang,
+      // Feature the two mid-tiers at the most popular length so the home grid leads with them.
+      featured: key === "5N6D" && (t.theme === "STANDARD" || t.theme === "THREE_STAR"),
+      hotelCategory: t.hotelCategory, accommodation: t.accommodation,
+      transport: t.transport, ferryClass: t.ferryClass,
+      images: t.images, has: t.has, extras: t.extras,
+    };
+  })
+);
 
 /** Inclusion list built from the package's own switches — never assumed. */
 function inclusionsFor(p: PkgSpec): string[] {
   const out: string[] = [];
-  if (p.has.hotel) out.push(`${NIGHTS} nights' accommodation — ${p.hotelCategory}, twin-sharing`);
+  if (p.has.hotel) out.push(`${p.nights} nights' accommodation — ${p.hotelCategory}, twin-sharing`);
   if (p.has.breakfast) out.push("Daily breakfast at the hotel");
   out.push(p.has.acTransport ? `${p.transport}` : `${p.transport} (non air-conditioned)`);
   if (p.has.islandTransfers) out.push(`Inter-island ferry tickets — ${p.ferryClass}`);
@@ -342,72 +401,120 @@ const COMMON_EXCLUSIONS = [
   "Goods and Services Tax, unless stated otherwise in your written quotation",
 ];
 
-/** The six-day itinerary, shared by all five tiers and fully editable in admin. */
-function itineraryDays(p: PkgSpec) {
-  const ac = p.has.acTransport ? "air-conditioned " : "";
-  return [
-    {
-      title: "Arrive in Port Blair",
-      summary: "Airport pick-up, hotel check-in and the Cellular Jail Light & Sound Show in the evening.",
-      items: [
-        { timeslot: "MORNING", kind: "TRANSFER", title: "Arrival at Veer Savarkar International Airport", description: `Our representative meets you outside the terminal and transfers you to your hotel by private ${ac}vehicle.` },
-        { timeslot: "AFTERNOON", kind: "HOTEL", title: "Check in and rest", description: "Check in at your Port Blair hotel. The afternoon is free to settle in after the flight." },
-        { timeslot: "EVENING", kind: "ACTIVITY", title: "Cellular Jail & Light and Sound Show", description: "Visit the Cellular Jail national memorial, then stay for the evening Light & Sound Show in the courtyard. Included where listed in your package; the show runs subject to the day's schedule and weather." },
-        { timeslot: "EVENING", kind: "NOTE", title: "Overnight in Port Blair", description: "Overnight at your hotel in Port Blair." },
-      ],
-    },
-    {
-      title: "Ross Island and North Bay Island",
-      summary: "A full day on the harbour — colonial ruins on Ross, and the coral reef at North Bay.",
-      items: [
-        { timeslot: "MORNING", kind: "MEAL", title: "Breakfast at the hotel", description: p.has.breakfast ? "Breakfast is included at your hotel." : "Breakfast is not included in this package." },
-        { timeslot: "MORNING", kind: "ACTIVITY", title: "Ross Island (Netaji Subhas Chandra Bose Dweep)", description: "A short boat ride across the harbour to the former British administrative headquarters — the church, bakery and residences now held together by banyan roots, with deer and peacocks around them." },
-        { timeslot: "AFTERNOON", kind: "ACTIVITY", title: "North Bay Island", description: "Continue to North Bay, the reef closest to Port Blair. Glass-bottom boat rides, snorkelling, sea walking and jet ski are available here and are paid directly to the licensed operator unless your package states otherwise." },
-        { timeslot: "EVENING", kind: "NOTE", title: "Overnight in Port Blair", description: "Return to Port Blair by boat and overnight at your hotel." },
-      ],
-    },
-    {
-      title: "Port Blair to Havelock Island — Radhanagar and Kalapathar",
-      summary: "Morning ferry to Havelock, then Kalapathar and sunset at Radhanagar Beach.",
-      items: [
-        { timeslot: "MORNING", kind: "TRANSFER", title: "Ferry to Havelock Island", description: `Transfer to the jetty for your morning sailing to Havelock. ${p.ferryClass}. Ferry timings are allotted by the operator and can change with sea conditions.` },
-        { timeslot: "AFTERNOON", kind: "HOTEL", title: "Check in on Havelock", description: `Check in at your Havelock hotel and continue by ${ac}vehicle for the afternoon's sightseeing.` },
-        { timeslot: "AFTERNOON", kind: "ACTIVITY", title: "Kalapathar Beach", description: "The quieter eastern shore of Havelock, named for the black rocks along the waterline and lined with tall tropical trees." },
-        { timeslot: "EVENING", kind: "ACTIVITY", title: "Radhanagar Beach at sunset", description: "Radhanagar (Beach No. 7) faces west, so the late afternoon is the time to be there. A swimming and walking beach — please follow the lifeguard flags." },
-        { timeslot: "EVENING", kind: "NOTE", title: "Overnight on Havelock", description: "Overnight at your hotel on Havelock Island." },
-      ],
-    },
-    {
-      title: "Havelock to Neil Island",
-      summary: "Ferry across to Neil, then Bharatpur, Laxmanpur and the natural coral bridge.",
-      items: [
-        { timeslot: "MORNING", kind: "MEAL", title: "Breakfast and check-out", description: p.has.breakfast ? "Breakfast at the hotel, then check out for the ferry." : "Check out for the ferry. Breakfast is not included in this package." },
-        { timeslot: "MORNING", kind: "TRANSFER", title: "Ferry to Neil Island (Shaheed Dweep)", description: `Sail across to Neil Island. ${p.ferryClass}.` },
-        { timeslot: "AFTERNOON", kind: "ACTIVITY", title: "Bharatpur and Laxmanpur beaches", description: "Bharatpur sits beside the jetty with shallow, glass-clear water and glass-bottom boat rides; Laxmanpur is the long western beach, best in the late afternoon." },
-        { timeslot: "AFTERNOON", kind: "ACTIVITY", title: "Natural Coral Bridge", description: "The natural rock arch near Laxmanpur. It is only reachable at low tide, so the visit depends on the tide table for the day." },
-        { timeslot: "EVENING", kind: "NOTE", title: "Overnight on Neil Island", description: "Overnight at your hotel on Neil Island." },
-      ],
-    },
-    {
-      title: "Neil Island back to Port Blair",
-      summary: "Return ferry to the capital, with Corbyn's Cove and the local markets in the afternoon.",
-      items: [
-        { timeslot: "MORNING", kind: "MEAL", title: "Breakfast and check-out", description: p.has.breakfast ? "Breakfast at the hotel, then check out for the ferry." : "Check out for the ferry. Breakfast is not included in this package." },
-        { timeslot: "MORNING", kind: "TRANSFER", title: "Ferry to Port Blair", description: `Sail back to Port Blair and transfer to your hotel by ${ac}vehicle.` },
-        { timeslot: "AFTERNOON", kind: "ACTIVITY", title: "Corbyn's Cove and local sightseeing", description: "Corbyn's Cove, the palm-lined beach closest to town, plus time at the Samudrika Naval Marine Museum or the local markets, as the day allows." },
-        { timeslot: "EVENING", kind: "NOTE", title: "Overnight in Port Blair", description: "Overnight at your hotel in Port Blair." },
-      ],
-    },
-    {
-      title: "Departure",
-      summary: "Check out and transfer to the airport for your flight home.",
-      items: [
-        { timeslot: "MORNING", kind: "MEAL", title: "Breakfast at the hotel", description: p.has.breakfast ? "Breakfast is included at your hotel." : "Breakfast is not included in this package." },
-        { timeslot: "MORNING", kind: "TRANSFER", title: "Transfer to Veer Savarkar International Airport", description: `Check out and transfer to the airport by private ${ac}vehicle in time for your flight.` },
-        { timeslot: "MORNING", kind: "NOTE", title: "Tour ends", description: "Your Andaman holiday with JST Andaman Travels ends here." },
-      ],
-    },
-  ];
+// ── Day builders. Each returns one day; durations compose them below, so the
+//    wording stays identical across tiers and lengths and is fully editable.
+type DayT = { title: string; summary: string; items: { timeslot: string; kind: string; title: string; description: string }[] };
+const acWord = (p: PkgSpec) => (p.has.acTransport ? "air-conditioned " : "");
+const breakfastItem = (p: PkgSpec) => ({
+  timeslot: "MORNING", kind: "MEAL", title: "Breakfast at the hotel",
+  description: p.has.breakfast ? "Breakfast is included at your hotel." : "Breakfast is not included in this package.",
+});
+
+function dayArrival(p: PkgSpec): DayT {
+  return {
+    title: "Arrive in Port Blair",
+    summary: "Airport pick-up, hotel check-in and the Cellular Jail Light & Sound Show in the evening.",
+    items: [
+      { timeslot: "MORNING", kind: "TRANSFER", title: "Arrival at Veer Savarkar International Airport", description: `Our representative meets you outside the terminal and transfers you to your hotel by private ${acWord(p)}vehicle.` },
+      { timeslot: "AFTERNOON", kind: "HOTEL", title: "Check in and rest", description: "Check in at your Port Blair hotel. The afternoon is free to settle in after the flight." },
+      { timeslot: "EVENING", kind: "ACTIVITY", title: "Cellular Jail & Light and Sound Show", description: "Visit the Cellular Jail national memorial, then stay for the evening Light & Sound Show in the courtyard. The show runs subject to the day's schedule and weather." },
+      { timeslot: "EVENING", kind: "NOTE", title: "Overnight in Port Blair", description: "Overnight at your hotel in Port Blair." },
+    ],
+  };
+}
+
+function dayBaratang(p: PkgSpec): DayT {
+  return {
+    title: "Baratang Island day trip",
+    summary: "An early start for the limestone caves, mangrove creek and the drive through the reserve forest.",
+    items: [
+      breakfastItem(p),
+      { timeslot: "MORNING", kind: "TRANSFER", title: "Drive to Baratang", description: `Early-morning drive north from Port Blair by ${acWord(p)}vehicle along the Andaman Trunk Road, crossing the reserve forest in the regulated convoy.` },
+      { timeslot: "AFTERNOON", kind: "ACTIVITY", title: "Limestone Caves & mangrove creek", description: "A speedboat through the mangrove creek to the natural limestone caves at Baratang. Timings depend on the tide and the convoy schedule for the day." },
+      { timeslot: "EVENING", kind: "NOTE", title: "Return to Port Blair", description: "Drive back to Port Blair and overnight at your hotel." },
+    ],
+  };
+}
+
+function dayToHavelock(p: PkgSpec): DayT {
+  return {
+    title: "Port Blair to Havelock Island — Radhanagar and Kalapathar",
+    summary: "Morning ferry to Havelock, then Kalapathar and sunset at Radhanagar Beach.",
+    items: [
+      breakfastItem(p),
+      { timeslot: "MORNING", kind: "TRANSFER", title: "Ferry to Havelock Island", description: `Transfer to the jetty for your morning sailing to Havelock. ${p.ferryClass}. Ferry timings are allotted by the operator and can change with sea conditions.` },
+      { timeslot: "AFTERNOON", kind: "HOTEL", title: "Check in on Havelock", description: `Check in at your Havelock hotel and continue by ${acWord(p)}vehicle for the afternoon's sightseeing.` },
+      { timeslot: "AFTERNOON", kind: "ACTIVITY", title: "Kalapathar Beach", description: "The quieter eastern shore of Havelock, named for the black rocks along the waterline and lined with tall tropical trees." },
+      { timeslot: "EVENING", kind: "ACTIVITY", title: "Radhanagar Beach at sunset", description: "Radhanagar (Beach No. 7) faces west, so the late afternoon is the time to be there. A swimming and walking beach — please follow the lifeguard flags." },
+      { timeslot: "EVENING", kind: "NOTE", title: "Overnight on Havelock", description: "Overnight at your hotel on Havelock Island." },
+    ],
+  };
+}
+
+function dayHavelockLeisure(p: PkgSpec): DayT {
+  return {
+    title: "Havelock at leisure — Elephant Beach",
+    summary: "A relaxed island day: Elephant Beach by boat, with optional snorkelling and water sports.",
+    items: [
+      breakfastItem(p),
+      { timeslot: "MORNING", kind: "ACTIVITY", title: "Elephant Beach", description: "A short boat ride to Elephant Beach, the island's best-known spot for snorkelling over a shallow reef. The boat ride and water sports are paid directly to the licensed operator and depend on the day's sea conditions." },
+      { timeslot: "AFTERNOON", kind: "FREE_TIME", title: "Free afternoon", description: "The rest of the day is free for the beach, an optional scuba dive, or simply resting at your resort." },
+      { timeslot: "EVENING", kind: "NOTE", title: "Overnight on Havelock", description: "Overnight at your hotel on Havelock Island." },
+    ],
+  };
+}
+
+function dayToNeil(p: PkgSpec): DayT {
+  return {
+    title: "Havelock to Neil Island",
+    summary: "Ferry across to Neil, then Bharatpur, Laxmanpur and the natural coral bridge.",
+    items: [
+      { timeslot: "MORNING", kind: "MEAL", title: "Breakfast and check-out", description: p.has.breakfast ? "Breakfast at the hotel, then check out for the ferry." : "Check out for the ferry. Breakfast is not included in this package." },
+      { timeslot: "MORNING", kind: "TRANSFER", title: "Ferry to Neil Island (Shaheed Dweep)", description: `Sail across to Neil Island. ${p.ferryClass}.` },
+      { timeslot: "AFTERNOON", kind: "HOTEL", title: "Check in on Neil", description: `Check in at your Neil Island hotel and continue by ${acWord(p)}vehicle for the island's beaches.` },
+      { timeslot: "AFTERNOON", kind: "ACTIVITY", title: "Bharatpur and Laxmanpur beaches", description: "Bharatpur sits beside the jetty with shallow, glass-clear water and glass-bottom boat rides; Laxmanpur is the long western beach, best in the late afternoon." },
+      { timeslot: "AFTERNOON", kind: "ACTIVITY", title: "Natural Coral Bridge", description: "The natural rock arch near Laxmanpur. It is only reachable at low tide, so the visit depends on the tide table for the day." },
+      { timeslot: "EVENING", kind: "NOTE", title: "Overnight on Neil Island", description: "Overnight at your hotel on Neil Island." },
+    ],
+  };
+}
+
+function dayBackToPortBlair(p: PkgSpec): DayT {
+  return {
+    title: "Neil Island to Port Blair — Ross and North Bay",
+    summary: "Morning ferry back to the capital, then colonial Ross Island and the North Bay reef.",
+    items: [
+      { timeslot: "MORNING", kind: "MEAL", title: "Breakfast and check-out", description: p.has.breakfast ? "Breakfast at the hotel, then check out for the ferry." : "Check out for the ferry. Breakfast is not included in this package." },
+      { timeslot: "MORNING", kind: "TRANSFER", title: "Ferry to Port Blair", description: `Sail back to Port Blair and transfer to your hotel by ${acWord(p)}vehicle.` },
+      { timeslot: "AFTERNOON", kind: "ACTIVITY", title: "Ross Island (Netaji Subhas Chandra Bose Dweep)", description: "A short boat ride across the harbour to the former British administrative headquarters — the church, bakery and residences now held together by banyan roots, with deer and peacocks around them." },
+      { timeslot: "AFTERNOON", kind: "ACTIVITY", title: "North Bay Island", description: "Continue to North Bay, the reef closest to Port Blair. Glass-bottom boat rides, snorkelling, sea walking and jet ski are available here and are paid directly to the licensed operator unless your package states otherwise." },
+      { timeslot: "EVENING", kind: "NOTE", title: "Overnight in Port Blair", description: "Return to Port Blair and overnight at your hotel." },
+    ],
+  };
+}
+
+function dayDeparture(p: PkgSpec): DayT {
+  return {
+    title: "Departure",
+    summary: "Check out and transfer to the airport for your flight home.",
+    items: [
+      breakfastItem(p),
+      { timeslot: "MORNING", kind: "TRANSFER", title: "Transfer to Veer Savarkar International Airport", description: `Check out and transfer to the airport by private ${acWord(p)}vehicle in time for your flight.` },
+      { timeslot: "MORNING", kind: "NOTE", title: "Tour ends", description: "Your Andaman holiday with JST Andaman Travels ends here." },
+    ],
+  };
+}
+
+/** Compose the right day-by-day plan for this package's trip length. */
+function itineraryDays(p: PkgSpec): DayT[] {
+  const days: DayT[] = [dayArrival(p)];
+  if (p.baratang) days.push(dayBaratang(p));
+  days.push(dayToHavelock(p));
+  if (p.nights >= 5) days.push(dayHavelockLeisure(p));
+  days.push(dayToNeil(p));
+  days.push(dayBackToPortBlair(p));
+  days.push(dayDeparture(p));
+  return days;
 }
 
 const IMPORTANT_INFO = [
@@ -483,15 +590,32 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
   ANALYST: ["dashboard.view", "report.view", "audit.view"],
 };
 
+/**
+ * Catalogue version. Bump this ONLY when the seeded catalogue itself changes
+ * and should replace what is live. The deploy then reseeds the database ONCE,
+ * on the next deploy, and skips on every deploy after that.
+ *
+ * ⚠️ A reseed wipes ALL data (packages, enquiries, bookings, edits). Only bump
+ * this on a site that has no real data to lose. Routine catalogue edits should
+ * be made in Admin → Packages, which is never overwritten.
+ */
+const SEED_VERSION = 2;
+
 async function main() {
-  // Production-safe: the deploy build runs this on every deploy, but it must
-  // only populate an EMPTY database. If the catalogue already exists we skip
-  // entirely so real enquiries, bookings and edits are never wiped.
-  // Force a full reset + reseed with FORCE_SEED=1.
+  // Production-safe: the deploy build runs this on every deploy. It populates
+  // an EMPTY database, and otherwise reseeds only when SEED_VERSION has been
+  // bumped since the database was last seeded — so real data is never wiped by
+  // an ordinary deploy. FORCE_SEED=1 forces a reset + reseed regardless.
   const existing = await db.package.count().catch(() => 0);
-  if (existing > 0 && process.env.FORCE_SEED !== "1") {
-    console.log(`✅ Database already seeded (${existing} packages) — skipping.`);
+  const seedState = await db.businessSetting.findUnique({ where: { key: "seed" } }).catch(() => null);
+  const seededVersion = Number((seedState?.value as { version?: number } | null)?.version ?? 0);
+  const force = process.env.FORCE_SEED === "1";
+  if (existing > 0 && seededVersion >= SEED_VERSION && !force) {
+    console.log(`✅ Database already seeded (catalogue v${seededVersion}, ${existing} packages) — skipping.`);
     return;
+  }
+  if (existing > 0) {
+    console.log(`♻️  Reseeding catalogue v${seededVersion} → v${SEED_VERSION}${force ? " (FORCE_SEED)" : ""} — existing data will be replaced.`);
   }
 
   console.log("🌱 Reset…");
@@ -518,13 +642,7 @@ async function main() {
     destId.set(d.slug, created.id);
   }
 
-  console.log("🌱 Holiday packages…");
-  const route = [
-    { city: "Port Blair", nights: 2 },
-    { city: "Havelock Island", nights: 2 },
-    { city: "Neil Island", nights: 1 },
-  ];
-
+  console.log(`🌱 Holiday packages (${PACKAGES.length})…`);
   for (const p of PACKAGES) {
     const pkg = await db.package.create({
       data: {
@@ -540,14 +658,15 @@ async function main() {
     const version = await db.packageVersion.create({
       data: {
         packageId: pkg.id, versionNumber: 1, isPublished: true, name: p.name,
-        summary: `${NIGHTS}N / ${DAYS}D across Port Blair, Havelock and Neil — ${p.hotelCategory.toLowerCase()}, sightseeing and all island transfers.`,
+        summary: `${p.short} across Port Blair, Havelock and Neil${p.baratang ? " with a Baratang day trip" : ""} — ${p.hotelCategory.toLowerCase()}, sightseeing and all island transfers.`,
         overview:
-          `A complete ${DAYS}-day Andaman holiday covering Port Blair, Havelock Island and Neil Island. ` +
+          `A complete ${p.days}-day Andaman holiday covering Port Blair, Havelock Island and Neil Island. ` +
           `The itinerary takes in the Cellular Jail and its Light & Sound Show, Ross Island and North Bay, ` +
           `Radhanagar and Kalapathar on Havelock, and Bharatpur, Laxmanpur and the natural coral bridge on Neil. ` +
+          (p.baratang ? "It also includes a day trip to Baratang for the limestone caves and mangrove creek. " : "") +
           `Accommodation is ${p.hotelCategory.toLowerCase()} on twin-sharing, with ${p.transport.toLowerCase()} ` +
           `and ${p.ferryClass.toLowerCase()}. Minimum ${MIN_PAX} travellers.`,
-        durationDays: DAYS, durationNights: NIGHTS, currency: "INR",
+        durationDays: p.days, durationNights: p.nights, currency: "INR",
         basePrice: p.price, perPersonPricing: true,
         minTravellers: MIN_PAX, maxTravellers: 30,
         // Honest status: the rate is the agency's advertised starting price and
@@ -557,7 +676,7 @@ async function main() {
         availabilityStatus: "ON_REQUEST",
         category: p.theme, bestFor: `Groups of ${MIN_PAX} or more`,
         departureCities: ["Chennai", "Kolkata", "Delhi", "Bengaluru", "Hyderabad", "Visakhapatnam"],
-        cityBreakdown: route,
+        cityBreakdown: p.route,
         travelWindows: "Oct–May is the main season · Jun–Sep sees heavier seas and more ferry disruption",
         roomCategory: p.hotelCategory,
         mealPlan: p.has.breakfast ? "Breakfast included" : "Room only",
@@ -565,14 +684,15 @@ async function main() {
         baggage: null,
         visaInfo: "Domestic travel — no visa required for Indian nationals. Foreign nationals should check the current permit rules before booking.",
         insuranceInfo: "Travel insurance is not included. We can suggest a provider on request.",
-        seoTitle: `${p.name} — ${NIGHTS}N/${DAYS}D Andaman Tour | JST Andaman Travels`,
-        seoDescription: `${p.name}: a ${NIGHTS} night, ${DAYS} day Andaman holiday across Port Blair, Havelock and Neil with ${p.hotelCategory.toLowerCase()}, sightseeing and island transfers. From ₹${p.price.toLocaleString("en-IN")} per person, minimum ${MIN_PAX} travellers.`,
+        seoTitle: `${p.name} — Andaman Tour | JST Andaman Travels`,
+        seoDescription: `${p.name}: a ${p.nights} night, ${p.days} day Andaman holiday across Port Blair, Havelock and Neil with ${p.hotelCategory.toLowerCase()}, sightseeing and island transfers. From ₹${p.price.toLocaleString("en-IN")} per person, minimum ${MIN_PAX} travellers.`,
         highlights: [
           "Cellular Jail and the evening Light & Sound Show",
           "Ross Island and the North Bay reef",
           "Radhanagar Beach at sunset",
           "Kalapathar Beach on Havelock's sunrise coast",
           "Bharatpur, Laxmanpur and the natural coral bridge on Neil",
+          ...(p.baratang ? ["Baratang limestone caves and mangrove creek"] : []),
         ],
         inclusions: inclusionsFor(p),
         exclusions: COMMON_EXCLUSIONS,
@@ -670,6 +790,9 @@ async function main() {
         },
       },
       { key: "checkout", value: { taxRatePct: 5, currency: "INR" } },
+      // Records which catalogue version is live, so the next deploy knows
+      // whether a reseed is due (see SEED_VERSION).
+      { key: "seed", value: { version: SEED_VERSION } },
     ],
   });
 

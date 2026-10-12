@@ -154,6 +154,8 @@ export type PackageFilters = {
   maxPrice?: number;
   /** Only packages whose advertised rate applies at this group size or below. */
   groupSize?: number;
+  /** Name of the chosen island when it has no destination page, matched on package routes. */
+  placeName?: string;
 };
 
 export async function listPackages(filters: PackageFilters) {
@@ -169,9 +171,27 @@ export async function listPackages(filters: PackageFilters) {
         where: { slug: filters.destination, isPublished: true },
         select: { slug: true, name: true, travelInfo: true },
       });
-      destinationIds = dest
-        ? (await getPackagesForDestinationOrHub(dest.slug, dest.travelInfo, dest.name)).items.map((p) => p.id)
-        : [];
+      if (dest) {
+        destinationIds = (await getPackagesForDestinationOrHub(dest.slug, dest.travelInfo, dest.name)).items.map((p) => p.id);
+      } else if (filters.placeName) {
+        // An island with no guide page (e.g. Baratang): match it on the packages' routes.
+        const target = normalisePlace(filters.placeName).replace(/\s+island$/, "");
+        const rows = await db.package.findMany({
+          where: { status: "PUBLISHED" },
+          select: { id: true, currentVersion: { select: { cityBreakdown: true } } },
+        });
+        destinationIds = rows
+          .filter((r) => {
+            const route = r.currentVersion?.cityBreakdown;
+            return Array.isArray(route) && route.some((leg) => {
+              const city = (leg as { city?: unknown })?.city;
+              return typeof city === "string" && normalisePlace(city).replace(/\s+island$/, "") === target;
+            });
+          })
+          .map((r) => r.id);
+      } else {
+        destinationIds = [];
+      }
     }
 
     const where: Prisma.PackageWhereInput = {

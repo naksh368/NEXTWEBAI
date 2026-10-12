@@ -13,6 +13,8 @@ import { PackageCard } from "@/components/package/package-card";
 import { PackageFilters } from "@/components/package/package-filters";
 import { parseRange } from "@/lib/filters";
 import { getAndamanDestinations, listPackages, type PackageFilters as Filters } from "@/lib/queries";
+import { getPageContent } from "@/lib/page-content";
+import { slugify } from "@/lib/utils";
 import { getSiteSettings, promoIsActive } from "@/lib/site-settings";
 import { formatDate } from "@/lib/utils";
 
@@ -64,7 +66,19 @@ export default async function PackagesPage({ searchParams }: { searchParams: Sea
     groupSize: Number.isFinite(group) && group > 0 ? group : undefined,
   };
 
-  const [settings, destinations] = await Promise.all([getSiteSettings(), getAndamanDestinations()]);
+  const [settings, destinations, plannerForm] = await Promise.all([getSiteSettings(), getAndamanDestinations(), getPageContent("planner")]);
+
+  // The island filter: the list edited in Admin → Pages & Terms. An island with
+  // a guide page filters by it; any other island is matched on package routes.
+  const islands = plannerForm.islandFilter
+    .map((name) => name.trim())
+    .filter(Boolean)
+    .map((name) => {
+      const dest = destinations.find((d) => d.name.toLowerCase() === name.toLowerCase() || d.slug === slugify(name));
+      return { slug: dest?.slug ?? slugify(name), name };
+    });
+  const chosen = filters.destination ? islands.find((i) => i.slug === filters.destination) : undefined;
+  if (chosen && !destinations.some((d) => d.slug === chosen.slug)) filters.placeName = chosen.name;
   const promoLive = promoIsActive(settings);
 
   // Preserve the whole filter state across pagination links.
@@ -86,12 +100,8 @@ export default async function PackagesPage({ searchParams }: { searchParams: Sea
     { label: "Holiday packages", href: "/packages" },
   ];
 
-  // Only islands that actually have packages are offered as a filter.
-  const filterDestinations = destinations
-    .filter((d) => d.packageCount > 0)
-    .map((d) => ({ slug: d.slug, name: d.name }));
-
-  const activeDestination = filters.destination ? destinations.find((d) => d.slug === filters.destination) : undefined;
+  const filterDestinations = islands;
+  const activeDestination = chosen ?? (filters.destination ? destinations.find((d) => d.slug === filters.destination) : undefined);
 
   return (
     <>
@@ -122,7 +132,7 @@ export default async function PackagesPage({ searchParams }: { searchParams: Sea
           </Suspense>
 
           <Suspense key={JSON.stringify(filters)} fallback={<GridSkeleton />}>
-            <Results filters={filters} buildHref={buildHref} disclaimer={settings.priceDisclaimer} />
+            <Results filters={filters} buildHref={buildHref} disclaimer={settings.priceDisclaimer} placeName={activeDestination?.name} />
           </Suspense>
         </Container>
       </Section>
@@ -132,10 +142,12 @@ export default async function PackagesPage({ searchParams }: { searchParams: Sea
 
 async function Results({
   filters,
+  placeName,
   buildHref,
   disclaimer,
 }: {
   filters: Filters;
+  placeName?: string;
   buildHref: (p: number) => string;
   disclaimer: string;
 }) {
@@ -144,12 +156,21 @@ async function Results({
   if (!items.length) {
     return (
       <div className="mt-8">
-        <EmptyState
-          icon={<SearchX className="h-5 w-5" />}
-          title="No packages match those filters"
-          description="Try widening the price range or the hotel category — or tell us what you have in mind and we will build it."
-          action={{ label: "Clear all filters", href: "/packages" }}
-        />
+        {placeName && filters.destination && !filters.theme && !filters.q && !filters.minPrice && !filters.maxPrice && !filters.minNights && !filters.maxNights && !filters.groupSize ? (
+          <EmptyState
+            icon={<SearchX className="h-5 w-5" />}
+            title={`We plan custom trips to ${placeName}`}
+            description={`None of our ready-made packages include ${placeName} yet, but we arrange it as part of a customised Andaman itinerary. Tell us your dates and group and we will send a written plan and quotation.`}
+            action={{ label: "Plan my trip", href: "/#plan" }}
+          />
+        ) : (
+          <EmptyState
+            icon={<SearchX className="h-5 w-5" />}
+            title="No packages match those filters"
+            description="Try widening the price range or the hotel category — or tell us what you have in mind and we will build it."
+            action={{ label: "Clear all filters", href: "/packages" }}
+          />
+        )}
         <p className="mt-5 text-center text-sm text-ink-muted">
           Prefer to just ask?{" "}
           <Link href="/contact" className="font-bold text-brand-blue underline-offset-2 hover:underline">

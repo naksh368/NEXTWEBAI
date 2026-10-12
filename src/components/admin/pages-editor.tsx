@@ -18,7 +18,7 @@ const TABS: { key: Tab; label: string; href: string }[] = [
   { key: "terms", label: "Terms & Conditions", href: "/terms" },
   { key: "privacy", label: "Privacy Policy", href: "/privacy-policy" },
   { key: "faqs", label: "FAQs", href: "/faq" },
-  { key: "planner", label: "Trip form", href: "/#plan" },
+  { key: "planner", label: "Trip form & islands", href: "/#plan" },
 ];
 
 /** Field layouts for the two free-form pages. `list` fields are editable cards. */
@@ -230,6 +230,7 @@ type Planner = PageContent<"planner">;
 function PlannerForm({ initial, defaults }: { initial: Planner; defaults: Planner }) {
   const [data, setData] = useState<Planner>(initial);
   const [list, setList] = useState(initial.destinations.join("\n"));
+  const [islands, setIslands] = useState(initial.islandFilter.join("\n"));
   const { busy, status, run } = useSaver();
   const field = (key: keyof Planner, label: string, area = false) => (
     <label className={cn("block text-sm font-semibold", area && "sm:col-span-2")}>
@@ -242,6 +243,7 @@ function PlannerForm({ initial, defaults }: { initial: Planner; defaults: Planne
     </label>
   );
   const destinations = list.split("\n").map((l) => l.trim()).filter(Boolean);
+  const islandFilter = islands.split("\n").map((l) => l.trim()).filter(Boolean);
 
   return (
     <div className="space-y-5">
@@ -263,6 +265,13 @@ function PlannerForm({ initial, defaults }: { initial: Planner; defaults: Planne
           <textarea rows={12} className={cn(inp, "mt-1")} value={list} onChange={(e) => setList(e.target.value)} />
         </label>
       </fieldset>
+      <fieldset className="rounded-2xl border border-surface-border bg-white p-5">
+        <legend className="px-1 text-sm font-extrabold text-brand-navy">Islands on the Packages page</legend>
+        <label className="block text-sm font-semibold">
+          The &ldquo;All islands&rdquo; filter <span className="font-normal text-ink-muted">(one per line — {islandFilter.length} now). Choosing an island shows the packages that visit it.</span>
+          <textarea rows={10} className={cn(inp, "mt-1")} value={islands} onChange={(e) => setIslands(e.target.value)} />
+        </label>
+      </fieldset>
       <fieldset className="grid gap-4 rounded-2xl border border-surface-border bg-white p-5 sm:grid-cols-3">
         <legend className="px-1 text-sm font-extrabold text-brand-navy">Travellers</legend>
         {field("travellersLabel", "Question")}
@@ -275,8 +284,8 @@ function PlannerForm({ initial, defaults }: { initial: Planner; defaults: Planne
       <SaveBar
         busy={busy}
         status={status}
-        onSave={() => run(() => savePageAction("planner", { ...data, destinations }))}
-        onReset={() => { if (confirm("Put the form back to its original wording and destinations?")) run(() => resetPageAction("planner"), () => { setData(defaults); setList(defaults.destinations.join("\n")); }); }}
+        onSave={() => run(() => savePageAction("planner", { ...data, destinations, islandFilter }))}
+        onReset={() => { if (confirm("Put the form back to its original wording and destinations?")) run(() => resetPageAction("planner"), () => { setData(defaults); setList(defaults.destinations.join("\n")); setIslands(defaults.islandFilter.join("\n")); }); }}
       />
     </div>
   );

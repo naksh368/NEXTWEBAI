@@ -268,6 +268,21 @@ export const DEFAULT_PLANNER = {
   packageLabel: "Preferred package",
   submitLabel: "Send enquiry",
   footnote: "We reply with an itinerary and a written quotation. Sending an enquiry does not book or hold anything.",
+  /** The "All islands" filter on the Packages page — islands only, no beaches or sights. */
+  islandFilter: [
+    "Port Blair",
+    "Havelock Island",
+    "Neil Island",
+    "Ross Island",
+    "North Bay Island",
+    "Baratang Island",
+    "Long Island",
+    "Rangat",
+    "Diglipur Island",
+    "Ross & Smith Island",
+    "Little Andaman",
+    "Barren Island",
+  ],
 };
 
 export const plannerSchema = z.object({
@@ -282,6 +297,7 @@ export const plannerSchema = z.object({
   packageLabel: text(DEFAULT_PLANNER.packageLabel, 40),
   submitLabel: text(DEFAULT_PLANNER.submitLabel, 40),
   footnote: text(DEFAULT_PLANNER.footnote, 300),
+  islandFilter: z.array(z.string().max(80)).max(40).catch(DEFAULT_PLANNER.islandFilter).default(DEFAULT_PLANNER.islandFilter),
 });
 export type PlannerContent = z.infer<typeof plannerSchema>;
 

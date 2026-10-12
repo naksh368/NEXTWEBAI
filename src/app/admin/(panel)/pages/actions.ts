@@ -51,6 +51,7 @@ const plannerStrict = z.object({
   travellersLabel: line("Travellers label", 40), travellersPlaceholder: line("Travellers placeholder", 60),
   maxTravellers: z.coerce.number().int().min(1, "Allow at least 1 traveller.").max(200, "At most 200 travellers."),
   packageLabel: line("Package label", 40), submitLabel: line("Button text", 40), footnote: optional("Note under the button", 300),
+  islandFilter: z.array(z.string().trim().min(1).max(80, "An island name is too long (max 80 characters).")).min(1, "Add at least one island to the package filter.").max(40, "At most 40 islands."),
 });
 const STRICT_SCHEMAS: Record<PageKey, z.ZodTypeAny> = { home: STRICT.home, about: STRICT.about, terms: STRICT.terms, privacy: STRICT.terms, planner: plannerStrict };
 

@@ -109,7 +109,7 @@ body.menu-open .mbar{transform:translateY(110%)}
 .chip{display:inline-flex;align-items:center;gap:6px;font-family:var(--f-mono);font-size:.74rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.45rem .8rem;border:var(--bw) solid var(--ink);border-radius:999px;background:var(--card);text-decoration:none}
 .chip .dot{width:8px;height:8px;border-radius:50%;background:#22C55E;box-shadow:0 0 0 3px color-mix(in srgb,#22C55E 30%,transparent);animation:pulse 2s ease-in-out infinite}
 @keyframes pulse{50%{box-shadow:0 0 0 6px color-mix(in srgb,#22C55E 10%,transparent)}}
-.hero h1{font-size:clamp(2.7rem,9vw,8.4rem);font-weight:800;text-transform:uppercase;line-height:.92;letter-spacing:-.04em}
+.hero h1{font-size:min(7.6rem, calc((min(100vw, var(--wrap)) - 40px) / 10.6));font-weight:800;text-transform:uppercase;line-height:.92;letter-spacing:-.04em}
 .hero h1 .line{display:block;white-space:nowrap;overflow:hidden;padding:.02em 0 .06em}
 .hero h1 .line > span{display:inline-block;animation:rise .9s cubic-bezier(.2,.8,.2,1) both}
 .hero h1 .line:nth-child(2) > span{animation-delay:.12s}
@@ -151,7 +151,7 @@ body.menu-open .mbar{transform:translateY(110%)}
 
 @media (max-width:1100px){ .s4{display:none} .s3{right:4%;bottom:30%} }
 @media (max-width:760px){
-  .hero h1{font-size:clamp(2.3rem,12.4vw,5rem)}
+  .hero h1{font-size:calc((100vw - 34px) / 10.4)}
   .badge,.s2,.s3,.drag-hint{display:none}
   .hero-kicker .chip:nth-child(2){display:none}
   .s1{top:16px;right:12px;font-size:.85rem;padding:.5rem .95rem}
@@ -169,6 +169,35 @@ body.menu-open .mbar{transform:translateY(110%)}
 .track li{display:flex;align-items:center;gap:30px;font-family:var(--f-display);font-weight:800;font-size:clamp(1.25rem,2.4vw,1.75rem);text-transform:uppercase;color:var(--on-accent);white-space:nowrap}
 .track li svg{width:18px;height:18px;color:var(--yellow)}
 @keyframes scroll{to{transform:translateX(-50%)}}
+
+/* ---------- scratch to reveal ---------- */
+.scratch-sec{padding-block:clamp(56px,8vw,104px) 0}
+.scratch-card{position:relative;border:var(--bw) solid var(--ink);border-radius:24px;box-shadow:8px 8px 0 var(--ink);overflow:hidden;background:var(--card);min-height:clamp(340px,34vw,420px)}
+.reveal-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));height:100%}
+.reveal-grid > div{padding:clamp(18px,2.4vw,28px);display:flex;gap:14px;align-items:flex-start;border-right:var(--bw) solid var(--ink);border-bottom:var(--bw) solid var(--ink);min-width:0}
+.reveal-grid > div:nth-child(3n){border-right:0}
+.reveal-grid > div:nth-last-child(-n+3){border-bottom:0}
+.reveal-grid .ri{flex:none;width:46px;height:46px;border-radius:12px;border:var(--bw) solid var(--ink);display:grid;place-items:center;background:var(--yellow)}
+.reveal-grid > div:nth-child(3n+2) .ri{background:var(--orange);color:#fff}
+.reveal-grid > div:nth-child(3n) .ri{background:var(--blue);color:#fff}
+.reveal-grid .ri svg{width:22px;height:22px}
+.reveal-grid b{display:block;font-family:var(--f-display);font-weight:800;font-size:1.12rem;line-height:1.15}
+.reveal-grid span{display:block;color:var(--muted);font-size:.9rem;margin-top:3px}
+.scratch-canvas{position:absolute;inset:0;width:100%;height:100%;cursor:grab;touch-action:none;transition:opacity .6s ease}
+.scratch-canvas.gone{opacity:0;pointer-events:none}
+.scratch-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;margin-top:22px}
+.scratch-foot p{color:var(--muted)}
+@media (max-width:860px){
+  .reveal-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .reveal-grid > div{border-right:var(--bw) solid var(--ink)!important;border-bottom:var(--bw) solid var(--ink)!important}
+  .reveal-grid > div:nth-child(2n){border-right:0!important}
+  .reveal-grid > div:last-child{grid-column:span 2;border-bottom:0!important;border-right:0!important}
+}
+@media (max-width:520px){
+  .reveal-grid > div{flex-direction:column;gap:10px;padding:16px}
+  .reveal-grid span{display:none}
+  .reveal-grid b{font-size:1rem}
+}
 
 /* ---------- services ---------- */
 .services-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
@@ -345,7 +374,7 @@ body.menu-open .mbar{transform:translateY(110%)}
 .starter .btn{justify-content:center}
 
 /* ---------- enquiry pop-up: one question at a time ---------- */
-.enq{padding:0;border:var(--bw) solid var(--ink);border-radius:28px;width:min(640px,calc(100vw - 32px));max-width:none;max-height:calc(100dvh - 32px);background:var(--card);color:var(--ink);box-shadow:12px 12px 0 var(--ink);overflow-y:auto;overscroll-behavior:contain}
+.enq{scrollbar-width:none;padding:0;border:var(--bw) solid var(--ink);border-radius:28px;width:min(640px,calc(100vw - 32px));max-width:none;max-height:calc(100dvh - 32px);background:var(--card);color:var(--ink);box-shadow:12px 12px 0 var(--ink);overflow-y:auto;overscroll-behavior:contain}
 .enq[open]{animation:enqIn .35s cubic-bezier(.2,.8,.2,1) both}
 .enq::backdrop{background:rgba(20,20,20,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 @keyframes enqIn{from{opacity:0;transform:translateY(24px) scale(.97)}to{opacity:1;transform:none}}
@@ -438,6 +467,17 @@ textarea.big-input{min-height:150px;resize:vertical;line-height:1.5}
 .boost-tag{font-family:var(--f-mono);font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;background:var(--yellow);border:1.5px solid var(--ink);border-radius:999px;padding:.3rem .7rem;transform:rotate(-2deg)}
 .boost .go{margin-top:6px}
 #sendErr{text-align:center}
+.enq::-webkit-scrollbar,.why-track::-webkit-scrollbar{display:none}
+.why-track{scrollbar-width:none}
+@media (min-width:601px) and (max-height:900px){
+  .enq-form{gap:16px;padding:28px 34px}
+  .fq h3{font-size:clamp(1.6rem,3.6vw,2.1rem)}
+  .tile span{padding:10px 11px;gap:6px}
+  .tile svg{width:20px;height:20px}
+  .pill span{padding:.5rem .85rem}
+  textarea.big-input{min-height:110px}
+  .go{padding:.9rem 1.2rem}
+}
 /* ---------- mobile action bar ---------- */
 .mbar{display:none}
 @media (max-width:760px){
@@ -567,10 +607,10 @@ footer .wrap{padding-block:56px 32px;display:grid;gap:40px}
       <span class="chip">Web · Apps · AI · Brand · SEO</span>
     </div>
 
-    <h1 id="hero-title" aria-label="We build websites, apps, brands and AI automation, and bring you more leads and sales.">
-      <span class="line" aria-hidden="true"><span>We <span class="rot" id="rotVerb">build</span></span></span>
-      <span class="line" aria-hidden="true"><span class="outline"><span class="rot" id="rotThing">websites</span></span></span>
-      <span class="line" aria-hidden="true"><span class="hl-orange"><span class="rot" id="rotGoal">and more.</span></span></span>
+    <h1 id="hero-title" aria-label="We build websites, mobile apps, logos, AI automation, Google rankings and ads.">
+      <span class="line" aria-hidden="true"><span>We are <span class="rot" id="rotVerb">builders</span></span></span>
+      <span class="line" aria-hidden="true"><span class="outline"><span class="rot" id="rotThing">we code websites</span></span></span>
+      <span class="line" aria-hidden="true"><span class="hl-orange">And more.</span></span>
     </h1>
 
     <div class="hero-foot">
@@ -621,6 +661,37 @@ footer .wrap{padding-block:56px 32px;display:grid;gap:40px}
     </ul>
   </div></div>
 </div>
+
+<!-- ============ SCRATCH TO REVEAL ============ -->
+<section class="scratch-sec" id="reveal" aria-labelledby="scratch-title">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <span class="eyebrow">Behind the curtain</span>
+        <h2 id="scratch-title">Scratch to <span class="hl-orange">reveal</span></h2>
+      </div>
+      <p>Nine ways we help businesses grow are hiding under this card. Rub it with your finger or mouse.</p>
+    </div>
+    <div class="scratch-card">
+      <div class="reveal-grid">
+          <div><span class="ri"><svg><use href="#i-web"/></svg></span><p><b>Websites</b><span>Fast sites that bring enquiries</span></p></div>
+          <div><span class="ri"><svg><use href="#i-cart"/></svg></span><p><b>Online stores</b><span>Shops with UPI and card payments</span></p></div>
+          <div><span class="ri"><svg><use href="#i-phone"/></svg></span><p><b>Mobile apps</b><span>Android and iOS, one codebase</span></p></div>
+          <div><span class="ri"><svg><use href="#i-app"/></svg></span><p><b>Web apps &amp; SaaS</b><span>Dashboards, portals, booking systems</span></p></div>
+          <div><span class="ri"><svg><use href="#i-bolt"/></svg></span><p><b>AI automation</b><span>Hand the busywork to AI</span></p></div>
+          <div><span class="ri"><svg><use href="#i-bot"/></svg></span><p><b>AI chatbots</b><span>Answer customers 24/7</span></p></div>
+          <div><span class="ri"><svg><use href="#i-pen"/></svg></span><p><b>Logo &amp; branding</b><span>A look people remember</span></p></div>
+          <div><span class="ri"><svg><use href="#i-mega"/></svg></span><p><b>Social media &amp; ads</b><span>Meta and Google campaigns</span></p></div>
+          <div><span class="ri"><svg><use href="#i-search"/></svg></span><p><b>Google SEO</b><span>Show up when people search</span></p></div>
+      </div>
+      <canvas class="scratch-canvas" id="scratch" aria-label="Scratch card. Drag across it to reveal our services." role="img"></canvas>
+    </div>
+    <div class="scratch-foot">
+      <button class="link-btn" type="button" id="revealAll">Show everything</button>
+      <a class="btn btn--orange" href="#contact">Start a project <svg><use href="#i-arrow"/></svg></a>
+    </div>
+  </div>
+</section>
 
 <!-- ============ SERVICES ============ -->
 <section class="sec" id="services" aria-labelledby="svc-title">
@@ -931,7 +1002,7 @@ footer .wrap{padding-block:56px 32px;display:grid;gap:40px}
       </ol>
       <div class="reach">
         <div class="reach-item"><span class="ic"><svg><use href="#i-mail"/></svg></span><span class="v" data-cfg="email">hello@bizparkers.com</span><button class="copy" type="button" data-copy="email">Copy</button></div>
-        <div class="reach-item" data-cfg-row="whatsapp"><span class="ic"><svg><use href="#i-wa"/></svg></span><span class="v" data-cfg="whatsappLabel"></span><button class="copy" type="button" data-copy="whatsappLabel">Copy</button></div>
+        <div class="reach-item" data-cfg-row="whatsapp"><span class="ic"><svg><use href="#i-phone"/></svg></span><span class="v" data-cfg="whatsappLabel"></span><button class="copy" type="button" data-copy="whatsappLabel">Copy</button></div>
         <div class="reach-item"><span class="ic"><svg><use href="#i-ig"/></svg></span><a class="v" href="https://www.instagram.com/bizparkers/" target="_blank" rel="noopener" style="text-decoration:none">@bizparkers</a></div>
         <div class="reach-item"><span class="ic"><svg><use href="#i-clock"/></svg></span><span class="v">Mon to Sat, 10 AM to 7 PM</span></div>
       </div>
@@ -967,6 +1038,7 @@ footer .wrap{padding-block:56px 32px;display:grid;gap:40px}
       <button class="round-btn" type="button" id="enqClose" aria-label="Close"><svg><use href="#i-x"/></svg></button>
     </div>
 
+    <input type="text" id="f-hp" name="company_website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
     <div id="formMain" style="display:contents">
       <fieldset class="fstep" data-step="1">
         <div class="fq"><h3 id="q1">Hi there!<br>What's your <em>name?</em></h3><p>So we know who we're chatting with.</p></div>
@@ -1148,10 +1220,8 @@ footer .wrap{padding-block:56px 32px;display:grid;gap:40px}
   </div>
 </footer>
 
-<a class="wa-float" id="waFloat" href="#" target="_blank" rel="noopener" aria-label="Chat on WhatsApp" hidden><svg><use href="#i-wa"/></svg></a>
 <div class="mbar" id="mbar">
   <a class="btn btn--orange" href="#contact">Get a free quote <svg><use href="#i-arrow"/></svg></a>
-  <a class="wa" id="mbarWa" href="#" target="_blank" rel="noopener" aria-label="Chat on WhatsApp" hidden><svg><use href="#i-wa"/></svg></a>
 </div>
 
 <script>
@@ -1161,7 +1231,8 @@ const CONFIG = {
   whatsapp: "917290911804", // digits with country code. Leave empty to hide WhatsApp.
   instagram: "https://www.instagram.com/bizparkers/",
   linkedin: "",            // e.g. "https://linkedin.com/company/bizparkers"
-  sendTo: "",              // the email that receives website enquiries (via formsubmit.co). Fill this in before going live.
+  sheetUrl: "",            // Google Apps Script web app URL (see apps-script/SETUP.md). Saves enquiries for the admin panel.
+  sendTo: "",              // optional: also email each enquiry here (via formsubmit.co)
   formEndpoint: ""         // optional: use your own Formspree / Web3Forms URL instead of sendTo
 };
 
@@ -1176,11 +1247,6 @@ const CONFIG = {
   const cfg = { email: CONFIG.email, whatsappLabel: waLabel };
   $$("[data-cfg]").forEach(el => { el.textContent = cfg[el.dataset.cfg] || ""; if(!el.textContent) el.closest("li")?.setAttribute("hidden",""); });
   $$("[data-cfg-row='whatsapp']").forEach(el => el.hidden = !CONFIG.whatsapp);
-  if (CONFIG.whatsapp) {
-    const hello = waLink("Hi Bizparkers, I'd like to discuss a project.");
-    $("#waFloat").href = hello; $("#waFloat").hidden = false;
-    $("#mbarWa").href = hello; $("#mbarWa").hidden = false;
-  }
   const soc = $("#socials");
   if (CONFIG.instagram) soc.insertAdjacentHTML("beforeend", `<a href="${CONFIG.instagram}" target="_blank" rel="noopener" aria-label="Instagram"><svg><use href="#i-ig"/></svg></a>`);
   if (CONFIG.linkedin) soc.insertAdjacentHTML("beforeend", `<a href="${CONFIG.linkedin}" target="_blank" rel="noopener" aria-label="LinkedIn"><svg><use href="#i-in"/></svg></a>`);
@@ -1208,9 +1274,8 @@ const CONFIG = {
   $$("[data-marquee]").forEach(t => { const ul = t.querySelector("ul"); t.appendChild(ul.cloneNode(true)); });
 
   /* rotating headline words */
-  const PAIRS = [["build","websites"],["launch","mobile apps"],["design","logos"],["automate","busywork"],["rank you","on Google"],["run","smart ads"],["create","web apps"]];
-  const GOALS = ["and more.", "more leads.", "more sales.", "more calls."];
-  const rv = $("#rotVerb"), rt = $("#rotThing"), rg = $("#rotGoal");
+  const PAIRS = [["builders","we code websites"],["designers","we craft logos"],["app makers","we ship apps"],["AI nerds","we build AI bots"],["SEO geeks","we rank you #1"],["ad pros","we run smart ads"],["automators","we kill busywork"]];
+  const rv = $("#rotVerb"), rt = $("#rotThing");
   let pi = 0;
   const swap = (el, text, delay) => setTimeout(() => {
     if (reduced) { el.textContent = text; return; }
@@ -1220,8 +1285,60 @@ const CONFIG = {
   setInterval(() => {
     if (document.hidden) return;
     pi = (pi + 1) % PAIRS.length;
-    swap(rv, PAIRS[pi][0], 0); swap(rt, PAIRS[pi][1], 90); swap(rg, GOALS[pi % GOALS.length], 180);
+    swap(rv, PAIRS[pi][0], 0); swap(rt, PAIRS[pi][1], 90);
   }, reduced ? 4000 : 2600);
+
+  /* scratch card */
+  (function(){
+    const cv = $("#scratch"); if (!cv) return;
+    const ctx = cv.getContext("2d");
+    let w, h, dpr, down = false, last = null, done = false, moves = 0;
+    const paint = () => {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const r = cv.getBoundingClientRect(); w = r.width; h = r.height;
+      cv.width = w * dpr; cv.height = h * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.globalCompositeOperation = "source-over";
+      ctx.fillStyle = "#FF4D00"; ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = "rgba(255,255,255,.10)"; ctx.lineWidth = 18;
+      for (let x = -h; x < w + h; x += 46) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + h, h); ctx.stroke(); }
+      const big = Math.max(34, Math.min(w / 9, 96));
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillStyle = "#FFFCF5"; ctx.font = `800 ${big}px "Bricolage Grotesque", Arial Black, sans-serif`;
+      ctx.fillText("SCRATCH HERE", w / 2, h / 2 - big * .45);
+      ctx.fillStyle = "#FFC72E"; ctx.font = `800 ${Math.round(big * .38)}px "Bricolage Grotesque", Arial Black, sans-serif`;
+      ctx.fillText("9 WAYS WE GROW YOUR BUSINESS", w / 2, h / 2 + big * .42);
+      const pill = "DRAG ACROSS WITH YOUR FINGER OR MOUSE";
+      ctx.font = `700 ${Math.max(11, Math.round(big * .17))}px "Onest", system-ui, sans-serif`;
+      const pw = ctx.measureText(pill).width + 36, ph = Math.max(30, big * .44), py = h - ph - 22;
+      ctx.fillStyle = "#141414"; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(w / 2 - pw / 2, py, pw, ph, ph / 2) : ctx.rect(w / 2 - pw / 2, py, pw, ph); ctx.fill();
+      ctx.fillStyle = "#FFFCF5"; ctx.fillText(pill, w / 2, py + ph / 2 + 1);
+    };
+    const pos = e => { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+    const scratch = p => {
+      ctx.globalCompositeOperation = "destination-out"; ctx.strokeStyle = "#000"; ctx.lineCap = "round"; ctx.lineJoin = "round";
+      ctx.lineWidth = Math.max(44, w / 14);
+      ctx.beginPath(); ctx.moveTo((last || p).x, (last || p).y); ctx.lineTo(p.x, p.y); ctx.stroke();
+      last = p;
+      if (++moves % 12 === 0) check();
+    };
+    const check = () => {
+      const step = 24, data = ctx.getImageData(0, 0, cv.width, cv.height).data;
+      let clear = 0, total = 0;
+      for (let y = 0; y < cv.height; y += step) for (let x = 0; x < cv.width; x += step) { total++; if (data[(y * cv.width + x) * 4 + 3] < 40) clear++; }
+      if (clear / total > .5) finish();
+    };
+    const finish = () => { if (done) return; done = true; cv.classList.add("gone"); $("#revealAll").hidden = true; };
+    cv.addEventListener("pointerdown", e => { if (done) return; down = true; last = null; cv.setPointerCapture(e.pointerId); scratch(pos(e)); });
+    cv.addEventListener("pointermove", e => { if (down && !done) scratch(pos(e)); });
+    const up = () => { down = false; last = null; if (!done) check(); };
+    cv.addEventListener("touchmove", e => { if (!done) e.preventDefault(); }, { passive: false });
+    cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
+    $("#revealAll").addEventListener("click", finish);
+    const init = () => { if (!done) paint(); };
+    (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(init);
+    init();
+    let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(init, 150); });
+  })();
 
   /* draggable stickers */
   $$("[data-drag]").forEach(el => {
@@ -1356,15 +1473,19 @@ const CONFIG = {
   backBtn.addEventListener("click", () => showStep(step - 1, -1));
 
   /* sending: enquiries go to CONFIG.sendTo through FormSubmit (or your own CONFIG.formEndpoint) */
+  /* sending: saved to your Google Sheet (CONFIG.sheetUrl, read by the admin panel)
+     and/or emailed through FormSubmit (CONFIG.sendTo) or your own CONFIG.formEndpoint */
   const endpoint = () => CONFIG.formEndpoint || (CONFIG.sendTo ? "https://formsubmit.co/ajax/" + encodeURIComponent(CONFIG.sendTo) : "");
-  const send = async (subject, data) => {
-    const url = endpoint();
-    if (!url) { console.warn("Bizparkers: set CONFIG.sendTo to receive enquiries. Nothing was sent.", data); await new Promise(r => setTimeout(r, 500)); return true; }
-    try {
-      const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" },
-        body: JSON.stringify({ _subject: subject, _template: "table", _captcha: "false", "Enquiry ID": leadId, ...data }) });
-      return r.ok;
-    } catch (err) { return false; }
+  const send = async (subject, data, action) => {
+    const hp = $("#f-hp").value;
+    const jobs = [];
+    if (CONFIG.sheetUrl) jobs.push(fetch(CONFIG.sheetUrl, { method: "POST", body: JSON.stringify({ action, _hp: hp, "Enquiry ID": leadId, ...data }) })
+      .then(r => r.ok ? r.json() : { ok: false }).then(j => !!j.ok).catch(() => false));
+    if (endpoint()) jobs.push(fetch(endpoint(), { method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify({ _subject: subject, _template: "table", _captcha: "false", _honey: hp, "Enquiry ID": leadId, ...data }) })
+      .then(r => r.ok).catch(() => false));
+    if (!jobs.length) { console.warn("Bizparkers: set CONFIG.sheetUrl or CONFIG.sendTo to receive enquiries. Nothing was sent.", data); await new Promise(r => setTimeout(r, 500)); return true; }
+    return (await Promise.all(jobs)).some(Boolean);
   };
   const mainData = () => ({
     "Name": $("#f-name").value.trim(),
@@ -1400,8 +1521,8 @@ const CONFIG = {
     const isMain = step === MAIN_LAST;
     nextBtn.disabled = true; nextBtn.textContent = "Sending…";
     const ok = isMain
-      ? await send(`New enquiry from ${$("#f-name").value.trim()} (${picked().join(", ")})`, mainData())
-      : await send(`More details: ${$("#x-brand").value.trim()} (${$("#f-name").value.trim()})`, extraData());
+      ? await send(`New enquiry from ${$("#f-name").value.trim()} (${picked().join(", ")})`, mainData(), "create")
+      : await send(`More details: ${$("#x-brand").value.trim()} (${$("#f-name").value.trim()})`, extraData(), "details");
     nextBtn.disabled = false; showStep(step);
     if (!ok) { const e2 = $("#sendErr"); e2.textContent = "We couldn't send this. Check your internet connection and try again."; e2.hidden = false; return; }
     if (isMain) {

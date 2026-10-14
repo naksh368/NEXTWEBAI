@@ -432,6 +432,12 @@ textarea.big-input{min-height:150px;resize:vertical;line-height:1.5}
 
 .link-btn{font:inherit;font-weight:700;background:none;border:0;color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:.6rem .2rem;text-decoration:underline;text-underline-offset:3px}
 
+.boost{display:grid;gap:10px;justify-items:center;width:100%;max-width:460px;margin-top:8px;padding:22px 20px;border:var(--bw) dashed var(--ink);border-radius:20px;background:var(--paper)}
+.boost strong{font-family:var(--f-display);font-size:1.35rem;font-weight:800;line-height:1.1}
+.boost > span:not(.boost-tag){color:var(--muted);font-size:.96rem}
+.boost-tag{font-family:var(--f-mono);font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;background:var(--yellow);border:1.5px solid var(--ink);border-radius:999px;padding:.3rem .7rem;transform:rotate(-2deg)}
+.boost .go{margin-top:6px}
+#sendErr{text-align:center}
 /* ---------- mobile action bar ---------- */
 .mbar{display:none}
 @media (max-width:760px){
@@ -1027,28 +1033,82 @@ footer .wrap{padding-block:56px 32px;display:grid;gap:40px}
         <p class="err" id="err4" hidden></p>
       </fieldset>
 
+
+      <fieldset class="fstep" data-step="5" hidden>
+        <div class="fq"><h3 id="q5">What's your <em>business</em> called?</h3><p>The name on your shop board, Instagram or invoices.</p></div>
+        <input class="big-input" id="x-brand" name="brand" autocomplete="organization" placeholder="e.g. Sharma Sweets" aria-labelledby="q5">
+        <p class="err" id="err5" hidden></p>
+      </fieldset>
+
+      <fieldset class="fstep" data-step="6" hidden>
+        <div class="fq"><h3 id="q6">Your <em>email</em> and website</h3><p>We'll send ideas and your quote here.</p></div>
+        <input class="big-input" id="x-email" name="email2" type="email" inputmode="email" autocomplete="email" placeholder="you@gmail.com" aria-labelledby="q6">
+        <span class="mini-label">Do you have a website right now?</span>
+        <div class="pills" role="radiogroup" aria-label="Has a website">
+          <label class="pill"><input type="radio" name="hasSite" id="hs-y" value="Yes"><span>Yes, I do</span></label>
+          <label class="pill"><input type="radio" name="hasSite" id="hs-n" value="No"><span>Not yet</span></label>
+        </div>
+        <input class="big-input" id="x-site" name="website" type="url" inputmode="url" placeholder="yourwebsite.com" aria-label="Website address" hidden>
+        <p class="err" id="err6" hidden></p>
+      </fieldset>
+
+      <fieldset class="fstep" data-step="7" hidden>
+        <div class="fq"><h3 id="q7">Where is your business <em>today?</em></h3><p>Two quick taps so we can come to the call with ideas.</p></div>
+        <span class="mini-label">What do you spend on ads each month?</span>
+        <div class="pills" role="radiogroup" aria-label="Monthly ad spend">
+          <label class="pill"><input type="radio" name="adSpend" id="ad0" value="Not running ads"><span>No ads yet</span></label>
+          <label class="pill"><input type="radio" name="adSpend" id="ad1" value="Under ₹25,000"><span>Under ₹25k</span></label>
+          <label class="pill"><input type="radio" name="adSpend" id="ad2" value="₹25,000 to ₹1 lakh"><span>₹25k to ₹1L</span></label>
+          <label class="pill"><input type="radio" name="adSpend" id="ad3" value="₹1 to 5 lakh"><span>₹1L to ₹5L</span></label>
+          <label class="pill"><input type="radio" name="adSpend" id="ad4" value="Above ₹5 lakh"><span>₹5L+</span></label>
+        </div>
+        <span class="mini-label">What should we improve first? <small style="font-weight:500;color:var(--muted)">Pick all that apply</small></span>
+        <div class="pills" id="goals">
+          <label class="pill"><input type="checkbox" id="g1" value="More leads and enquiries"><span>More leads</span></label>
+          <label class="pill"><input type="checkbox" id="g2" value="More online sales"><span>More online sales</span></label>
+          <label class="pill"><input type="checkbox" id="g3" value="A new website"><span>A new website</span></label>
+          <label class="pill"><input type="checkbox" id="g4" value="Website redesign"><span>Website redesign</span></label>
+          <label class="pill"><input type="checkbox" id="g5" value="Slow or broken website"><span>Slow or broken site</span></label>
+          <label class="pill"><input type="checkbox" id="g6" value="Ranking on Google"><span>Rank on Google</span></label>
+          <label class="pill"><input type="checkbox" id="g7" value="Better ad results"><span>Better ad results</span></label>
+          <label class="pill"><input type="checkbox" id="g8" value="Social media growth"><span>Social media growth</span></label>
+          <label class="pill"><input type="checkbox" id="g9" value="Automating follow-ups"><span>Automate follow-ups</span></label>
+          <label class="pill"><input type="checkbox" id="g10" value="Brand refresh"><span>Brand refresh</span></label>
+          <label class="pill"><input type="checkbox" id="g11" value="Something else"><span>Something else</span></label>
+        </div>
+      </fieldset>
+
       <div class="enq-foot">
         <button class="btn btn--orange go" type="submit" id="nextBtn">Next <svg><use href="#i-arrow"/></svg></button>
-        <div class="dots" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></div>
-        <div class="assure"><span><svg><use href="#i-check"/></svg>Free consultation</span><span><svg><use href="#i-check"/></svg>Reply in 24h</span><span><svg><use href="#i-check"/></svg>No spam</span></div>
+        <p class="err" id="sendErr" hidden></p>
+        <div class="dots" id="dots" aria-hidden="true"></div>
+        <div class="assure" id="assure"><span><svg><use href="#i-check"/></svg>Free consultation</span><span><svg><use href="#i-check"/></svg>Reply in 24h</span><span><svg><use href="#i-check"/></svg>No spam</span></div>
       </div>
     </div>
 
     <div class="thanks" id="formSent" hidden>
       <span class="thanks-badge"><svg><use href="#i-tick"/></svg></span>
       <h3 id="sentTitle" tabindex="-1">Thank you!</h3>
-      <p id="sentText"></p>
-      <p class="note" id="sentNote"></p>
-      <div class="acts">
-        <a class="btn btn--wa" id="sendWa" href="#" target="_blank" rel="noopener" hidden><svg><use href="#i-wa"/></svg><span id="sendWaLabel">Open WhatsApp</span></a>
-        <a class="btn btn--ghost" id="sendMail" href="#"><svg><use href="#i-mail"/></svg>Send by email instead</a>
-        <button class="link-btn" type="button" id="doneBtn" style="justify-self:center">Back to the website</button>
+      <p>Your enquiry has reached our team. We'll get in touch within 24 hours.</p>
+      <div class="boost">
+        <span class="boost-tag">Optional · 30 seconds</span>
+        <strong>Want a faster, sharper reply?</strong>
+        <span>Answer 3 quick questions and we'll come to the first call with ideas for your business.</span>
+        <button class="btn btn--orange go" type="button" id="boostBtn">Answer 3 quick questions <svg><use href="#i-arrow"/></svg></button>
+        <button class="link-btn" type="button" id="laterBtn">No thanks, maybe later</button>
       </div>
+    </div>
+
+    <div class="thanks" id="formDone" hidden>
+      <span class="thanks-badge" style="background:var(--yellow)"><svg style="color:var(--ink)"><use href="#i-tick"/></svg></span>
+      <h3 id="doneTitle" tabindex="-1">All set!</h3>
+      <p id="doneText">Thanks for the extra details. We'll reply within 24 hours with ideas.</p>
       <ol class="next-mini">
-        <li><b>1</b>We read your enquiry and reply within 24 hours</li>
+        <li><b>1</b>We review your answers and reply within 24 hours</li>
         <li><b>2</b>A free call to plan the right solution</li>
         <li><b>3</b>A fixed, written quote. No surprises.</li>
       </ol>
+      <div class="acts"><button class="btn btn--ghost" type="button" id="doneBtn">Back to the website</button></div>
     </div>
   </form>
 </dialog>
@@ -1101,7 +1161,8 @@ const CONFIG = {
   whatsapp: "917290911804", // digits with country code. Leave empty to hide WhatsApp.
   instagram: "https://www.instagram.com/bizparkers/",
   linkedin: "",            // e.g. "https://linkedin.com/company/bizparkers"
-  formEndpoint: ""         // optional: a Formspree / Web3Forms / Getform URL to receive enquiries directly
+  sendTo: "",              // the email that receives website enquiries (via formsubmit.co). Fill this in before going live.
+  formEndpoint: ""         // optional: use your own Formspree / Web3Forms URL instead of sendTo
 };
 
 (function(){
@@ -1223,25 +1284,32 @@ const CONFIG = {
   $$("[data-copy]").forEach(b => b.addEventListener("click", () => copyText(cfg[b.dataset.copy], b, b.previousElementSibling)));
 
   /* ===== enquiry pop-up: one question at a time ===== */
-  const dlg = $("#enquiry"), form = $("#leadForm"), steps = $$(".fstep", form), total = steps.length;
+  const dlg = $("#enquiry"), form = $("#leadForm"), steps = $$(".fstep", form);
   const nextBtn = $("#nextBtn"), backBtn = $("#backBtn");
+  const MAIN_LAST = 4, EXTRA_FIRST = 5, EXTRA_LAST = 7;
   const words = t => (t.trim().match(/\S+/g) || []).length;
   const MAX_WORDS = 150;
+  const leadId = "BP-" + Date.now().toString(36).toUpperCase();
   let step = 1;
 
   const showStep = (n, dir) => {
     step = n;
+    const extra = n >= EXTRA_FIRST, first = extra ? EXTRA_FIRST : 1, count = extra ? 3 : MAIN_LAST, pos = n - first + 1;
     steps.forEach(s => { s.hidden = +s.dataset.step !== n; s.classList.toggle("back", dir < 0); });
-    $("#stepLabel").textContent = `Step ${n} of ${total}`;
-    $$(".dots i", form).forEach((d, i) => { d.className = i < n - 1 ? "done" : i === n - 1 ? "on" : ""; });
-    backBtn.hidden = n === 1;
-    nextBtn.innerHTML = (n === total ? "Send enquiry" : "Next") + ' <svg><use href="#i-arrow"/></svg>';
+    $("#stepLabel").textContent = extra ? `Faster reply · ${pos} of ${count}` : `Step ${pos} of ${count}`;
+    $("#dots").innerHTML = Array.from({ length: count }, (_, i) => `<i class="${i < pos - 1 ? "done" : i === pos - 1 ? "on" : ""}"></i>`).join("");
+    $("#assure").hidden = extra;
+    $("#sendErr").hidden = true;
+    backBtn.hidden = n === 1 || n === EXTRA_FIRST;
+    const label = n === MAIN_LAST ? "Send enquiry" : n === EXTRA_LAST ? "Send details" : "Next";
+    nextBtn.innerHTML = label + ' <svg><use href="#i-arrow"/></svg>';
     dlg.setAttribute("aria-labelledby", "q" + n);
-    if (n === 2) $("#hiName").textContent = ", " + $("#f-name").value.trim().split(" ")[0];
+    if (n === 2) $("#hiName").textContent = ", " + firstName();
     dlg.scrollTop = 0;
     if (dir !== undefined) setTimeout(() => steps[n - 1].querySelector("input.big-input, textarea, input")?.focus({ preventScroll: true }), 60);
   };
 
+  const firstName = () => $("#f-name").value.trim().split(" ")[0];
   const fail = (n, msg, input) => {
     const e = $("#err" + n); e.textContent = msg; e.hidden = !msg;
     if (input) input.setAttribute("aria-invalid", msg ? "true" : "false");
@@ -1250,23 +1318,30 @@ const CONFIG = {
   };
   const picked = () => $$("#picks input:checked, #kits input:checked").map(i => i.value);
   const phoneDigits = () => $("#f-phone").value.replace(/\D/g, "");
+  const okEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
   const validate = n => {
-    if (n === 1) {
-      const v = $("#f-name").value.trim();
-      return fail(1, v.length < 2 ? "Please type your name so we know who to reply to." : "", $("#f-name"));
-    }
+    if (n === 1) return fail(1, $("#f-name").value.trim().length < 2 ? "Please type your name so we know who to reply to." : "", $("#f-name"));
     if (n === 2) {
       const d = phoneDigits(), cc = $("#f-cc").value, em = $("#f-email").value.trim();
       let msg = "";
       if (cc === "91" && !/^[6-9]\d{9}$/.test(d)) msg = "Enter a valid 10-digit Indian mobile number.";
       else if (cc !== "91" && (d.length < 6 || d.length > 14)) msg = "Enter a valid phone number without the country code.";
-      if (!msg && em && !/^\S+@\S+\.\S+$/.test(em)) { $("#f-email").setAttribute("aria-invalid", "true"); return fail(2, "That email doesn't look right. Check for typos, or leave it empty.", $("#f-email")); }
+      if (!msg && em && !okEmail(em)) return fail(2, "That email doesn't look right. Check for typos, or leave it empty.", $("#f-email"));
       $("#f-email").setAttribute("aria-invalid", "false");
       return fail(2, msg, $("#f-phone"));
     }
     if (n === 3) return fail(3, picked().length ? "" : "Pick at least one option. Choose “Not sure” if you're still deciding.");
     if (n === 4) return fail(4, words($("#f-msg").value) > MAX_WORDS ? `Please keep it under ${MAX_WORDS} words. You can share more on the call.` : "", $("#f-msg"));
+    if (n === 5) return fail(5, $("#x-brand").value.trim().length < 2 ? "Please add your business name." : "", $("#x-brand"));
+    if (n === 6) {
+      const em = $("#x-email").value.trim();
+      if (!okEmail(em)) return fail(6, "Please enter a valid email address.", $("#x-email"));
+      $("#x-email").setAttribute("aria-invalid", "false");
+      const site = $("#x-site").value.trim();
+      if (form.hasSite.value === "Yes" && site && !/^\S+\.\S{2,}/.test(site)) return fail(6, "That website address doesn't look right.", $("#x-site"));
+      return fail(6, "");
+    }
     return true;
   };
 
@@ -1277,72 +1352,78 @@ const CONFIG = {
     const w = words(e.target.value), c = $("#msgCount");
     c.textContent = `${w} / ${MAX_WORDS} words`; c.classList.toggle("over", w > MAX_WORDS);
   });
+  $$("input[name=hasSite]").forEach(r => r.addEventListener("change", () => { $("#x-site").hidden = form.hasSite.value !== "Yes"; if (!$("#x-site").hidden) $("#x-site").focus(); }));
   backBtn.addEventListener("click", () => showStep(step - 1, -1));
 
-  const collect = () => ({
-    name: $("#f-name").value.trim(),
-    phone: "+" + $("#f-cc").value + " " + phoneDigits(),
-    email: $("#f-email").value.trim(),
-    services: picked().join(", "),
-    budget: (form.budget.value || "Not shared"),
-    message: $("#f-msg").value.trim()
+  /* sending: enquiries go to CONFIG.sendTo through FormSubmit (or your own CONFIG.formEndpoint) */
+  const endpoint = () => CONFIG.formEndpoint || (CONFIG.sendTo ? "https://formsubmit.co/ajax/" + encodeURIComponent(CONFIG.sendTo) : "");
+  const send = async (subject, data) => {
+    const url = endpoint();
+    if (!url) { console.warn("Bizparkers: set CONFIG.sendTo to receive enquiries. Nothing was sent.", data); await new Promise(r => setTimeout(r, 500)); return true; }
+    try {
+      const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({ _subject: subject, _template: "table", _captcha: "false", "Enquiry ID": leadId, ...data }) });
+      return r.ok;
+    } catch (err) { return false; }
+  };
+  const mainData = () => ({
+    "Name": $("#f-name").value.trim(),
+    "Phone": "+" + $("#f-cc").value + " " + phoneDigits(),
+    "Email": $("#f-email").value.trim() || "Not given",
+    "Looking for": picked().join(", "),
+    "Budget": form.budget.value || "Not shared",
+    "About the business": $("#f-msg").value.trim() || "Not shared"
   });
-  const asText = d => [
-    "Hi Bizparkers! I'd like to start a project.", "",
-    "Name: " + d.name,
-    "Phone: " + d.phone,
-    d.email && "Email: " + d.email,
-    "Looking for: " + d.services,
-    "Budget: " + d.budget,
-    d.message && "\nAbout my business: " + d.message
-  ].filter(Boolean).join("\n");
+  const extraData = () => ({
+    "Name": $("#f-name").value.trim(),
+    "Phone": "+" + $("#f-cc").value + " " + phoneDigits(),
+    "Business name": $("#x-brand").value.trim(),
+    "Email": $("#x-email").value.trim(),
+    "Has a website": form.hasSite.value || "Not answered",
+    "Website": $("#x-site").value.trim() || "-",
+    "Monthly ad spend": form.adSpend.value || "Not answered",
+    "Wants to improve": $$("#goals input:checked").map(i => i.value).join(", ") || "Not answered"
+  });
 
-  const showThanks = (d, received) => {
-    const first = d.name.split(" ")[0], text = asText(d);
-    $("#sentTitle").textContent = `Thank you, ${first}!`;
-    if (received) {
-      $("#sentText").textContent = "Your enquiry is with our team. Expect a WhatsApp message from us within 24 hours.";
-      $("#sentNote").textContent = "In a hurry? Message us on WhatsApp now and we'll pick it up right away.";
-      $("#sendWaLabel").textContent = "Chat with us now";
-    } else {
-      $("#sentText").textContent = "Your enquiry is ready in WhatsApp. Tap send there and we'll reply within 24 hours.";
-      $("#sentNote").textContent = "WhatsApp didn't open? Use the button below to send it.";
-      $("#sendWaLabel").textContent = "Send on WhatsApp";
-    }
-    if (CONFIG.whatsapp) { $("#sendWa").href = waLink(text); $("#sendWa").hidden = false; }
-    $("#sendMail").href = "mailto:" + CONFIG.email + "?subject=" + encodeURIComponent("New project enquiry from " + d.name) + "&body=" + encodeURIComponent(text);
-    $("#formMain").hidden = true; $("#formMain").style.display = "none"; $("#formSent").hidden = false;
-    $("#backBtn").hidden = true; $("#stepLabel").textContent = "All done";
-    dlg.scrollTop = 0; $("#sentTitle").focus({ preventScroll: true });
+  const screen = which => {
+    $("#formMain").style.display = which === "form" ? "contents" : "none";
+    $("#formSent").hidden = which !== "thanks";
+    $("#formDone").hidden = which !== "done";
+    if (which !== "form") { backBtn.hidden = true; $("#stepLabel").textContent = which === "thanks" ? "Enquiry sent" : "All done"; }
+    dlg.scrollTop = 0;
   };
 
   form.addEventListener("submit", async e => {
     e.preventDefault();
     if (!validate(step)) return;
-    if (step < total) { showStep(step + 1, 1); return; }
-    const d = collect();
-    if (CONFIG.formEndpoint) {
-      nextBtn.disabled = true; nextBtn.textContent = "Sending…";
-      let ok = false;
-      try {
-        const r = await fetch(CONFIG.formEndpoint, { method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" }, body: JSON.stringify(d) });
-        ok = r.ok;
-      } catch (err) { ok = false; }
-      nextBtn.disabled = false; showStep(step);
-      if (ok) { showThanks(d, true); return; }
+    if (step !== MAIN_LAST && step !== EXTRA_LAST) { showStep(step + 1, 1); return; }
+    const isMain = step === MAIN_LAST;
+    nextBtn.disabled = true; nextBtn.textContent = "Sending…";
+    const ok = isMain
+      ? await send(`New enquiry from ${$("#f-name").value.trim()} (${picked().join(", ")})`, mainData())
+      : await send(`More details: ${$("#x-brand").value.trim()} (${$("#f-name").value.trim()})`, extraData());
+    nextBtn.disabled = false; showStep(step);
+    if (!ok) { const e2 = $("#sendErr"); e2.textContent = "We couldn't send this. Check your internet connection and try again."; e2.hidden = false; return; }
+    if (isMain) {
+      if ($("#f-email").value.trim()) $("#x-email").value = $("#f-email").value.trim();
+      $("#sentTitle").textContent = `Thank you, ${firstName()}!`;
+      screen("thanks"); $("#sentTitle").focus({ preventScroll: true });
+    } else {
+      $("#doneTitle").textContent = `All set, ${firstName()}!`;
+      $("#doneText").textContent = `Thanks for the details. We'll reply within 24 hours with ideas for ${$("#x-brand").value.trim()}.`;
+      screen("done"); $("#doneTitle").focus({ preventScroll: true });
     }
-    // no form service (or it failed): hand the enquiry to WhatsApp, ready to send
-    if (CONFIG.whatsapp) { try { window.open(waLink(asText(d)), "_blank", "noopener"); } catch (err) {} }
-    showThanks(d, false);
   });
 
-  const resetView = () => { $("#formSent").hidden = true; $("#formMain").hidden = false; $("#formMain").style.display = "contents"; };
+  $("#boostBtn").addEventListener("click", () => { screen("form"); showStep(EXTRA_FIRST, 1); });
+
   const openEnquiry = pick => {
+    const finished = !$("#formSent").hidden || !$("#formDone").hidden || step >= EXTRA_FIRST;
+    if (finished) { form.reset(); $("#x-site").hidden = true; $("#msgCount").textContent = `0 / ${MAX_WORDS} words`; screen("form"); }
     if (pick) {
       const box = $$("#picks input, #kits input").find(i => i.value === pick);
       if (box) { box.checked = true; $("#err3").hidden = true; }
     }
-    if (!$("#formSent").hidden) { resetView(); }
     setMenu(false);
     showStep(1);
     if (!dlg.open) { dlg.showModal(); document.body.classList.add("modal-open"); }
@@ -1353,6 +1434,7 @@ const CONFIG = {
   dlg.addEventListener("click", e => { if (e.target === dlg) closeEnquiry(); });
   $("#enqClose").addEventListener("click", closeEnquiry);
   $("#doneBtn").addEventListener("click", closeEnquiry);
+  $("#laterBtn").addEventListener("click", closeEnquiry);
 
   /* every "Start a project" / "Get a quote" / "Ask about…" opens the pop-up */
   document.addEventListener("click", e => {

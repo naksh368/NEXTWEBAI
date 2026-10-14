@@ -12,7 +12,7 @@
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@700&display=swap">
 <style>
 /* Layout: bold "sticker-board" studio page. Thick ink outlines, hard offset shadows,
    blue + orange from the Bizparkers mark, one big type-driven hero, crossing marquees. */
@@ -376,7 +376,7 @@ body.menu-open .mbar{transform:translateY(110%)}
 /* ---------- enquiry pop-up: one question at a time ---------- */
 .enq{scrollbar-width:none;padding:0;border:var(--bw) solid var(--ink);border-radius:28px;width:min(640px,calc(100vw - 32px));max-width:none;max-height:calc(100dvh - 32px);background:var(--card);color:var(--ink);box-shadow:12px 12px 0 var(--ink);overflow-y:auto;overscroll-behavior:contain}
 .enq[open]{animation:enqIn .35s cubic-bezier(.2,.8,.2,1) both}
-.enq::backdrop{background:rgba(20,20,20,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.enq::backdrop{background:rgba(20,20,20,.62)}
 @keyframes enqIn{from{opacity:0;transform:translateY(24px) scale(.97)}to{opacity:1;transform:none}}
 body.modal-open{overflow:hidden}
 .enq-form{display:flex;flex-direction:column;gap:22px;padding:clamp(24px,4.5vw,44px);min-height:100%}
@@ -483,7 +483,7 @@ textarea.big-input{min-height:150px;resize:vertical;line-height:1.5}
 @media (max-width:760px){
   .mbar{position:fixed;left:0;right:0;bottom:0;z-index:55;display:flex;gap:10px;align-items:center;
     padding-top:10px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));padding-left:var(--gutter-l);padding-right:var(--gutter-r);
-    background:color-mix(in srgb,var(--paper) 94%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    background:var(--paper);
     border-top:var(--bw) solid var(--ink);transform:translateY(110%);transition:transform .3s ease}
   .mbar.show{transform:none}
   .mbar .btn{flex:1;justify-content:center;box-shadow:3px 3px 0 var(--ink)}
@@ -517,6 +517,16 @@ footer .wrap{padding-block:56px 32px;display:grid;gap:40px}
 .wa-float{position:fixed;z-index:60;right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));width:58px;height:58px;border-radius:50%;background:#25D366;color:#fff;border:var(--bw) solid #10121A;box-shadow:4px 4px 0 #10121A;display:grid;place-items:center;transition:transform .2s}
 .wa-float:hover{transform:scale(1.07) rotate(-6deg)}
 .wa-float svg{width:28px;height:28px}
+
+/* ---------- announcement + availability ---------- */
+.announce{background:var(--ink);color:var(--paper);font-weight:600;font-size:.92rem;text-align:center}
+.announce .wrap{padding-block:9px}
+.chip.busy .dot{background:var(--orange);box-shadow:0 0 0 3px color-mix(in srgb,var(--orange) 30%,transparent)}
+
+/* ---------- performance: skip work for things you can't see ---------- */
+.paused .track,.paused .badge svg.ring,.paused .chip .dot{animation-play-state:paused}
+.track{will-change:transform}
+#reveal,#services,#work,#why,#process,#bundles,#faq,#contact,footer{content-visibility:auto;contain-intrinsic-size:auto 900px}
 
 /* ---------- reveal ---------- */
 .reveal{transition:opacity .7s ease, transform .7s cubic-bezier(.2,.8,.2,1)}
@@ -557,6 +567,7 @@ footer .wrap{padding-block:56px 32px;display:grid;gap:40px}
   </defs>
 </svg>
 
+<div class="announce" id="announce" hidden><div class="wrap"><span id="announceText"></span></div></div>
 <!-- ============ NAV ============ -->
 <header class="nav" id="top">
   <div class="wrap">
@@ -603,7 +614,7 @@ footer .wrap{padding-block:56px 32px;display:grid;gap:40px}
 
   <div class="wrap">
     <div class="hero-kicker">
-      <span class="chip"><span class="dot"></span>Taking new projects</span>
+      <span class="chip" id="availChip"><span class="dot"></span><span id="availText">Taking new projects</span></span>
       <span class="chip">Web · Apps · AI · Brand · SEO</span>
     </div>
 
@@ -1225,31 +1236,66 @@ footer .wrap{padding-block:56px 32px;display:grid;gap:40px}
 </div>
 
 <script>
-/* ===== Edit your business details here ===== */
+/* Contact details shown before /api/config answers. Change them live in Admin -> Settings. */
 const CONFIG = {
   email: "hello@bizparkers.com",
-  whatsapp: "917290911804", // digits with country code. Leave empty to hide WhatsApp.
-  instagram: "https://www.instagram.com/bizparkers/",
-  linkedin: "",            // e.g. "https://linkedin.com/company/bizparkers"
-  sheetUrl: "",            // Google Apps Script web app URL (see apps-script/SETUP.md). Saves enquiries for the admin panel.
-  sendTo: "",              // optional: also email each enquiry here (via formsubmit.co)
-  formEndpoint: ""         // optional: use your own Formspree / Web3Forms URL instead of sendTo
+  phone: "+91 72909 11804",
+  instagram: "https://www.instagram.com/bizparkers/"
 };
+/* Preview mode: no server behind the page (opened as a file or in a preview), so nothing is sent. */
+const DEMO = !!window.__BP_DEMO || !/^https?:$/.test(location.protocol);
 
 (function(){
   const $ = (s, r=document) => r.querySelector(s);
   const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const waLink = text => "https://wa.me/" + CONFIG.whatsapp + "?text=" + encodeURIComponent(text);
+  const post = (url, body) => fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 
-  /* config -> page */
-  const waLabel = CONFIG.whatsapp ? "+" + CONFIG.whatsapp.replace(/^(\d{2})(\d{5})(\d+)$/, "$1 $2 $3") : "";
-  const cfg = { email: CONFIG.email, whatsappLabel: waLabel };
-  $$("[data-cfg]").forEach(el => { el.textContent = cfg[el.dataset.cfg] || ""; if(!el.textContent) el.closest("li")?.setAttribute("hidden",""); });
-  $$("[data-cfg-row='whatsapp']").forEach(el => el.hidden = !CONFIG.whatsapp);
-  const soc = $("#socials");
-  if (CONFIG.instagram) soc.insertAdjacentHTML("beforeend", `<a href="${CONFIG.instagram}" target="_blank" rel="noopener" aria-label="Instagram"><svg><use href="#i-ig"/></svg></a>`);
-  if (CONFIG.linkedin) soc.insertAdjacentHTML("beforeend", `<a href="${CONFIG.linkedin}" target="_blank" rel="noopener" aria-label="LinkedIn"><svg><use href="#i-in"/></svg></a>`);
+  /* ---------- privacy-friendly analytics (no cookies, stored on your own server) ---------- */
+  const rid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
+  const keep = (store, k) => { try { let v = store.getItem(k); if (!v) { v = rid(); store.setItem(k, v); } return v; } catch (e) { return rid(); } };
+  const vid = keep(window.localStorage, "bp_vid"), sid = keep(window.sessionStorage, "bp_sid");
+  const dev = innerWidth < 768 ? "mobile" : innerWidth < 1100 ? "tablet" : "desktop";
+  const qs = new URLSearchParams(location.search);
+  const utm = qs.get("utm_source") ? { s: qs.get("utm_source"), m: qs.get("utm_medium") || "", c: qs.get("utm_campaign") || "" } : undefined;
+  let ref = ""; try { const r = document.referrer && new URL(document.referrer); if (r && r.host !== location.host) ref = r.host; } catch (e) {}
+  const track = (t, extra = {}) => {
+    if (DEMO) return;
+    const body = JSON.stringify({ t, sid, vid, dev, path: location.pathname, ...extra });
+    try { if (!(navigator.sendBeacon && navigator.sendBeacon("/api/track", new Blob([body], { type: "application/json" })))) fetch("/api/track", { method: "POST", body, keepalive: true, headers: { "Content-Type": "application/json" } }); } catch (e) {}
+  };
+  let tz = ""; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e) {}
+  track("view", { ref, utm, tz });
+  const t0 = Date.now();
+  addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") track("leave", { dur: (Date.now() - t0) / 1000 }); });
+  if ("IntersectionObserver" in window) {
+    const seen = new Set();
+    const so = new IntersectionObserver(es => es.forEach(en => { const id = en.target.id; if (en.isIntersecting && !seen.has(id)) { seen.add(id); track("section", { label: id }); so.unobserve(en.target); } }), { threshold: .35 });
+    ["reveal", "services", "work", "why", "process", "bundles", "faq", "contact"].forEach(id => { const el = document.getElementById(id); if (el) so.observe(el); });
+  }
+  document.addEventListener("click", e => {
+    const a = e.target.closest("a, button"); if (!a) return;
+    if (a.matches('a[href="#contact"], [data-open], [data-pick]')) track("cta", { label: (a.dataset.pick || a.dataset.open || a.textContent).trim().slice(0, 40) || "Start a project" });
+    else if (a.href && a.host && a.host !== location.host) track("outbound", { label: a.host });
+  }, true);
+
+  /* ---------- contact details, availability and announcement (editable in Admin) ---------- */
+  const cfg = {};
+  const applyConfig = c => {
+    Object.assign(CONFIG, c);
+    cfg.email = CONFIG.email; cfg.whatsappLabel = CONFIG.phone;
+    $$("[data-cfg]").forEach(el => { el.textContent = cfg[el.dataset.cfg] || ""; const li = el.closest("li"); if (li) li.hidden = !el.textContent; });
+    $$("[data-cfg-row='whatsapp']").forEach(el => el.hidden = !CONFIG.phone);
+    $$("a[data-ig]").forEach(a => { a.href = CONFIG.instagram || "#"; a.closest(".reach-item, li, .socials > *") && (a.hidden = !CONFIG.instagram); });
+    const soc = $("#socials");
+    soc.innerHTML = CONFIG.instagram ? `<a href="${CONFIG.instagram.replace(/"/g, "")}" target="_blank" rel="noopener" aria-label="Instagram"><svg><use href="#i-ig"/></svg></a>` : "";
+    const chip = $("#availChip");
+    if (chip && c.available !== undefined) { chip.classList.toggle("busy", !c.available); $("#availText").textContent = c.available ? "Taking new projects" : "Booked up · join the waitlist"; }
+    const an = $("#announce");
+    if (an && c.announcement) { an.hidden = !(c.announcement.on && c.announcement.text); $("#announceText").textContent = c.announcement.text || ""; }
+  };
+  applyConfig({});
+  if (!DEMO) fetch("/api/config").then(r => r.ok ? r.json() : null).then(c => c && applyConfig(c)).catch(() => {});
   $("#yr").textContent = new Date().getFullYear();
 
   /* mobile menu */
@@ -1266,12 +1312,19 @@ const CONFIG = {
   /* mobile action bar: shows after the hero, hides at the form */
   const mbar = $("#mbar"), contact = $("#contact");
   let atContact = false;
-  const syncBar = () => mbar.classList.toggle("show", window.scrollY > 520 && !atContact);
+  let barQueued = false;
+  const syncBar = () => { if (barQueued) return; barQueued = true; requestAnimationFrame(() => { barQueued = false; mbar.classList.toggle("show", window.scrollY > 520 && !atContact); }); };
   if ("IntersectionObserver" in window) new IntersectionObserver(es => { atContact = es[0].isIntersecting; syncBar(); }, { threshold: .05 }).observe(contact);
   window.addEventListener("scroll", syncBar, { passive: true });
 
   /* marquee: duplicate list for a seamless loop */
   $$("[data-marquee]").forEach(t => { const ul = t.querySelector("ul"); t.appendChild(ul.cloneNode(true)); });
+
+  /* pause looping animations (marquees, badge, pulse) while they are off screen */
+  if ("IntersectionObserver" in window) {
+    const po = new IntersectionObserver(es => es.forEach(en => en.target.classList.toggle("paused", !en.isIntersecting)));
+    $$(".marquees, .hero").forEach(el => po.observe(el));
+  }
 
   /* rotating headline words */
   const PAIRS = [["builders","we code websites"],["designers","we craft logos"],["app makers","we ship apps"],["AI nerds","we build AI bots"],["SEO geeks","we rank you #1"],["ad pros","we run smart ads"],["automators","we kill busywork"]];
@@ -1283,7 +1336,7 @@ const CONFIG = {
     el.addEventListener("animationend", function h(){ el.removeEventListener("animationend", h); el.textContent = text; el.classList.remove("out"); void el.offsetWidth; el.classList.add("in"); });
   }, delay);
   setInterval(() => {
-    if (document.hidden) return;
+    if (document.hidden || $(".hero").classList.contains("paused")) return;
     pi = (pi + 1) % PAIRS.length;
     swap(rv, PAIRS[pi][0], 0); swap(rt, PAIRS[pi][1], 90);
   }, reduced ? 4000 : 2600);
@@ -1292,7 +1345,15 @@ const CONFIG = {
   (function(){
     const cv = $("#scratch"); if (!cv) return;
     const ctx = cv.getContext("2d");
-    let w, h, dpr, down = false, last = null, done = false, moves = 0;
+    let w, h, dpr, down = false, last = null, done = false;
+    const GX = 32, GY = 14; let grid = new Uint8Array(GX * GY), cleared = 0;
+    const mark = (x, y, r) => {
+      for (let gy = Math.max(0, Math.floor((y - r) / h * GY)); gy <= Math.min(GY - 1, Math.floor((y + r) / h * GY)); gy++)
+        for (let gx = Math.max(0, Math.floor((x - r) / w * GX)); gx <= Math.min(GX - 1, Math.floor((x + r) / w * GX)); gx++) {
+          const cx = (gx + .5) * w / GX, cy = (gy + .5) * h / GY;
+          if (!grid[gy * GX + gx] && (cx - x) ** 2 + (cy - y) ** 2 <= r * r) { grid[gy * GX + gx] = 1; cleared++; }
+        }
+    };
     const paint = () => {
       dpr = Math.min(window.devicePixelRatio || 1, 2);
       const r = cv.getBoundingClientRect(); w = r.width; h = r.height;
@@ -1317,24 +1378,21 @@ const CONFIG = {
     const scratch = p => {
       ctx.globalCompositeOperation = "destination-out"; ctx.strokeStyle = "#000"; ctx.lineCap = "round"; ctx.lineJoin = "round";
       ctx.lineWidth = Math.max(44, w / 14);
-      ctx.beginPath(); ctx.moveTo((last || p).x, (last || p).y); ctx.lineTo(p.x, p.y); ctx.stroke();
+      const from = last || p;
+      ctx.beginPath(); ctx.moveTo(from.x, from.y); ctx.lineTo(p.x, p.y); ctx.stroke();
+      const r = ctx.lineWidth / 2, dist = Math.hypot(p.x - from.x, p.y - from.y), n = Math.max(1, Math.ceil(dist / (r / 2)));
+      for (let k = 0; k <= n; k++) mark(from.x + (p.x - from.x) * k / n, from.y + (p.y - from.y) * k / n, r);
       last = p;
-      if (++moves % 12 === 0) check();
+      if (cleared / grid.length > .5) finish();
     };
-    const check = () => {
-      const step = 24, data = ctx.getImageData(0, 0, cv.width, cv.height).data;
-      let clear = 0, total = 0;
-      for (let y = 0; y < cv.height; y += step) for (let x = 0; x < cv.width; x += step) { total++; if (data[(y * cv.width + x) * 4 + 3] < 40) clear++; }
-      if (clear / total > .5) finish();
-    };
-    const finish = () => { if (done) return; done = true; cv.classList.add("gone"); $("#revealAll").hidden = true; };
+    const finish = () => { if (done) return; done = true; cv.classList.add("gone"); $("#revealAll").hidden = true; track("scratch", { label: "revealed" }); };
     cv.addEventListener("pointerdown", e => { if (done) return; down = true; last = null; cv.setPointerCapture(e.pointerId); scratch(pos(e)); });
     cv.addEventListener("pointermove", e => { if (down && !done) scratch(pos(e)); });
-    const up = () => { down = false; last = null; if (!done) check(); };
+    const up = () => { down = false; last = null; };
     cv.addEventListener("touchmove", e => { if (!done) e.preventDefault(); }, { passive: false });
     cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
     $("#revealAll").addEventListener("click", finish);
-    const init = () => { if (!done) paint(); };
+    const init = () => { if (!done) { paint(); grid = new Uint8Array(GX * GY); cleared = 0; } };
     (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(init);
     init();
     let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(init, 150); });
@@ -1378,10 +1436,10 @@ const CONFIG = {
   }
 
   /* why-us carousel */
-  const track = $("#whyTrack");
-  const stepW = () => (track.querySelector(".why-card")?.offsetWidth || 300) + 20;
-  $("#whyPrev").addEventListener("click", () => track.scrollBy({ left: -stepW(), behavior: reduced ? "auto" : "smooth" }));
-  $("#whyNext").addEventListener("click", () => track.scrollBy({ left: stepW(), behavior: reduced ? "auto" : "smooth" }));
+  const whyTrack = $("#whyTrack");
+  const stepW = () => (whyTrack.querySelector(".why-card")?.offsetWidth || 300) + 20;
+  $("#whyPrev").addEventListener("click", () => whyTrack.scrollBy({ left: -stepW(), behavior: reduced ? "auto" : "smooth" }));
+  $("#whyNext").addEventListener("click", () => whyTrack.scrollBy({ left: stepW(), behavior: reduced ? "auto" : "smooth" }));
 
   /* FAQ: one open at a time */
   $$(".faq details").forEach(d => d.addEventListener("toggle", () => {
@@ -1406,7 +1464,7 @@ const CONFIG = {
   const MAIN_LAST = 4, EXTRA_FIRST = 5, EXTRA_LAST = 7;
   const words = t => (t.trim().match(/\S+/g) || []).length;
   const MAX_WORDS = 150;
-  const leadId = "BP-" + Date.now().toString(36).toUpperCase();
+  let lead = null; // { id, token } from the server, used to attach faster-reply details
   let step = 1;
 
   const showStep = (n, dir) => {
@@ -1472,38 +1530,33 @@ const CONFIG = {
   $$("input[name=hasSite]").forEach(r => r.addEventListener("change", () => { $("#x-site").hidden = form.hasSite.value !== "Yes"; if (!$("#x-site").hidden) $("#x-site").focus(); }));
   backBtn.addEventListener("click", () => showStep(step - 1, -1));
 
-  /* sending: enquiries go to CONFIG.sendTo through FormSubmit (or your own CONFIG.formEndpoint) */
-  /* sending: saved to your Google Sheet (CONFIG.sheetUrl, read by the admin panel)
-     and/or emailed through FormSubmit (CONFIG.sendTo) or your own CONFIG.formEndpoint */
-  const endpoint = () => CONFIG.formEndpoint || (CONFIG.sendTo ? "https://formsubmit.co/ajax/" + encodeURIComponent(CONFIG.sendTo) : "");
-  const send = async (subject, data, action) => {
-    const hp = $("#f-hp").value;
-    const jobs = [];
-    if (CONFIG.sheetUrl) jobs.push(fetch(CONFIG.sheetUrl, { method: "POST", body: JSON.stringify({ action, _hp: hp, "Enquiry ID": leadId, ...data }) })
-      .then(r => r.ok ? r.json() : { ok: false }).then(j => !!j.ok).catch(() => false));
-    if (endpoint()) jobs.push(fetch(endpoint(), { method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" },
-      body: JSON.stringify({ _subject: subject, _template: "table", _captcha: "false", _honey: hp, "Enquiry ID": leadId, ...data }) })
-      .then(r => r.ok).catch(() => false));
-    if (!jobs.length) { console.warn("Bizparkers: set CONFIG.sheetUrl or CONFIG.sendTo to receive enquiries. Nothing was sent.", data); await new Promise(r => setTimeout(r, 500)); return true; }
-    return (await Promise.all(jobs)).some(Boolean);
+  /* sending: enquiries are saved on the Bizparkers server and appear in /admin */
+  const send = async (data, isMain) => {
+    if (DEMO) { await new Promise(r => setTimeout(r, 450)); if (isMain) lead = { id: "DEMO", token: "demo" }; return { ok: true }; }
+    try {
+      const r = isMain
+        ? await post("/api/enquiries", { ...data, company_website: $("#f-hp").value, sid, vid, source: { ref, landing: location.pathname + location.search, utm: utm ? [utm.s, utm.m, utm.c].filter(Boolean).join(" / ") : "", dev } })
+        : await post(`/api/enquiries/${encodeURIComponent(lead.id)}/details`, { ...data, token: lead.token });
+      const j = await r.json().catch(() => ({}));
+      if (r.ok && j.ok) { if (isMain) lead = { id: j.id, token: j.token }; return { ok: true }; }
+      return { ok: false, error: j.error };
+    } catch (e) { return { ok: false }; }
   };
   const mainData = () => ({
-    "Name": $("#f-name").value.trim(),
-    "Phone": "+" + $("#f-cc").value + " " + phoneDigits(),
-    "Email": $("#f-email").value.trim() || "Not given",
-    "Looking for": picked().join(", "),
-    "Budget": form.budget.value || "Not shared",
-    "About the business": $("#f-msg").value.trim() || "Not shared"
+    name: $("#f-name").value.trim(),
+    phone: "+" + $("#f-cc").value + " " + phoneDigits(),
+    email: $("#f-email").value.trim(),
+    services: picked(),
+    budget: form.budget.value || "",
+    message: $("#f-msg").value.trim()
   });
   const extraData = () => ({
-    "Name": $("#f-name").value.trim(),
-    "Phone": "+" + $("#f-cc").value + " " + phoneDigits(),
-    "Business name": $("#x-brand").value.trim(),
-    "Email": $("#x-email").value.trim(),
-    "Has a website": form.hasSite.value || "Not answered",
-    "Website": $("#x-site").value.trim() || "-",
-    "Monthly ad spend": form.adSpend.value || "Not answered",
-    "Wants to improve": $$("#goals input:checked").map(i => i.value).join(", ") || "Not answered"
+    brand: $("#x-brand").value.trim(),
+    email: $("#x-email").value.trim(),
+    hasSite: form.hasSite.value || "",
+    website: $("#x-site").value.trim(),
+    adSpend: form.adSpend.value || "",
+    improve: $$("#goals input:checked").map(i => i.value)
   });
 
   const screen = which => {
@@ -1517,14 +1570,13 @@ const CONFIG = {
   form.addEventListener("submit", async e => {
     e.preventDefault();
     if (!validate(step)) return;
-    if (step !== MAIN_LAST && step !== EXTRA_LAST) { showStep(step + 1, 1); return; }
+    if (step !== MAIN_LAST && step !== EXTRA_LAST) { if (step < MAIN_LAST) track("form_step", { step: step + 1 }); showStep(step + 1, 1); return; }
     const isMain = step === MAIN_LAST;
     nextBtn.disabled = true; nextBtn.textContent = "Sending…";
-    const ok = isMain
-      ? await send(`New enquiry from ${$("#f-name").value.trim()} (${picked().join(", ")})`, mainData(), "create")
-      : await send(`More details: ${$("#x-brand").value.trim()} (${$("#f-name").value.trim()})`, extraData(), "details");
+    const res = await send(isMain ? mainData() : extraData(), isMain);
     nextBtn.disabled = false; showStep(step);
-    if (!ok) { const e2 = $("#sendErr"); e2.textContent = "We couldn't send this. Check your internet connection and try again."; e2.hidden = false; return; }
+    if (!res.ok) { const e2 = $("#sendErr"); e2.textContent = res.error || "We couldn't send this. Check your internet connection and try again."; e2.hidden = false; return; }
+    track(isMain ? "form_submit" : "form_details");
     if (isMain) {
       if ($("#f-email").value.trim()) $("#x-email").value = $("#f-email").value.trim();
       $("#sentTitle").textContent = `Thank you, ${firstName()}!`;
@@ -1540,14 +1592,14 @@ const CONFIG = {
 
   const openEnquiry = pick => {
     const finished = !$("#formSent").hidden || !$("#formDone").hidden || step >= EXTRA_FIRST;
-    if (finished) { form.reset(); $("#x-site").hidden = true; $("#msgCount").textContent = `0 / ${MAX_WORDS} words`; screen("form"); }
+    if (finished) { lead = null; form.reset(); $("#x-site").hidden = true; $("#msgCount").textContent = `0 / ${MAX_WORDS} words`; screen("form"); }
     if (pick) {
       const box = $$("#picks input, #kits input").find(i => i.value === pick);
       if (box) { box.checked = true; $("#err3").hidden = true; }
     }
     setMenu(false);
     showStep(1);
-    if (!dlg.open) { dlg.showModal(); document.body.classList.add("modal-open"); }
+    if (!dlg.open) { dlg.showModal(); document.body.classList.add("modal-open"); track("form_open"); }
     setTimeout(() => $("#f-name").focus({ preventScroll: true }), 60);
   };
   const closeEnquiry = () => { if (dlg.open) dlg.close(); };

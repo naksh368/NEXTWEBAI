@@ -1,0 +1,871 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Bizparkers Admin</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: studio back office. Fixed sidebar, page header with range control, KPI strip, chart cards in a 12-col grid, slide-in record drawer. */
+:root{
+  --paper:#FAF3E5; --card:#FFFCF5; --ink:#141414; --muted:#6A6253; --line:#E7DDC9; --soft:#F3EAD7;
+  --orange:#FF4D00; --yellow:#FFC72E; --blue:#0A66FF; --good:#15803D; --bad:#C0261A;
+  --f-display:"Bricolage Grotesque","Arial Black",Arial,sans-serif;
+  --f-body:"Onest","Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  --bw:2px; --gl:max(16px,env(safe-area-inset-left,0px)); --gr:max(16px,env(safe-area-inset-right,0px));
+  color-scheme:light;
+}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--orange);outline-offset:2px;border-radius:8px}
+h1,h2,h3{font-family:var(--f-display);margin:0;letter-spacing:-.02em;line-height:1.08}
+.num{font-variant-numeric:tabular-nums}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;font-family:var(--f-display);font-weight:700;font-size:.95rem;padding:.6rem 1rem;border:var(--bw) solid var(--ink);border-radius:999px;background:var(--card);cursor:pointer;box-shadow:3px 3px 0 var(--ink);text-decoration:none;color:var(--ink);transition:transform .12s, box-shadow .12s}
+.btn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--ink)}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.btn[disabled]{opacity:.55;pointer-events:none}
+.btn--orange{background:var(--orange);color:#fff}
+.btn--ink{background:var(--ink);color:var(--paper)}
+.btn--sm{padding:.4rem .75rem;font-size:.85rem;box-shadow:2px 2px 0 var(--ink)}
+.btn svg{width:17px;height:17px;flex:none}
+.icon-btn{width:40px;height:40px;flex:none;border-radius:50%;border:var(--bw) solid var(--ink);background:var(--card);display:grid;place-items:center;cursor:pointer;color:var(--ink)}
+.icon-btn svg{width:18px;height:18px}
+.link{background:none;border:0;padding:0;font-weight:700;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.input{width:100%;background:var(--card);border:var(--bw) solid var(--ink);border-radius:12px;padding:.65rem .85rem;font-size:.95rem;min-width:0}
+.input:focus{outline:none;box-shadow:3px 3px 0 var(--orange)}
+textarea.input{resize:vertical;min-height:90px}
+label.f{display:grid;gap:6px;font-weight:600;font-size:.9rem;min-width:0}
+label.f small{font-weight:500;color:var(--muted)}
+.err{color:var(--bad);font-weight:600;font-size:.9rem;margin:0}
+.muted{color:var(--muted)}
+.eyebrow{font-family:var(--f-mono);font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+
+/* ---------- login ---------- */
+.login{min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:24px var(--gr) 24px var(--gl);background-image:radial-gradient(rgba(20,20,20,.12) 1.4px,transparent 1.4px);background-size:24px 24px}
+.login-card{width:min(430px,100%);background:var(--card);border:var(--bw) solid var(--ink);border-radius:26px;box-shadow:10px 10px 0 var(--ink);padding:34px;display:grid;gap:16px}
+.login-card img{height:38px;width:auto}
+.login-card h1{font-size:2.1rem;text-transform:uppercase}
+.login-card h1 span{color:var(--orange)}
+.pw{position:relative}
+.pw .input{padding-right:70px}
+.pw button{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:0;font-weight:700;font-size:.82rem;cursor:pointer;padding:6px}
+.check{display:flex;align-items:center;gap:8px;font-weight:500;cursor:pointer}
+.check input{width:18px;height:18px;accent-color:var(--orange)}
+.demo-note{font-size:.85rem;background:var(--yellow);border:1.5px solid var(--ink);border-radius:12px;padding:.6rem .8rem}
+
+/* ---------- shell ---------- */
+.shell{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100vh}
+.side{position:sticky;top:0;height:100vh;border-right:var(--bw) solid var(--ink);background:var(--card);display:flex;flex-direction:column;padding:22px 16px;gap:22px}
+.side .brand{display:flex;align-items:center;gap:10px;padding:0 8px}
+.side .brand img{height:30px;width:auto}
+.side .brand span{font-family:var(--f-mono);font-size:.62rem;font-weight:700;letter-spacing:.12em;background:var(--ink);color:var(--yellow);padding:.2rem .5rem;border-radius:999px}
+.nav{display:grid;gap:4px}
+.nav a{display:flex;align-items:center;gap:12px;padding:.7rem .8rem;border-radius:14px;text-decoration:none;font-weight:600;border:var(--bw) solid transparent}
+.nav a svg{width:20px;height:20px;flex:none}
+.nav a:hover{background:var(--soft)}
+.nav a[aria-current="page"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.nav a .badge{margin-left:auto;font-family:var(--f-mono);font-size:.7rem;font-weight:700;background:var(--orange);color:#fff;border-radius:999px;padding:.05rem .45rem}
+.side .foot{margin-top:auto;display:grid;gap:10px;font-size:.85rem}
+.side .who{padding:12px;border:1.5px solid var(--line);border-radius:14px;display:grid;gap:2px;overflow-wrap:anywhere}
+.side .who b{font-weight:700}
+.main{min-width:0;padding:28px clamp(16px,3vw,40px) 80px}
+.topbar{display:none}
+.tabs{display:none}
+.page-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px;margin-bottom:22px}
+.page-head h1{font-size:clamp(1.9rem,3.6vw,2.8rem);text-transform:uppercase}
+.page-head h1 span{color:var(--orange)}
+.page-head .sub{color:var(--muted);margin-top:6px}
+.head-tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.seg{display:inline-flex;border:var(--bw) solid var(--ink);border-radius:999px;background:var(--card);padding:3px}
+.seg button{border:0;background:none;border-radius:999px;padding:.4rem .85rem;font-weight:700;font-size:.85rem;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.live{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:.88rem;padding:.45rem .8rem;border:1.5px solid var(--ink);border-radius:999px;background:var(--card)}
+.live i{width:9px;height:9px;border-radius:50%;background:#22C55E;box-shadow:0 0 0 3px rgba(34,197,94,.25)}
+
+@media (max-width:960px){
+  .shell{grid-template-columns:1fr}
+  .side{display:none}
+  .topbar{display:flex;position:sticky;top:0;z-index:30;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top,0px)) var(--gr) 10px var(--gl);background:var(--card);border-bottom:var(--bw) solid var(--ink)}
+  .topbar img{height:26px;width:auto}
+  .topbar .sp{flex:1}
+  .tabs{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);border-top:var(--bw) solid var(--ink);padding:6px var(--gr) calc(6px + env(safe-area-inset-bottom,0px)) var(--gl)}
+  .tabs a{display:grid;justify-items:center;gap:2px;font-size:.68rem;font-weight:700;text-decoration:none;padding:6px 2px;border-radius:12px;position:relative}
+  .tabs a svg{width:21px;height:21px}
+  .tabs a[aria-current="page"]{background:var(--ink);color:var(--paper)}
+  .tabs a .badge{position:absolute;top:2px;right:calc(50% - 22px);font-size:.6rem;background:var(--orange);color:#fff;border-radius:999px;padding:0 .35rem;font-family:var(--f-mono)}
+  .main{padding:20px var(--gr) 110px var(--gl)}
+}
+
+/* ---------- cards + grid ---------- */
+.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px;align-items:start}
+.card{background:var(--card);border:var(--bw) solid var(--ink);border-radius:20px;padding:18px 20px;min-width:0}
+.card h3{font-size:1.08rem;margin-bottom:2px}
+.card .note{font-size:.84rem;color:var(--muted);margin:0 0 12px}
+.c12{grid-column:span 12}.c8{grid-column:span 8}.c6{grid-column:span 6}.c4{grid-column:span 4}
+@media (max-width:1180px){.c4{grid-column:span 6}.c8{grid-column:span 12}}
+@media (max-width:760px){.c4,.c6,.c8{grid-column:span 12}}
+
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-bottom:16px}
+@media (max-width:1180px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:620px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:var(--card);border:var(--bw) solid var(--ink);border-radius:18px;padding:14px 16px;display:grid;gap:4px;min-width:0}
+.kpi:first-child{box-shadow:5px 5px 0 var(--ink)}
+.kpi span{font-weight:600;font-size:.88rem;color:var(--muted)}
+.kpi b{font-family:var(--f-display);font-size:clamp(1.6rem,2.6vw,2.2rem);line-height:1;font-variant-numeric:tabular-nums}
+.delta{font-size:.78rem;font-weight:700;display:inline-flex;align-items:center;gap:4px}
+.delta.up{color:var(--good)}.delta.down{color:var(--bad)}.delta.flat{color:var(--muted)}
+
+/* bar chart */
+.chart{position:relative}
+.chart svg{display:block;width:100%;height:220px;overflow:visible}
+.chart .axis text{font-family:var(--f-mono);font-size:10px;fill:var(--muted)}
+.chart .grid-line{stroke:var(--line);stroke-width:1}
+.chart .hit{fill:transparent;cursor:crosshair}
+.chart .hit:hover + .bar,.chart .bar.on{opacity:.75}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--paper);font-size:.8rem;padding:.4rem .6rem;border-radius:10px;white-space:nowrap;transform:translate(-50%,-110%);z-index:5}
+.tip b{font-family:var(--f-display)}
+
+/* horizontal bars */
+.hbars{display:grid;gap:10px}
+.hbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center;font-size:.9rem}
+.hbar .lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.hbar .val{font-variant-numeric:tabular-nums;color:var(--muted);font-weight:600}
+.hbar .track{grid-column:1 / -1;height:10px;border-radius:999px;background:var(--soft);overflow:hidden}
+.hbar .fill{display:block;height:100%;border-radius:999px;background:var(--orange);transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.hbars.blue .fill{background:var(--blue)}
+.hbars.ink .fill{background:var(--ink)}
+.empty-mini{color:var(--muted);font-size:.9rem;padding:14px 0}
+
+/* funnel */
+.funnel{display:grid;gap:8px}
+.fstep{display:grid;grid-template-columns:170px minmax(0,1fr) 92px;gap:12px;align-items:center;font-size:.9rem}
+.fstep .lbl{font-weight:600}
+.fstep .bar{height:26px;border-radius:8px;background:var(--soft);overflow:hidden}
+.fstep .bar i{display:block;height:100%;background:var(--orange);border-radius:8px}
+.fstep .v{text-align:right;font-variant-numeric:tabular-nums}
+.fstep .v small{display:block;color:var(--muted);font-size:.75rem}
+@media (max-width:620px){.fstep{grid-template-columns:1fr 70px}.fstep .bar{grid-column:1 / -1;grid-row:2}}
+
+/* lists */
+.mini-list{display:grid}
+.mini-list button{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;text-align:left;background:none;border:0;border-bottom:1.5px solid var(--line);padding:10px 2px;cursor:pointer}
+.mini-list button:last-child{border-bottom:0}
+.mini-list button:hover{background:var(--soft)}
+.mini-list b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini-list small{color:var(--muted);grid-column:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini-list .r{grid-row:1 / span 2;grid-column:2;align-self:center}
+
+/* status pills */
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:.76rem;font-weight:700;padding:.22rem .6rem;border-radius:999px;border:1.5px solid var(--ink);white-space:nowrap;line-height:1.3}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.s-New{background:#FFE3D6;color:#B33600}
+.s-Contacted{background:#DCE8FF;color:#0748B3}
+.s-Proposal{background:#FFF0C2;color:#7A5600}
+.s-Won{background:#D9F5E3;color:#0E7A37}
+.s-Lost{background:#EDEAE3;color:#5F594C}
+.s-Spam{background:#F6D9D6;color:#8F1D13}
+
+/* enquiries table */
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+.search{position:relative;flex:1 1 260px;min-width:0}
+.search svg{position:absolute;left:12px;top:50%;width:18px;height:18px;transform:translateY(-50%);color:var(--muted)}
+.search .input{padding-left:38px}
+select.input{width:auto;cursor:pointer}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.chip{display:inline-flex;align-items:center;gap:6px;border:var(--bw) solid var(--ink);background:var(--card);border-radius:999px;padding:.35rem .75rem;font-weight:600;font-size:.86rem;cursor:pointer}
+.chip i{font-style:normal;font-family:var(--f-mono);font-size:.7rem;background:var(--paper);border:1.5px solid var(--ink);border-radius:999px;padding:0 .35rem}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.chip[aria-pressed="true"] i{background:var(--yellow);color:var(--ink)}
+.table{background:var(--card);border:var(--bw) solid var(--ink);border-radius:20px;overflow:hidden}
+.tr{display:grid;grid-template-columns:34px 92px minmax(0,1.4fr) 150px minmax(0,1.3fr) 110px 128px;gap:12px;align-items:center;padding:12px 16px;border-bottom:1.5px solid var(--line)}
+.tr:last-child{border-bottom:0}
+.tr.th{background:var(--soft);font-family:var(--f-mono);font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-bottom:var(--bw) solid var(--ink)}
+.tr.row{cursor:pointer}
+.tr.row:hover{background:color-mix(in srgb,var(--yellow) 16%,transparent)}
+.tr .when{font-size:.84rem;color:var(--muted)}
+.tr .who{min-width:0}
+.tr .who b{display:flex;align-items:center;gap:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tr .who small{display:block;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dot-new{width:8px;height:8px;border-radius:50%;background:var(--orange);flex:none}
+.tr .ph{font-family:var(--f-mono);font-size:.8rem}
+.svcs{display:flex;flex-wrap:wrap;gap:4px;min-width:0}
+.svcs span{font-size:.74rem;font-weight:600;padding:.1rem .45rem;border:1.5px solid var(--ink);border-radius:999px;background:var(--paper);white-space:nowrap}
+.money{font-variant-numeric:tabular-nums;font-weight:600}
+.star{background:none;border:0;cursor:pointer;padding:4px;color:var(--line);display:grid;place-items:center}
+.star svg{width:20px;height:20px}
+.star[aria-pressed="true"]{color:var(--yellow)}
+.star[aria-pressed="true"] svg{stroke:var(--ink)}
+.fu{font-size:.74rem;font-weight:700;color:var(--bad)}
+.tr .meta{display:none}
+@media (max-width:1100px){
+  .tr{grid-template-columns:30px minmax(0,1fr) auto;grid-template-areas:"star who st" "star svcs svcs" "star meta meta";gap:6px 10px}
+  .tr.th{display:none}
+  .tr .star{grid-area:star;align-self:start}.tr .who{grid-area:who}.tr .st{grid-area:st}.tr .svcs{grid-area:svcs}
+  .tr .when,.tr .ph,.tr .money{display:none}
+  .tr .meta{grid-area:meta;display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.8rem;color:var(--muted)}
+}
+.empty{padding:50px 20px;text-align:center;display:grid;gap:6px;justify-items:center}
+.empty b{font-family:var(--f-display);font-size:1.3rem}
+.empty span{color:var(--muted)}
+
+/* pipeline */
+.main-wrap{min-width:0}
+.board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;align-items:start}
+.col{background:var(--soft);border:var(--bw) solid var(--ink);border-radius:20px;padding:12px;display:grid;gap:10px;min-height:160px;transition:background .15s}
+.col.over{background:color-mix(in srgb,var(--yellow) 40%,var(--soft))}
+.col-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:2px 4px}
+.col-head small{font-family:var(--f-mono);font-size:.72rem;color:var(--muted)}
+.kcard{background:var(--card);border:var(--bw) solid var(--ink);border-radius:14px;padding:10px 12px;display:grid;gap:6px;cursor:grab;box-shadow:2px 2px 0 var(--ink)}
+.kcard:active{cursor:grabbing}
+.kcard.drag{opacity:.4}
+.kcard b{font-size:.95rem}
+.kcard .row2{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px 8px;font-size:.8rem;color:var(--muted)}
+.kcard select{font-size:.8rem;padding:.25rem .4rem;border-radius:8px;border:1.5px solid var(--ink);background:var(--paper)}
+@media (max-width:1320px){.board{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:900px){.board{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:620px){.board{grid-template-columns:1fr}}
+
+/* follow-ups */
+.fu-group{display:grid;gap:10px;margin-bottom:22px}
+.fu-group h2{font-size:1.2rem;display:flex;align-items:center;gap:10px}
+.fu-group h2 i{font-style:normal;font-family:var(--f-mono);font-size:.75rem;border:1.5px solid var(--ink);border-radius:999px;padding:0 .45rem;background:var(--card)}
+.fu-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--card);border:var(--bw) solid var(--ink);border-radius:16px;padding:12px 14px}
+.fu-item .info{min-width:0;cursor:pointer}
+.fu-item .info b{display:block}
+.fu-item .info small{color:var(--muted)}
+.fu-item .acts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+@media (max-width:620px){.fu-item{grid-template-columns:1fr}.fu-item .acts{justify-content:flex-start}}
+
+/* settings */
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:620px){.form-grid{grid-template-columns:1fr}}
+.switch{display:flex;align-items:center;gap:12px;font-weight:600;cursor:pointer}
+.switch input{appearance:none;width:48px;height:28px;border-radius:999px;border:var(--bw) solid var(--ink);background:var(--soft);position:relative;cursor:pointer;flex:none;transition:background .15s}
+.switch input::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--ink);transition:transform .15s}
+.switch input:checked{background:var(--orange)}
+.switch input:checked::after{transform:translateX(20px);background:#fff}
+.preview-bar{background:var(--ink);color:var(--paper);font-weight:600;font-size:.9rem;text-align:center;padding:9px 12px;border-radius:12px}
+
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(20,20,20,.45);z-index:40}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,100vw);z-index:50;background:var(--card);border-left:var(--bw) solid var(--ink);display:flex;flex-direction:column;animation:slide .25s cubic-bezier(.2,.8,.2,1);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@keyframes slide{from{transform:translateX(30px);opacity:0}}
+.d-head{padding:18px 20px;border-bottom:var(--bw) solid var(--ink);display:grid;gap:10px;background:var(--paper)}
+.d-head .x{display:flex;align-items:flex-start;gap:10px}
+.d-head h2{font-size:1.6rem;flex:1;min-width:0;overflow-wrap:anywhere}
+.d-head small{font-family:var(--f-mono);font-size:.72rem;color:var(--muted)}
+.d-acts{display:flex;flex-wrap:wrap;gap:8px}
+.d-body{flex:1;overflow-y:auto;padding:18px 20px 30px;display:grid;gap:22px;align-content:start;overscroll-behavior:contain}
+.d-sec{display:grid;gap:10px}
+.status-pick{display:flex;flex-wrap:wrap;gap:8px}
+.status-pick button{cursor:pointer;font:inherit;font-size:.8rem}
+.status-pick button[aria-pressed="true"]{outline:2px solid var(--ink);outline-offset:2px}
+.d-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:520px){.d-fields{grid-template-columns:1fr}}
+dl{margin:0;border:var(--bw) solid var(--ink);border-radius:16px;overflow:hidden}
+dl div{display:grid;grid-template-columns:140px minmax(0,1fr);gap:12px;padding:9px 14px;border-bottom:1.5px solid var(--line)}
+dl div:last-child{border-bottom:0}
+dt{font-size:.82rem;color:var(--muted);font-weight:600}
+dd{margin:0;overflow-wrap:anywhere;white-space:pre-wrap}
+@media (max-width:520px){dl div{grid-template-columns:1fr;gap:0}}
+.timeline{display:grid;gap:0;border-left:2px solid var(--line);margin-left:6px}
+.tl{position:relative;padding:0 0 14px 18px}
+.tl::before{content:"";position:absolute;left:-7px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--card);border:2px solid var(--ink)}
+.tl.note::before{background:var(--yellow)}
+.tl.status::before{background:var(--blue)}
+.tl.created::before{background:var(--orange)}
+.tl small{display:block;font-family:var(--f-mono);font-size:.7rem;color:var(--muted)}
+.tl p{margin:2px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.danger{color:var(--bad)}
+.confirm{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px;border:var(--bw) solid var(--bad);border-radius:14px;background:#FDECEA}
+
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:60;background:var(--ink);color:var(--paper);padding:.65rem 1.1rem;border-radius:999px;font-weight:600;box-shadow:4px 4px 0 var(--orange)}
+@media (max-width:960px){.toast{bottom:calc(86px + env(safe-area-inset-bottom,0px))}}
+.spin{width:16px;height:16px;border:2.5px solid currentColor;border-right-color:transparent;border-radius:50%;animation:rot .8s linear infinite;display:inline-block}
+@keyframes rot{to{transform:rotate(360deg)}}
+.skeleton{height:120px;border-radius:20px;background:linear-gradient(90deg,var(--soft),var(--card),var(--soft));background-size:200% 100%;animation:sh 1.2s infinite}
+@keyframes sh{to{background-position:-200% 0}}
+.demo-bar{background:var(--yellow);border-bottom:var(--bw) solid var(--ink);font-weight:600;font-size:.88rem;padding:8px var(--gr) 8px var(--gl);text-align:center}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-home" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></g></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13l3-8h12l3 8v6H3z"/><path d="M3 13h5l1 3h6l1-3h5"/></g></symbol>
+  <symbol id="i-board" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="10" y="4" width="5" height="11" rx="1.5"/><rect x="17" y="4" width="4" height="7" rx="1.5"/></g></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0c0 6 2 7 2 7H4s2-1 2-7"/><path d="M10 20a2 2 0 0 0 4 0"/></g></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></g></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.8-4.8"/></g></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/></g></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></g></symbol>
+  <symbol id="i-out" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H4"/></g></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-call" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2Z"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="m3 6.5 9 6.5 9-6.5"/></g></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="8" y="8" width="13" height="13" rx="2.5"/><path d="M16 8V5.5A2.5 2.5 0 0 0 13.5 3h-8A2.5 2.5 0 0 0 3 5.5v8A2.5 2.5 0 0 0 5.5 16H8"/></g></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="m12 3 2.8 5.8 6.2.9-4.5 4.4 1 6.2L12 17.4l-5.5 2.9 1-6.2L3 9.7l6.2-.9z"/></symbol>
+  <symbol id="i-site" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></g></symbol>
+</defs></svg>
+
+<!-- ================= LOGIN ================= -->
+<section class="login" id="loginView" hidden>
+  <form class="login-card" id="loginForm" novalidate>
+    <img src="/assets/logo-full.png" alt="Bizparkers" width="156" height="38">
+    <h1>Admin <span>sign in</span></h1>
+    <p class="muted" style="margin:0">Enquiries, analytics and website settings in one place.</p>
+    <label class="f">Email<input class="input" id="lEmail" type="email" autocomplete="username" placeholder="bizparkers@gmail.com"></label>
+    <label class="f">Password<span class="pw"><input class="input" id="lPass" type="password" autocomplete="current-password" placeholder="Your admin password"><button type="button" id="pwToggle">Show</button></span></label>
+    <label class="check"><input type="checkbox" id="lRemember" checked>Keep me signed in for 30 days</label>
+    <p class="err" id="lErr" hidden></p>
+    <button class="btn btn--orange" type="submit" id="lBtn">Sign in</button>
+    <p class="demo-note" id="lDemo" hidden>Preview mode: no server is connected, so any email and password opens the panel with <b>example data</b>.</p>
+  </form>
+</section>
+
+<!-- ================= APP ================= -->
+<div id="appView" hidden>
+  <div class="demo-bar" id="demoBar" hidden>Preview with example data. Deploy the server to see your real enquiries and visitors.</div>
+  <div class="shell">
+    <aside class="side">
+      <div class="brand"><img src="/assets/logo-full.png" alt="Bizparkers" width="123" height="30"><span>ADMIN</span></div>
+      <nav class="nav" id="sideNav"></nav>
+      <div class="foot">
+        <div class="who"><span class="muted">Signed in as</span><b id="whoEmail"></b><span class="muted" id="whoStore"></span></div>
+        <a class="btn btn--sm" href="/" target="_blank" rel="noopener"><svg><use href="#i-site"/></svg>View website</a>
+        <button class="btn btn--sm" type="button" data-logout><svg><use href="#i-out"/></svg>Sign out</button>
+      </div>
+    </aside>
+
+    <div class="main-wrap">
+      <header class="topbar">
+        <img src="/assets/logo-full.png" alt="Bizparkers" width="107" height="26">
+        <span class="sp"></span>
+        <a class="icon-btn" href="/" target="_blank" rel="noopener" aria-label="View website"><svg><use href="#i-site"/></svg></a>
+        <button class="icon-btn" type="button" data-logout aria-label="Sign out"><svg><use href="#i-out"/></svg></button>
+      </header>
+      <main class="main" id="main"></main>
+    </div>
+  </div>
+  <nav class="tabs" id="tabNav"></nav>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" hidden role="dialog" aria-modal="true" aria-labelledby="dName"></aside>
+<div class="tip" id="tip" hidden></div>
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script>
+(function(){
+"use strict";
+const DEMO = !!window.__BP_DEMO || !/^https?:$/.test(location.protocol);
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const STATUSES = ["New", "Contacted", "Proposal sent", "Won", "Lost"];
+const ALL_STATUSES = [...STATUSES, "Spam"];
+const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const cls = s => "s-" + String(s || "New").split(" ")[0];
+const inr = n => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n || 0);
+const nf = n => new Intl.NumberFormat("en-IN").format(n || 0);
+const pct = n => (n * 100).toFixed(n && n < .1 ? 1 : 0) + "%";
+const dur = s => s >= 60 ? Math.floor(s / 60) + "m " + String(Math.round(s % 60)).padStart(2, "0") + "s" : Math.round(s) + "s";
+const today = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+const addDays = (ymd, n) => { const d = new Date(ymd + "T12:00:00"); d.setDate(d.getDate() + n); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+const fmtDate = iso => { const d = new Date(iso); return isNaN(d) ? "" : d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) + ", " + d.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" }); };
+const fmtDay = ymd => new Date(ymd + "T12:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+const ago = iso => { const m = Math.max(0, Math.round((Date.now() - new Date(iso)) / 60000)); if (m < 1) return "just now"; if (m < 60) return m + "m ago"; const h = Math.round(m / 60); if (h < 24) return h + "h ago"; const d = Math.round(h / 24); return d < 30 ? d + "d ago" : new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short" }); };
+const toast = msg => { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 2400); };
+
+/* ================= API (real server, or example data in preview) ================= */
+async function api(path, opts = {}) {
+  if (DEMO) return mock(path, opts);
+  const r = await fetch(path, { method: opts.method || "GET", credentials: "same-origin",
+    headers: { "Content-Type": "application/json", "X-BP-Admin": "1" }, body: opts.body ? JSON.stringify(opts.body) : undefined });
+  const j = await r.json().catch(() => ({ ok: false, error: "Unexpected response from the server." }));
+  if (r.status === 401 && !path.endsWith("/login")) { showLogin(); throw new Error("Please sign in again."); }
+  if (!r.ok || !j.ok) throw new Error(j.error || "Request failed.");
+  return j;
+}
+
+/* ---------- example data for the preview ---------- */
+const M = { enquiries: null, settings: { email: "hello@bizparkers.com", phone: "+91 72909 11804", instagram: "https://www.instagram.com/bizparkers/", available: true, announcement: { on: false, text: "" } } };
+function seed() {
+  const names = ["Rahul Verma", "Priya Nair", "Aman Gupta", "Neha Shah", "Karan Mehta", "Sneha Iyer", "Vikram Rao", "Pooja Kulkarni", "Arjun Singh", "Meera Joshi", "Rohit Das", "Ananya Bose"];
+  const brands = ["Sample Sweets", "FitNest Studios", "Keystone Realty", "Glow Theory", "Threadline", "Chai Corner", "Rao Motors", "Petal & Co", "Singh Logistics", "Joshi Dental", "Das Electricals", "Bose Bakes"];
+  const svc = [["Website", "Google SEO"], ["Mobile app"], ["AI chatbot", "AI automation"], ["Logo & branding", "Website"], ["Digital marketing"], ["E-commerce"], ["Web app"], ["Website", "Digital marketing"], ["AI automation"], ["Google SEO"], ["Website"], ["Logo & branding"]];
+  const st = ["New", "New", "Contacted", "Proposal sent", "Won", "Lost", "Contacted", "New", "Proposal sent", "Won", "Contacted", "New"];
+  const budgets = ["₹25,000 to ₹75,000", "Above ₹2,00,000", "₹75,000 to ₹2,00,000", "₹25,000 to ₹75,000", "Under ₹25,000", "₹75,000 to ₹2,00,000", "Above ₹2,00,000", "", "₹75,000 to ₹2,00,000", "₹25,000 to ₹75,000", "Under ₹25,000", ""];
+  const vals = [0, 0, 60000, 120000, 45000, 0, 180000, 0, 90000, 35000, 25000, 0];
+  M.enquiries = names.map((n, i) => {
+    const created = new Date(Date.now() - (i * 1.7 + .2) * 864e5).toISOString();
+    return { id: "BP-EX" + (101 + i), createdAt: created, updatedAt: created, status: st[i], starred: i % 4 === 1, value: vals[i],
+      followUp: [2, 6, 8].includes(i) ? addDays(today(), i === 2 ? -1 : i === 6 ? 0 : 3) : "", tags: i === 3 ? ["referral"] : [],
+      name: "Example: " + n, phone: "+91 9" + String(8765432100 + i * 1111).slice(1), email: i % 3 ? n.split(" ")[0].toLowerCase() + "@example.com" : "",
+      services: svc[i], budget: budgets[i], message: "Example enquiry. " + ["We want online orders.", "Need a booking app for members.", "Too many WhatsApp leads to answer by hand.", "New brand launching next month."][i % 4],
+      brand: i % 2 ? "" : brands[i], hasSite: i % 2 ? "" : "No", website: "", adSpend: i % 2 ? "" : "Under ₹25,000", improve: i % 2 ? [] : ["More leads and enquiries"],
+      source: { ref: ["instagram.com", "google.com", "", "facebook.com"][i % 4], dev: i % 3 ? "mobile" : "desktop" },
+      activity: [{ ts: created, type: "created", text: "Enquiry received from the website" }] };
+  });
+}
+function mockStats(days) {
+  const rnd = (i, a, b) => a + Math.round((Math.sin(i * 12.9898 + days) * 43758.5453 % 1 + 1) % 1 * (b - a));
+  const daily = [];
+  for (let i = days - 1; i >= 0; i--) { const v = rnd(i, 18, 64) + (i % 7 < 2 ? -8 : 6); daily.push({ date: addDays(today(), -i), visitors: Math.max(4, v), views: Math.max(6, Math.round(v * 1.6)), enquiries: rnd(i + 3, 0, 3) }); }
+  const sum = k => daily.reduce((a, d) => a + d[k], 0);
+  const cur = { visitors: sum("visitors"), sessions: Math.round(sum("visitors") * 1.2), views: sum("views"), enquiries: sum("enquiries"), avgTime: 94 };
+  cur.conversion = cur.visitors ? cur.enquiries / cur.visitors : 0;
+  const prev = { visitors: Math.round(cur.visitors * .86), views: Math.round(cur.views * .9), enquiries: Math.max(1, cur.enquiries - 3), avgTime: 81 };
+  prev.conversion = prev.enquiries / prev.visitors;
+  const v = cur.visitors, sc = x => Math.round(v * x);
+  const count = (arr, fn) => { const m = {}; arr.forEach(e => [].concat(fn(e)).filter(Boolean).forEach(k => m[k] = (m[k] || 0) + 1)); return Object.entries(m).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value); };
+  return { ok: true, range: days, kpis: { current: cur, previous: prev }, daily,
+    sources: [["Google", .38], ["Instagram", .27], ["Direct", .2], ["Facebook", .09], ["WhatsApp", .04], ["LinkedIn", .02]].map(([l, x]) => ({ label: l, value: sc(x) })),
+    devices: [["Mobile", .71], ["Desktop", .24], ["Tablet", .05]].map(([l, x]) => ({ label: l, value: sc(x) })),
+    places: [["Kolkata", .62], ["Dubai", .09], ["London", .06], ["New York", .05], ["Singapore", .04]].map(([l, x]) => ({ label: l === "Kolkata" ? "India (IST)" : l, value: sc(x) })),
+    sections: [["Scratch card", 71], ["Services", 64], ["Work", 48], ["Why us", 41], ["Process", 36], ["Packages", 29], ["FAQ", 22], ["Contact", 19]].map(([label, value]) => ({ label, value })),
+    ctas: [["Start a project", sc(.09)], ["Get a free quote", sc(.05)], ["Website", sc(.03)], ["Google SEO", sc(.02)], ["Growth kit", sc(.015)]].map(([label, value]) => ({ label, value })),
+    funnel: [["Opened the form", .14], ["Entered name", .11], ["Entered phone", .085], ["Picked services", .075], ["Sent enquiry", .065], ["Added faster-reply details", .03]].map(([label, x]) => ({ label, value: sc(x) })),
+    services: count(M.enquiries, e => e.services), budgets: count(M.enquiries, e => e.budget || "Not shared"),
+    pipeline: STATUSES.map(s => { const l = M.enquiries.filter(e => e.status === s); return { label: s, value: l.length, amount: l.reduce((a, e) => a + e.value, 0) }; }),
+    openValue: M.enquiries.filter(e => !["Won", "Lost", "Spam"].includes(e.status)).reduce((a, e) => a + e.value, 0),
+    followUpsDue: M.enquiries.filter(e => e.followUp && e.followUp <= today() && !["Won", "Lost", "Spam"].includes(e.status)).length, live: 3 };
+}
+async function mock(path, opts) {
+  await new Promise(r => setTimeout(r, 120));
+  if (!M.enquiries) seed();
+  const m = opts.method || "GET";
+  if (path.endsWith("/login")) return { ok: true, email: (opts.body.email || "bizparkers@gmail.com").toLowerCase() };
+  if (path.endsWith("/logout")) return { ok: true };
+  if (path.endsWith("/me")) { if (!sessionStorage.getItem("bp_demo")) throw new Error("auth"); return { ok: true, email: sessionStorage.getItem("bp_demo"), storage: "preview" }; }
+  if (path.includes("/stats")) return mockStats(+new URL(path, "http://x").searchParams.get("days") || 30);
+  if (path.endsWith("/enquiries") && m === "GET") return { ok: true, enquiries: JSON.parse(JSON.stringify(M.enquiries)), statuses: ALL_STATUSES };
+  const one = path.match(/enquiries\/([^/]+)$/);
+  if (one && m === "PATCH") {
+    const e = M.enquiries.find(x => x.id === one[1]); const b = opts.body, now = new Date().toISOString();
+    if (b.status && b.status !== e.status) { e.activity.push({ ts: now, type: "status", text: `Status changed from ${e.status} to ${b.status}` }); e.status = b.status; }
+    ["starred", "value", "followUp", "tags"].forEach(k => { if (b[k] !== undefined) e[k] = b[k]; });
+    if (b.note) e.activity.push({ ts: now, type: "note", text: b.note });
+    return { ok: true, enquiry: JSON.parse(JSON.stringify(e)) };
+  }
+  if (one && m === "DELETE") { M.enquiries = M.enquiries.filter(x => x.id !== one[1]); return { ok: true }; }
+  if (path.endsWith("/settings")) { if (m === "PUT") M.settings = opts.body; return { ok: true, settings: M.settings }; }
+  throw new Error("Not available in preview.");
+}
+
+/* ================= state + routing ================= */
+const S = { me: null, enquiries: [], stats: null, days: 30, filter: "All", starred: false, q: "", svc: "", sort: "new", settings: null, openId: null };
+const ROUTES = [
+  { id: "dashboard", label: "Dashboard", icon: "i-home" },
+  { id: "enquiries", label: "Enquiries", icon: "i-inbox" },
+  { id: "pipeline", label: "Pipeline", icon: "i-board" },
+  { id: "followups", label: "Follow-ups", icon: "i-bell" },
+  { id: "settings", label: "Settings", icon: "i-gear" }
+];
+const route = () => (location.hash.replace(/^#\/?/, "") || "dashboard").split("?")[0];
+
+function renderNav() {
+  const r = route();
+  const newCount = S.enquiries.filter(e => e.status === "New").length;
+  const due = S.enquiries.filter(e => e.followUp && e.followUp <= today() && !["Won", "Lost", "Spam"].includes(e.status)).length;
+  const badge = id => id === "enquiries" && newCount ? `<span class="badge">${newCount}</span>` : id === "followups" && due ? `<span class="badge">${due}</span>` : "";
+  const html = ROUTES.map(x => `<a href="#/${x.id}" ${x.id === r ? 'aria-current="page"' : ""}><svg><use href="#${x.icon}"/></svg>${x.label}${badge(x.id)}</a>`).join("");
+  $("#sideNav").innerHTML = html; $("#tabNav").innerHTML = html;
+}
+
+async function render() {
+  renderNav();
+  const r = route(), main = $("#main");
+  window.scrollTo(0, 0);
+  if (r === "dashboard") return renderDashboard(main);
+  if (r === "enquiries") return renderEnquiries(main);
+  if (r === "pipeline") return renderPipeline(main);
+  if (r === "followups") return renderFollowups(main);
+  if (r === "settings") return renderSettings(main);
+  location.hash = "#/dashboard";
+}
+addEventListener("hashchange", () => { closeDrawer(); render(); });
+
+async function loadEnquiries() { const j = await api("/api/admin/enquiries"); S.enquiries = j.enquiries; renderNav(); }
+const upsert = e => { const i = S.enquiries.findIndex(x => x.id === e.id); if (i > -1) S.enquiries[i] = e; renderNav(); };
+
+/* ================= dashboard ================= */
+function delta(cur, prev, invert) {
+  if (!prev && !cur) return `<span class="delta flat">No change</span>`;
+  if (!prev) return `<span class="delta up">▲ New</span>`;
+  const d = (cur - prev) / prev, up = d >= 0;
+  if (Math.abs(d) < .005) return `<span class="delta flat">No change</span>`;
+  return `<span class="delta ${up !== !!invert ? "up" : "down"}">${up ? "▲" : "▼"} ${Math.abs(d * 100).toFixed(0)}% vs previous</span>`;
+}
+function hbars(items, opts = {}) {
+  if (!items || !items.length || !items.some(i => i.value)) return `<p class="empty-mini">${opts.empty || "No data for this period yet."}</p>`;
+  const max = opts.max || Math.max(...items.map(i => i.value), 1);
+  return `<div class="hbars ${opts.tone || ""}">${items.slice(0, opts.limit || 8).map(i => `<div class="hbar"><span class="lbl" title="${esc(i.label)}">${esc(i.label)}</span><span class="val">${opts.fmt ? opts.fmt(i.value) : nf(i.value)}</span><span class="track"><span class="fill" style="width:${Math.max(2, i.value / max * 100)}%"></span></span></div>`).join("")}</div>`;
+}
+function barChart(el, data, key, color, label) {
+  const draw = () => {
+    const W = el.clientWidth || 600, H = 220, pad = { t: 10, r: 6, b: 26, l: 34 };
+    const max = Math.max(1, ...data.map(d => d[key]));
+    const step = max <= 4 ? 1 : Math.pow(10, Math.floor(Math.log10(max))) * (max / Math.pow(10, Math.floor(Math.log10(max))) > 5 ? 2 : 1);
+    const top = Math.ceil(max / step) * step, ticks = [];
+    for (let v = 0; v <= top; v += step) ticks.push(v);
+    const iw = W - pad.l - pad.r, ih = H - pad.t - pad.b, bw = iw / data.length, barW = Math.max(2, Math.min(28, bw - 2));
+    const y = v => pad.t + ih - v / top * ih;
+    const every = Math.ceil(data.length / Math.max(2, Math.floor(iw / 64)));
+    let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label)}"><g class="axis">`;
+    ticks.forEach(t => { svg += `<line class="grid-line" x1="${pad.l}" x2="${W - pad.r}" y1="${y(t)}" y2="${y(t)}"/><text x="${pad.l - 8}" y="${y(t) + 3}" text-anchor="end">${t}</text>`; });
+    data.forEach((d, i) => { if (i % every === 0 || i === data.length - 1) svg += `<text x="${pad.l + bw * i + bw / 2}" y="${H - 6}" text-anchor="middle">${fmtDay(d.date)}</text>`; });
+    svg += `</g>`;
+    data.forEach((d, i) => {
+      const x = pad.l + bw * i + (bw - barW) / 2, h = Math.max(d[key] ? 2 : 0, ih - (y(d[key]) - pad.t)), r = Math.min(4, barW / 2, h);
+      svg += `<rect class="hit" data-i="${i}" x="${pad.l + bw * i}" y="${pad.t}" width="${bw}" height="${ih}"/>`;
+      svg += h ? `<path class="bar" data-i="${i}" fill="${color}" d="M${x},${y(0)} V${y(0) - h + r} Q${x},${y(0) - h} ${x + r},${y(0) - h} H${x + barW - r} Q${x + barW},${y(0) - h} ${x + barW},${y(0) - h + r} V${y(0)} Z"/>` : "";
+    });
+    el.innerHTML = svg + "</svg>";
+    const tip = $("#tip");
+    el.querySelector("svg").addEventListener("pointermove", e => {
+      const t = e.target.closest(".hit"); if (!t) { tip.hidden = true; return; }
+      const d = data[+t.dataset.i];
+      tip.innerHTML = `${fmtDay(d.date)}<br><b>${nf(d[key])}</b> ${label.toLowerCase()}`;
+      const r = t.getBoundingClientRect();
+      tip.style.left = (r.left + r.width / 2) + "px"; tip.style.top = (window.scrollY + el.getBoundingClientRect().top + y(d[key])) + "px"; tip.style.position = "absolute"; tip.hidden = false;
+      $$(".bar", el).forEach(b => b.classList.toggle("on", b.dataset.i === t.dataset.i));
+    });
+    el.querySelector("svg").addEventListener("pointerleave", () => { tip.hidden = true; $$(".bar", el).forEach(b => b.classList.remove("on")); });
+  };
+  draw();
+  new ResizeObserver(() => { clearTimeout(el._t); el._t = setTimeout(draw, 80); }).observe(el);
+}
+
+async function renderDashboard(main) {
+  const hour = new Date().getHours();
+  main.innerHTML = `
+    <div class="page-head">
+      <div><h1>${hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening"}<span>.</span></h1><p class="sub">Here's how your website and enquiries are doing.</p></div>
+      <div class="head-tools">
+        <span class="live" id="live"><i></i><span>Loading</span></span>
+        <div class="seg" id="range">${[7, 30, 90].map(d => `<button type="button" data-d="${d}" aria-pressed="${S.days === d}">${d} days</button>`).join("")}</div>
+        <button class="icon-btn" type="button" id="reload" aria-label="Refresh"><svg><use href="#i-refresh"/></svg></button>
+      </div>
+    </div>
+    <div id="dash"><div class="kpis">${'<div class="skeleton" style="height:96px"></div>'.repeat(5)}</div><div class="skeleton" style="height:280px"></div></div>`;
+  $("#range").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; S.days = +b.dataset.d; renderDashboard(main); });
+  $("#reload").addEventListener("click", () => renderDashboard(main));
+  let st;
+  try { [st] = await Promise.all([api("/api/admin/stats?days=" + S.days), loadEnquiries()]); }
+  catch (e) { $("#dash").innerHTML = `<div class="card"><b>Couldn't load your dashboard.</b><p class="muted">${esc(e.message)}</p></div>`; return; }
+  S.stats = st;
+  const c = st.kpis.current, p = st.kpis.previous;
+  $("#live").innerHTML = `<i></i><span>${st.live} on the website now</span>`;
+  const recent = S.enquiries.filter(e => e.status !== "Spam").slice(0, 6);
+  const due = S.enquiries.filter(e => e.followUp && e.followUp <= today() && !["Won", "Lost", "Spam"].includes(e.status));
+  const f0 = st.funnel[0].value || 1;
+  $("#dash").innerHTML = `
+    <div class="kpis">
+      <div class="kpi"><span>Visitors</span><b>${nf(c.visitors)}</b>${delta(c.visitors, p.visitors)}</div>
+      <div class="kpi"><span>Page views</span><b>${nf(c.views)}</b>${delta(c.views, p.views)}</div>
+      <div class="kpi"><span>Enquiries</span><b>${nf(c.enquiries)}</b>${delta(c.enquiries, p.enquiries)}</div>
+      <div class="kpi"><span>Conversion rate</span><b>${pct(c.conversion)}</b>${delta(c.conversion, p.conversion)}</div>
+      <div class="kpi"><span>Avg. time on site</span><b>${dur(c.avgTime)}</b>${delta(c.avgTime, p.avgTime)}</div>
+    </div>
+    <div class="grid">
+      <div class="card c8"><h3>Visitors per day</h3><p class="note">Unique visitors, last ${S.days} days</p><div class="chart" id="chV"></div></div>
+      <div class="card c4"><h3>Pipeline</h3><p class="note">Open deal value <b>${inr(st.openValue)}</b></p>
+        ${hbars(st.pipeline.map(x => ({ label: x.label + (x.amount ? " · " + inr(x.amount) : ""), value: x.value })), { tone: "ink", empty: "No enquiries yet." })}
+        <p class="note" style="margin:14px 0 0">${st.followUpsDue ? `<a href="#/followups"><b>${st.followUpsDue} follow-up${st.followUpsDue > 1 ? "s" : ""} due</b></a>` : "No follow-ups due today."}</p></div>
+      <div class="card c8"><h3>Enquiries per day</h3><p class="note">Enquiries sent through the website form</p><div class="chart" id="chE"></div></div>
+      <div class="card c4"><h3>Latest enquiries</h3><p class="note"><a href="#/enquiries">See all</a></p>
+        <div class="mini-list">${recent.length ? recent.map(e => `<button type="button" data-open="${esc(e.id)}"><b>${esc(e.name)}</b><small>${esc(e.services.join(", "))} · ${esc(ago(e.createdAt))}</small><span class="r pill ${cls(e.status)}">${esc(e.status)}</span></button>`).join("") : '<p class="empty-mini">New enquiries will appear here.</p>'}</div></div>
+      <div class="card c6"><h3>Enquiry form funnel</h3><p class="note">Sessions that reached each step</p>
+        <div class="funnel">${st.funnel.map(s => `<div class="fstep"><span class="lbl">${esc(s.label)}</span><span class="bar"><i style="width:${Math.max(1, s.value / f0 * 100)}%"></i></span><span class="v">${nf(s.value)}<small>${st.funnel[0].value ? pct(s.value / f0) : "–"}</small></span></div>`).join("")}</div></div>
+      <div class="card c6"><h3>Traffic sources</h3><p class="note">Where visits came from</p>${hbars(st.sources)}</div>
+      <div class="card c4"><h3>Devices</h3><p class="note">Visits by screen size</p>${hbars(st.devices, { tone: "blue" })}</div>
+      <div class="card c4"><h3>Visitor locations</h3><p class="note">By the visitor's time zone</p>${hbars(st.places, { tone: "ink" })}</div>
+      <div class="card c4"><h3>Most clicked buttons</h3><p class="note">Calls to action on the website</p>${hbars(st.ctas, { empty: "No button clicks yet." })}</div>
+      <div class="card c6"><h3>How far people scroll</h3><p class="note">Share of visits that reached each section</p>${hbars(st.sections, { max: 100, fmt: v => v + "%", tone: "blue" })}</div>
+      <div class="card c6"><h3>What people ask for</h3><p class="note">Services picked in enquiries this period</p>${hbars(st.services, { empty: "No enquiries this period." })}
+        <h3 style="margin-top:18px">Budgets</h3><p class="note">From the enquiry form</p>${hbars(st.budgets, { tone: "ink", empty: "No enquiries this period." })}</div>
+    </div>`;
+  barChart($("#chV"), st.daily, "visitors", "#FF4D00", "Visitors");
+  barChart($("#chE"), st.daily, "enquiries", "#0A66FF", "Enquiries");
+  $$("[data-open]", main).forEach(b => b.addEventListener("click", () => openDrawer(b.dataset.open)));
+}
+
+/* ================= enquiries ================= */
+function visibleEnquiries() {
+  const q = S.q.trim().toLowerCase();
+  let list = S.enquiries.filter(e =>
+    (S.filter === "All" ? e.status !== "Spam" : e.status === S.filter) &&
+    (!S.starred || e.starred) && (!S.svc || e.services.includes(S.svc)) &&
+    (!q || [e.name, e.phone, e.email, e.brand, e.message, e.services.join(" "), (e.tags || []).join(" "), e.id].some(v => String(v || "").toLowerCase().includes(q))));
+  if (S.sort === "old") list = list.slice().reverse();
+  if (S.sort === "value") list = list.slice().sort((a, b) => (b.value || 0) - (a.value || 0));
+  return list;
+}
+async function renderEnquiries(main) {
+  main.innerHTML = `
+    <div class="page-head">
+      <div><h1>Enqui<span>ries</span></h1><p class="sub">Everyone who contacted you through the website.</p></div>
+      <div class="head-tools"><button class="icon-btn" type="button" id="reload" aria-label="Refresh"><svg><use href="#i-refresh"/></svg></button><button class="btn" type="button" id="csv"><svg><use href="#i-down"/></svg>Export CSV</button></div>
+    </div>
+    <div class="toolbar">
+      <label class="search"><svg><use href="#i-search"/></svg><input class="input" id="q" type="search" placeholder="Search name, phone, business, tag…" value="${esc(S.q)}" aria-label="Search enquiries"></label>
+      <select class="input" id="svc" aria-label="Filter by service"><option value="">All services</option></select>
+      <select class="input" id="sort" aria-label="Sort"><option value="new">Newest first</option><option value="old">Oldest first</option><option value="value">Highest value</option></select>
+      <button class="chip" type="button" id="starOnly" aria-pressed="${S.starred}"><svg width="14" height="14"><use href="#i-star"/></svg>Starred</button>
+    </div>
+    <div class="chips" id="stChips"></div>
+    <div id="tbl"><div class="skeleton" style="height:300px"></div></div>`;
+  $("#sort").value = S.sort;
+  const draw = () => {
+    const count = s => S.enquiries.filter(e => s === "All" ? e.status !== "Spam" : e.status === s).length;
+    $("#stChips").innerHTML = ["All", ...ALL_STATUSES].map(s => `<button class="chip" type="button" data-s="${s}" aria-pressed="${S.filter === s}">${s}<i>${count(s)}</i></button>`).join("");
+    const svcs = [...new Set(S.enquiries.flatMap(e => e.services))].sort();
+    $("#svc").innerHTML = '<option value="">All services</option>' + svcs.map(s => `<option ${s === S.svc ? "selected" : ""}>${esc(s)}</option>`).join("");
+    const list = visibleEnquiries();
+    $("#tbl").innerHTML = `<div class="table">${list.length ? `<div class="tr th"><span></span><span>Received</span><span>Name</span><span>Phone</span><span>Looking for</span><span>Value</span><span>Status</span></div>` + list.map(e => {
+      const overdue = e.followUp && e.followUp <= today() && !["Won", "Lost", "Spam"].includes(e.status);
+      return `<div class="tr row" data-id="${esc(e.id)}" tabindex="0">
+        <button class="star" type="button" data-star="${esc(e.id)}" aria-pressed="${!!e.starred}" aria-label="Star"><svg><use href="#i-star"/></svg></button>
+        <span class="when" title="${esc(fmtDate(e.createdAt))}">${esc(ago(e.createdAt))}</span>
+        <span class="who"><b>${e.status === "New" ? '<i class="dot-new"></i>' : ""}${esc(e.name)}</b><small>${esc(e.brand || e.message || e.email || "")}</small></span>
+        <span class="ph">${esc(e.phone)}</span>
+        <span class="svcs">${e.services.map(s => `<span>${esc(s)}</span>`).join("")}</span>
+        <span class="money">${e.value ? inr(e.value) : '<span class="muted">–</span>'}</span>
+        <span class="st"><span class="pill ${cls(e.status)}">${esc(e.status)}</span>${overdue ? '<br><span class="fu">Follow-up due</span>' : ""}</span>
+        <span class="meta"><span>${esc(ago(e.createdAt))}</span><span>${esc(e.phone)}</span>${e.value ? `<span>${inr(e.value)}</span>` : ""}${overdue ? '<span class="fu">Follow-up due</span>' : ""}</span>
+      </div>`; }).join("") : `<div class="empty"><b>${S.enquiries.length ? "No matches" : "No enquiries yet"}</b><span>${S.enquiries.length ? "Try a different search or filter." : "When someone fills in the form on your website, they show up here."}</span></div>`}</div>`;
+  };
+  try { await loadEnquiries(); } catch (e) { $("#tbl").innerHTML = `<div class="card">${esc(e.message)}</div>`; return; }
+  draw();
+  $("#q").addEventListener("input", e => { S.q = e.target.value; draw(); });
+  $("#svc").addEventListener("change", e => { S.svc = e.target.value; draw(); });
+  $("#sort").addEventListener("change", e => { S.sort = e.target.value; draw(); });
+  $("#starOnly").addEventListener("click", e => { S.starred = !S.starred; e.currentTarget.setAttribute("aria-pressed", S.starred); draw(); });
+  $("#stChips").addEventListener("click", e => { const c = e.target.closest(".chip"); if (c) { S.filter = c.dataset.s; draw(); } });
+  $("#reload").addEventListener("click", async () => { await loadEnquiries(); draw(); toast("Enquiries refreshed"); });
+  $("#csv").addEventListener("click", exportCsv);
+  $("#tbl").addEventListener("click", async e => {
+    const star = e.target.closest("[data-star]");
+    if (star) { e.stopPropagation(); const en = S.enquiries.find(x => x.id === star.dataset.star); await patch(en.id, { starred: !en.starred }); draw(); return; }
+    const row = e.target.closest(".row"); if (row) openDrawer(row.dataset.id, draw);
+  });
+  $("#tbl").addEventListener("keydown", e => { if (e.key === "Enter" && e.target.matches(".row")) openDrawer(e.target.dataset.id, draw); });
+}
+function exportCsv() {
+  if (!DEMO) { location.href = "/api/admin/enquiries.csv"; return; }
+  const cols = ["id", "createdAt", "status", "name", "phone", "email", "services", "budget", "message", "brand", "value", "followUp"];
+  const cell = v => '"' + String(Array.isArray(v) ? v.join(", ") : v ?? "").replace(/"/g, '""') + '"';
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob(["﻿" + [cols.join(","), ...S.enquiries.map(e => cols.map(c => cell(e[c])).join(","))].join("\n")], { type: "text/csv" }));
+  a.download = "bizparkers-enquiries.csv"; document.body.appendChild(a); a.click(); a.remove();
+}
+async function patch(id, body, quiet) {
+  try { const j = await api("/api/admin/enquiries/" + encodeURIComponent(id), { method: "PATCH", body }); upsert(j.enquiry); if (!quiet) toast("Saved"); return j.enquiry; }
+  catch (e) { toast(e.message || "Couldn't save. Try again."); return null; }
+}
+
+/* ================= drawer ================= */
+function openDrawer(id, onChange) {
+  const e = S.enquiries.find(x => x.id === id); if (!e) return;
+  S.openId = id;
+  const d = $("#drawer"), digits = String(e.phone || "").replace(/[^\d+]/g, "");
+  const field = (k, v) => v && (!Array.isArray(v) || v.length) ? `<div><dt>${k}</dt><dd>${esc(Array.isArray(v) ? v.join(", ") : v)}</dd></div>` : "";
+  const src = e.source || {};
+  d.innerHTML = `
+    <div class="d-head">
+      <div class="x"><h2 id="dName">${esc(e.name)}</h2>
+        <button class="star" type="button" id="dStar" aria-pressed="${!!e.starred}" aria-label="Star"><svg><use href="#i-star"/></svg></button>
+        <button class="icon-btn" type="button" id="dClose" aria-label="Close"><svg><use href="#i-x"/></svg></button></div>
+      <small>${esc(e.id)} · ${esc(fmtDate(e.createdAt))}${src.ref || src.utm ? " · from " + esc(src.utm || src.ref) : ""}${src.dev ? " · " + esc(src.dev) : ""}</small>
+      <div class="d-acts">
+        ${digits ? `<a class="btn btn--ink btn--sm" href="tel:${esc(digits)}"><svg><use href="#i-call"/></svg>Call</a>` : ""}
+        ${e.email ? `<a class="btn btn--sm" href="mailto:${esc(e.email)}?subject=${encodeURIComponent("Your enquiry with Bizparkers")}"><svg><use href="#i-mail"/></svg>Email</a>` : ""}
+        <button class="btn btn--sm" type="button" id="dCopy"><svg><use href="#i-copy"/></svg>Copy phone</button>
+      </div>
+    </div>
+    <div class="d-body">
+      <div class="d-sec"><span class="eyebrow">Status</span><div class="status-pick" id="dStatus">${ALL_STATUSES.map(s => `<button type="button" class="pill ${cls(s)}" data-s="${s}" aria-pressed="${e.status === s}">${s}</button>`).join("")}</div></div>
+      <div class="d-fields">
+        <label class="f">Deal value (₹)<input class="input" id="dValue" type="number" min="0" step="1000" inputmode="numeric" value="${e.value || ""}" placeholder="0"></label>
+        <label class="f">Follow-up date<input class="input" id="dFollow" type="date" value="${esc(e.followUp || "")}"></label>
+        <label class="f" style="grid-column:1/-1">Tags <small>Comma separated, e.g. referral, urgent</small><input class="input" id="dTags" value="${esc((e.tags || []).join(", "))}" placeholder="Add tags"></label>
+      </div>
+      <div class="d-sec"><span class="eyebrow">Enquiry</span><dl>
+        ${field("Phone", e.phone)}${field("Email", e.email)}${field("Looking for", e.services)}${field("Budget", e.budget)}${field("About the business", e.message)}
+        ${field("Business name", e.brand)}${field("Has a website", e.hasSite)}${field("Website", e.website)}${field("Monthly ad spend", e.adSpend)}${field("Wants to improve", e.improve)}
+      </dl></div>
+      <div class="d-sec"><span class="eyebrow">Activity</span>
+        <div class="timeline">${(e.activity || []).slice().reverse().map(a => `<div class="tl ${esc(a.type)}"><small>${esc(fmtDate(a.ts))}</small><p>${esc(a.text)}</p></div>`).join("")}</div>
+        <textarea class="input" id="dNote" placeholder="Add a note: call summary, quote sent, next step…"></textarea>
+        <div><button class="btn btn--orange btn--sm" type="button" id="dAddNote">Add note</button></div>
+      </div>
+      <div class="d-sec"><button class="link danger" type="button" id="dDel">Delete this enquiry</button><div class="confirm" id="dConfirm" hidden>Delete permanently? This can't be undone.<button class="btn btn--sm" type="button" id="dDelYes" style="background:var(--bad);color:#fff">Delete</button><button class="btn btn--sm" type="button" id="dDelNo">Cancel</button></div></div>
+    </div>`;
+  const refresh = (en) => { if (onChange) onChange(); renderNav(); if (en && S.openId === id) openDrawer(id, onChange); };
+  $("#dClose").onclick = closeDrawer;
+  $("#dStar").onclick = async () => refresh(await patch(id, { starred: !e.starred }));
+  $("#dCopy").onclick = () => { try { navigator.clipboard.writeText(e.phone).then(() => toast("Phone number copied"), () => toast(e.phone)); } catch (x) { toast(e.phone); } };
+  $("#dStatus").onclick = async ev => { const b = ev.target.closest("button"); if (b && b.dataset.s !== e.status) refresh(await patch(id, { status: b.dataset.s })); };
+  $("#dValue").onchange = async ev => refresh(await patch(id, { value: Number(ev.target.value) || 0 }));
+  $("#dFollow").onchange = async ev => refresh(await patch(id, { followUp: ev.target.value }));
+  $("#dTags").onchange = async ev => refresh(await patch(id, { tags: ev.target.value.split(",").map(t => t.trim()).filter(Boolean) }));
+  $("#dAddNote").onclick = async () => { const v = $("#dNote").value.trim(); if (!v) { $("#dNote").focus(); return; } refresh(await patch(id, { note: v })); };
+  $("#dDel").onclick = () => { $("#dConfirm").hidden = false; $("#dDel").hidden = true; };
+  $("#dDelNo").onclick = () => { $("#dConfirm").hidden = true; $("#dDel").hidden = false; };
+  $("#dDelYes").onclick = async () => {
+    try { await api("/api/admin/enquiries/" + encodeURIComponent(id), { method: "DELETE" }); S.enquiries = S.enquiries.filter(x => x.id !== id); closeDrawer(); toast("Enquiry deleted"); render(); }
+    catch (x) { toast(x.message); }
+  };
+  if (d.hidden) { d.hidden = false; $("#scrim").hidden = false; document.body.style.overflow = "hidden"; $("#dClose").focus(); }
+}
+function closeDrawer() { $("#drawer").hidden = true; $("#scrim").hidden = true; document.body.style.overflow = ""; S.openId = null; }
+$("#scrim").addEventListener("click", closeDrawer);
+addEventListener("keydown", e => { if (e.key === "Escape" && S.openId) closeDrawer(); });
+
+/* ================= pipeline ================= */
+async function renderPipeline(main) {
+  main.innerHTML = `<div class="page-head"><div><h1>Pipe<span>line</span></h1><p class="sub">Drag a card to move it, or use the menu on the card.</p></div></div><div id="board"><div class="skeleton" style="height:300px"></div></div>`;
+  try { await loadEnquiries(); } catch (e) { $("#board").innerHTML = `<div class="card">${esc(e.message)}</div>`; return; }
+  const draw = () => {
+    $("#board").innerHTML = `<div class="board">${STATUSES.map(s => {
+      const list = S.enquiries.filter(e => e.status === s), total = list.reduce((a, e) => a + (e.value || 0), 0);
+      return `<section class="col" data-s="${s}"><div class="col-head"><span class="pill ${cls(s)}">${s} · ${list.length}</span><small>${total ? inr(total) : ""}</small></div>
+        ${list.map(e => `<article class="kcard" draggable="true" data-id="${esc(e.id)}"><b>${esc(e.name)}</b><span class="svcs">${e.services.slice(0, 3).map(x => `<span>${esc(x)}</span>`).join("")}</span>
+          <div class="row2"><span>${e.value ? inr(e.value) : esc(ago(e.createdAt))}</span><select aria-label="Move to" data-move="${esc(e.id)}">${STATUSES.map(x => `<option ${x === s ? "selected" : ""}>${x}</option>`).join("")}</select></div>
+          ${e.followUp ? `<span class="${e.followUp <= today() ? "fu" : "muted"}" style="font-size:.76rem">Follow up ${esc(fmtDay(e.followUp))}</span>` : ""}</article>`).join("") || '<p class="muted" style="font-size:.85rem;margin:6px 4px">Nothing here.</p>'}</section>`;
+    }).join("")}</div>`;
+  };
+  draw();
+  const board = $("#board");
+  let dragId = null;
+  board.addEventListener("dragstart", e => { const c = e.target.closest(".kcard"); if (!c) return; dragId = c.dataset.id; c.classList.add("drag"); e.dataTransfer.effectAllowed = "move"; });
+  board.addEventListener("dragend", e => { const c = e.target.closest(".kcard"); if (c) c.classList.remove("drag"); $$(".col", board).forEach(x => x.classList.remove("over")); });
+  board.addEventListener("dragover", e => { const col = e.target.closest(".col"); if (!col) return; e.preventDefault(); $$(".col", board).forEach(x => x.classList.toggle("over", x === col)); });
+  board.addEventListener("drop", async e => { const col = e.target.closest(".col"); if (!col || !dragId) return; e.preventDefault(); const en = S.enquiries.find(x => x.id === dragId); if (en && en.status !== col.dataset.s) { en.status = col.dataset.s; draw(); await patch(dragId, { status: col.dataset.s }); draw(); } dragId = null; });
+  board.addEventListener("change", async e => { const s = e.target.closest("[data-move]"); if (s) { await patch(s.dataset.move, { status: s.value }); draw(); } });
+  board.addEventListener("click", e => { if (e.target.closest("select")) return; const c = e.target.closest(".kcard"); if (c) openDrawer(c.dataset.id, draw); });
+}
+
+/* ================= follow-ups ================= */
+async function renderFollowups(main) {
+  main.innerHTML = `<div class="page-head"><div><h1>Follow-<span>ups</span></h1><p class="sub">Who to call today, so no lead goes cold.</p></div></div><div id="fu"><div class="skeleton" style="height:240px"></div></div>`;
+  try { await loadEnquiries(); } catch (e) { $("#fu").innerHTML = `<div class="card">${esc(e.message)}</div>`; return; }
+  const draw = () => {
+    const t = today(), open = S.enquiries.filter(e => !["Won", "Lost", "Spam"].includes(e.status));
+    const groups = [
+      ["Overdue", open.filter(e => e.followUp && e.followUp < t)],
+      ["Today", open.filter(e => e.followUp === t)],
+      ["Waiting for a first reply", open.filter(e => e.status === "New" && !e.followUp && Date.now() - new Date(e.createdAt) > 864e5 * .5)],
+      ["Coming up (next 14 days)", open.filter(e => e.followUp > t && e.followUp <= addDays(t, 14)).sort((a, b) => a.followUp < b.followUp ? -1 : 1)]
+    ];
+    const item = e => `<div class="fu-item"><div class="info" data-id="${esc(e.id)}"><b>${esc(e.name)}</b><small>${esc(e.services.join(", "))} · ${esc(e.phone)}${e.followUp ? " · follow up " + esc(fmtDay(e.followUp)) : " · received " + esc(ago(e.createdAt))}</small></div>
+      <div class="acts">${String(e.phone).replace(/[^\d+]/g, "") ? `<a class="btn btn--ink btn--sm" href="tel:${esc(String(e.phone).replace(/[^\d+]/g, ""))}"><svg><use href="#i-call"/></svg>Call</a>` : ""}
+      <button class="btn btn--sm" type="button" data-done="${esc(e.id)}">Mark contacted</button><button class="btn btn--sm" type="button" data-snooze="${esc(e.id)}">+1 day</button></div></div>`;
+    const any = groups.some(g => g[1].length);
+    $("#fu").innerHTML = any ? groups.filter(g => g[1].length).map(([title, list]) => `<section class="fu-group"><h2>${title}<i>${list.length}</i></h2>${list.map(item).join("")}</section>`).join("")
+      : `<div class="card empty"><b>You're all caught up</b><span>Set a follow-up date on an enquiry and it will show up here.</span></div>`;
+  };
+  draw();
+  $("#fu").addEventListener("click", async e => {
+    const done = e.target.closest("[data-done]"), snz = e.target.closest("[data-snooze]"), info = e.target.closest(".info");
+    if (done) { const en = S.enquiries.find(x => x.id === done.dataset.done); await patch(en.id, { status: en.status === "New" ? "Contacted" : en.status, followUp: "", note: "Followed up" }); draw(); }
+    else if (snz) { const en = S.enquiries.find(x => x.id === snz.dataset.snooze); await patch(en.id, { followUp: addDays(en.followUp && en.followUp > today() ? en.followUp : today(), 1) }); draw(); }
+    else if (info) openDrawer(info.dataset.id, draw);
+  });
+}
+
+/* ================= settings ================= */
+async function renderSettings(main) {
+  main.innerHTML = `<div class="page-head"><div><h1>Set<span>tings</span></h1><p class="sub">Change what the website shows, without touching code.</p></div></div><div id="set"><div class="skeleton" style="height:300px"></div></div>`;
+  let s;
+  try { s = (await api("/api/admin/settings")).settings; } catch (e) { $("#set").innerHTML = `<div class="card">${esc(e.message)}</div>`; return; }
+  $("#set").innerHTML = `
+    <form class="grid" id="setForm" novalidate>
+      <div class="card c6" style="display:grid;gap:14px;align-content:start"><h3>Contact details</h3><p class="note" style="margin:0">Shown in the contact section and footer of the website.</p>
+        <label class="f">Email<input class="input" id="sEmail" type="email" value="${esc(s.email)}"></label>
+        <label class="f">Phone<input class="input" id="sPhone" value="${esc(s.phone)}"></label>
+        <label class="f">Instagram link<input class="input" id="sIg" type="url" value="${esc(s.instagram)}" placeholder="https://www.instagram.com/bizparkers/"></label>
+      </div>
+      <div class="card c6" style="display:grid;gap:14px;align-content:start"><h3>Availability</h3><p class="note" style="margin:0">Controls the badge at the top of the homepage.</p>
+        <label class="switch"><input type="checkbox" id="sAvail" ${s.available ? "checked" : ""}><span id="sAvailLbl">${s.available ? "Taking new projects" : "Booked up · join the waitlist"}</span></label>
+        <h3 style="margin-top:8px">Announcement bar</h3><p class="note" style="margin:0">A thin message above the menu, for offers or news.</p>
+        <label class="switch"><input type="checkbox" id="sAnnOn" ${s.announcement.on ? "checked" : ""}>Show the announcement bar</label>
+        <label class="f">Message <small>Up to 160 characters</small><input class="input" id="sAnn" maxlength="160" value="${esc(s.announcement.text)}" placeholder="e.g. Diwali offer: free logo with every website this month"></label>
+        <div class="preview-bar" id="sPrev">${esc(s.announcement.text) || "Your message will look like this"}</div>
+      </div>
+      <div class="c12" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><button class="btn btn--orange" type="submit" id="sSave">Save changes</button><span class="err" id="sErr" hidden></span></div>
+      <div class="card c6"><h3>Account</h3><p class="note">Signed in as <b>${esc(S.me.email)}</b></p>
+        <p class="muted" style="margin:0">To change the admin email or password, set <b>ADMIN_EMAIL</b> and <b>ADMIN_PASSWORD</b> in your hosting environment variables, then restart the app.</p></div>
+      <div class="card c6"><h3>Data</h3><p class="note">Stored in: <b>${esc(S.me.storage === "postgres" ? "Postgres database" : S.me.storage === "file" ? "Server files (data folder)" : "Preview only")}</b></p>
+        <button class="btn btn--sm" type="button" id="sCsv"><svg><use href="#i-down"/></svg>Download all enquiries (CSV)</button></div>
+    </form>`;
+  $("#sAvail").onchange = e => $("#sAvailLbl").textContent = e.target.checked ? "Taking new projects" : "Booked up · join the waitlist";
+  $("#sAnn").oninput = e => $("#sPrev").textContent = e.target.value || "Your message will look like this";
+  $("#sCsv").onclick = exportCsv;
+  $("#setForm").onsubmit = async e => {
+    e.preventDefault(); const btn = $("#sSave"), err = $("#sErr");
+    btn.disabled = true; err.hidden = true;
+    try {
+      await api("/api/admin/settings", { method: "PUT", body: { email: $("#sEmail").value.trim(), phone: $("#sPhone").value.trim(), instagram: $("#sIg").value.trim(), available: $("#sAvail").checked, announcement: { on: $("#sAnnOn").checked, text: $("#sAnn").value.trim() } } });
+      toast("Saved. The website updates within a minute.");
+    } catch (x) { err.textContent = x.message; err.hidden = false; }
+    btn.disabled = false;
+  };
+}
+
+/* ================= auth ================= */
+function showLogin() {
+  closeDrawer();
+  $("#appView").hidden = true; $("#loginView").hidden = false; $("#lDemo").hidden = !DEMO;
+  setTimeout(() => ($("#lEmail").value ? $("#lPass") : $("#lEmail")).focus(), 50);
+}
+async function enterApp(me) {
+  S.me = me;
+  $("#whoEmail").textContent = me.email;
+  $("#whoStore").textContent = me.storage === "postgres" ? "Database: Postgres" : me.storage === "file" ? "Database: server files" : "Preview data";
+  $("#loginView").hidden = true; $("#appView").hidden = false; $("#demoBar").hidden = !DEMO;
+  if (!location.hash) location.hash = "#/dashboard";
+  render();
+}
+$("#pwToggle").onclick = () => { const p = $("#lPass"); p.type = p.type === "password" ? "text" : "password"; $("#pwToggle").textContent = p.type === "password" ? "Show" : "Hide"; };
+$("#loginForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const email = $("#lEmail").value.trim(), password = $("#lPass").value, err = $("#lErr"), btn = $("#lBtn");
+  err.hidden = true;
+  if (!email || !password) { err.textContent = "Enter your email and password."; err.hidden = false; return; }
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Signing in';
+  try {
+    const j = await api("/api/admin/login", { method: "POST", body: { email, password, remember: $("#lRemember").checked } });
+    if (DEMO) sessionStorage.setItem("bp_demo", j.email);
+    $("#lPass").value = "";
+    await enterApp(await api("/api/admin/me"));
+  } catch (x) { err.textContent = x.message; err.hidden = false; }
+  btn.disabled = false; btn.textContent = "Sign in";
+});
+$$("[data-logout]").forEach(b => b.addEventListener("click", async () => {
+  try { await api("/api/admin/logout", { method: "POST" }); } catch (e) {}
+  if (DEMO) sessionStorage.removeItem("bp_demo");
+  S.enquiries = []; showLogin();
+}));
+
+/* keep data fresh while the panel is open */
+setInterval(async () => {
+  if ($("#appView").hidden || document.hidden || S.openId) return;
+  try { await loadEnquiries(); } catch (e) {}
+}, 60000);
+
+api("/api/admin/me").then(enterApp).catch(showLogin);
+})();
+</script>
+</body>
+</html>

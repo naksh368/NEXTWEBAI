@@ -72,7 +72,8 @@ p{margin:0}
 .btn svg{width:18px;height:18px;flex:none}
 
 /* ---------- nav ---------- */
-.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:var(--bw) solid var(--ink)}
+.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;background:var(--paper);border-bottom:var(--bw) solid var(--ink)}
+.nav::before{content:"";position:absolute;left:0;right:0;bottom:100%;height:calc(env(safe-area-inset-top,0px) + 2px);background:var(--paper)}
 .nav .wrap{display:flex;align-items:center;justify-content:space-between;height:70px;gap:16px}
 .brand{display:flex;align-items:center;text-decoration:none}
 .brand img{height:34px;width:auto}
@@ -350,21 +351,22 @@ body.menu-open .mbar{transform:translateY(110%)}
 @keyframes enqIn{from{opacity:0;transform:translateY(24px) scale(.98)}to{opacity:1;transform:none}}
 body.modal-open{overflow:hidden}
 .enq-form{display:grid;grid-template-columns:320px minmax(0,1fr);height:100%}
-.enq-side{background:var(--ink);color:var(--paper);padding:32px 28px;display:flex;flex-direction:column;gap:28px;position:relative;overflow:hidden}
-.enq-side::after{content:"";position:absolute;right:-56px;top:-56px;width:150px;height:150px;border-radius:50%;background:var(--orange);opacity:.95}
+.enq-side{background:var(--yellow);color:var(--ink);border-right:var(--bw) solid var(--ink);padding:32px 28px;display:flex;flex-direction:column;gap:28px;position:relative;overflow:hidden}
+.enq-side::after{content:"";position:absolute;right:-60px;bottom:-60px;width:170px;height:170px;border-radius:50%;background:var(--card);border:var(--bw) solid var(--ink)}
 .enq-side img{width:44px;height:auto}
 .enq-side h2{font-size:2.3rem;font-weight:800;text-transform:uppercase;line-height:.95}
 .enq-side h2 span{color:var(--orange)}
 .enq-steps{list-style:none;margin:0;padding:0;display:grid;gap:16px;position:relative;z-index:1}
 .enq-steps li{display:flex;align-items:center;gap:12px;font-weight:600;opacity:.55;transition:opacity .2s}
-.enq-steps li b{width:32px;height:32px;border-radius:50%;border:var(--bw) solid var(--paper);display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:.9rem;flex:none}
+.enq-steps li b{width:32px;height:32px;border-radius:50%;border:var(--bw) solid var(--ink);background:var(--card);display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:.9rem;flex:none}
 .enq-steps li.on{opacity:1}
-.enq-steps li.on b{background:var(--orange);border-color:var(--orange);color:#fff}
+.enq-steps li.on b{background:var(--orange);color:#fff}
 .enq-steps li.done{opacity:.9}
-.enq-steps li.done b{background:var(--yellow);border-color:var(--yellow);color:var(--ink)}
+.enq-steps li.done b{background:var(--ink);color:var(--yellow)}
 .enq-promise{margin-top:auto;position:relative;z-index:1;font-size:.92rem;display:grid;gap:8px}
 .enq-promise span{display:flex;gap:8px;align-items:center}
-.enq-promise svg{width:18px;height:18px;color:var(--yellow);flex:none}
+.enq-promise{max-width:200px}
+.enq-promise svg{width:18px;height:18px;color:var(--card);flex:none}
 .enq-main{display:flex;flex-direction:column;min-width:0;min-height:0}
 .enq-top{display:flex;align-items:center;gap:16px;padding:20px 28px;border-bottom:var(--bw) solid var(--ink);background:var(--card)}
 .enq-top .ttl{flex:1;min-width:0}
@@ -569,10 +571,10 @@ footer .wrap{padding-block:56px 32px;display:grid;gap:40px}
       <span class="chip">Web · Apps · AI · Brand · SEO</span>
     </div>
 
-    <h1 id="hero-title" aria-label="We build websites, apps, brands and AI automation. You grow.">
+    <h1 id="hero-title" aria-label="We build websites, apps, brands and AI automation, and bring you more leads and sales.">
       <span class="line" aria-hidden="true"><span>We <span class="rot" id="rotVerb">build</span></span></span>
       <span class="line" aria-hidden="true"><span class="outline"><span class="rot" id="rotThing">websites</span></span></span>
-      <span class="line" aria-hidden="true"><span class="hl-orange">You grow.</span></span>
+      <span class="line" aria-hidden="true"><span class="hl-orange"><span class="rot" id="rotGoal">and more.</span></span></span>
     </h1>
 
     <div class="hero-foot">
@@ -934,6 +936,7 @@ footer .wrap{padding-block:56px 32px;display:grid;gap:40px}
       <div class="reach">
         <div class="reach-item"><span class="ic"><svg><use href="#i-mail"/></svg></span><span class="v" data-cfg="email">hello@bizparkers.com</span><button class="copy" type="button" data-copy="email">Copy</button></div>
         <div class="reach-item" data-cfg-row="whatsapp"><span class="ic"><svg><use href="#i-wa"/></svg></span><span class="v" data-cfg="whatsappLabel"></span><button class="copy" type="button" data-copy="whatsappLabel">Copy</button></div>
+        <div class="reach-item"><span class="ic"><svg><use href="#i-ig"/></svg></span><a class="v" href="https://www.instagram.com/bizparkers/" target="_blank" rel="noopener" style="text-decoration:none">@bizparkers</a></div>
         <div class="reach-item"><span class="ic"><svg><use href="#i-clock"/></svg></span><span class="v">Mon to Sat, 10 AM to 7 PM</span></div>
       </div>
     </div>
@@ -1125,8 +1128,8 @@ footer .wrap{padding-block:56px 32px;display:grid;gap:40px}
 /* ===== Edit your business details here ===== */
 const CONFIG = {
   email: "hello@bizparkers.com",
-  whatsapp: "",            // digits with country code, e.g. "919876543210". Leave empty to hide WhatsApp.
-  instagram: "",           // e.g. "https://instagram.com/bizparkers"
+  whatsapp: "917290911804", // digits with country code. Leave empty to hide WhatsApp.
+  instagram: "https://www.instagram.com/bizparkers/",
   linkedin: "",            // e.g. "https://linkedin.com/company/bizparkers"
   formEndpoint: ""         // optional: a Formspree / Web3Forms / Getform URL to receive enquiries directly
 };
@@ -1175,7 +1178,8 @@ const CONFIG = {
 
   /* rotating headline words */
   const PAIRS = [["build","websites"],["launch","mobile apps"],["design","logos"],["automate","busywork"],["rank you","on Google"],["run","smart ads"],["create","web apps"]];
-  const rv = $("#rotVerb"), rt = $("#rotThing");
+  const GOALS = ["and more.", "more leads.", "more sales.", "more calls."];
+  const rv = $("#rotVerb"), rt = $("#rotThing"), rg = $("#rotGoal");
   let pi = 0;
   const swap = (el, text, delay) => setTimeout(() => {
     if (reduced) { el.textContent = text; return; }
@@ -1185,7 +1189,7 @@ const CONFIG = {
   setInterval(() => {
     if (document.hidden) return;
     pi = (pi + 1) % PAIRS.length;
-    swap(rv, PAIRS[pi][0], 0); swap(rt, PAIRS[pi][1], 90);
+    swap(rv, PAIRS[pi][0], 0); swap(rt, PAIRS[pi][1], 90); swap(rg, GOALS[pi % GOALS.length], 180);
   }, reduced ? 4000 : 2600);
 
   /* draggable stickers */

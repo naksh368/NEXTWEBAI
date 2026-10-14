@@ -86,7 +86,7 @@ function computeStats(allEvents, allEnquiries, days, now = new Date()) {
     { label: 'Added faster-reply details', value: reached(e => e.t === 'form_details') }
   ];
 
-  const sectionNames = { reveal: 'Scratch card', services: 'Services', work: 'Work', why: 'Why us', process: 'Process', bundles: 'Packages', faq: 'FAQ', contact: 'Contact' };
+  const sectionNames = { reveal: 'Scratch card', services: 'Services', work: 'What we can build', why: 'Why us', process: 'Process', bundles: 'Packages', faq: 'FAQ', contact: 'Contact' };
   const sections = Object.entries(sectionNames).map(([id, label]) => ({
     label, value: Math.round(reached(e => e.t === 'section' && e.label === id) / nSessions * 100)
   }));

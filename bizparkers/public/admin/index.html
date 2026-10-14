@@ -432,7 +432,7 @@ function mockStats(days) {
     sources: [["Google", .38], ["Instagram", .27], ["Direct", .2], ["Facebook", .09], ["WhatsApp", .04], ["LinkedIn", .02]].map(([l, x]) => ({ label: l, value: sc(x) })),
     devices: [["Mobile", .71], ["Desktop", .24], ["Tablet", .05]].map(([l, x]) => ({ label: l, value: sc(x) })),
     places: [["Kolkata", .62], ["Dubai", .09], ["London", .06], ["New York", .05], ["Singapore", .04]].map(([l, x]) => ({ label: l === "Kolkata" ? "India (IST)" : l, value: sc(x) })),
-    sections: [["Scratch card", 71], ["Services", 64], ["Work", 48], ["Why us", 41], ["Process", 36], ["Packages", 29], ["FAQ", 22], ["Contact", 19]].map(([label, value]) => ({ label, value })),
+    sections: [["Scratch card", 71], ["Services", 64], ["What we can build", 48], ["Why us", 41], ["Process", 36], ["Packages", 29], ["FAQ", 22], ["Contact", 19]].map(([label, value]) => ({ label, value })),
     ctas: [["Start a project", sc(.09)], ["Get a free quote", sc(.05)], ["Website", sc(.03)], ["Google SEO", sc(.02)], ["Growth kit", sc(.015)]].map(([label, value]) => ({ label, value })),
     funnel: [["Opened the form", .14], ["Entered name", .11], ["Entered phone", .085], ["Picked services", .075], ["Sent enquiry", .065], ["Added faster-reply details", .03]].map(([label, x]) => ({ label, value: sc(x) })),
     services: count(M.enquiries, e => e.services), budgets: count(M.enquiries, e => e.budget || "Not shared"),

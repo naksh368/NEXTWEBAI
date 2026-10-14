@@ -17,16 +17,16 @@
 /* Layout: bold "sticker-board" studio page. Thick ink outlines, hard offset shadows,
    blue + orange from the Bizparkers mark, one big type-driven hero, crossing marquees. */
 :root{
-  --paper:#F3F4F8;
-  --card:#FFFFFF;
-  --ink:#10121A;
-  --muted:#565D6E;
+  --paper:#FAF3E5;
+  --card:#FFFCF5;
+  --ink:#141414;
+  --muted:#5F584B;
   --blue:#0A66FF;
-  --orange:#FF6A13;
-  --yellow:#FFD43B;
-  --shade:#10121A;
+  --orange:#FF4D00;
+  --yellow:#FFC72E;
+  --shade:#141414;
   --on-accent:#FFFFFF;
-  --dot:rgba(16,18,26,.13);
+  --dot:rgba(20,20,20,.14);
 
   --f-display:"Bricolage Grotesque", "Arial Black", "Helvetica Neue", Arial, sans-serif;
   --f-body:"Onest", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
@@ -63,7 +63,7 @@ p{margin:0}
 .hl-blue{color:var(--blue)}
 .hl-orange{color:var(--orange)}
 
-.btn{--b:var(--ink);--t:var(--paper);display:inline-flex;align-items:center;gap:.6rem;font-family:var(--f-display);font-weight:700;font-size:1rem;padding:.9rem 1.4rem;border-radius:999px;border:var(--bw) solid var(--ink);background:var(--b);color:var(--t);text-decoration:none;cursor:pointer;box-shadow:4px 4px 0 var(--shade);transition:transform .18s ease, box-shadow .18s ease, background .18s ease}
+.btn{--b:var(--ink);--t:var(--paper);display:inline-flex;align-items:center;gap:.6rem;white-space:nowrap;font-family:var(--f-display);font-weight:700;font-size:1rem;padding:.9rem 1.4rem;border-radius:999px;border:var(--bw) solid var(--ink);background:var(--b);color:var(--t);text-decoration:none;cursor:pointer;box-shadow:4px 4px 0 var(--shade);transition:transform .18s ease, box-shadow .18s ease, background .18s ease}
 .btn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--shade)}
 .btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--shade)}
 .btn--orange{--b:var(--orange);--t:var(--on-accent)}
@@ -102,116 +102,60 @@ body.menu-open .mbar{transform:translateY(110%)}
 }
 
 /* ---------- hero ---------- */
-.hero{position:relative;overflow:hidden;border-bottom:var(--bw) solid var(--ink);
-  background-color:var(--paper);
-  background-image:
-    radial-gradient(55% 50% at 88% 18%, color-mix(in srgb,var(--blue) 16%,transparent), transparent 70%),
-    radial-gradient(45% 45% at 72% 95%, color-mix(in srgb,var(--orange) 16%,transparent), transparent 70%),
-    radial-gradient(var(--dot) 1.4px, transparent 1.4px);
-  background-size:auto, auto, 22px 22px}
-.hero .wrap{position:relative;z-index:2;padding-block:clamp(36px,5vw,80px) clamp(44px,6vw,88px)}
-.hero-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:clamp(32px,4vw,64px);align-items:center}
-.hero-text{min-width:0}
-.hero-kicker{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:clamp(18px,2.5vw,28px)}
+.hero{position:relative;overflow:hidden;border-bottom:var(--bw) solid var(--ink);background-color:var(--paper);background-image:radial-gradient(var(--dot) 1.4px, transparent 1.4px);background-size:24px 24px}
+.hero .wrap{position:relative;z-index:2;padding-block:clamp(40px,6vw,96px) clamp(44px,5vw,72px)}
+.hero-kicker{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:clamp(20px,3vw,36px)}
 .chip{display:inline-flex;align-items:center;gap:6px;font-family:var(--f-mono);font-size:.74rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.45rem .8rem;border:var(--bw) solid var(--ink);border-radius:999px;background:var(--card);text-decoration:none}
 .chip .dot{width:8px;height:8px;border-radius:50%;background:#22C55E;box-shadow:0 0 0 3px color-mix(in srgb,#22C55E 30%,transparent);animation:pulse 2s ease-in-out infinite}
 @keyframes pulse{50%{box-shadow:0 0 0 6px color-mix(in srgb,#22C55E 10%,transparent)}}
-.hero h1{font-size:clamp(3rem,7.2vw,7rem);font-weight:800;text-transform:uppercase;line-height:.9;letter-spacing:-.045em}
-.hero h1 .line{display:block;overflow:hidden;padding-bottom:.04em}
-.hero h1 .line > span{display:block;animation:rise .9s cubic-bezier(.2,.8,.2,1) both}
+.hero h1{font-size:clamp(2.7rem,9vw,8.4rem);font-weight:800;text-transform:uppercase;line-height:.92;letter-spacing:-.04em}
+.hero h1 .line{display:block;white-space:nowrap;overflow:hidden;padding:.02em 0 .06em}
+.hero h1 .line > span{display:inline-block;animation:rise .9s cubic-bezier(.2,.8,.2,1) both}
 .hero h1 .line:nth-child(2) > span{animation-delay:.12s}
 .hero h1 .line:nth-child(3) > span{animation-delay:.24s}
+.rot{display:inline-block;vertical-align:bottom;will-change:transform}
+.rot.out{animation:wordOut .32s cubic-bezier(.6,0,.8,.4) forwards}
+.rot.in{animation:wordIn .5s cubic-bezier(.2,.8,.2,1) both}
+@keyframes wordOut{to{transform:translateY(-110%);opacity:0}}
+@keyframes wordIn{from{transform:translateY(110%);opacity:0}to{transform:none;opacity:1}}
 /* outline drawn with shadows so overlapping glyph contours stay hidden */
 .outline{--ol:var(--ink);--of:var(--paper);color:var(--of);text-shadow:2px 0 var(--ol),-2px 0 var(--ol),0 2px var(--ol),0 -2px var(--ol),1.5px 1.5px var(--ol),-1.5px -1.5px var(--ol),1.5px -1.5px var(--ol),-1.5px 1.5px var(--ol)}
 @media (max-width:560px){.outline{text-shadow:1.5px 0 var(--ol),-1.5px 0 var(--ol),0 1.5px var(--ol),0 -1.5px var(--ol),1px 1px var(--ol),-1px -1px var(--ol),1px -1px var(--ol),-1px 1px var(--ol)}}
 @keyframes rise{from{transform:translateY(105%)}to{transform:none}}
-.hero-copy{max-width:540px;margin-top:clamp(20px,2.5vw,30px);font-size:clamp(1.02rem,1.4vw,1.15rem);color:var(--muted)}
+.hero-foot{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:32px;margin-top:clamp(24px,3.5vw,40px)}
+.hero-left{max-width:600px;min-width:0}
+.hero-copy{font-size:clamp(1.02rem,1.5vw,1.2rem);color:var(--muted)}
 .hero-copy strong{color:var(--ink)}
 .hero-ctas{display:flex;flex-wrap:wrap;gap:14px;margin-top:26px}
 .trust{display:flex;flex-wrap:wrap;gap:10px 20px;margin-top:24px;font-weight:600;font-size:.92rem}
 .trust span{display:inline-flex;align-items:center;gap:8px}
 .trust svg{width:20px;height:20px;color:var(--yellow)}
 
-/* stage: mock browser + phone + Google card */
-.hero-stage{position:relative;height:clamp(400px,40vw,540px);min-width:0}
-.stage-browser{position:absolute;top:7%;left:6%;right:1%;height:64%;background:var(--card);border:var(--bw) solid var(--ink);border-radius:18px;box-shadow:8px 8px 0 var(--ink);overflow:hidden;animation:floaty 8s ease-in-out infinite}
-.sb-bar{height:32px;display:flex;align-items:center;gap:6px;padding:0 12px;border-bottom:var(--bw) solid var(--ink);background:var(--paper)}
-.sb-bar i{width:10px;height:10px;border-radius:50%;border:1.5px solid var(--ink)}
-.sb-bar i:nth-child(1){background:var(--orange)}.sb-bar i:nth-child(2){background:var(--yellow)}.sb-bar i:nth-child(3){background:var(--blue)}
-.sb-url{margin-left:10px;flex:1;min-width:0;max-width:240px;font-family:var(--f-mono);font-size:10.5px;font-weight:700;padding:3px 10px;border:1.5px solid var(--ink);border-radius:999px;background:var(--card);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sb-hero{background:var(--blue);padding:7% 7% 6%;display:grid;gap:8px;position:relative;overflow:hidden}
-.sb-hero::after{content:"";position:absolute;right:-8%;top:-30%;width:46%;aspect-ratio:1;border-radius:50%;background:var(--orange);border:var(--bw) solid var(--ink)}
-.sb-hero b{display:block;height:13px;border-radius:5px;background:#fff;position:relative;z-index:1}
-.sb-hero b:nth-child(1){width:62%;height:16px}.sb-hero b:nth-child(2){width:44%}
-.sb-hero em{display:block;width:30%;height:22px;margin-top:6px;border-radius:999px;background:var(--yellow);border:1.5px solid var(--ink);position:relative;z-index:1}
-.sb-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px 7%}
-.sb-cards div{height:52px;border:1.5px solid var(--ink);border-radius:10px;background:var(--paper);position:relative}
-.sb-cards div::before{content:"";position:absolute;left:8px;top:8px;width:16px;height:16px;border-radius:5px;background:var(--orange)}
-.sb-cards div:nth-child(2)::before{background:var(--blue)}.sb-cards div:nth-child(3)::before{background:var(--yellow)}
-
-.stage-phone{position:absolute;left:0;bottom:0;width:clamp(150px,30%,190px);aspect-ratio:9/17;background:var(--card);border:var(--bw) solid var(--ink);border-radius:26px;box-shadow:6px 6px 0 var(--ink);padding:10px 9px;display:flex;flex-direction:column;gap:7px;overflow:hidden;animation:floaty 7s ease-in-out -2s infinite}
-.sp-head{display:flex;align-items:center;gap:7px;padding-bottom:7px;border-bottom:1.5px solid color-mix(in srgb,var(--ink) 15%,transparent)}
-.sp-av{width:24px;height:24px;border-radius:50%;background:var(--blue);display:grid;place-items:center;color:#fff;flex:none}
-.sp-av svg{width:14px;height:14px}
-.sp-head b{font-size:11px;line-height:1.1;display:block}
-.sp-head small{font-size:9px;color:#16A34A;font-weight:600}
-.msg{font-size:10px;line-height:1.35;padding:6px 8px;border-radius:10px;max-width:88%;border:1.5px solid var(--ink)}
-.msg.in{background:var(--paper);align-self:flex-start;border-bottom-left-radius:3px}
-.msg.out{background:#DCF8C6;color:#10121A;align-self:flex-end;border-bottom-right-radius:3px}
-.typing{align-self:flex-start;display:flex;gap:3px;padding:7px 9px;border:1.5px solid var(--ink);border-radius:10px;background:var(--paper)}
-.typing i{width:5px;height:5px;border-radius:50%;background:var(--muted);animation:blink 1.2s infinite}
-.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
-@keyframes blink{0%,60%,100%{opacity:.25}30%{opacity:1}}
-
-.stage-rank{position:absolute;right:0;bottom:6%;width:clamp(200px,52%,280px);background:var(--card);border:var(--bw) solid var(--ink);border-radius:16px;box-shadow:6px 6px 0 var(--orange);padding:12px;display:grid;gap:8px;animation:floaty 9s ease-in-out -4s infinite}
-.sr-q{display:flex;align-items:center;gap:6px;font-size:11px;padding:5px 10px;border:1.5px solid var(--ink);border-radius:999px;color:var(--muted)}
-.sr-q svg{width:12px;height:12px;flex:none;color:var(--ink)}
-.sr-row{display:flex;align-items:center;gap:9px;padding:7px;border-radius:10px}
-.sr-row.top{background:color-mix(in srgb,var(--yellow) 40%,transparent);border:1.5px dashed var(--ink)}
-.sr-n{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:11px;background:var(--orange);color:#fff;border:1.5px solid var(--ink);flex:none}
-.sr-row:not(.top) .sr-n{background:var(--paper);color:var(--muted)}
-.sr-t{display:grid;gap:3px;min-width:0;flex:1}
-.sr-t b{font-size:11.5px;color:var(--blue);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sr-t small{font-size:10px;color:#B45309;letter-spacing:.06em}
-.sr-t i{display:block;height:6px;border-radius:3px;background:color-mix(in srgb,var(--ink) 12%,transparent)}
-@keyframes floaty{50%{transform:translateY(-8px)}}
-
-.badge{position:absolute;z-index:4;top:-4%;right:-2%;width:124px;height:124px;text-decoration:none;display:block}
+.badge{position:relative;width:150px;height:150px;flex:none;text-decoration:none;display:block}
 .badge svg.ring{position:absolute;inset:0;width:100%;height:100%;animation:spin 16s linear infinite}
-.badge svg.ring text{fill:var(--ink);font-family:var(--f-mono);font-size:10.6px;font-weight:700;letter-spacing:.22em}
-.badge::before{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--paper);border:var(--bw) solid var(--ink)}
-.badge .core{position:absolute;inset:30px;border-radius:50%;background:var(--orange);border:var(--bw) solid var(--ink);display:grid;place-items:center;transition:transform .25s ease}
-.badge:hover .core{transform:rotate(45deg) scale(1.05)}
-.badge .core svg{width:28px;height:28px;color:#fff}
+.badge svg.ring text{fill:var(--ink);font-family:var(--f-mono);font-size:11px;font-weight:700;letter-spacing:.24em}
+.badge .core{position:absolute;inset:38px;border-radius:50%;background:var(--orange);border:var(--bw) solid var(--ink);display:grid;place-items:center;transition:transform .25s ease}
+.badge:hover .core{transform:rotate(45deg) scale(1.06)}
+.badge .core svg{width:30px;height:30px;color:#fff}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-.sticker{position:absolute;z-index:5;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;font-family:var(--f-display);font-weight:800;font-size:.95rem;padding:.55rem .95rem;border:var(--bw) solid var(--ink);border-radius:14px;box-shadow:4px 4px 0 var(--ink);display:flex;align-items:center;gap:8px;white-space:nowrap;transition:box-shadow .15s}
-.sticker:active,.sticker.dragging{cursor:grabbing;box-shadow:8px 8px 0 var(--ink)}
+.sticker{position:absolute;z-index:5;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;font-family:var(--f-display);font-weight:800;font-size:1.15rem;text-transform:uppercase;letter-spacing:-.01em;padding:.7rem 1.3rem;border:var(--bw) solid var(--ink);border-radius:999px;box-shadow:5px 5px 0 var(--ink);display:flex;align-items:center;gap:8px;white-space:nowrap;transition:box-shadow .15s}
+.sticker:active,.sticker.dragging{cursor:grabbing;box-shadow:9px 9px 0 var(--ink)}
 .sticker svg{width:18px;height:18px;flex:none}
-.s1{background:var(--yellow);color:#10121A;right:8%;bottom:37%;transform:rotate(5deg)}
-.s2{background:var(--blue);color:#fff;left:21%;top:52%;transform:rotate(-6deg)}
-.s3{background:var(--orange);color:#fff;left:0;top:0;transform:rotate(-5deg)}
-.s4{background:var(--card);color:var(--ink);left:40%;bottom:-2%;transform:rotate(3deg)}
-.drag-hint{position:absolute;right:0;bottom:-34px;font-family:var(--f-mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.s1{background:var(--orange);color:#fff;top:9%;right:4%;transform:rotate(7deg)}
+.s2{background:var(--yellow);color:var(--ink);top:40%;right:7%;transform:rotate(-6deg)}
+.s3{background:var(--ink);color:var(--paper);bottom:26%;right:22%;transform:rotate(-4deg)}
+.s4{background:var(--blue);color:#fff;top:24%;right:20%;transform:rotate(5deg)}
+.drag-hint{margin-top:18px;font-family:var(--f-mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 
-@media (max-width:1000px){
-  .hero-grid{grid-template-columns:1fr}
-  .hero h1{font-size:clamp(3.1rem,16vw,7rem)}
-  .hero-stage{height:clamp(340px,70vw,500px);max-width:640px;width:100%;justify-self:center}
-  .drag-hint{display:none}
-}
-@media (max-width:560px){
+@media (max-width:1100px){ .s4{display:none} .s3{right:4%;bottom:30%} }
+@media (max-width:760px){
+  .hero h1{font-size:clamp(2.3rem,12.4vw,5rem)}
+  .badge,.s2,.s3,.drag-hint{display:none}
+  .hero-kicker .chip:nth-child(2){display:none}
+  .s1{top:16px;right:12px;font-size:.85rem;padding:.5rem .95rem}
   .hero-ctas .btn{flex:1 1 auto;justify-content:center}
   .trust{font-size:.86rem;gap:8px 14px}
-  .hero-stage{height:330px;margin-top:6px}
-  .stage-browser{left:3%;height:58%;top:4%;box-shadow:5px 5px 0 var(--ink)}
-  .stage-phone{width:118px;border-radius:20px;padding:8px 7px;gap:5px}
-  .msg{font-size:8.5px;padding:5px 6px}
-  .stage-rank{width:62%;bottom:2%;padding:9px}
-  .sb-cards div{height:34px}
-  .badge,.s3,.s4{display:none}
-  .s1{font-size:.8rem;right:2%;bottom:34%}
-  .s2{font-size:.8rem;left:30%;top:47%}
 }
 /* ---------- marquee ---------- */
 .marquees{position:relative;overflow:hidden;padding-block:38px;border-bottom:var(--bw) solid var(--ink)}
@@ -389,19 +333,68 @@ body.menu-open .mbar{transform:translateY(110%)}
 .reach-item .v{font-weight:600;user-select:all;word-break:break-all}
 .copy{font-family:var(--f-mono);font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border:1.5px solid #fff;color:#fff;background:transparent;padding:.3rem .6rem;border-radius:999px;cursor:pointer}
 
-.form{background:var(--card);color:var(--ink);border:var(--bw) solid var(--ink);border-radius:22px;padding:clamp(20px,3vw,32px);box-shadow:10px 10px 0 var(--ink);display:grid;gap:18px;min-width:0;scroll-margin-top:90px}
-.form-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
-.form-head h3{font-size:clamp(1.35rem,2.4vw,1.65rem);font-weight:800}
-.step-count{font-family:var(--f-mono);font-size:.74rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.progress{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.progress i{height:8px;border-radius:999px;border:1.5px solid var(--ink);background:var(--paper);transition:background .3s}
+/* quick-start card in the contact section */
+.starter{background:var(--card);color:var(--ink);border:var(--bw) solid var(--ink);border-radius:22px;padding:clamp(20px,3vw,32px);box-shadow:10px 10px 0 var(--ink);display:grid;gap:18px;min-width:0}
+.starter h3{font-size:clamp(1.35rem,2.4vw,1.65rem);font-weight:800}
+.starter p{color:var(--muted)}
+.starter .tiles button{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:8px;padding:13px 12px;border:var(--bw) solid var(--ink);border-radius:14px;background:var(--paper);font-weight:600;font-size:.9rem;line-height:1.25;transition:transform .15s, box-shadow .15s, background .15s}
+.starter .tiles button:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--ink);background:var(--yellow)}
+.starter .tiles button:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+.starter .tiles svg{width:22px;height:22px;color:var(--orange)}
+.starter .btn{justify-content:center}
+
+/* ---------- enquiry pop-up ---------- */
+.enq{padding:0;border:var(--bw) solid var(--ink);border-radius:26px;width:min(1040px,calc(100vw - 32px));max-width:none;height:min(740px,calc(100dvh - 32px));max-height:none;background:var(--paper);color:var(--ink);box-shadow:12px 12px 0 var(--ink);overflow:hidden}
+.enq[open]{animation:enqIn .35s cubic-bezier(.2,.8,.2,1) both}
+.enq::backdrop{background:rgba(20,20,20,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+@keyframes enqIn{from{opacity:0;transform:translateY(24px) scale(.98)}to{opacity:1;transform:none}}
+body.modal-open{overflow:hidden}
+.enq-form{display:grid;grid-template-columns:320px minmax(0,1fr);height:100%}
+.enq-side{background:var(--ink);color:var(--paper);padding:32px 28px;display:flex;flex-direction:column;gap:28px;position:relative;overflow:hidden}
+.enq-side::after{content:"";position:absolute;right:-56px;top:-56px;width:150px;height:150px;border-radius:50%;background:var(--orange);opacity:.95}
+.enq-side img{width:44px;height:auto}
+.enq-side h2{font-size:2.3rem;font-weight:800;text-transform:uppercase;line-height:.95}
+.enq-side h2 span{color:var(--orange)}
+.enq-steps{list-style:none;margin:0;padding:0;display:grid;gap:16px;position:relative;z-index:1}
+.enq-steps li{display:flex;align-items:center;gap:12px;font-weight:600;opacity:.55;transition:opacity .2s}
+.enq-steps li b{width:32px;height:32px;border-radius:50%;border:var(--bw) solid var(--paper);display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:.9rem;flex:none}
+.enq-steps li.on{opacity:1}
+.enq-steps li.on b{background:var(--orange);border-color:var(--orange);color:#fff}
+.enq-steps li.done{opacity:.9}
+.enq-steps li.done b{background:var(--yellow);border-color:var(--yellow);color:var(--ink)}
+.enq-promise{margin-top:auto;position:relative;z-index:1;font-size:.92rem;display:grid;gap:8px}
+.enq-promise span{display:flex;gap:8px;align-items:center}
+.enq-promise svg{width:18px;height:18px;color:var(--yellow);flex:none}
+.enq-main{display:flex;flex-direction:column;min-width:0;min-height:0}
+.enq-top{display:flex;align-items:center;gap:16px;padding:20px 28px;border-bottom:var(--bw) solid var(--ink);background:var(--card)}
+.enq-top .ttl{flex:1;min-width:0}
+.enq-top h3{font-size:clamp(1.3rem,2.4vw,1.75rem);font-weight:800}
+.step-count{font-family:var(--f-mono);font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.enq-close{width:46px;height:46px;flex:none;border-radius:50%;border:var(--bw) solid var(--ink);background:var(--paper);color:var(--ink);cursor:pointer;display:grid;place-items:center;transition:transform .2s, background .2s}
+.enq-close:hover{transform:rotate(90deg);background:var(--yellow)}
+.enq-close svg{width:20px;height:20px}
+.progress{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:14px 28px 0}
+.progress i{height:8px;border-radius:999px;border:1.5px solid var(--ink);background:var(--card);transition:background .3s}
 .progress i.on{background:var(--orange)}
+.enq-body{flex:1;min-height:0;overflow-y:auto;padding:22px 28px 28px;overscroll-behavior:contain}
+.enq-nav{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 28px;border-top:var(--bw) solid var(--ink);background:var(--card)}
+.enq-nav .btn{padding:.85rem 1.4rem}
+.enq-nav .spacer{flex:1}
+@media (max-width:760px){
+  .enq{width:100vw;height:100dvh;border-radius:0;border:0;box-shadow:none;margin:0}
+  .enq-form{grid-template-columns:1fr}
+  .enq-side{display:none}
+  .enq-top{padding:calc(14px + env(safe-area-inset-top,0px)) var(--gutter-r) 14px var(--gutter-l)}
+  .progress,.enq-body{padding-left:var(--gutter-l);padding-right:var(--gutter-r)}
+  .enq-nav{padding:12px var(--gutter-r) calc(12px + env(safe-area-inset-bottom,0px)) var(--gutter-l)}
+  .enq-nav .btn{flex:1;justify-content:center}
+}
 .fstep{display:grid;gap:16px;border:0;margin:0;padding:0;min-width:0;animation:stepIn .35s ease both}
 @keyframes stepIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
 .q{font-family:var(--f-display);font-weight:700;font-size:1.08rem;padding:0}
 .q small{display:block;margin-top:2px;font-family:var(--f-body);font-weight:500;color:var(--muted);font-size:.86rem}
 .tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-@media (max-width:560px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.tiles .tile:last-child{grid-column:span 2}}
+@media (max-width:560px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.tiles > :last-child{grid-column:span 2}}
 .tile{position:relative;cursor:pointer;display:block;min-width:0}
 .tile input,.pill input{position:absolute;opacity:0;pointer-events:none}
 .tile span{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:13px 12px;border:var(--bw) solid var(--ink);border-radius:14px;background:var(--paper);font-weight:600;font-size:.9rem;line-height:1.25;height:100%;transition:background .15s, color .15s, transform .15s, box-shadow .15s}
@@ -429,9 +422,6 @@ body.menu-open .mbar{transform:translateY(110%)}
 .err{color:#C0261A;font-size:.86rem;font-weight:600}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 @media (max-width:560px){.row{grid-template-columns:1fr}}
-.fnav{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:16px;border-top:var(--bw) dashed color-mix(in srgb,var(--ink) 25%,transparent)}
-.fnav .btn{padding:.8rem 1.25rem}
-.fnav .spacer{flex:1}
 .link-btn{font:inherit;font-weight:700;background:none;border:0;color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:.6rem .2rem}
 .link-btn svg{width:16px;height:16px}
 .form-note{font-size:.84rem;color:var(--muted);display:flex;gap:8px;align-items:center}
@@ -525,6 +515,7 @@ footer .wrap{padding-block:56px 32px;display:grid;gap:40px}
     <symbol id="i-in" viewBox="0 0 24 24"><path fill="currentColor" d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 9.75h4v11H3v-11Zm6.5 0h3.8v1.5h.06c.53-1 1.83-2.06 3.77-2.06 4.03 0 4.77 2.65 4.77 6.1v5.46h-4v-4.84c0-1.16-.02-2.64-1.61-2.64-1.61 0-1.86 1.26-1.86 2.56v4.92h-3.93v-11Z"/></symbol>
     <symbol id="i-lock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></g></symbol>
     <symbol id="i-tick" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/></symbol>
   </defs>
 </svg>
 
@@ -567,65 +558,44 @@ footer .wrap{padding-block:56px 32px;display:grid;gap:40px}
 <main>
 <!-- ============ HERO ============ -->
 <section class="hero" aria-labelledby="hero-title">
-  <div class="wrap hero-grid">
-    <div class="hero-text">
-      <div class="hero-kicker">
-        <span class="chip"><span class="dot"></span>Taking new projects</span>
-        <span class="chip">Web · Apps · AI · Brand · SEO</span>
-      </div>
+  <div class="sticker s1" data-drag>Websites</div>
+  <div class="sticker s2" data-drag>Google SEO</div>
+  <div class="sticker s3" data-drag>AI bots</div>
+  <div class="sticker s4" data-drag>Mobile apps</div>
 
-      <h1 id="hero-title">
-        <span class="line"><span>Build it.</span></span>
-        <span class="line"><span class="outline">Brand it.</span></span>
-        <span class="line"><span class="hl-orange">Grow it.</span></span>
-      </h1>
-
-      <p class="hero-copy"><strong>Bizparkers is a digital studio for growing businesses.</strong> We design your brand, build your website, mobile app or web app, automate the busywork with AI, and get you found on Google. One team, from first sketch to first customer.</p>
-      <div class="hero-ctas">
-        <a class="btn btn--orange" href="#contact">Get a free quote <svg><use href="#i-arrow"/></svg></a>
-        <a class="btn btn--ghost" href="#services">Explore services</a>
-      </div>
-      <div class="trust">
-        <span><svg><use href="#i-check"/></svg>Free consultation</span>
-        <span><svg><use href="#i-check"/></svg>Fixed, written quotes</span>
-        <span><svg><use href="#i-check"/></svg>Reply within 24h</span>
-      </div>
+  <div class="wrap">
+    <div class="hero-kicker">
+      <span class="chip"><span class="dot"></span>Taking new projects</span>
+      <span class="chip">Web · Apps · AI · Brand · SEO</span>
     </div>
 
-    <div class="hero-stage">
-      <div class="stage-browser" aria-hidden="true">
-        <div class="sb-bar"><i></i><i></i><i></i><span class="sb-url">yourbrand.com</span></div>
-        <div class="sb-hero"><b></b><b></b><em></em></div>
-        <div class="sb-cards"><div></div><div></div><div></div></div>
-      </div>
+    <h1 id="hero-title" aria-label="We build websites, apps, brands and AI automation. You grow.">
+      <span class="line" aria-hidden="true"><span>We <span class="rot" id="rotVerb">build</span></span></span>
+      <span class="line" aria-hidden="true"><span class="outline"><span class="rot" id="rotThing">websites</span></span></span>
+      <span class="line" aria-hidden="true"><span class="hl-orange">You grow.</span></span>
+    </h1>
 
-      <div class="stage-phone" aria-hidden="true">
-        <div class="sp-head"><span class="sp-av"><svg><use href="#i-bot"/></svg></span><span><b>AI assistant</b><small>● online</small></span></div>
-        <div class="msg in">Hi! How can I help you today?</div>
-        <div class="msg out">Can I book a demo for Friday?</div>
-        <div class="msg in">Sure. 11 AM is free. Shall I confirm it?</div>
-        <div class="typing"><i></i><i></i><i></i></div>
+    <div class="hero-foot">
+      <div class="hero-left">
+        <p class="hero-copy"><strong>Bizparkers is a digital studio for growing businesses.</strong> Websites, mobile apps, AI automation, branding, ads and Google SEO, all from one team that stays with you after launch.</p>
+        <div class="hero-ctas">
+          <a class="btn btn--orange" href="#contact">Start a project <svg><use href="#i-arrow"/></svg></a>
+          <a class="btn btn--ghost" href="#work">See what we build</a>
+        </div>
+        <div class="trust">
+          <span><svg><use href="#i-check"/></svg>Free consultation</span>
+          <span><svg><use href="#i-check"/></svg>Fixed, written quotes</span>
+          <span><svg><use href="#i-check"/></svg>Reply within 24h</span>
+        </div>
+        <p class="drag-hint">Psst. The stickers move. Drag one.</p>
       </div>
-
-      <div class="stage-rank" aria-hidden="true">
-        <div class="sr-q"><svg><use href="#i-search"/></svg>best agency near me</div>
-        <div class="sr-row top"><span class="sr-n">1</span><span class="sr-t"><b>Your Brand · Official site</b><small>★★★★★</small></span></div>
-        <div class="sr-row"><span class="sr-n">2</span><span class="sr-t"><i style="width:80%"></i><i style="width:55%"></i></span></div>
-      </div>
-
-      <a class="badge" href="#contact" aria-label="Get a free quote">
-        <svg class="ring" viewBox="0 0 124 124" aria-hidden="true">
-          <defs><path id="circ" d="M62 62m-48 0a48 48 0 1 1 96 0a48 48 0 1 1-96 0"/></defs>
-          <text><textPath href="#circ">FREE QUOTE • FREE QUOTE • FREE QUOTE • </textPath></text>
+      <a class="badge" href="#contact" aria-label="Start a project">
+        <svg class="ring" viewBox="0 0 150 150" aria-hidden="true">
+          <defs><path id="circ" d="M75 75m-58 0a58 58 0 1 1 116 0a58 58 0 1 1-116 0"/></defs>
+          <text><textPath href="#circ">BUILD • BRAND • AUTOMATE • GROW • </textPath></text>
         </svg>
         <span class="core"><svg><use href="#i-arrow-ur"/></svg></span>
       </a>
-
-      <div class="sticker s1" data-drag><svg><use href="#i-search"/></svg>Rank on Google</div>
-      <div class="sticker s2" data-drag><svg><use href="#i-bot"/></svg>AI that works 24/7</div>
-      <div class="sticker s3" data-drag><svg><use href="#i-phone"/></svg>iOS + Android</div>
-      <div class="sticker s4" data-drag><svg><use href="#i-pen"/></svg>Logos with a story</div>
-      <p class="drag-hint">Psst. Drag the stickers.</p>
     </div>
   </div>
 </section>
@@ -955,7 +925,7 @@ footer .wrap{padding-block:56px 32px;display:grid;gap:40px}
     <div>
       <span class="eyebrow">Start a project</span>
       <h2 id="contact-title" style="margin-top:16px">Got an<br><span class="outline">idea?</span><br>Park it here.</h2>
-      <p class="lead">Tell us what you want to build or grow. It takes about a minute.</p>
+      <p class="lead">Tell us what you want to build or grow. The form takes about a minute.</p>
       <ol class="next-steps">
         <li><b>1</b><span><strong>We reply within 24 hours</strong><small>On WhatsApp, a call or email, whichever you prefer.</small></span></li>
         <li><b>2</b><span><strong>A free planning call</strong><small>We go through your goals and suggest the right plan.</small></span></li>
@@ -968,14 +938,54 @@ footer .wrap{padding-block:56px 32px;display:grid;gap:40px}
       </div>
     </div>
 
-    <form class="form" id="leadForm" novalidate>
-      <div id="formMain" style="display:grid;gap:18px">
-        <div class="form-head">
-          <h3 id="stepTitle">What do you need?</h3>
-          <span class="step-count">Step <b id="stepNum">1</b> of 3</span>
-        </div>
-        <div class="progress" aria-hidden="true"><i class="on"></i><i></i><i></i></div>
+    <div class="starter">
+      <h3>What do you need?</h3>
+      <p>Tap a service to start your enquiry, or open the full form.</p>
+      <div class="tiles">
+          <button type="button" data-open="Website"><svg><use href="#i-web"/></svg>Website</button>
+          <button type="button" data-open="E-commerce"><svg><use href="#i-cart"/></svg>Online store</button>
+          <button type="button" data-open="Mobile app"><svg><use href="#i-phone"/></svg>Mobile app</button>
+          <button type="button" data-open="Web app"><svg><use href="#i-app"/></svg>Web app / SaaS</button>
+          <button type="button" data-open="AI automation"><svg><use href="#i-bolt"/></svg>AI automation</button>
+          <button type="button" data-open="AI chatbot"><svg><use href="#i-bot"/></svg>AI / WhatsApp bot</button>
+          <button type="button" data-open="Logo & branding"><svg><use href="#i-pen"/></svg>Logo &amp; branding</button>
+          <button type="button" data-open="Digital marketing"><svg><use href="#i-mega"/></svg>Digital marketing</button>
+          <button type="button" data-open="Google SEO"><svg><use href="#i-search"/></svg>Google SEO</button>
+      </div>
+      <a class="btn btn--orange" href="#contact" data-open="">Start a project <svg><use href="#i-arrow"/></svg></a>
+    </div>
+  </div>
+</section>
+</main>
 
+<!-- ============ ENQUIRY POP-UP ============ -->
+<dialog class="enq" id="enquiry" aria-labelledby="stepTitle">
+  <form class="enq-form" id="leadForm" novalidate>
+    <aside class="enq-side">
+      <img src="assets/mark.png" alt="" width="44" height="54">
+      <h2>Start a <span>project</span></h2>
+      <ol class="enq-steps" id="enqSteps">
+        <li class="on"><b>1</b>What you need</li>
+        <li><b>2</b>Budget and details</li>
+        <li><b>3</b>Your contact info</li>
+      </ol>
+      <div class="enq-promise">
+        <span><svg><use href="#i-check"/></svg>Takes about a minute</span>
+        <span><svg><use href="#i-check"/></svg>Reply within 24 hours</span>
+        <span><svg><use href="#i-check"/></svg>Free, no obligation</span>
+      </div>
+    </aside>
+    <div class="enq-main">
+      <div class="enq-top">
+        <div class="ttl">
+          <span class="step-count">Step <b id="stepNum">1</b> of 3</span>
+          <h3 id="stepTitle">What do you need?</h3>
+        </div>
+        <button class="enq-close" type="button" id="enqClose" aria-label="Close the form"><svg><use href="#i-x"/></svg></button>
+      </div>
+      <div class="progress" aria-hidden="true"><i class="on"></i><i></i><i></i></div>
+      <div class="enq-body" id="enqBody">
+        <div id="formMain" style="display:grid;gap:18px">
         <fieldset class="fstep" data-step="1" data-title="What do you need?">
           <legend class="q">Pick everything that applies <small>You can choose more than one</small></legend>
           <div class="tiles" id="picks">
@@ -1047,14 +1057,7 @@ footer .wrap{padding-block:56px 32px;display:grid;gap:40px}
           </div>
           <p class="form-note"><svg><use href="#i-lock"/></svg>We only use your details to reply to this enquiry. No spam.</p>
         </fieldset>
-
-        <div class="fnav">
-          <button class="link-btn" type="button" id="backBtn" hidden><svg><use href="#i-left"/></svg>Back</button>
-          <span class="spacer"></span>
-          <button class="btn btn--orange" type="submit" id="nextBtn">Next <svg><use href="#i-arrow"/></svg></button>
         </div>
-      </div>
-
       <div class="sent" id="formSent" hidden>
         <span class="sent-icon"><svg><use href="#i-tick"/></svg></span>
         <h3 id="sentTitle" tabindex="-1">Thanks!</h3>
@@ -1067,11 +1070,15 @@ footer .wrap{padding-block:56px 32px;display:grid;gap:40px}
         </div>
         <button class="link-btn" type="button" id="editMsg" style="justify-self:start"><svg><use href="#i-left"/></svg>Edit my answers</button>
       </div>
-    </form>
-  </div>
-</section>
-</main>
-
+      </div>
+      <div class="enq-nav" id="enqNav">
+        <button class="link-btn" type="button" id="backBtn" hidden><svg><use href="#i-left"/></svg>Back</button>
+        <span class="spacer"></span>
+        <button class="btn btn--orange" type="submit" id="nextBtn">Next <svg><use href="#i-arrow"/></svg></button>
+      </div>
+    </div>
+  </form>
+</dialog>
 
 <!-- ============ FOOTER ============ -->
 <footer>
@@ -1166,6 +1173,21 @@ const CONFIG = {
   /* marquee: duplicate list for a seamless loop */
   $$("[data-marquee]").forEach(t => { const ul = t.querySelector("ul"); t.appendChild(ul.cloneNode(true)); });
 
+  /* rotating headline words */
+  const PAIRS = [["build","websites"],["launch","mobile apps"],["design","logos"],["automate","busywork"],["rank you","on Google"],["run","smart ads"],["create","web apps"]];
+  const rv = $("#rotVerb"), rt = $("#rotThing");
+  let pi = 0;
+  const swap = (el, text, delay) => setTimeout(() => {
+    if (reduced) { el.textContent = text; return; }
+    el.classList.remove("in"); el.classList.add("out");
+    el.addEventListener("animationend", function h(){ el.removeEventListener("animationend", h); el.textContent = text; el.classList.remove("out"); void el.offsetWidth; el.classList.add("in"); });
+  }, delay);
+  setInterval(() => {
+    if (document.hidden) return;
+    pi = (pi + 1) % PAIRS.length;
+    swap(rv, PAIRS[pi][0], 0); swap(rt, PAIRS[pi][1], 90);
+  }, reduced ? 4000 : 2600);
+
   /* draggable stickers */
   $$("[data-drag]").forEach(el => {
     let sx, sy, ox = 0, oy = 0, base = getComputedStyle(el).transform;
@@ -1239,9 +1261,9 @@ const CONFIG = {
     $$(".progress i", form).forEach((b, i) => b.classList.toggle("on", i < n));
     backBtn.hidden = n === 1;
     nextBtn.innerHTML = (n === total ? "Send enquiry" : "Next") + ' <svg><use href="#i-arrow"/></svg>';
+    $$("#enqSteps li").forEach((li, i) => { li.classList.toggle("on", i === n - 1); li.classList.toggle("done", i < n - 1); });
     if (focus) {
-      const top = form.getBoundingClientRect().top;
-      if (top < 0 || top > window.innerHeight * .5) form.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+      $("#enqBody").scrollTop = 0;
       steps[n - 1].querySelector("input:not([type=radio]):not([type=checkbox]), textarea")?.focus({ preventScroll: true });
     }
   };
@@ -1321,9 +1343,11 @@ const CONFIG = {
     if (CONFIG.whatsapp) { $("#sendWa").href = waLink(text); $("#sendWa").hidden = false; }
     $("#sendMail").href = "mailto:" + CONFIG.email + "?subject=" + encodeURIComponent("New project enquiry from " + d.name) + "&body=" + encodeURIComponent(text);
     $("#copyMsg").onclick = e => copyText(text, e.currentTarget, $("#summary"));
-    $("#formMain").hidden = true; $("#formSent").hidden = false;
+    $("#formMain").hidden = true; $("#formSent").hidden = false; $("#enqNav").hidden = true;
+    $("#stepTitle").textContent = received ? "Enquiry sent" : "Review and send";
+    $$("#enqSteps li").forEach(li => { li.classList.remove("on"); li.classList.add("done"); });
+    $("#enqBody").scrollTop = 0;
     $("#sentTitle").focus({ preventScroll: true });
-    form.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
   };
 
   form.addEventListener("submit", async e => {
@@ -1343,15 +1367,36 @@ const CONFIG = {
     showSent(d, received);
   });
 
-  $("#editMsg").addEventListener("click", () => { $("#formSent").hidden = true; $("#formMain").hidden = false; showStep(1, true); });
+  const resetView = () => { $("#formSent").hidden = true; $("#formMain").hidden = false; $("#enqNav").hidden = false; };
+  $("#editMsg").addEventListener("click", () => { resetView(); showStep(1, true); });
 
-  /* any "Ask about…" / "Get a quote" link pre-selects that option */
-  $$("[data-pick]").forEach(a => a.addEventListener("click", () => {
-    const box = $$("#picks input, #kits input").find(i => i.value === a.dataset.pick);
-    if (box) { box.checked = true; $("#err1").hidden = true; }
-    if (!$("#formSent").hidden) { $("#formSent").hidden = true; $("#formMain").hidden = false; }
+  /* ===== enquiry pop-up ===== */
+  const dlg = $("#enquiry");
+  const openEnquiry = pick => {
+    if (pick) {
+      const box = $$("#picks input, #kits input").find(i => i.value === pick);
+      if (box) { box.checked = true; $("#err1").hidden = true; }
+    }
+    if (!$("#formSent").hidden) resetView();
+    setMenu(false);
     showStep(1);
-  }));
+    if (!dlg.open) { dlg.showModal(); document.body.classList.add("modal-open"); }
+    $("#enqBody").scrollTop = 0;
+    (pick ? nextBtn : $("#p-web")).focus({ preventScroll: true });
+  };
+  const closeEnquiry = () => { if (dlg.open) dlg.close(); };
+  dlg.addEventListener("close", () => document.body.classList.remove("modal-open"));
+  dlg.addEventListener("click", e => { if (e.target === dlg) closeEnquiry(); });
+  $("#enqClose").addEventListener("click", closeEnquiry);
+
+  /* every "Start a project" / "Get a quote" / "Ask about…" opens the pop-up */
+  document.addEventListener("click", e => {
+    const a = e.target.closest('a[href="#contact"], [data-pick], [data-open]');
+    if (!a || dlg.contains(a)) return;
+    e.preventDefault();
+    openEnquiry(a.dataset.pick ?? a.dataset.open ?? "");
+  });
+  if (/^#(enquire|start)$/.test(location.hash)) openEnquiry("");
 
   showStep(1);
 })();

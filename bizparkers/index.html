@@ -344,103 +344,93 @@ body.menu-open .mbar{transform:translateY(110%)}
 .starter .tiles svg{width:22px;height:22px;color:var(--orange)}
 .starter .btn{justify-content:center}
 
-/* ---------- enquiry pop-up ---------- */
-.enq{padding:0;border:var(--bw) solid var(--ink);border-radius:26px;width:min(1040px,calc(100vw - 32px));max-width:none;height:min(740px,calc(100dvh - 32px));max-height:none;background:var(--paper);color:var(--ink);box-shadow:12px 12px 0 var(--ink);overflow:hidden}
+/* ---------- enquiry pop-up: one question at a time ---------- */
+.enq{padding:0;border:var(--bw) solid var(--ink);border-radius:28px;width:min(640px,calc(100vw - 32px));max-width:none;max-height:calc(100dvh - 32px);background:var(--card);color:var(--ink);box-shadow:12px 12px 0 var(--ink);overflow-y:auto;overscroll-behavior:contain}
 .enq[open]{animation:enqIn .35s cubic-bezier(.2,.8,.2,1) both}
-.enq::backdrop{background:rgba(20,20,20,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
-@keyframes enqIn{from{opacity:0;transform:translateY(24px) scale(.98)}to{opacity:1;transform:none}}
+.enq::backdrop{background:rgba(20,20,20,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+@keyframes enqIn{from{opacity:0;transform:translateY(24px) scale(.97)}to{opacity:1;transform:none}}
 body.modal-open{overflow:hidden}
-.enq-form{display:grid;grid-template-columns:320px minmax(0,1fr);height:100%}
-.enq-side{background:var(--yellow);color:var(--ink);border-right:var(--bw) solid var(--ink);padding:32px 28px;display:flex;flex-direction:column;gap:28px;position:relative;overflow:hidden}
-.enq-side::after{content:"";position:absolute;right:-60px;bottom:-60px;width:170px;height:170px;border-radius:50%;background:var(--card);border:var(--bw) solid var(--ink)}
-.enq-side img{width:44px;height:auto}
-.enq-side h2{font-size:2.3rem;font-weight:800;text-transform:uppercase;line-height:.95}
-.enq-side h2 span{color:var(--orange)}
-.enq-steps{list-style:none;margin:0;padding:0;display:grid;gap:16px;position:relative;z-index:1}
-.enq-steps li{display:flex;align-items:center;gap:12px;font-weight:600;opacity:.55;transition:opacity .2s}
-.enq-steps li b{width:32px;height:32px;border-radius:50%;border:var(--bw) solid var(--ink);background:var(--card);display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:.9rem;flex:none}
-.enq-steps li.on{opacity:1}
-.enq-steps li.on b{background:var(--orange);color:#fff}
-.enq-steps li.done{opacity:.9}
-.enq-steps li.done b{background:var(--ink);color:var(--yellow)}
-.enq-promise{margin-top:auto;position:relative;z-index:1;font-size:.92rem;display:grid;gap:8px}
-.enq-promise span{display:flex;gap:8px;align-items:center}
-.enq-promise{max-width:200px}
-.enq-promise svg{width:18px;height:18px;color:var(--card);flex:none}
-.enq-main{display:flex;flex-direction:column;min-width:0;min-height:0}
-.enq-top{display:flex;align-items:center;gap:16px;padding:20px 28px;border-bottom:var(--bw) solid var(--ink);background:var(--card)}
-.enq-top .ttl{flex:1;min-width:0}
-.enq-top h3{font-size:clamp(1.3rem,2.4vw,1.75rem);font-weight:800}
-.step-count{font-family:var(--f-mono);font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.enq-close{width:46px;height:46px;flex:none;border-radius:50%;border:var(--bw) solid var(--ink);background:var(--paper);color:var(--ink);cursor:pointer;display:grid;place-items:center;transition:transform .2s, background .2s}
-.enq-close:hover{transform:rotate(90deg);background:var(--yellow)}
-.enq-close svg{width:20px;height:20px}
-.progress{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:14px 28px 0}
-.progress i{height:8px;border-radius:999px;border:1.5px solid var(--ink);background:var(--card);transition:background .3s}
-.progress i.on{background:var(--orange)}
-.enq-body{flex:1;min-height:0;overflow-y:auto;padding:22px 28px 28px;overscroll-behavior:contain}
-.enq-nav{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 28px;border-top:var(--bw) solid var(--ink);background:var(--card)}
-.enq-nav .btn{padding:.85rem 1.4rem}
-.enq-nav .spacer{flex:1}
-@media (max-width:760px){
-  .enq{width:100vw;height:100dvh;border-radius:0;border:0;box-shadow:none;margin:0}
-  .enq-form{grid-template-columns:1fr}
-  .enq-side{display:none}
-  .enq-top{padding:calc(14px + env(safe-area-inset-top,0px)) var(--gutter-r) 14px var(--gutter-l)}
-  .progress,.enq-body{padding-left:var(--gutter-l);padding-right:var(--gutter-r)}
-  .enq-nav{padding:12px var(--gutter-r) calc(12px + env(safe-area-inset-bottom,0px)) var(--gutter-l)}
-  .enq-nav .btn{flex:1;justify-content:center}
-}
-.fstep{display:grid;gap:16px;border:0;margin:0;padding:0;min-width:0;animation:stepIn .35s ease both}
-@keyframes stepIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
-.q{font-family:var(--f-display);font-weight:700;font-size:1.08rem;padding:0}
-.q small{display:block;margin-top:2px;font-family:var(--f-body);font-weight:500;color:var(--muted);font-size:.86rem}
+.enq-form{display:flex;flex-direction:column;gap:22px;padding:clamp(24px,4.5vw,44px);min-height:100%}
+.enq-head{display:flex;align-items:center;gap:12px}
+.enq-head .spacer{flex:1}
+.enq-step{font-family:var(--f-mono);font-size:.78rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--orange)}
+.round-btn{width:46px;height:46px;flex:none;border-radius:50%;border:var(--bw) solid var(--ink);background:var(--paper);color:var(--ink);cursor:pointer;display:grid;place-items:center;transition:transform .2s, background .2s}
+.round-btn:hover{background:var(--yellow)}
+.round-btn svg{width:20px;height:20px}
+#enqClose:hover{transform:rotate(90deg)}
+.fstep{display:flex;flex-direction:column;gap:18px;border:0;margin:0;padding:0;min-width:0;animation:stepIn .35s cubic-bezier(.2,.8,.2,1) both}
+.fstep.back{animation-name:stepBack}
+@keyframes stepIn{from{opacity:0;transform:translateX(22px)}to{opacity:1;transform:none}}
+@keyframes stepBack{from{opacity:0;transform:translateX(-22px)}to{opacity:1;transform:none}}
+.fq{display:grid;gap:8px}
+.fq h3{font-size:clamp(1.75rem,4.4vw,2.5rem);font-weight:800;text-transform:uppercase;line-height:1;letter-spacing:-.025em}
+.fq h3 em{font-style:normal;color:var(--orange)}
+.fq p{color:var(--muted);font-size:1.02rem}
+.timer{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;font-family:var(--f-mono);font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.35rem .7rem;border:1.5px solid var(--ink);border-radius:999px;background:var(--yellow)}
+.timer svg{width:14px;height:14px}
+.big-input{font:inherit;font-size:1.15rem;color:var(--ink);background:var(--paper);border:var(--bw) solid var(--ink);border-radius:16px;padding:1rem 1.15rem;width:100%;min-width:0;transition:box-shadow .15s}
+.big-input:focus{outline:none;box-shadow:5px 5px 0 var(--orange)}
+.big-input[aria-invalid="true"]{border-color:#C0261A;box-shadow:5px 5px 0 color-mix(in srgb,#C0261A 30%,transparent)}
+textarea.big-input{min-height:150px;resize:vertical;line-height:1.5}
+.phone-row{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px}
+.phone-row select{font:inherit;font-weight:700;font-size:1.05rem;color:var(--ink);background:var(--paper);border:var(--bw) solid var(--ink);border-radius:16px;padding:0 .9rem;cursor:pointer}
+.phone-row select:focus{outline:none;box-shadow:5px 5px 0 var(--orange)}
+.sub-field{display:grid;gap:6px}
+.sub-field label{font-family:var(--f-mono);font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.sub-field .big-input{font-size:1rem;padding:.8rem 1rem}
+.err{color:#C0261A;font-size:.9rem;font-weight:600}
+.counter{align-self:flex-end;font-family:var(--f-mono);font-size:.74rem;color:var(--muted)}
+.counter.over{color:#C0261A;font-weight:700}
 .tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 @media (max-width:560px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.tiles > :last-child{grid-column:span 2}}
 .tile{position:relative;cursor:pointer;display:block;min-width:0}
 .tile input,.pill input{position:absolute;opacity:0;pointer-events:none}
-.tile span{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:13px 12px;border:var(--bw) solid var(--ink);border-radius:14px;background:var(--paper);font-weight:600;font-size:.9rem;line-height:1.25;height:100%;transition:background .15s, color .15s, transform .15s, box-shadow .15s}
+.tile span{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:13px 12px;border:var(--bw) solid var(--ink);border-radius:14px;background:var(--paper);font-weight:600;font-size:.92rem;line-height:1.25;height:100%;transition:background .15s, color .15s, transform .15s, box-shadow .15s}
 .tile span::after{content:"";position:absolute;top:9px;right:9px;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--ink);background:var(--card)}
-.tile svg{width:22px;height:22px;color:var(--blue)}
+.tile svg{width:22px;height:22px;color:var(--orange)}
 .tile:hover span{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--ink)}
-.tile input:checked + span{background:var(--blue);color:#fff;box-shadow:3px 3px 0 var(--ink);transform:translate(-1px,-1px)}
-.tile input:checked + span svg{color:#fff}
-.tile input:checked + span::after{background:var(--yellow) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%2310121A' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round' d='m6 12.5 4 4 8-9'/%3E%3C/svg%3E") center/12px no-repeat}
+.tile input:checked + span{background:var(--ink);color:var(--paper);box-shadow:3px 3px 0 var(--orange);transform:translate(-1px,-1px)}
+.tile input:checked + span svg{color:var(--yellow)}
+.tile input:checked + span::after{border-color:var(--yellow);background:var(--yellow) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23141414' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round' d='m6 12.5 4 4 8-9'/%3E%3C/svg%3E") center/12px no-repeat}
 .tile input:focus-visible + span,.pill input:focus-visible + span{outline:3px solid var(--orange);outline-offset:2px}
 .pills{display:flex;flex-wrap:wrap;gap:8px}
 .pill{cursor:pointer;position:relative}
-.pill span{display:inline-flex;align-items:center;gap:6px;padding:.55rem .95rem;border:var(--bw) solid var(--ink);border-radius:999px;background:var(--paper);font-weight:600;font-size:.9rem;transition:background .15s,color .15s}
-.pill:hover span{background:color-mix(in srgb,var(--orange) 14%,var(--paper))}
+.pill span{display:inline-flex;align-items:center;gap:6px;padding:.6rem 1rem;border:var(--bw) solid var(--ink);border-radius:999px;background:var(--paper);font-weight:600;font-size:.92rem;transition:background .15s,color .15s}
+.pill:hover span{background:color-mix(in srgb,var(--yellow) 45%,var(--paper))}
 .pill input:checked + span{background:var(--orange);color:#fff}
-.pill svg{width:16px;height:16px}
-.field{display:grid;gap:6px;min-width:0}
-.field label{font-family:var(--f-mono);font-size:.74rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
-.field label small{text-transform:none;letter-spacing:0;font-family:var(--f-body);color:var(--muted);font-weight:500}
-.field input,.field select,.field textarea{font:inherit;font-size:1rem;color:var(--ink);background:var(--paper);border:var(--bw) solid var(--ink);border-radius:12px;padding:.85rem .95rem;width:100%;min-width:0;transition:box-shadow .15s}
-.field textarea{min-height:120px;resize:vertical}
-.field input:focus,.field select:focus,.field textarea:focus{outline:none;box-shadow:4px 4px 0 var(--orange)}
-.field input[aria-invalid="true"],.field textarea[aria-invalid="true"]{border-color:#D92D20;box-shadow:4px 4px 0 color-mix(in srgb,#D92D20 35%,transparent)}
-.counter{justify-self:end;font-family:var(--f-mono);font-size:.7rem;color:var(--muted)}
-.err{color:#C0261A;font-size:.86rem;font-weight:600}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-@media (max-width:560px){.row{grid-template-columns:1fr}}
-.link-btn{font:inherit;font-weight:700;background:none;border:0;color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:.6rem .2rem}
-.link-btn svg{width:16px;height:16px}
-.form-note{font-size:.84rem;color:var(--muted);display:flex;gap:8px;align-items:center}
-.form-note svg{width:16px;height:16px;flex:none}
+.mini-label{font-family:var(--f-display);font-weight:700;font-size:1rem}
+.go{width:100%;justify-content:center;font-size:1.1rem;padding:1.05rem 1.4rem;text-transform:uppercase;letter-spacing:.02em}
+.enq-foot{display:grid;gap:14px;justify-items:center;margin-top:auto}
+.dots{display:flex;gap:8px}
+.dots i{width:22px;height:8px;border-radius:999px;border:1.5px solid var(--ink);background:var(--card);transition:width .3s, background .3s}
+.dots i.done{background:var(--ink)}
+.dots i.on{width:40px;background:var(--orange)}
+.assure{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 16px;font-size:.84rem;color:var(--muted)}
+.assure span{display:inline-flex;align-items:center;gap:6px}
+.assure svg{width:15px;height:15px;color:var(--yellow)}
 .btn[disabled]{opacity:.6;pointer-events:none}
 
-.sent{display:grid;gap:16px;animation:stepIn .35s ease both}
-.sent-icon{width:64px;height:64px;border-radius:50%;background:#22C55E;border:var(--bw) solid var(--ink);display:grid;place-items:center;box-shadow:4px 4px 0 var(--ink)}
-.sent-icon svg{width:30px;height:30px;color:#fff}
-.sent h3{font-size:1.6rem;font-weight:800}
-.sent p{color:var(--muted)}
-.summary{margin:0;display:grid;gap:8px;background:var(--paper);border:var(--bw) dashed var(--ink);border-radius:14px;padding:14px 16px;font-size:.93rem}
-.summary div{display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px}
-.summary dt{font-family:var(--f-mono);font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding-top:2px}
-.summary dd{margin:0;word-break:break-word}
-.sent .acts{display:flex;flex-wrap:wrap;gap:10px}
-.btn--wa{--b:#25D366;--t:#10121A}
+/* thank-you screen */
+.thanks{display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px;animation:stepIn .4s ease both}
+.thanks-badge{position:relative;width:96px;height:96px;border-radius:50%;background:var(--orange);border:var(--bw) solid var(--ink);box-shadow:5px 5px 0 var(--ink);display:grid;place-items:center;animation:popIn .5s cubic-bezier(.2,1.6,.4,1) both}
+.thanks-badge svg{width:44px;height:44px;color:#fff}
+@keyframes popIn{from{transform:scale(.4) rotate(-20deg);opacity:0}to{transform:none;opacity:1}}
+.thanks h3{font-size:clamp(2rem,5vw,3rem);font-weight:800;text-transform:uppercase;line-height:1}
+.thanks p{color:var(--muted);max-width:440px;font-size:1.05rem}
+.thanks .note{font-family:var(--f-display);font-weight:700;color:var(--ink);background:var(--yellow);border:var(--bw) solid var(--ink);border-radius:14px;padding:.7rem 1rem;transform:rotate(-1.5deg);max-width:440px}
+.thanks .acts{display:grid;gap:10px;width:100%;max-width:420px}
+.thanks .acts .btn{justify-content:center}
+.btn--wa{--b:#25D366;--t:#141414}
+.next-mini{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:8px;text-align:left;font-size:.92rem;width:100%;max-width:420px}
+.next-mini li{display:flex;gap:10px;align-items:center}
+.next-mini b{width:26px;height:26px;flex:none;border-radius:50%;border:1.5px solid var(--ink);display:grid;place-items:center;font-family:var(--f-display);font-size:.8rem}
+
+@media (max-width:600px){
+  .enq{width:100vw;height:100dvh;max-height:100dvh;border-radius:0;border:0;box-shadow:none;margin:0}
+  .enq-form{min-height:100dvh;padding:calc(18px + env(safe-area-inset-top,0px)) var(--gutter-r) calc(22px + env(safe-area-inset-bottom,0px)) var(--gutter-l)}
+}
+
+.link-btn{font:inherit;font-weight:700;background:none;border:0;color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:.6rem .2rem;text-decoration:underline;text-underline-offset:3px}
 
 /* ---------- mobile action bar ---------- */
 .mbar{display:none}
@@ -962,36 +952,47 @@ footer .wrap{padding-block:56px 32px;display:grid;gap:40px}
 </main>
 
 <!-- ============ ENQUIRY POP-UP ============ -->
-<dialog class="enq" id="enquiry" aria-labelledby="stepTitle">
+<dialog class="enq" id="enquiry" aria-labelledby="q1">
   <form class="enq-form" id="leadForm" novalidate>
-    <aside class="enq-side">
-      <img src="assets/mark.png" alt="" width="44" height="54">
-      <h2>Start a <span>project</span></h2>
-      <ol class="enq-steps" id="enqSteps">
-        <li class="on"><b>1</b>What you need</li>
-        <li><b>2</b>Budget and details</li>
-        <li><b>3</b>Your contact info</li>
-      </ol>
-      <div class="enq-promise">
-        <span><svg><use href="#i-check"/></svg>Takes about a minute</span>
-        <span><svg><use href="#i-check"/></svg>Reply within 24 hours</span>
-        <span><svg><use href="#i-check"/></svg>Free, no obligation</span>
-      </div>
-    </aside>
-    <div class="enq-main">
-      <div class="enq-top">
-        <div class="ttl">
-          <span class="step-count">Step <b id="stepNum">1</b> of 3</span>
-          <h3 id="stepTitle">What do you need?</h3>
+    <div class="enq-head">
+      <button class="round-btn" type="button" id="backBtn" aria-label="Previous question" hidden><svg><use href="#i-left"/></svg></button>
+      <span class="enq-step" id="stepLabel">Step 1 of 4</span>
+      <span class="spacer"></span>
+      <button class="round-btn" type="button" id="enqClose" aria-label="Close"><svg><use href="#i-x"/></svg></button>
+    </div>
+
+    <div id="formMain" style="display:contents">
+      <fieldset class="fstep" data-step="1">
+        <div class="fq"><h3 id="q1">Hi there!<br>What's your <em>name?</em></h3><p>So we know who we're chatting with.</p></div>
+        <input class="big-input" id="f-name" name="name" autocomplete="given-name" placeholder="e.g. Rahul" aria-labelledby="q1">
+        <p class="err" id="err1" hidden></p>
+        <span class="timer"><svg><use href="#i-clock"/></svg>Takes about 60 seconds</span>
+      </fieldset>
+
+      <fieldset class="fstep" data-step="2" hidden>
+        <div class="fq"><h3 id="q2">Nice to meet you<span id="hiName"></span>!<br>Your <em>WhatsApp</em> number?</h3><p>We reply within 24 hours. No spam, ever.</p></div>
+        <div class="phone-row">
+          <select id="f-cc" aria-label="Country code">
+              <option value="91" selected>IN +91</option>
+              <option value="971">AE +971</option>
+              <option value="1">US +1</option>
+              <option value="44">UK +44</option>
+              <option value="61">AU +61</option>
+              <option value="65">SG +65</option>
+              <option value="966">SA +966</option>
+              <option value="974">QA +974</option>
+              <option value="977">NP +977</option>
+              <option value="880">BD +880</option>
+          </select>
+          <input class="big-input" id="f-phone" name="phone" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="10-digit number" aria-labelledby="q2">
         </div>
-        <button class="enq-close" type="button" id="enqClose" aria-label="Close the form"><svg><use href="#i-x"/></svg></button>
-      </div>
-      <div class="progress" aria-hidden="true"><i class="on"></i><i></i><i></i></div>
-      <div class="enq-body" id="enqBody">
-        <div id="formMain" style="display:grid;gap:18px">
-        <fieldset class="fstep" data-step="1" data-title="What do you need?">
-          <legend class="q">Pick everything that applies <small>You can choose more than one</small></legend>
-          <div class="tiles" id="picks">
+        <p class="err" id="err2" hidden></p>
+        <div class="sub-field"><label for="f-email">Email (optional)</label><input class="big-input" id="f-email" name="email" type="email" inputmode="email" autocomplete="email" placeholder="you@company.com"></div>
+      </fieldset>
+
+      <fieldset class="fstep" data-step="3" hidden>
+        <div class="fq"><h3 id="q3">What can we <em>build</em> for you?</h3><p>Tap everything that fits. You can pick more than one.</p></div>
+        <div class="tiles" id="picks" role="group" aria-labelledby="q3">
             <label class="tile"><input type="checkbox" id="p-web" value="Website"><span><svg><use href="#i-web"/></svg>Website</span></label>
             <label class="tile"><input type="checkbox" id="p-shop" value="E-commerce"><span><svg><use href="#i-cart"/></svg>Online store</span></label>
             <label class="tile"><input type="checkbox" id="p-mob" value="Mobile app"><span><svg><use href="#i-phone"/></svg>Mobile app</span></label>
@@ -999,86 +1000,55 @@ footer .wrap{padding-block:56px 32px;display:grid;gap:40px}
             <label class="tile"><input type="checkbox" id="p-ai" value="AI automation"><span><svg><use href="#i-bolt"/></svg>AI automation</span></label>
             <label class="tile"><input type="checkbox" id="p-bot" value="AI chatbot"><span><svg><use href="#i-bot"/></svg>AI / WhatsApp bot</span></label>
             <label class="tile"><input type="checkbox" id="p-brand" value="Logo & branding"><span><svg><use href="#i-pen"/></svg>Logo &amp; branding</span></label>
-            <label class="tile"><input type="checkbox" id="p-mkt" value="Digital marketing"><span><svg><use href="#i-mega"/></svg>Digital marketing</span></label>
+            <label class="tile"><input type="checkbox" id="p-mkt" value="Digital marketing"><span><svg><use href="#i-mega"/></svg>Social media &amp; ads</span></label>
             <label class="tile"><input type="checkbox" id="p-seo" value="Google SEO"><span><svg><use href="#i-search"/></svg>Google SEO</span></label>
           </div>
-          <p class="q" style="font-size:.95rem">Or start with a package</p>
-          <div class="pills" id="kits">
-            <label class="pill"><input type="checkbox" id="p-k1" value="Launch kit"><span>Launch kit</span></label>
-            <label class="pill"><input type="checkbox" id="p-k2" value="Growth kit"><span>Growth kit</span></label>
-            <label class="pill"><input type="checkbox" id="p-k3" value="Automate kit"><span>Automate kit</span></label>
-            <label class="pill"><input type="checkbox" id="p-unsure" value="Not sure yet"><span>Not sure yet, help me choose</span></label>
-          </div>
-          <p class="err" id="err1" hidden></p>
-        </fieldset>
-
-        <fieldset class="fstep" data-step="2" data-title="Tell us about it" hidden>
-          <legend class="sr-only">Project details</legend>
-          <div style="display:grid;gap:10px">
-            <p class="q">Budget</p>
-            <div class="pills" role="radiogroup" aria-label="Budget">
-              <label class="pill"><input type="radio" name="budget" id="b1" value="Under ₹25,000"><span>Under ₹25k</span></label>
-              <label class="pill"><input type="radio" name="budget" id="b2" value="₹25,000 to ₹75,000"><span>₹25k to ₹75k</span></label>
-              <label class="pill"><input type="radio" name="budget" id="b3" value="₹75,000 to ₹2,00,000"><span>₹75k to ₹2L</span></label>
-              <label class="pill"><input type="radio" name="budget" id="b4" value="Above ₹2,00,000"><span>₹2L+</span></label>
-              <label class="pill"><input type="radio" name="budget" id="b5" value="Not sure yet" checked><span>Not sure</span></label>
-            </div>
-          </div>
-          <div style="display:grid;gap:10px">
-            <p class="q">When do you want to start?</p>
-            <div class="pills" role="radiogroup" aria-label="Start date">
-              <label class="pill"><input type="radio" name="timeline" id="t1" value="As soon as possible"><span>ASAP</span></label>
-              <label class="pill"><input type="radio" name="timeline" id="t2" value="Within a month" checked><span>Within a month</span></label>
-              <label class="pill"><input type="radio" name="timeline" id="t3" value="In 1 to 3 months"><span>1 to 3 months</span></label>
-              <label class="pill"><input type="radio" name="timeline" id="t4" value="Just exploring"><span>Just exploring</span></label>
-            </div>
-          </div>
-          <div class="field">
-            <label for="f-msg">Project details <small>(optional)</small></label>
-            <textarea id="f-msg" name="message" maxlength="1000" placeholder="What are you building? Share any links, ideas or deadlines."></textarea>
-            <span class="counter" id="msgCount">0 / 1000</span>
-          </div>
-        </fieldset>
-
-        <fieldset class="fstep" data-step="3" data-title="How can we reach you?" hidden>
-          <legend class="sr-only">Your contact details</legend>
-          <div class="row">
-            <div class="field"><label for="f-name">Your name</label><input id="f-name" name="name" autocomplete="name" placeholder="e.g. Priya Sharma"><span class="err" hidden></span></div>
-            <div class="field"><label for="f-biz">Business name <small>(optional)</small></label><input id="f-biz" name="business" autocomplete="organization" placeholder="e.g. Sharma Interiors"></div>
-          </div>
-          <div class="row">
-            <div class="field"><label for="f-phone">Phone / WhatsApp</label><input id="f-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+91 98765 43210"><span class="err" hidden></span></div>
-            <div class="field"><label for="f-email">Email</label><input id="f-email" name="email" type="email" inputmode="email" autocomplete="email" placeholder="you@company.com"><span class="err" hidden></span></div>
-          </div>
-          <div style="display:grid;gap:10px">
-            <p class="q">Best way to reach you</p>
-            <div class="pills" role="radiogroup" aria-label="Preferred contact">
-              <label class="pill"><input type="radio" name="via" id="v1" value="WhatsApp" checked><span><svg><use href="#i-wa"/></svg>WhatsApp</span></label>
-              <label class="pill"><input type="radio" name="via" id="v2" value="Phone call"><span><svg><use href="#i-phone"/></svg>Call</span></label>
-              <label class="pill"><input type="radio" name="via" id="v3" value="Email"><span><svg><use href="#i-mail"/></svg>Email</span></label>
-            </div>
-          </div>
-          <p class="form-note"><svg><use href="#i-lock"/></svg>We only use your details to reply to this enquiry. No spam.</p>
-        </fieldset>
+        <span class="mini-label">Or start with a package</span>
+        <div class="pills" id="kits">
+          <label class="pill"><input type="checkbox" id="p-k1" value="Launch kit"><span>Launch kit</span></label>
+          <label class="pill"><input type="checkbox" id="p-k2" value="Growth kit"><span>Growth kit</span></label>
+          <label class="pill"><input type="checkbox" id="p-k3" value="Automate kit"><span>Automate kit</span></label>
+          <label class="pill"><input type="checkbox" id="p-unsure" value="Not sure yet"><span>Not sure, help me choose</span></label>
         </div>
-      <div class="sent" id="formSent" hidden>
-        <span class="sent-icon"><svg><use href="#i-tick"/></svg></span>
-        <h3 id="sentTitle" tabindex="-1">Thanks!</h3>
-        <p id="sentText"></p>
-        <dl class="summary" id="summary"></dl>
-        <div class="acts" id="sendActs">
-          <a class="btn btn--wa" id="sendWa" href="#" target="_blank" rel="noopener" hidden><svg><use href="#i-wa"/></svg>Send on WhatsApp</a>
-          <a class="btn btn--orange" id="sendMail" href="#"><svg><use href="#i-mail"/></svg>Send by email</a>
-          <button class="btn btn--ghost" type="button" id="copyMsg">Copy message</button>
+        <p class="err" id="err3" hidden></p>
+      </fieldset>
+
+      <fieldset class="fstep" data-step="4" hidden>
+        <div class="fq"><h3 id="q4">Tell us about your <em>business</em></h3><p>What you do and what you want to achieve. A few lines is plenty.</p></div>
+        <textarea class="big-input" id="f-msg" name="message" aria-labelledby="q4" placeholder="e.g. We run a bakery in Pune and want a website with online orders, plus more customers from Instagram."></textarea>
+        <span class="counter" id="msgCount">0 / 150 words</span>
+        <span class="mini-label">Rough budget <small style="font-weight:500;color:var(--muted)">(optional)</small></span>
+        <div class="pills" role="radiogroup" aria-label="Budget">
+          <label class="pill"><input type="radio" name="budget" id="b1" value="Under ₹25,000"><span>Under ₹25k</span></label>
+          <label class="pill"><input type="radio" name="budget" id="b2" value="₹25,000 to ₹75,000"><span>₹25k to ₹75k</span></label>
+          <label class="pill"><input type="radio" name="budget" id="b3" value="₹75,000 to ₹2,00,000"><span>₹75k to ₹2L</span></label>
+          <label class="pill"><input type="radio" name="budget" id="b4" value="Above ₹2,00,000"><span>₹2L+</span></label>
         </div>
-        <button class="link-btn" type="button" id="editMsg" style="justify-self:start"><svg><use href="#i-left"/></svg>Edit my answers</button>
+        <p class="err" id="err4" hidden></p>
+      </fieldset>
+
+      <div class="enq-foot">
+        <button class="btn btn--orange go" type="submit" id="nextBtn">Next <svg><use href="#i-arrow"/></svg></button>
+        <div class="dots" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></div>
+        <div class="assure"><span><svg><use href="#i-check"/></svg>Free consultation</span><span><svg><use href="#i-check"/></svg>Reply in 24h</span><span><svg><use href="#i-check"/></svg>No spam</span></div>
       </div>
+    </div>
+
+    <div class="thanks" id="formSent" hidden>
+      <span class="thanks-badge"><svg><use href="#i-tick"/></svg></span>
+      <h3 id="sentTitle" tabindex="-1">Thank you!</h3>
+      <p id="sentText"></p>
+      <p class="note" id="sentNote"></p>
+      <div class="acts">
+        <a class="btn btn--wa" id="sendWa" href="#" target="_blank" rel="noopener" hidden><svg><use href="#i-wa"/></svg><span id="sendWaLabel">Open WhatsApp</span></a>
+        <a class="btn btn--ghost" id="sendMail" href="#"><svg><use href="#i-mail"/></svg>Send by email instead</a>
+        <button class="link-btn" type="button" id="doneBtn" style="justify-self:center">Back to the website</button>
       </div>
-      <div class="enq-nav" id="enqNav">
-        <button class="link-btn" type="button" id="backBtn" hidden><svg><use href="#i-left"/></svg>Back</button>
-        <span class="spacer"></span>
-        <button class="btn btn--orange" type="submit" id="nextBtn">Next <svg><use href="#i-arrow"/></svg></button>
-      </div>
+      <ol class="next-mini">
+        <li><b>1</b>We read your enquiry and reply within 24 hours</li>
+        <li><b>2</b>A free call to plan the right solution</li>
+        <li><b>3</b>A fixed, written quote. No surprises.</li>
+      </ol>
     </div>
   </form>
 </dialog>
@@ -1252,146 +1222,137 @@ const CONFIG = {
   };
   $$("[data-copy]").forEach(b => b.addEventListener("click", () => copyText(cfg[b.dataset.copy], b, b.previousElementSibling)));
 
-  /* ===== multi-step enquiry form ===== */
-  const form = $("#leadForm"), steps = $$(".fstep", form), total = steps.length;
+  /* ===== enquiry pop-up: one question at a time ===== */
+  const dlg = $("#enquiry"), form = $("#leadForm"), steps = $$(".fstep", form), total = steps.length;
   const nextBtn = $("#nextBtn"), backBtn = $("#backBtn");
+  const words = t => (t.trim().match(/\S+/g) || []).length;
+  const MAX_WORDS = 150;
   let step = 1;
 
-  const showStep = (n, focus) => {
+  const showStep = (n, dir) => {
     step = n;
-    steps.forEach(s => s.hidden = +s.dataset.step !== n);
-    $("#stepNum").textContent = n;
-    $("#stepTitle").textContent = steps[n - 1].dataset.title;
-    $$(".progress i", form).forEach((b, i) => b.classList.toggle("on", i < n));
+    steps.forEach(s => { s.hidden = +s.dataset.step !== n; s.classList.toggle("back", dir < 0); });
+    $("#stepLabel").textContent = `Step ${n} of ${total}`;
+    $$(".dots i", form).forEach((d, i) => { d.className = i < n - 1 ? "done" : i === n - 1 ? "on" : ""; });
     backBtn.hidden = n === 1;
     nextBtn.innerHTML = (n === total ? "Send enquiry" : "Next") + ' <svg><use href="#i-arrow"/></svg>';
-    $$("#enqSteps li").forEach((li, i) => { li.classList.toggle("on", i === n - 1); li.classList.toggle("done", i < n - 1); });
-    if (focus) {
-      $("#enqBody").scrollTop = 0;
-      steps[n - 1].querySelector("input:not([type=radio]):not([type=checkbox]), textarea")?.focus({ preventScroll: true });
-    }
+    dlg.setAttribute("aria-labelledby", "q" + n);
+    if (n === 2) $("#hiName").textContent = ", " + $("#f-name").value.trim().split(" ")[0];
+    dlg.scrollTop = 0;
+    if (dir !== undefined) setTimeout(() => steps[n - 1].querySelector("input.big-input, textarea, input")?.focus({ preventScroll: true }), 60);
   };
 
-  const setErr = (input, msg) => {
-    const e = input.parentElement.querySelector(".err");
-    if (e) { e.textContent = msg; e.hidden = !msg; }
-    input.setAttribute("aria-invalid", msg ? "true" : "false");
+  const fail = (n, msg, input) => {
+    const e = $("#err" + n); e.textContent = msg; e.hidden = !msg;
+    if (input) input.setAttribute("aria-invalid", msg ? "true" : "false");
+    if (msg) (input || steps[n - 1].querySelector("input")).focus();
     return !msg;
   };
   const picked = () => $$("#picks input:checked, #kits input:checked").map(i => i.value);
+  const phoneDigits = () => $("#f-phone").value.replace(/\D/g, "");
 
   const validate = n => {
     if (n === 1) {
-      const ok = picked().length > 0, e = $("#err1");
-      e.textContent = ok ? "" : "Pick at least one option. Choose “Not sure yet” if you're still deciding."; e.hidden = ok;
-      if (!ok) $("#p-web").focus();
-      return ok;
+      const v = $("#f-name").value.trim();
+      return fail(1, v.length < 2 ? "Please type your name so we know who to reply to." : "", $("#f-name"));
     }
-    if (n === 3) {
-      const name = $("#f-name"), phone = $("#f-phone"), email = $("#f-email");
-      const pv = phone.value.trim(), ev = email.value.trim();
-      const okName = setErr(name, name.value.trim() ? "" : "Please add your name so we know who to reply to.");
-      let phoneMsg = "";
-      if (!pv && !ev) phoneMsg = "Add a phone number or an email address.";
-      else if (pv && pv.replace(/\D/g, "").length < 8) phoneMsg = "That number looks too short. Include your country code.";
-      const okPhone = setErr(phone, phoneMsg);
-      const okEmail = setErr(email, ev && !/^\S+@\S+\.\S+$/.test(ev) ? "That email doesn't look right. Check for typos." : "");
-      const ok = okName && okPhone && okEmail;
-      if (!ok) form.querySelector("[aria-invalid='true']")?.focus();
-      return ok;
+    if (n === 2) {
+      const d = phoneDigits(), cc = $("#f-cc").value, em = $("#f-email").value.trim();
+      let msg = "";
+      if (cc === "91" && !/^[6-9]\d{9}$/.test(d)) msg = "Enter a valid 10-digit Indian mobile number.";
+      else if (cc !== "91" && (d.length < 6 || d.length > 14)) msg = "Enter a valid phone number without the country code.";
+      if (!msg && em && !/^\S+@\S+\.\S+$/.test(em)) { $("#f-email").setAttribute("aria-invalid", "true"); return fail(2, "That email doesn't look right. Check for typos, or leave it empty.", $("#f-email")); }
+      $("#f-email").setAttribute("aria-invalid", "false");
+      return fail(2, msg, $("#f-phone"));
     }
+    if (n === 3) return fail(3, picked().length ? "" : "Pick at least one option. Choose “Not sure” if you're still deciding.");
+    if (n === 4) return fail(4, words($("#f-msg").value) > MAX_WORDS ? `Please keep it under ${MAX_WORDS} words. You can share more on the call.` : "", $("#f-msg"));
     return true;
   };
 
-  $$("#picks input, #kits input").forEach(i => i.addEventListener("change", () => { if (picked().length) $("#err1").hidden = true; }));
-  $("#f-msg").addEventListener("input", e => $("#msgCount").textContent = e.target.value.length + " / 1000");
-  $$("#f-name, #f-phone, #f-email").forEach(i => i.addEventListener("input", () => { if (i.getAttribute("aria-invalid") === "true") setErr(i, ""); }));
-
-  backBtn.addEventListener("click", () => showStep(step - 1, true));
+  $("#f-phone").addEventListener("input", e => { e.target.value = e.target.value.replace(/[^\d ]/g, "").slice(0, 16); if (!$("#err2").hidden) fail(2, "", e.target); });
+  $("#f-name").addEventListener("input", () => { if (!$("#err1").hidden) fail(1, "", $("#f-name")); });
+  $$("#picks input, #kits input").forEach(i => i.addEventListener("change", () => { if (picked().length) $("#err3").hidden = true; }));
+  $("#f-msg").addEventListener("input", e => {
+    const w = words(e.target.value), c = $("#msgCount");
+    c.textContent = `${w} / ${MAX_WORDS} words`; c.classList.toggle("over", w > MAX_WORDS);
+  });
+  backBtn.addEventListener("click", () => showStep(step - 1, -1));
 
   const collect = () => ({
     name: $("#f-name").value.trim(),
-    business: $("#f-biz").value.trim(),
-    phone: $("#f-phone").value.trim(),
+    phone: "+" + $("#f-cc").value + " " + phoneDigits(),
     email: $("#f-email").value.trim(),
     services: picked().join(", "),
-    budget: form.budget.value,
-    timeline: form.timeline.value,
-    contactVia: form.via.value,
+    budget: (form.budget.value || "Not shared"),
     message: $("#f-msg").value.trim()
   });
   const asText = d => [
-    "Hi Bizparkers, I'd like to start a project.", "",
+    "Hi Bizparkers! I'd like to start a project.", "",
     "Name: " + d.name,
-    d.business && "Business: " + d.business,
-    d.phone && "Phone: " + d.phone,
+    "Phone: " + d.phone,
     d.email && "Email: " + d.email,
-    "Services: " + d.services,
+    "Looking for: " + d.services,
     "Budget: " + d.budget,
-    "Start: " + d.timeline,
-    "Contact me by: " + d.contactVia,
-    d.message && "\nDetails: " + d.message
+    d.message && "\nAbout my business: " + d.message
   ].filter(Boolean).join("\n");
 
-  const esc = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-  const showSent = (d, received) => {
-    const first = d.name.split(" ")[0];
-    $("#sentTitle").textContent = received ? `Thanks, ${first}! We've got it.` : `Almost done, ${first}.`;
-    $("#sentText").textContent = received
-      ? `We'll get back to you by ${d.contactVia.toLowerCase()} within 24 hours. Here's what you sent:`
-      : "Tap a button below to send your enquiry to us. Here's the summary:";
-    const rows = [["Services", d.services], ["Budget", d.budget], ["Start", d.timeline], ["Name", d.name + (d.business ? ", " + d.business : "")], ["Contact", [d.phone, d.email].filter(Boolean).join(" · ")], ["Details", d.message]];
-    $("#summary").innerHTML = rows.filter(r => r[1]).map(r => `<div><dt>${r[0]}</dt><dd>${esc(r[1])}</dd></div>`).join("");
-    const text = asText(d);
-    $("#sendActs").hidden = received;
+  const showThanks = (d, received) => {
+    const first = d.name.split(" ")[0], text = asText(d);
+    $("#sentTitle").textContent = `Thank you, ${first}!`;
+    if (received) {
+      $("#sentText").textContent = "Your enquiry is with our team. Expect a WhatsApp message from us within 24 hours.";
+      $("#sentNote").textContent = "In a hurry? Message us on WhatsApp now and we'll pick it up right away.";
+      $("#sendWaLabel").textContent = "Chat with us now";
+    } else {
+      $("#sentText").textContent = "Your enquiry is ready in WhatsApp. Tap send there and we'll reply within 24 hours.";
+      $("#sentNote").textContent = "WhatsApp didn't open? Use the button below to send it.";
+      $("#sendWaLabel").textContent = "Send on WhatsApp";
+    }
     if (CONFIG.whatsapp) { $("#sendWa").href = waLink(text); $("#sendWa").hidden = false; }
     $("#sendMail").href = "mailto:" + CONFIG.email + "?subject=" + encodeURIComponent("New project enquiry from " + d.name) + "&body=" + encodeURIComponent(text);
-    $("#copyMsg").onclick = e => copyText(text, e.currentTarget, $("#summary"));
-    $("#formMain").hidden = true; $("#formSent").hidden = false; $("#enqNav").hidden = true;
-    $("#stepTitle").textContent = received ? "Enquiry sent" : "Review and send";
-    $$("#enqSteps li").forEach(li => { li.classList.remove("on"); li.classList.add("done"); });
-    $("#enqBody").scrollTop = 0;
-    $("#sentTitle").focus({ preventScroll: true });
+    $("#formMain").hidden = true; $("#formMain").style.display = "none"; $("#formSent").hidden = false;
+    $("#backBtn").hidden = true; $("#stepLabel").textContent = "All done";
+    dlg.scrollTop = 0; $("#sentTitle").focus({ preventScroll: true });
   };
 
   form.addEventListener("submit", async e => {
     e.preventDefault();
     if (!validate(step)) return;
-    if (step < total) { showStep(step + 1, true); return; }
+    if (step < total) { showStep(step + 1, 1); return; }
     const d = collect();
-    let received = false;
     if (CONFIG.formEndpoint) {
       nextBtn.disabled = true; nextBtn.textContent = "Sending…";
+      let ok = false;
       try {
         const r = await fetch(CONFIG.formEndpoint, { method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" }, body: JSON.stringify(d) });
-        received = r.ok;
-      } catch (err) { received = false; }
+        ok = r.ok;
+      } catch (err) { ok = false; }
       nextBtn.disabled = false; showStep(step);
+      if (ok) { showThanks(d, true); return; }
     }
-    showSent(d, received);
+    // no form service (or it failed): hand the enquiry to WhatsApp, ready to send
+    if (CONFIG.whatsapp) { try { window.open(waLink(asText(d)), "_blank", "noopener"); } catch (err) {} }
+    showThanks(d, false);
   });
 
-  const resetView = () => { $("#formSent").hidden = true; $("#formMain").hidden = false; $("#enqNav").hidden = false; };
-  $("#editMsg").addEventListener("click", () => { resetView(); showStep(1, true); });
-
-  /* ===== enquiry pop-up ===== */
-  const dlg = $("#enquiry");
+  const resetView = () => { $("#formSent").hidden = true; $("#formMain").hidden = false; $("#formMain").style.display = "contents"; };
   const openEnquiry = pick => {
     if (pick) {
       const box = $$("#picks input, #kits input").find(i => i.value === pick);
-      if (box) { box.checked = true; $("#err1").hidden = true; }
+      if (box) { box.checked = true; $("#err3").hidden = true; }
     }
-    if (!$("#formSent").hidden) resetView();
+    if (!$("#formSent").hidden) { resetView(); }
     setMenu(false);
     showStep(1);
     if (!dlg.open) { dlg.showModal(); document.body.classList.add("modal-open"); }
-    $("#enqBody").scrollTop = 0;
-    (pick ? nextBtn : $("#p-web")).focus({ preventScroll: true });
+    setTimeout(() => $("#f-name").focus({ preventScroll: true }), 60);
   };
   const closeEnquiry = () => { if (dlg.open) dlg.close(); };
   dlg.addEventListener("close", () => document.body.classList.remove("modal-open"));
   dlg.addEventListener("click", e => { if (e.target === dlg) closeEnquiry(); });
   $("#enqClose").addEventListener("click", closeEnquiry);
+  $("#doneBtn").addEventListener("click", closeEnquiry);
 
   /* every "Start a project" / "Get a quote" / "Ask about…" opens the pop-up */
   document.addEventListener("click", e => {

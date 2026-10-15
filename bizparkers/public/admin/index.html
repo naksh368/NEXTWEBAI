@@ -98,7 +98,7 @@ label.f small{font-weight:500;color:var(--muted)}
   .topbar{display:flex;position:sticky;top:0;z-index:30;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top,0px)) var(--gr) 10px var(--gl);background:var(--card);border-bottom:var(--bw) solid var(--ink)}
   .topbar img{height:26px;width:auto}
   .topbar .sp{flex:1}
-  .tabs{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);border-top:var(--bw) solid var(--ink);padding:6px var(--gr) calc(6px + env(safe-area-inset-bottom,0px)) var(--gl)}
+  .tabs{display:grid;grid-template-columns:repeat(6,1fr);position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);border-top:var(--bw) solid var(--ink);padding:6px var(--gr) calc(6px + env(safe-area-inset-bottom,0px)) var(--gl)}
   .tabs a{display:grid;justify-items:center;gap:2px;font-size:.68rem;font-weight:700;text-decoration:none;padding:6px 2px;border-radius:12px;position:relative}
   .tabs a svg{width:21px;height:21px}
   .tabs a[aria-current="page"]{background:var(--ink);color:var(--paper)}
@@ -120,6 +120,26 @@ label.f small{font-weight:500;color:var(--muted)}
 @media (max-width:620px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .kpi{background:var(--card);border:var(--bw) solid var(--ink);border-radius:18px;padding:14px 16px;display:grid;gap:4px;min-width:0}
 .kpi:first-child{box-shadow:5px 5px 0 var(--ink)}
+.money-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.money-row > div{display:grid;gap:2px;padding:10px 12px;border:1.5px solid var(--line);border-radius:14px;min-width:0}
+.money-row span{font-size:.8rem;font-weight:600}
+.money-row b{font-family:var(--f-display);font-size:1.25rem;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.money-row .delta{font-size:.72rem}
+.sale-table .tr{grid-template-columns:minmax(0,1.4fr) 110px 130px 130px 120px minmax(190px,1fr)}
+.pay{display:flex;gap:6px;align-items:center}
+.pay input{width:100%;min-width:0;padding:.4rem .6rem;border:1.5px solid var(--ink);border-radius:10px;background:var(--paper);font-size:.85rem}
+.due{color:var(--bad);font-weight:700}
+.paid-full{color:var(--good);font-weight:700}
+@media (max-width:1100px){.sale-table .tr{grid-template-columns:1fr auto;grid-template-areas:"who amt" "meta meta" "pay pay"}.sale-table .who{grid-area:who}.sale-table .amt{grid-area:amt;text-align:right}.sale-table .meta{grid-area:meta}.sale-table .pay{grid-area:pay}.sale-table .hide-m{display:none}}
+.modal-form{display:grid;gap:12px}
+.modal-form .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:520px){.modal-form .two{grid-template-columns:1fr}}
+.svc-picks{display:flex;flex-wrap:wrap;gap:6px}
+.svc-picks label{cursor:pointer}
+.svc-picks input{position:absolute;opacity:0;pointer-events:none}
+.svc-picks span{display:inline-block;font-size:.82rem;font-weight:600;padding:.3rem .65rem;border:1.5px solid var(--ink);border-radius:999px;background:var(--paper)}
+.svc-picks input:checked + span{background:var(--ink);color:var(--paper)}
+.svc-picks input:focus-visible + span{outline:3px solid var(--orange);outline-offset:2px}
 .kpi span{font-weight:600;font-size:.88rem;color:var(--muted)}
 .kpi b{font-family:var(--f-display);font-size:clamp(1.6rem,2.6vw,2.2rem);line-height:1;font-variant-numeric:tabular-nums}
 .delta{font-size:.78rem;font-weight:700;display:inline-flex;align-items:center;gap:4px}
@@ -315,6 +335,8 @@ dd{margin:0;overflow-wrap:anywhere;white-space:pre-wrap}
   <symbol id="i-mail" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="m3 6.5 9 6.5 9-6.5"/></g></symbol>
   <symbol id="i-copy" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="8" y="8" width="13" height="13" rx="2.5"/><path d="M16 8V5.5A2.5 2.5 0 0 0 13.5 3h-8A2.5 2.5 0 0 0 3 5.5v8A2.5 2.5 0 0 0 5.5 16H8"/></g></symbol>
   <symbol id="i-star" viewBox="0 0 24 24"><path fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="m12 3 2.8 5.8 6.2.9-4.5 4.4 1 6.2L12 17.4l-5.5 2.9 1-6.2L3 9.7l6.2-.9z"/></symbol>
+  <symbol id="i-rupee" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M6 4h12M6 9h12M9 4c4 0 6 2 6 5s-2 5-6 5H6l8 7"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" d="M12 5v14M5 12h14"/></symbol>
   <symbol id="i-site" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></g></symbol>
 </defs></svg>
 
@@ -329,13 +351,13 @@ dd{margin:0;overflow-wrap:anywhere;white-space:pre-wrap}
     <label class="check"><input type="checkbox" id="lRemember" checked>Keep me signed in for 30 days</label>
     <p class="err" id="lErr" hidden></p>
     <button class="btn btn--orange" type="submit" id="lBtn">Sign in</button>
-    <p class="demo-note" id="lDemo" hidden>Preview mode: no server is connected, so any email and password opens the panel with <b>example data</b>.</p>
+    <p class="demo-note" id="lDemo" hidden>Preview mode: no server is connected, so any email and password opens an empty panel. Nothing is saved.</p>
   </form>
 </section>
 
 <!-- ================= APP ================= -->
 <div id="appView" hidden>
-  <div class="demo-bar" id="demoBar" hidden>Preview with example data. Deploy the server to see your real enquiries and visitors.</div>
+  <div class="demo-bar" id="demoBar" hidden>Preview mode: nothing here is saved. Deploy the server to see your real enquiries, visitors and sales.</div>
   <div class="shell">
     <aside class="side">
       <div class="brand"><img src="/assets/logo-full.png" alt="Bizparkers" width="123" height="30"><span>ADMIN</span></div>
@@ -377,6 +399,9 @@ const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": 
 const cls = s => "s-" + String(s || "New").split(" ")[0];
 const inr = n => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n || 0);
 const nf = n => new Intl.NumberFormat("en-IN").format(n || 0);
+const inrShort = n => n >= 1e7 ? "₹" + (n / 1e7).toFixed(1).replace(/\.0$/, "") + "Cr" : n >= 1e5 ? "₹" + (n / 1e5).toFixed(1).replace(/\.0$/, "") + "L" : n >= 1e3 ? "₹" + Math.round(n / 1e3) + "k" : "₹" + n;
+const fmtMonth = ymd => new Date(ymd + "T12:00:00").toLocaleDateString("en-IN", { month: "short", year: "2-digit" });
+const OPEN = ["New", "Contacted", "Proposal sent"];
 const pct = n => (n * 100).toFixed(n && n < .1 ? 1 : 0) + "%";
 const dur = s => s >= 60 ? Math.floor(s / 60) + "m " + String(Math.round(s % 60)).padStart(2, "0") + "s" : Math.round(s) + "s";
 const today = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
@@ -397,68 +422,54 @@ async function api(path, opts = {}) {
   return j;
 }
 
-/* ---------- example data for the preview ---------- */
-const M = { enquiries: null, settings: { email: "hello@bizparkers.com", phone: "+91 72909 11804", instagram: "https://www.instagram.com/bizparkers/", available: true, announcement: { on: false, text: "" } } };
-function seed() {
-  const names = ["Rahul Verma", "Priya Nair", "Aman Gupta", "Neha Shah", "Karan Mehta", "Sneha Iyer", "Vikram Rao", "Pooja Kulkarni", "Arjun Singh", "Meera Joshi", "Rohit Das", "Ananya Bose"];
-  const brands = ["Sample Sweets", "FitNest Studios", "Keystone Realty", "Glow Theory", "Threadline", "Chai Corner", "Rao Motors", "Petal & Co", "Singh Logistics", "Joshi Dental", "Das Electricals", "Bose Bakes"];
-  const svc = [["Website", "Google SEO"], ["Mobile app"], ["AI chatbot", "AI automation"], ["Logo & branding", "Website"], ["Digital marketing"], ["E-commerce"], ["Web app"], ["Website", "Digital marketing"], ["AI automation"], ["Google SEO"], ["Website"], ["Logo & branding"]];
-  const st = ["New", "New", "Contacted", "Proposal sent", "Won", "Lost", "Contacted", "New", "Proposal sent", "Won", "Contacted", "New"];
-  const budgets = ["₹25,000 to ₹75,000", "Above ₹2,00,000", "₹75,000 to ₹2,00,000", "₹25,000 to ₹75,000", "Under ₹25,000", "₹75,000 to ₹2,00,000", "Above ₹2,00,000", "", "₹75,000 to ₹2,00,000", "₹25,000 to ₹75,000", "Under ₹25,000", ""];
-  const vals = [0, 0, 60000, 120000, 45000, 0, 180000, 0, 90000, 35000, 25000, 0];
-  M.enquiries = names.map((n, i) => {
-    const created = new Date(Date.now() - (i * 1.7 + .2) * 864e5).toISOString();
-    return { id: "BP-EX" + (101 + i), createdAt: created, updatedAt: created, status: st[i], starred: i % 4 === 1, value: vals[i],
-      followUp: [2, 6, 8].includes(i) ? addDays(today(), i === 2 ? -1 : i === 6 ? 0 : 3) : "", tags: i === 3 ? ["referral"] : [],
-      name: "Example: " + n, phone: "+91 9" + String(8765432100 + i * 1111).slice(1), email: i % 3 ? n.split(" ")[0].toLowerCase() + "@example.com" : "",
-      services: svc[i], budget: budgets[i], message: "Example enquiry. " + ["We want online orders.", "Need a booking app for members.", "Too many WhatsApp leads to answer by hand.", "New brand launching next month."][i % 4],
-      brand: i % 2 ? "" : brands[i], hasSite: i % 2 ? "" : "No", website: "", adSpend: i % 2 ? "" : "Under ₹25,000", improve: i % 2 ? [] : ["More leads and enquiries"],
-      source: { ref: ["instagram.com", "google.com", "", "facebook.com"][i % 4], dev: i % 3 ? "mobile" : "desktop" },
-      activity: [{ ts: created, type: "created", text: "Enquiry received from the website" }] };
-  });
-}
+/* ---------- preview store: starts empty, just like a fresh install ---------- */
+const M = { enquiries: [], settings: { email: "hello@bizparkers.com", phone: "+91 72909 11804", instagram: "https://www.instagram.com/bizparkers/", available: true, announcement: { on: false, text: "" } } };
 function mockStats(days) {
-  const rnd = (i, a, b) => a + Math.round((Math.sin(i * 12.9898 + days) * 43758.5453 % 1 + 1) % 1 * (b - a));
-  const daily = [];
-  for (let i = days - 1; i >= 0; i--) { const v = rnd(i, 18, 64) + (i % 7 < 2 ? -8 : 6); daily.push({ date: addDays(today(), -i), visitors: Math.max(4, v), views: Math.max(6, Math.round(v * 1.6)), enquiries: rnd(i + 3, 0, 3) }); }
-  const sum = k => daily.reduce((a, d) => a + d[k], 0);
-  const cur = { visitors: sum("visitors"), sessions: Math.round(sum("visitors") * 1.2), views: sum("views"), enquiries: sum("enquiries"), avgTime: 94 };
-  cur.conversion = cur.visitors ? cur.enquiries / cur.visitors : 0;
-  const prev = { visitors: Math.round(cur.visitors * .86), views: Math.round(cur.views * .9), enquiries: Math.max(1, cur.enquiries - 3), avgTime: 81 };
-  prev.conversion = prev.enquiries / prev.visitors;
-  const v = cur.visitors, sc = x => Math.round(v * x);
-  const count = (arr, fn) => { const m = {}; arr.forEach(e => [].concat(fn(e)).filter(Boolean).forEach(k => m[k] = (m[k] || 0) + 1)); return Object.entries(m).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value); };
-  return { ok: true, range: days, kpis: { current: cur, previous: prev }, daily,
-    sources: [["Google", .38], ["Instagram", .27], ["Direct", .2], ["Facebook", .09], ["WhatsApp", .04], ["LinkedIn", .02]].map(([l, x]) => ({ label: l, value: sc(x) })),
-    devices: [["Mobile", .71], ["Desktop", .24], ["Tablet", .05]].map(([l, x]) => ({ label: l, value: sc(x) })),
-    places: [["Kolkata", .62], ["Dubai", .09], ["London", .06], ["New York", .05], ["Singapore", .04]].map(([l, x]) => ({ label: l === "Kolkata" ? "India (IST)" : l, value: sc(x) })),
-    sections: [["Scratch card", 71], ["Services", 64], ["Free audit", 48], ["Why us", 41], ["Process", 36], ["Packages", 29], ["FAQ", 22], ["Contact", 19]].map(([label, value]) => ({ label, value })),
-    ctas: [["Start a project", sc(.09)], ["Get a free quote", sc(.05)], ["Website", sc(.03)], ["Google SEO", sc(.02)], ["Growth kit", sc(.015)]].map(([label, value]) => ({ label, value })),
-    funnel: [["Opened the form", .14], ["Entered name", .11], ["Entered phone", .085], ["Picked services", .075], ["Sent enquiry", .065], ["Added faster-reply details", .03]].map(([label, x]) => ({ label, value: sc(x) })),
-    services: count(M.enquiries, e => e.services), budgets: count(M.enquiries, e => e.budget || "Not shared"),
-    pipeline: STATUSES.map(s => { const l = M.enquiries.filter(e => e.status === s); return { label: s, value: l.length, amount: l.reduce((a, e) => a + e.value, 0) }; }),
-    openValue: M.enquiries.filter(e => !["Won", "Lost", "Spam"].includes(e.status)).reduce((a, e) => a + e.value, 0),
-    followUpsDue: M.enquiries.filter(e => e.followUp && e.followUp <= today() && !["Won", "Lost", "Spam"].includes(e.status)).length, live: 3 };
+  const daily = []; for (let i = days - 1; i >= 0; i--) daily.push({ date: addDays(today(), -i), visitors: 0, views: 0, enquiries: 0 });
+  const zero = { visitors: 0, sessions: 0, views: 0, enquiries: 0, conversion: 0, avgTime: 0 };
+  const won = M.enquiries.filter(e => e.status === "Won"), sum = (l, k) => l.reduce((a, e) => a + (Number(e[k]) || 0), 0);
+  const from = addDays(today(), -(days - 1)), cur = won.filter(e => (e.closedAt || "") >= from);
+  const months = []; for (let i = 11; i >= 0; i--) { const d = new Date(); d.setDate(15); d.setMonth(d.getMonth() - i); months.push(d.toISOString().slice(0, 7)); }
+  const open = M.enquiries.filter(e => !["Won", "Lost", "Spam"].includes(e.status));
+  return { ok: true, range: days, kpis: { current: zero, previous: zero }, daily, sources: [], devices: [], places: [], ctas: [], services: [], budgets: [],
+    sections: ["Scratch card", "Services", "Free audit", "Why us", "Process", "Packages", "FAQ", "Contact"].map(label => ({ label, value: 0 })),
+    funnel: ["Opened the form", "Entered name", "Entered phone", "Picked services", "Sent enquiry", "Added faster-reply details"].map(label => ({ label, value: 0 })),
+    pipeline: STATUSES.map(s => { const l = M.enquiries.filter(e => e.status === s); return { label: s, value: l.length, amount: sum(l, "value") }; }),
+    sales: { current: { amount: sum(cur, "value"), received: sum(cur, "paid"), deals: cur.length }, previous: { amount: 0, received: 0, deals: 0 },
+      allTime: { amount: sum(won, "value"), received: sum(won, "paid"), deals: won.length },
+      outstanding: won.reduce((a, e) => a + Math.max(0, (e.value || 0) - (e.paid || 0)), 0),
+      monthly: months.map(m => ({ date: m + "-01", amount: sum(won.filter(e => (e.closedAt || "").slice(0, 7) === m), "value") })) },
+    openValue: sum(open, "value"), followUpsDue: open.filter(e => e.followUp && e.followUp <= today()).length, live: 0 };
 }
 async function mock(path, opts) {
-  await new Promise(r => setTimeout(r, 120));
-  if (!M.enquiries) seed();
-  const m = opts.method || "GET";
-  if (path.endsWith("/login")) return { ok: true, email: (opts.body.email || "bizparkers@gmail.com").toLowerCase() };
+  await new Promise(r => setTimeout(r, 100));
+  const m = opts.method || "GET", b = opts.body || {}, now = new Date().toISOString();
+  if (path.endsWith("/login")) return { ok: true, email: (b.email || "").toLowerCase() };
   if (path.endsWith("/logout")) return { ok: true };
   if (path.endsWith("/me")) { if (!sessionStorage.getItem("bp_demo")) throw new Error("auth"); return { ok: true, email: sessionStorage.getItem("bp_demo"), storage: "preview" }; }
   if (path.includes("/stats")) return mockStats(+new URL(path, "http://x").searchParams.get("days") || 30);
   if (path.endsWith("/enquiries") && m === "GET") return { ok: true, enquiries: JSON.parse(JSON.stringify(M.enquiries)), statuses: ALL_STATUSES };
+  if (path.endsWith("/enquiries") && m === "POST") {
+    if (!b.name || b.name.trim().length < 2) throw new Error("Add the client name.");
+    const e = { id: "BP-P" + Date.now().toString(36).toUpperCase(), createdAt: now, updatedAt: now, status: b.status || "New", starred: false,
+      value: +b.value || 0, paid: +b.paid || 0, closedAt: b.status === "Won" ? (b.closedAt || today()) : "", followUp: b.followUp || "", tags: [],
+      name: b.name.trim(), phone: b.phone || "", email: b.email || "", services: b.services || [], budget: "", message: b.message || "", brand: b.brand || "",
+      hasSite: "", website: "", adSpend: "", improve: [], source: { ref: "manual" }, activity: [{ ts: now, type: "created", text: b.status === "Won" ? "Sale added manually in the admin panel" : "Added manually in the admin panel" }] };
+    if (e.paid) e.activity.push({ ts: now, type: "payment", text: "Payment received: " + inr(e.paid) });
+    M.enquiries.unshift(e); return { ok: true, enquiry: JSON.parse(JSON.stringify(e)) };
+  }
   const one = path.match(/enquiries\/([^/]+)$/);
   if (one && m === "PATCH") {
-    const e = M.enquiries.find(x => x.id === one[1]); const b = opts.body, now = new Date().toISOString();
-    if (b.status && b.status !== e.status) { e.activity.push({ ts: now, type: "status", text: `Status changed from ${e.status} to ${b.status}` }); e.status = b.status; }
-    ["starred", "value", "followUp", "tags"].forEach(k => { if (b[k] !== undefined) e[k] = b[k]; });
+    const e = M.enquiries.find(x => x.id === one[1]);
+    if (b.status && b.status !== e.status) { e.activity.push({ ts: now, type: "status", text: `Status changed from ${e.status} to ${b.status}` }); e.status = b.status; if (b.status === "Won" && !e.closedAt) e.closedAt = today(); }
+    ["starred", "value", "paid", "followUp", "tags", "closedAt"].forEach(k => { if (b[k] !== undefined) e[k] = b[k]; });
+    if (+b.addPayment > 0 && e.value && (e.paid || 0) + +b.addPayment > e.value) throw new Error("That's more than what's still due.");
+    if (+b.addPayment > 0) { e.paid = (e.paid || 0) + +b.addPayment; e.activity.push({ ts: now, type: "payment", text: "Payment received: " + inr(+b.addPayment) }); }
     if (b.note) e.activity.push({ ts: now, type: "note", text: b.note });
-    return { ok: true, enquiry: JSON.parse(JSON.stringify(e)) };
+    e.updatedAt = now; return { ok: true, enquiry: JSON.parse(JSON.stringify(e)) };
   }
   if (one && m === "DELETE") { M.enquiries = M.enquiries.filter(x => x.id !== one[1]); return { ok: true }; }
-  if (path.endsWith("/settings")) { if (m === "PUT") M.settings = opts.body; return { ok: true, settings: M.settings }; }
+  if (path.endsWith("/settings")) { if (m === "PUT") M.settings = b; return { ok: true, settings: M.settings }; }
   throw new Error("Not available in preview.");
 }
 
@@ -468,6 +479,7 @@ const ROUTES = [
   { id: "dashboard", label: "Dashboard", icon: "i-home" },
   { id: "enquiries", label: "Enquiries", icon: "i-inbox" },
   { id: "pipeline", label: "Pipeline", icon: "i-board" },
+  { id: "sales", label: "Sales", icon: "i-rupee" },
   { id: "followups", label: "Follow-ups", icon: "i-bell" },
   { id: "settings", label: "Settings", icon: "i-gear" }
 ];
@@ -489,6 +501,7 @@ async function render() {
   if (r === "dashboard") return renderDashboard(main);
   if (r === "enquiries") return renderEnquiries(main);
   if (r === "pipeline") return renderPipeline(main);
+  if (r === "sales") return renderSales(main);
   if (r === "followups") return renderFollowups(main);
   if (r === "settings") return renderSettings(main);
   location.hash = "#/dashboard";
@@ -511,9 +524,10 @@ function hbars(items, opts = {}) {
   const max = opts.max || Math.max(...items.map(i => i.value), 1);
   return `<div class="hbars ${opts.tone || ""}">${items.slice(0, opts.limit || 8).map(i => `<div class="hbar"><span class="lbl" title="${esc(i.label)}">${esc(i.label)}</span><span class="val">${opts.fmt ? opts.fmt(i.value) : nf(i.value)}</span><span class="track"><span class="fill" style="width:${Math.max(2, i.value / max * 100)}%"></span></span></div>`).join("")}</div>`;
 }
-function barChart(el, data, key, color, label) {
+function barChart(el, data, key, color, label, opts = {}) {
+  const xf = opts.xfmt || fmtDay, yf = opts.yfmt || (v => v), tf = opts.tfmt || (v => nf(v) + " " + label.toLowerCase());
   const draw = () => {
-    const W = el.clientWidth || 600, H = 220, pad = { t: 10, r: 6, b: 26, l: 34 };
+    const W = el.clientWidth || 600, H = 220, pad = { t: 10, r: 6, b: 26, l: opts.padL || 34 };
     const max = Math.max(1, ...data.map(d => d[key]));
     const step = max <= 4 ? 1 : Math.pow(10, Math.floor(Math.log10(max))) * (max / Math.pow(10, Math.floor(Math.log10(max))) > 5 ? 2 : 1);
     const top = Math.ceil(max / step) * step, ticks = [];
@@ -522,8 +536,8 @@ function barChart(el, data, key, color, label) {
     const y = v => pad.t + ih - v / top * ih;
     const every = Math.ceil(data.length / Math.max(2, Math.floor(iw / 64)));
     let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label)}"><g class="axis">`;
-    ticks.forEach(t => { svg += `<line class="grid-line" x1="${pad.l}" x2="${W - pad.r}" y1="${y(t)}" y2="${y(t)}"/><text x="${pad.l - 8}" y="${y(t) + 3}" text-anchor="end">${t}</text>`; });
-    data.forEach((d, i) => { if (i % every === 0 || i === data.length - 1) svg += `<text x="${pad.l + bw * i + bw / 2}" y="${H - 6}" text-anchor="middle">${fmtDay(d.date)}</text>`; });
+    ticks.forEach(t => { svg += `<line class="grid-line" x1="${pad.l}" x2="${W - pad.r}" y1="${y(t)}" y2="${y(t)}"/><text x="${pad.l - 8}" y="${y(t) + 3}" text-anchor="end">${yf(t)}</text>`; });
+    data.forEach((d, i) => { if (i % every === 0 || i === data.length - 1) svg += `<text x="${pad.l + bw * i + bw / 2}" y="${H - 6}" text-anchor="middle">${xf(d.date)}</text>`; });
     svg += `</g>`;
     data.forEach((d, i) => {
       const x = pad.l + bw * i + (bw - barW) / 2, h = Math.max(d[key] ? 2 : 0, ih - (y(d[key]) - pad.t)), r = Math.min(4, barW / 2, h);
@@ -535,7 +549,7 @@ function barChart(el, data, key, color, label) {
     el.querySelector("svg").addEventListener("pointermove", e => {
       const t = e.target.closest(".hit"); if (!t) { tip.hidden = true; return; }
       const d = data[+t.dataset.i];
-      tip.innerHTML = `${fmtDay(d.date)}<br><b>${nf(d[key])}</b> ${label.toLowerCase()}`;
+      tip.innerHTML = `${xf(d.date)}<br><b>${tf(d[key])}</b>`;
       const r = t.getBoundingClientRect();
       tip.style.left = (r.left + r.width / 2) + "px"; tip.style.top = (window.scrollY + el.getBoundingClientRect().top + y(d[key])) + "px"; tip.style.position = "absolute"; tip.hidden = false;
       $$(".bar", el).forEach(b => b.classList.toggle("on", b.dataset.i === t.dataset.i));
@@ -579,7 +593,12 @@ async function renderDashboard(main) {
     </div>
     <div class="grid">
       <div class="card c8"><h3>Visitors per day</h3><p class="note">Unique visitors, last ${S.days} days</p><div class="chart" id="chV"></div></div>
-      <div class="card c4"><h3>Pipeline</h3><p class="note">Open deal value <b>${inr(st.openValue)}</b></p>
+      <div class="card c4"><h3>Sales</h3><p class="note">Closed in the last ${S.days} days · <a href="#/sales">Open sales</a></p>
+        <div class="money-row"><div><span class="muted">Sales</span><b>${inr(st.sales.current.amount)}</b>${delta(st.sales.current.amount, st.sales.previous.amount)}</div>
+        <div><span class="muted">Received</span><b>${inr(st.sales.current.received)}</b></div>
+        <div><span class="muted">To collect (all)</span><b>${inr(st.sales.outstanding)}</b></div>
+        <div><span class="muted">Pending deals</span><b>${inr(st.openValue)}</b></div></div>
+        <h3 style="margin-top:16px">Pipeline</h3><p class="note">Pending = New, Contacted, Proposal sent</p>
         ${hbars(st.pipeline.map(x => ({ label: x.label + (x.amount ? " · " + inr(x.amount) : ""), value: x.value })), { tone: "ink", empty: "No enquiries yet." })}
         <p class="note" style="margin:14px 0 0">${st.followUpsDue ? `<a href="#/followups"><b>${st.followUpsDue} follow-up${st.followUpsDue > 1 ? "s" : ""} due</b></a>` : "No follow-ups due today."}</p></div>
       <div class="card c8"><h3>Enquiries per day</h3><p class="note">Enquiries sent through the website form</p><div class="chart" id="chE"></div></div>
@@ -604,7 +623,7 @@ async function renderDashboard(main) {
 function visibleEnquiries() {
   const q = S.q.trim().toLowerCase();
   let list = S.enquiries.filter(e =>
-    (S.filter === "All" ? e.status !== "Spam" : e.status === S.filter) &&
+    (S.filter === "All" ? e.status !== "Spam" : S.filter === "Pending" ? OPEN.includes(e.status) : S.filter === "Closed" ? ["Won", "Lost"].includes(e.status) : e.status === S.filter) &&
     (!S.starred || e.starred) && (!S.svc || e.services.includes(S.svc)) &&
     (!q || [e.name, e.phone, e.email, e.brand, e.message, e.services.join(" "), (e.tags || []).join(" "), e.id].some(v => String(v || "").toLowerCase().includes(q))));
   if (S.sort === "old") list = list.slice().reverse();
@@ -615,7 +634,7 @@ async function renderEnquiries(main) {
   main.innerHTML = `
     <div class="page-head">
       <div><h1>Enqui<span>ries</span></h1><p class="sub">Everyone who contacted you through the website.</p></div>
-      <div class="head-tools"><button class="icon-btn" type="button" id="reload" aria-label="Refresh"><svg><use href="#i-refresh"/></svg></button><button class="btn" type="button" id="csv"><svg><use href="#i-down"/></svg>Export CSV</button></div>
+      <div class="head-tools"><button class="icon-btn" type="button" id="reload" aria-label="Refresh"><svg><use href="#i-refresh"/></svg></button><button class="btn" type="button" id="csv"><svg><use href="#i-down"/></svg>Export CSV</button><button class="btn btn--orange" type="button" id="addEnq"><svg><use href="#i-plus"/></svg>Add enquiry</button></div>
     </div>
     <div class="toolbar">
       <label class="search"><svg><use href="#i-search"/></svg><input class="input" id="q" type="search" placeholder="Search name, phone, business, tag…" value="${esc(S.q)}" aria-label="Search enquiries"></label>
@@ -627,8 +646,8 @@ async function renderEnquiries(main) {
     <div id="tbl"><div class="skeleton" style="height:300px"></div></div>`;
   $("#sort").value = S.sort;
   const draw = () => {
-    const count = s => S.enquiries.filter(e => s === "All" ? e.status !== "Spam" : e.status === s).length;
-    $("#stChips").innerHTML = ["All", ...ALL_STATUSES].map(s => `<button class="chip" type="button" data-s="${s}" aria-pressed="${S.filter === s}">${s}<i>${count(s)}</i></button>`).join("");
+    const count = s => S.enquiries.filter(e => s === "All" ? e.status !== "Spam" : s === "Pending" ? OPEN.includes(e.status) : s === "Closed" ? ["Won", "Lost"].includes(e.status) : e.status === s).length;
+    $("#stChips").innerHTML = ["All", "Pending", "Closed", ...ALL_STATUSES].map(s => `<button class="chip" type="button" data-s="${s}" aria-pressed="${S.filter === s}">${s}<i>${count(s)}</i></button>`).join("");
     const svcs = [...new Set(S.enquiries.flatMap(e => e.services))].sort();
     $("#svc").innerHTML = '<option value="">All services</option>' + svcs.map(s => `<option ${s === S.svc ? "selected" : ""}>${esc(s)}</option>`).join("");
     const list = visibleEnquiries();
@@ -654,6 +673,7 @@ async function renderEnquiries(main) {
   $("#stChips").addEventListener("click", e => { const c = e.target.closest(".chip"); if (c) { S.filter = c.dataset.s; draw(); } });
   $("#reload").addEventListener("click", async () => { await loadEnquiries(); draw(); toast("Enquiries refreshed"); });
   $("#csv").addEventListener("click", exportCsv);
+  $("#addEnq").addEventListener("click", () => openNewForm("New", draw));
   $("#tbl").addEventListener("click", async e => {
     const star = e.target.closest("[data-star]");
     if (star) { e.stopPropagation(); const en = S.enquiries.find(x => x.id === star.dataset.star); await patch(en.id, { starred: !en.starred }); draw(); return; }
@@ -694,10 +714,14 @@ function openDrawer(id, onChange) {
       </div>
     </div>
     <div class="d-body">
-      <div class="d-sec"><span class="eyebrow">Status</span><div class="status-pick" id="dStatus">${ALL_STATUSES.map(s => `<button type="button" class="pill ${cls(s)}" data-s="${s}" aria-pressed="${e.status === s}">${s}</button>`).join("")}</div></div>
+      <div class="d-sec"><span class="eyebrow">Status <span style="text-transform:none;letter-spacing:0;font-family:var(--f-body);font-weight:500">· Won = closed sale, counted in Sales</span></span><div class="status-pick" id="dStatus">${ALL_STATUSES.map(s => `<button type="button" class="pill ${cls(s)}" data-s="${s}" aria-pressed="${e.status === s}">${s}</button>`).join("")}</div></div>
       <div class="d-fields">
-        <label class="f">Deal value (₹)<input class="input" id="dValue" type="number" min="0" step="1000" inputmode="numeric" value="${e.value || ""}" placeholder="0"></label>
+        <label class="f">Deal amount (₹)<input class="input" id="dValue" type="number" min="0" step="500" inputmode="numeric" value="${e.value || ""}" placeholder="0"></label>
+        <label class="f">Received so far (₹)<input class="input" id="dPaid" type="number" min="0" step="500" inputmode="numeric" value="${e.paid || ""}" placeholder="0"></label>
+        <label class="f">Add a payment (₹)<span class="pay"><input id="dPayAmt" type="number" min="1" inputmode="numeric" placeholder="e.g. 10000"><button class="btn btn--sm" type="button" id="dPayBtn">Add</button></span></label>
         <label class="f">Follow-up date<input class="input" id="dFollow" type="date" value="${esc(e.followUp || "")}"></label>
+        ${e.status === "Won" ? `<label class="f">Closed on<input class="input" id="dClosed" type="date" value="${esc(e.closedAt || "")}"></label>
+        <div class="f"><span>Still to collect</span><b class="${(e.value || 0) - (e.paid || 0) > 0 ? "due" : "paid-full"}" style="font-size:1.2rem">${(e.value || 0) - (e.paid || 0) > 0 ? inr((e.value || 0) - (e.paid || 0)) : "Fully paid"}</b></div>` : ""}
         <label class="f" style="grid-column:1/-1">Tags <small>Comma separated, e.g. referral, urgent</small><input class="input" id="dTags" value="${esc((e.tags || []).join(", "))}" placeholder="Add tags"></label>
       </div>
       <div class="d-sec"><span class="eyebrow">Enquiry</span><dl>
@@ -718,6 +742,9 @@ function openDrawer(id, onChange) {
   $("#dStatus").onclick = async ev => { const b = ev.target.closest("button"); if (b && b.dataset.s !== e.status) refresh(await patch(id, { status: b.dataset.s })); };
   $("#dValue").onchange = async ev => refresh(await patch(id, { value: Number(ev.target.value) || 0 }));
   $("#dFollow").onchange = async ev => refresh(await patch(id, { followUp: ev.target.value }));
+  $("#dPaid").onchange = async ev => refresh(await patch(id, { paid: Number(ev.target.value) || 0 }));
+  $("#dPayBtn").onclick = async () => { const v = Number($("#dPayAmt").value), due = (e.value || 0) - (e.paid || 0); if (!(v > 0)) { $("#dPayAmt").focus(); return; } if (e.value && v > due) { toast("That's more than what's still due (" + inr(Math.max(0, due)) + ")."); return; } refresh(await patch(id, { addPayment: v })); };
+  if ($("#dClosed")) $("#dClosed").onchange = async ev => refresh(await patch(id, { closedAt: ev.target.value }));
   $("#dTags").onchange = async ev => refresh(await patch(id, { tags: ev.target.value.split(",").map(t => t.trim()).filter(Boolean) }));
   $("#dAddNote").onclick = async () => { const v = $("#dNote").value.trim(); if (!v) { $("#dNote").focus(); return; } refresh(await patch(id, { note: v })); };
   $("#dDel").onclick = () => { $("#dConfirm").hidden = false; $("#dDel").hidden = true; };
@@ -727,6 +754,42 @@ function openDrawer(id, onChange) {
     catch (x) { toast(x.message); }
   };
   if (d.hidden) { d.hidden = false; $("#scrim").hidden = false; document.body.style.overflow = "hidden"; $("#dClose").focus(); }
+}
+const SVC_OPTIONS = ["Website", "E-commerce", "Mobile app", "Web app", "AI automation", "AI chatbot", "Logo & branding", "Digital marketing", "Google SEO", "Other"];
+function openNewForm(status, onDone) {
+  const sale = status === "Won", d = $("#drawer");
+  S.openId = "new";
+  d.innerHTML = `
+    <div class="d-head"><div class="x"><h2 id="dName">${sale ? "Add a sale" : "Add an enquiry"}</h2><button class="icon-btn" type="button" id="dClose" aria-label="Close"><svg><use href="#i-x"/></svg></button></div>
+      <small>${sale ? "For clients who paid you outside the website. It counts in your sales totals." : "For leads from calls, walk-ins or referrals."}</small></div>
+    <form class="d-body modal-form" id="newForm" novalidate>
+      <label class="f">Client name<input class="input" id="nName" autocomplete="off" placeholder="e.g. Sharma Sweets or Rahul Verma"></label>
+      <div class="two"><label class="f">Phone <small>(optional)</small><input class="input" id="nPhone" type="tel" placeholder="+91 98765 43210"></label>
+        <label class="f">Email <small>(optional)</small><input class="input" id="nEmail" type="email" placeholder="client@email.com"></label></div>
+      <div class="f"><span>Services</span><div class="svc-picks">${SVC_OPTIONS.map((x, i) => `<label><input type="checkbox" value="${x}" id="ns${i}"><span>${x}</span></label>`).join("")}</div></div>
+      <div class="two"><label class="f">${sale ? "Sale amount (₹)" : "Deal amount (₹)"} <input class="input" id="nValue" type="number" min="0" inputmode="numeric" placeholder="e.g. 45000"></label>
+        <label class="f">Received so far (₹)<input class="input" id="nPaid" type="number" min="0" inputmode="numeric" placeholder="0"></label></div>
+      <div class="two"><label class="f">Status<select class="input" id="nStatus">${STATUSES.map(x => `<option ${x === status ? "selected" : ""}>${x}</option>`).join("")}</select></label>
+        <label class="f">${sale ? "Closed on" : "Follow-up date"}<input class="input" id="nDate" type="date" value="${sale ? today() : ""}"></label></div>
+      <label class="f">Note <small>(optional)</small><textarea class="input" id="nNote" placeholder="What did they ask for? Anything to remember?"></textarea></label>
+      <p class="err" id="nErr" hidden></p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn--orange" type="submit" id="nSave">${sale ? "Save sale" : "Save enquiry"}</button><button class="btn" type="button" id="nCancel">Cancel</button></div>
+    </form>`;
+  $("#dClose").onclick = $("#nCancel").onclick = closeDrawer;
+  $("#newForm").onsubmit = async ev => {
+    ev.preventDefault();
+    const st = $("#nStatus").value, date = $("#nDate").value, err = $("#nErr");
+    const body = { name: $("#nName").value.trim(), phone: $("#nPhone").value.trim(), email: $("#nEmail").value.trim(), status: st,
+      services: $$(".svc-picks input:checked", d).map(i => i.value), value: Number($("#nValue").value) || 0, paid: Number($("#nPaid").value) || 0,
+      message: $("#nNote").value.trim() };
+    if (st === "Won") body.closedAt = date || today(); else body.followUp = date;
+    if (body.name.length < 2) { err.textContent = "Add the client name."; err.hidden = false; $("#nName").focus(); return; }
+    if (body.paid > body.value && body.value) { err.textContent = "Received can't be more than the amount."; err.hidden = false; $("#nPaid").focus(); return; }
+    $("#nSave").disabled = true;
+    try { const j = await api("/api/admin/enquiries", { method: "POST", body }); S.enquiries.unshift(j.enquiry); renderNav(); closeDrawer(); toast(st === "Won" ? "Sale added" : "Enquiry added"); if (onDone) onDone(); }
+    catch (x) { err.textContent = x.message; err.hidden = false; $("#nSave").disabled = false; }
+  };
+  d.hidden = false; $("#scrim").hidden = false; document.body.style.overflow = "hidden"; $("#nName").focus();
 }
 function closeDrawer() { $("#drawer").hidden = true; $("#scrim").hidden = true; document.body.style.overflow = ""; S.openId = null; }
 $("#scrim").addEventListener("click", closeDrawer);
@@ -756,6 +819,55 @@ async function renderPipeline(main) {
   board.addEventListener("click", e => { if (e.target.closest("select")) return; const c = e.target.closest(".kcard"); if (c) openDrawer(c.dataset.id, draw); });
 }
 
+/* ================= sales ================= */
+async function renderSales(main) {
+  main.innerHTML = `
+    <div class="page-head">
+      <div><h1>Sal<span>es</span></h1><p class="sub">Closed deals, money received and what's still to collect. Totals update automatically.</p></div>
+      <div class="head-tools">
+        <div class="seg" id="sRange">${[[30, "30 days"], [90, "90 days"], [365, "12 months"]].map(([d, l]) => `<button type="button" data-d="${d}" aria-pressed="${(S.salesDays || 30) === d}">${l}</button>`).join("")}</div>
+        <button class="btn btn--orange" type="button" id="addSale"><svg><use href="#i-plus"/></svg>Add a sale</button>
+      </div>
+    </div>
+    <div id="sales"><div class="kpis">${'<div class="skeleton" style="height:96px"></div>'.repeat(5)}</div></div>`;
+  const days = S.salesDays || 30;
+  $("#sRange").onclick = e => { const b = e.target.closest("button"); if (b) { S.salesDays = +b.dataset.d; renderSales(main); } };
+  $("#addSale").onclick = () => openNewForm("Won", () => renderSales(main));
+  let st;
+  try { [st] = await Promise.all([api("/api/admin/stats?days=" + days), loadEnquiries()]); } catch (e) { $("#sales").innerHTML = `<div class="card">${esc(e.message)}</div>`; return; }
+  const sl = st.sales, won = S.enquiries.filter(e => e.status === "Won").sort((a, b) => (b.closedAt || "") < (a.closedAt || "") ? -1 : 1);
+  const pending = S.enquiries.filter(e => OPEN.includes(e.status));
+  $("#sales").innerHTML = `
+    <div class="kpis">
+      <div class="kpi"><span>Sales (${days === 365 ? "12 months" : days + " days"})</span><b>${inr(sl.current.amount)}</b>${delta(sl.current.amount, sl.previous.amount)}</div>
+      <div class="kpi"><span>Received</span><b>${inr(sl.current.received)}</b><span class="delta flat">${sl.current.deals} deal${sl.current.deals === 1 ? "" : "s"} closed</span></div>
+      <div class="kpi"><span>Still to collect</span><b class="${sl.outstanding ? "due" : ""}">${inr(sl.outstanding)}</b><span class="delta flat">From all closed deals</span></div>
+      <div class="kpi"><span>Pending deals</span><b>${inr(st.openValue)}</b><span class="delta flat">${pending.length} not closed yet</span></div>
+      <div class="kpi"><span>All-time sales</span><b>${inr(sl.allTime.amount)}</b><span class="delta flat">${sl.allTime.deals} deals</span></div>
+    </div>
+    <div class="grid">
+      <div class="card c12"><h3>Sales per month</h3><p class="note">Amount of deals closed (status Won), last 12 months</p><div class="chart" id="chS"></div></div>
+      <div class="c12"><div class="table sale-table">${won.length ? `<div class="tr th"><span>Client</span><span>Closed on</span><span class="hide-m">Amount</span><span class="hide-m">Received</span><span class="hide-m">To collect</span><span>Add payment</span></div>` + won.map(e => {
+        const due = Math.max(0, (e.value || 0) - (e.paid || 0));
+        return `<div class="tr" data-id="${esc(e.id)}">
+          <span class="who" style="cursor:pointer" data-open-deal="${esc(e.id)}"><b>${esc(e.name)}</b><small>${esc(e.services.join(", ") || e.brand || "")}</small></span>
+          <span class="when">${e.closedAt ? esc(fmtDay(e.closedAt)) : "–"}</span>
+          <span class="money hide-m">${inr(e.value)}</span>
+          <span class="money hide-m">${inr(e.paid)}</span>
+          <span class="hide-m ${due ? "due" : "paid-full"}">${due ? inr(due) : "Paid"}</span>
+          <span class="amt money" style="display:none"></span>
+          <span class="meta">${inr(e.value)} · received ${inr(e.paid)} · <span class="${due ? "due" : "paid-full"}">${due ? inr(due) + " to collect" : "fully paid"}</span></span>
+          ${due ? `<span class="pay"><input type="number" min="1" max="${due}" inputmode="numeric" placeholder="up to ${inr(due)}" aria-label="Payment amount for ${esc(e.name)}" data-pay="${esc(e.id)}"><button class="btn btn--sm" type="button" data-paybtn="${esc(e.id)}">Add</button></span>` : `<span class="pay paid-full">✓ Fully paid</span>`}
+        </div>`; }).join("") : `<div class="empty"><b>No sales yet</b><span>Mark an enquiry as Won, or press “Add a sale” for clients who paid you directly.</span></div>`}</div></div>
+    </div>`;
+  barChart($("#chS"), sl.monthly, "amount", "#15803D", "Sales", { xfmt: fmtMonth, yfmt: inrShort, tfmt: inr, padL: 52 });
+  $("#sales").onclick = async e => {
+    const btn = e.target.closest("[data-paybtn]"), open = e.target.closest("[data-open-deal]");
+    if (btn) { const inp = $(`[data-pay="${btn.dataset.paybtn}"]`); const v = Number(inp.value), max = Number(inp.max); if (!(v > 0)) { inp.focus(); return; } if (max && v > max) { toast("That's more than what's still due (" + inr(max) + ")."); inp.focus(); return; } if (await patch(btn.dataset.paybtn, { addPayment: v }, true)) { toast("Payment added"); renderSales(main); } }
+    else if (open) openDrawer(open.dataset.openDeal, () => renderSales(main));
+  };
+}
+
 /* ================= follow-ups ================= */
 async function renderFollowups(main) {
   main.innerHTML = `<div class="page-head"><div><h1>Follow-<span>ups</span></h1><p class="sub">Who to call today, so no lead goes cold.</p></div></div><div id="fu"><div class="skeleton" style="height:240px"></div></div>`;
@@ -770,16 +882,26 @@ async function renderFollowups(main) {
     ];
     const item = e => `<div class="fu-item"><div class="info" data-id="${esc(e.id)}"><b>${esc(e.name)}</b><small>${esc(e.services.join(", "))} · ${esc(e.phone)}${e.followUp ? " · follow up " + esc(fmtDay(e.followUp)) : " · received " + esc(ago(e.createdAt))}</small></div>
       <div class="acts">${String(e.phone).replace(/[^\d+]/g, "") ? `<a class="btn btn--ink btn--sm" href="tel:${esc(String(e.phone).replace(/[^\d+]/g, ""))}"><svg><use href="#i-call"/></svg>Call</a>` : ""}
-      <button class="btn btn--sm" type="button" data-done="${esc(e.id)}">Mark contacted</button><button class="btn btn--sm" type="button" data-snooze="${esc(e.id)}">+1 day</button></div></div>`;
+      <button class="btn btn--sm" type="button" data-done="${esc(e.id)}">Done</button>
+      <button class="btn btn--sm" type="button" data-snooze="${esc(e.id)}" data-days="1">+1 day</button>
+      <button class="btn btn--sm" type="button" data-snooze="${esc(e.id)}" data-days="7">+1 week</button>
+      <label class="btn btn--sm" style="position:relative">Pick date<input type="date" data-date="${esc(e.id)}" aria-label="New follow-up date" style="position:absolute;inset:0;opacity:0;cursor:pointer"></label>
+      <button class="btn btn--sm" type="button" data-won="${esc(e.id)}" style="background:#D9F5E3">Won</button>
+      <button class="btn btn--sm" type="button" data-lost="${esc(e.id)}">Lost</button></div></div>`;
     const any = groups.some(g => g[1].length);
     $("#fu").innerHTML = any ? groups.filter(g => g[1].length).map(([title, list]) => `<section class="fu-group"><h2>${title}<i>${list.length}</i></h2>${list.map(item).join("")}</section>`).join("")
       : `<div class="card empty"><b>You're all caught up</b><span>Set a follow-up date on an enquiry and it will show up here.</span></div>`;
   };
   draw();
+  $("#fu").addEventListener("change", async e => { const d = e.target.closest("[data-date]"); if (d && d.value) { await patch(d.dataset.date, { followUp: d.value }); draw(); } });
   $("#fu").addEventListener("click", async e => {
+    if (e.target.closest("[data-date]")) return;
     const done = e.target.closest("[data-done]"), snz = e.target.closest("[data-snooze]"), info = e.target.closest(".info");
+    const won = e.target.closest("[data-won]"), lost = e.target.closest("[data-lost]");
     if (done) { const en = S.enquiries.find(x => x.id === done.dataset.done); await patch(en.id, { status: en.status === "New" ? "Contacted" : en.status, followUp: "", note: "Followed up" }); draw(); }
-    else if (snz) { const en = S.enquiries.find(x => x.id === snz.dataset.snooze); await patch(en.id, { followUp: addDays(en.followUp && en.followUp > today() ? en.followUp : today(), 1) }); draw(); }
+    else if (snz) { const en = S.enquiries.find(x => x.id === snz.dataset.snooze); await patch(en.id, { followUp: addDays(en.followUp && en.followUp > today() ? en.followUp : today(), +snz.dataset.days) }); draw(); }
+    else if (won) { await patch(won.dataset.won, { status: "Won", followUp: "" }); draw(); openDrawer(won.dataset.won, draw); toast("Marked as won. Add the amount here."); }
+    else if (lost) { await patch(lost.dataset.lost, { status: "Lost", followUp: "" }); draw(); }
     else if (info) openDrawer(info.dataset.id, draw);
   });
 }

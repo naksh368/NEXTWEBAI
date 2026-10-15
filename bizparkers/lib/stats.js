@@ -60,8 +60,9 @@ function computeStats(allEvents, allEnquiries, days, now = new Date()) {
 
   const ev = allEvents.filter(e => inCur(e.ts));
   const evPrev = allEvents.filter(e => inPrev(e.ts));
-  const enq = allEnquiries.filter(e => inCur(e.createdAt) && e.status !== 'Spam');
-  const enqPrev = allEnquiries.filter(e => inPrev(e.createdAt) && e.status !== 'Spam');
+  const fromSite = e => e.status !== 'Spam' && !(e.source && e.source.ref === 'manual');
+  const enq = allEnquiries.filter(e => inCur(e.createdAt) && fromSite(e));
+  const enqPrev = allEnquiries.filter(e => inPrev(e.createdAt) && fromSite(e));
 
   // daily series
   const byDay = new Map([...cur].map(k => [k, { date: k, visitors: new Set(), views: 0, enquiries: 0 }]));
@@ -93,6 +94,21 @@ function computeStats(allEvents, allEnquiries, days, now = new Date()) {
 
   const open = allEnquiries.filter(e => !['Won', 'Lost', 'Spam'].includes(e.status));
   const today = dayKey(now);
+
+  // sales: a deal counts as a sale on the day it was closed (status Won)
+  const won = allEnquiries.filter(e => e.status === 'Won');
+  const closedOn = e => e.closedAt || dayKey(e.updatedAt || e.createdAt);
+  const sum = (list, k) => list.reduce((a, e) => a + (Number(e[k]) || 0), 0);
+  const wonCur = won.filter(e => cur.has(closedOn(e))), wonPrev = won.filter(e => prev.has(closedOn(e)));
+  const months = [];
+  for (let i = 11; i >= 0; i--) { const d = new Date(now.getFullYear(), now.getMonth() - i, 15); months.push(dayKey(d).slice(0, 7)); }
+  const sales = {
+    current: { amount: sum(wonCur, 'value'), received: sum(wonCur, 'paid'), deals: wonCur.length },
+    previous: { amount: sum(wonPrev, 'value'), received: sum(wonPrev, 'paid'), deals: wonPrev.length },
+    allTime: { amount: sum(won, 'value'), received: sum(won, 'paid'), deals: won.length },
+    outstanding: won.reduce((a, e) => a + Math.max(0, (Number(e.value) || 0) - (Number(e.paid) || 0)), 0),
+    monthly: months.map(m => ({ date: m + '-01', amount: sum(won.filter(e => closedOn(e).slice(0, 7) === m), 'value') }))
+  };
   const statuses = ['New', 'Contacted', 'Proposal sent', 'Won', 'Lost'];
 
   return {
@@ -112,6 +128,7 @@ function computeStats(allEvents, allEnquiries, days, now = new Date()) {
       const list = allEnquiries.filter(e => e.status === s);
       return { label: s, value: list.length, amount: list.reduce((a, e) => a + (Number(e.value) || 0), 0) };
     }),
+    sales,
     openValue: open.reduce((a, e) => a + (Number(e.value) || 0), 0),
     followUpsDue: open.filter(e => e.followUp && e.followUp <= today).length,
     live: new Set(allEvents.filter(e => now - new Date(e.ts) < 5 * 60e3).map(e => e.sid)).size

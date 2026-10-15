@@ -113,6 +113,8 @@ function cookie(req, value, maxAgeSec) {
 /* ---------------- enquiries ---------------- */
 function newId() { return 'BP-' + Date.now().toString(36).toUpperCase() + crypto.randomBytes(2).toString('hex').toUpperCase(); }
 const publicEnquiry = ({ token, ...rest }) => rest;
+const money = v => Math.max(0, Math.min(1e10, Math.round(Number(v) || 0)));
+const ymd = v => (/^\d{4}-\d{2}-\d{2}$/.test(v || '') ? v : '');
 
 function validateEnquiry(b) {
   const name = str(b.name, 80);
@@ -256,11 +258,34 @@ async function api(req, res, url) {
       return send(res, 200, { ok: true, enquiries: list, statuses: STATUSES });
     }
 
+    if (p === '/api/admin/enquiries' && m === 'POST') {
+      const b = await readJson(req);
+      const name = str(b.name, 80);
+      if (name.length < 2) return send(res, 400, { ok: false, error: 'Add the client name.' });
+      const status = STATUSES.includes(b.status) ? b.status : 'New';
+      const now = new Date().toISOString();
+      if (money(b.value) && money(b.paid) > money(b.value)) return send(res, 400, { ok: false, error: "Received can't be more than the amount." });
+      const e = {
+        id: newId(), token: crypto.randomBytes(16).toString('hex'),
+        createdAt: now, updatedAt: now, status, starred: false,
+        value: money(b.value), paid: money(b.paid), closedAt: status === 'Won' ? (ymd(b.closedAt) || now.slice(0, 10)) : '',
+        followUp: ymd(b.followUp), tags: [].concat(b.tags || []).map(t => str(t, 30)).filter(Boolean).slice(0, 10),
+        name, phone: str(b.phone, 24), email: str(b.email, 120),
+        services: [].concat(b.services || []).map(s => str(s, 40)).filter(Boolean).slice(0, 10),
+        budget: '', message: str(b.message, 1500), brand: str(b.brand, 100), hasSite: '', website: '', adSpend: '', improve: [],
+        source: { ref: 'manual', landing: '', utm: '', dev: '' }, sid: '', vid: '',
+        activity: [{ ts: now, type: 'created', text: status === 'Won' ? 'Sale added manually in the admin panel' : 'Added manually in the admin panel' }]
+      };
+      if (e.paid) e.activity.push({ ts: now, type: 'payment', text: `Payment received: ₹${e.paid.toLocaleString('en-IN')}` });
+      await store.createEnquiry(e);
+      return send(res, 201, { ok: true, enquiry: publicEnquiry(e) });
+    }
+
     if (p === '/api/admin/enquiries.csv' && m === 'GET') {
       const list = await store.listEnquiries();
       const cols = [['ID', 'id'], ['Received', 'createdAt'], ['Status', 'status'], ['Name', 'name'], ['Phone', 'phone'], ['Email', 'email'],
         ['Looking for', 'services'], ['Budget', 'budget'], ['About', 'message'], ['Business', 'brand'], ['Website', 'website'],
-        ['Ad spend', 'adSpend'], ['Wants to improve', 'improve'], ['Deal value', 'value'], ['Follow-up', 'followUp'], ['Tags', 'tags'], ['Source', 'source']];
+        ['Ad spend', 'adSpend'], ['Wants to improve', 'improve'], ['Deal value', 'value'], ['Received', 'paid'], ['Closed on', 'closedAt'], ['Follow-up', 'followUp'], ['Tags', 'tags'], ['Source', 'source']];
       const cell = v => { let s = Array.isArray(v) ? v.join(', ') : v && typeof v === 'object' ? (v.utm || v.ref || '') : String(v ?? ''); if (/^[=+\-@]/.test(s) && !/^\+[\d\s()-]+$/.test(s)) s = "'" + s; return '"' + s.replace(/"/g, '""') + '"'; };
       const csv = '﻿' + [cols.map(c => cell(c[0])).join(','), ...list.map(e => cols.map(c => cell(e[c[1]])).join(','))].join('\n');
       return send(res, 200, csv, { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': `attachment; filename="bizparkers-enquiries-${new Date().toISOString().slice(0, 10)}.csv"` });
@@ -275,9 +300,21 @@ async function api(req, res, url) {
       if (b.status !== undefined && STATUSES.includes(b.status) && b.status !== e.status) {
         e.activity.push({ ts: now, type: 'status', text: `Status changed from ${e.status} to ${b.status}` });
         e.status = b.status;
+        if (b.status === 'Won' && !e.closedAt) e.closedAt = now.slice(0, 10);
       }
       if (b.starred !== undefined) e.starred = !!b.starred;
-      if (b.value !== undefined) e.value = Math.max(0, Math.min(1e9, Math.round(Number(b.value) || 0)));
+      if (b.value !== undefined) e.value = money(b.value);
+      const total = Number(e.value) || 0;
+      if (b.paid !== undefined && total && money(b.paid) > total) return send(res, 400, { ok: false, error: `Received can't be more than the deal amount (₹${total.toLocaleString('en-IN')}).` });
+      if (b.addPayment !== undefined && total && (Number(e.paid) || 0) + money(b.addPayment) > total) {
+        return send(res, 400, { ok: false, error: `That's more than what's still due (₹${Math.max(0, total - (Number(e.paid) || 0)).toLocaleString('en-IN')}).` });
+      }
+      if (b.paid !== undefined) e.paid = money(b.paid);
+      if (b.addPayment !== undefined && money(b.addPayment) > 0) {
+        e.paid = (Number(e.paid) || 0) + money(b.addPayment);
+        e.activity.push({ ts: now, type: 'payment', text: `Payment received: ₹${money(b.addPayment).toLocaleString('en-IN')}` });
+      }
+      if (b.closedAt !== undefined) e.closedAt = /^\d{4}-\d{2}-\d{2}$/.test(b.closedAt) ? b.closedAt : '';
       if (b.followUp !== undefined) e.followUp = /^\d{4}-\d{2}-\d{2}$/.test(b.followUp) ? b.followUp : '';
       if (b.tags !== undefined) e.tags = [].concat(b.tags).map(t => str(t, 30)).filter(Boolean).slice(0, 10);
       if (b.note) e.activity.push({ ts: now, type: 'note', text: str(b.note, 2000) });
@@ -310,14 +347,18 @@ async function api(req, res, url) {
 
 /* ---------------- static files (gzip/brotli, cached in memory) ---------------- */
 const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.json': 'application/json',
-  '.svg': 'image/svg+xml', '.png': 'image/png', '.webp': 'image/webp', '.jpg': 'image/jpeg', '.ico': 'image/x-icon', '.txt': 'text/plain', '.xml': 'application/xml' };
+  '.svg': 'image/svg+xml', '.png': 'image/png', '.webp': 'image/webp', '.jpg': 'image/jpeg', '.ico': 'image/x-icon', '.txt': 'text/plain', '.xml': 'application/xml',
+  '.webmanifest': 'application/manifest+json' };
 const fileCache = new Map();
 
-function loadFile(file) {
+// Pages may contain %%SITE_URL%% (canonical, Open Graph, structured data); it becomes SITE_URL or the request's origin.
+function loadFile(file, site) {
   const stat = fs.statSync(file);
-  const hit = fileCache.get(file);
+  const key = file + '|' + (site || '');
+  const hit = fileCache.get(key);
   if (hit && hit.mtime === stat.mtimeMs) return hit;
-  const raw = fs.readFileSync(file);
+  let raw = fs.readFileSync(file);
+  if (site && /\.html$/.test(file)) raw = Buffer.from(raw.toString('utf8').split('%%SITE_URL%%').join(site));
   const ext = path.extname(file);
   const text = /\.(html|css|js|json|svg|txt|xml)$/.test(ext);
   const entry = {
@@ -326,34 +367,39 @@ function loadFile(file) {
     br: text ? zlib.brotliCompressSync(raw) : null,
     gz: text ? zlib.gzipSync(raw, { level: 9 }) : null
   };
-  fileCache.set(file, entry);
+  fileCache.set(key, entry);
   return entry;
 }
 
-function serveFile(req, res, file, cache) {
+function serveFile(req, res, file, cache, status = 200) {
   let f;
-  try { f = loadFile(file); } catch (e) { return send(res, 404, 'Not found'); }
+  const site = (process.env.SITE_URL || origin(req)).replace(/\/+$/, '');
+  try { f = loadFile(file, site); } catch (e) { return send(res, 404, 'Not found'); }
   const headers = { 'Content-Type': f.type, 'Cache-Control': cache, ETag: f.etag, Vary: 'Accept-Encoding' };
-  if (req.headers['if-none-match'] === f.etag) { res.writeHead(304, headers); return res.end(); }
+  if (status === 200 && req.headers['if-none-match'] === f.etag) { res.writeHead(304, headers); return res.end(); }
   const ae = String(req.headers['accept-encoding'] || '');
   let body = f.raw;
   if (f.br && /\bbr\b/.test(ae)) { body = f.br; headers['Content-Encoding'] = 'br'; }
   else if (f.gz && /\bgzip\b/.test(ae)) { body = f.gz; headers['Content-Encoding'] = 'gzip'; }
   headers['Content-Length'] = body.length;
-  res.writeHead(200, headers);
+  res.writeHead(status, headers);
   res.end(req.method === 'HEAD' ? undefined : body);
 }
 
 function serveStatic(req, res, url) {
   let p = decodeURIComponent(url.pathname);
-  if (p === '/robots.txt') return send(res, 200, `User-agent: *\nDisallow: /admin\nDisallow: /api/\nSitemap: ${origin(req)}/sitemap.xml\n`, { 'Cache-Control': 'public, max-age=3600' });
-  if (p === '/sitemap.xml') return send(res, 200, `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${origin(req)}/</loc><changefreq>weekly</changefreq></url></urlset>\n`, { 'Content-Type': 'application/xml', 'Cache-Control': 'public, max-age=3600' });
+  if (p === '/robots.txt') return send(res, 200, `User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /api/\nSitemap: ${(process.env.SITE_URL || origin(req)).replace(/\/+$/, '')}/sitemap.xml\n`, { 'Cache-Control': 'public, max-age=3600' });
+  if (p === '/sitemap.xml') {
+    const site = (process.env.SITE_URL || origin(req)).replace(/\/+$/, ''), day = new Date().toISOString().slice(0, 10);
+    return send(res, 200, `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n<url><loc>${site}/</loc><lastmod>${day}</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>\n<url><loc>${site}/privacy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>\n</urlset>\n`, { 'Content-Type': 'application/xml', 'Cache-Control': 'public, max-age=3600' });
+  }
+  if (p === '/privacy' || p === '/privacy/') return serveFile(req, res, path.join(PUBLIC_DIR, 'privacy.html'), 'public, max-age=3600');
   if (p === '/admin') { res.writeHead(301, { Location: '/admin/' }); return res.end(); }
   if (p === '/' || p === '/index.html') return serveFile(req, res, path.join(PUBLIC_DIR, 'index.html'), 'no-cache');
   if (p === '/admin/') return serveFile(req, res, path.join(PUBLIC_DIR, 'admin', 'index.html'), 'no-store');
   const file = path.normalize(path.join(PUBLIC_DIR, p));
   if (!file.startsWith(PUBLIC_DIR + path.sep) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
-    return serveFile(req, res, path.join(PUBLIC_DIR, 'index.html'), 'no-cache'); // single page: unknown paths show the site
+    return serveFile(req, res, path.join(PUBLIC_DIR, '404.html'), 'no-cache', 404);
   }
   return serveFile(req, res, file, p.startsWith('/assets/') ? 'public, max-age=604800' : 'no-cache');
 }

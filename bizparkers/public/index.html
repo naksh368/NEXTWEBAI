@@ -12,7 +12,8 @@
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@700&display=swap">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@700&display=swap"></noscript>
 <style>
 /* Layout: bold "sticker-board" studio page. Thick ink outlines, hard offset shadows,
    blue + orange from the Bizparkers mark, one big type-driven hero, crossing marquees. */
@@ -226,33 +227,33 @@ body.menu-open .mbar{transform:translateY(110%)}
 .svc-link svg{width:16px;height:16px;transition:transform .2s}
 .svc-link:hover svg{transform:translateX(4px)}
 
-/* ---------- what we can build (by business type) ---------- */
-.work{background:var(--paper);color:var(--ink)}
-.biz-tabs{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:26px}
-.biz-tabs button{font:inherit;font-family:var(--f-display);font-weight:700;font-size:1rem;color:var(--ink);background:var(--card);border:var(--bw) solid var(--ink);border-radius:999px;padding:.6rem 1.1rem;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:background .15s,color .15s,border-color .15s}
-.biz-tabs button:hover{background:color-mix(in srgb,var(--yellow) 35%,var(--card))}
-.biz-tabs button[aria-selected="true"]{background:var(--ink);color:var(--paper);box-shadow:3px 3px 0 var(--orange)}
-.biz-tabs svg{width:18px;height:18px}
-@media (max-width:560px){.biz-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px}.biz-tabs button{font-size:.86rem;padding:.55rem .7rem;justify-content:center;text-align:center}.biz-tabs svg{display:none}}
-.biz-panel{display:grid;gap:18px;animation:stepIn .35s cubic-bezier(.2,.8,.2,1) both}
-.build-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
-@media (max-width:1100px){.build-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:560px){.build-grid{grid-template-columns:1fr}}
-.build{background:var(--card);color:var(--ink);border:var(--bw) solid var(--ink);box-shadow:5px 5px 0 var(--ink);border-radius:var(--radius);padding:20px;display:flex;flex-direction:column;gap:10px;min-width:0;transition:transform .2s ease}
-.build:hover{transform:translate(-3px,-3px);box-shadow:8px 8px 0 var(--ink)}
-.build .bi{width:46px;height:46px;border-radius:12px;border:var(--bw) solid var(--ink);display:grid;place-items:center;background:var(--yellow)}
-.build:nth-child(2) .bi{background:var(--orange);color:#fff}
-.build:nth-child(3) .bi{background:var(--blue);color:#fff}
-.build:nth-child(4) .bi{background:var(--card)}
-.build .bi svg{width:22px;height:22px}
-.build h3{font-size:1.2rem;font-weight:800;line-height:1.15}
-.build p{color:var(--muted);font-size:.93rem}
-.build .gain{margin-top:auto;font-family:var(--f-mono);font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);display:flex;align-items:center;gap:6px;padding-top:10px;border-top:1.5px dashed color-mix(in srgb,var(--ink) 25%,transparent)}
-.build .gain svg{width:14px;height:14px;color:var(--orange)}
-.plan-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;padding:18px 22px;background:var(--yellow);border:var(--bw) solid var(--ink);border-radius:var(--radius)}
-.plan-bar p{font-size:1.05rem}
-.plan-bar p b{color:var(--orange)}
-.plan-bar small{display:block;color:var(--ink);opacity:.75;font-size:.88rem;margin-top:2px}
+/* ---------- free growth audit (one short offer, one small form) ---------- */
+.audit{padding-block:clamp(56px,8vw,104px)}
+.audit-card{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);border:var(--bw) solid var(--ink);border-radius:26px;overflow:hidden;box-shadow:10px 10px 0 var(--ink);background:var(--card)}
+@media (max-width:900px){.audit-card{grid-template-columns:1fr}}
+.audit-pitch{padding:clamp(24px,4vw,48px);display:grid;gap:18px;align-content:start;background:var(--yellow)}
+.audit-pitch h2{font-size:clamp(2.1rem,4.6vw,3.6rem);font-weight:800;text-transform:uppercase;line-height:.95}
+.audit-pitch h2 span{color:var(--orange)}
+.audit-pitch > p{font-size:1.08rem;max-width:460px}
+.audit-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.audit-list li{display:flex;gap:10px;align-items:flex-start;font-weight:600}
+.audit-list svg{flex:none;width:22px;height:22px;color:var(--card);margin-top:1px}
+.audit-tag{justify-self:start;font-family:var(--f-mono);font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;background:var(--ink);color:var(--yellow);border-radius:999px;padding:.35rem .75rem}
+@media (max-width:560px){.audit-pitch{gap:12px}.audit-pitch > p{display:none}.audit-list li{font-size:.93rem}.audit-card{box-shadow:6px 6px 0 var(--ink)}}
+.audit-form{padding:clamp(24px,4vw,44px);display:grid;gap:14px;align-content:center;border-left:var(--bw) solid var(--ink)}
+@media (max-width:900px){.audit-form{border-left:0;border-top:var(--bw) solid var(--ink)}}
+.audit-form h3{font-size:1.45rem;font-weight:800}
+.audit-form .af{display:grid;gap:6px}
+.audit-form label{font-family:var(--f-mono);font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.audit-form input{font:inherit;font-size:1.05rem;color:var(--ink);background:var(--paper);border:var(--bw) solid var(--ink);border-radius:14px;padding:.85rem 1rem;width:100%;min-width:0}
+.audit-form input:focus{outline:none;box-shadow:4px 4px 0 var(--orange)}
+.audit-form input[aria-invalid="true"]{border-color:#C0261A}
+.audit-form .btn{justify-content:center;width:100%;padding:1rem}
+.audit-form .small{font-size:.84rem;color:var(--muted);text-align:center}
+.audit-ok{display:grid;gap:10px;text-align:center;justify-items:center}
+.audit-ok .tick{width:70px;height:70px;border-radius:50%;background:var(--orange);border:var(--bw) solid var(--ink);box-shadow:4px 4px 0 var(--ink);display:grid;place-items:center;animation:popIn .5s cubic-bezier(.2,1.6,.4,1) both}
+.audit-ok .tick svg{width:34px;height:34px;color:#fff}
+.audit-ok h3{font-size:1.6rem}
 
 /* ---------- why us (swipe) ---------- */
 .why-track{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(280px,340px);gap:20px;overflow-x:auto;scroll-snap-type:x mandatory;padding:6px 6px 22px;scrollbar-width:thin;overscroll-behavior-x:contain}
@@ -514,7 +515,7 @@ footer .wrap{padding-block:56px 32px;display:grid;gap:40px}
 /* ---------- performance: skip work for things you can't see ---------- */
 .paused .track,.paused .badge svg.ring,.paused .chip .dot{animation-play-state:paused}
 .track{will-change:transform}
-#reveal,#services,#work,#why,#process,#bundles,#faq,#contact,footer{content-visibility:auto;contain-intrinsic-size:auto 900px}
+#reveal,#services,#audit,#why,#process,#bundles,#faq,#contact,footer{content-visibility:auto;contain-intrinsic-size:auto 900px}
 
 /* ---------- reveal ---------- */
 .reveal{transition:opacity .7s ease, transform .7s cubic-bezier(.2,.8,.2,1)}
@@ -559,10 +560,10 @@ footer .wrap{padding-block:56px 32px;display:grid;gap:40px}
 <!-- ============ NAV ============ -->
 <header class="nav" id="top">
   <div class="wrap">
-    <a class="brand" href="#top" aria-label="Bizparkers home"><img src="assets/logo-full.png" alt="Bizparkers" width="160" height="39"></a>
+    <a class="brand" href="#top" aria-label="Bizparkers home"><img src="data:image/webp;base64,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" alt="Bizparkers" width="140" height="34" fetchpriority="high" decoding="sync"></a>
     <nav class="nav-links" aria-label="Main">
       <a href="#services">Services</a>
-      <a href="#work">What we build</a>
+      <a href="#audit">Free audit</a>
       <a href="#process">Process</a>
       <a href="#why">Why us</a>
       <a href="#faq">FAQ</a>
@@ -574,7 +575,7 @@ footer .wrap{padding-block:56px 32px;display:grid;gap:40px}
     <div class="wrap">
       <nav aria-label="Mobile">
         <a href="#services">Services</a>
-        <a href="#work">What we build</a>
+        <a href="#audit">Free audit</a>
         <a href="#process">Process</a>
         <a href="#why">Why us</a>
         <a href="#faq">FAQ</a>
@@ -617,7 +618,7 @@ footer .wrap{padding-block:56px 32px;display:grid;gap:40px}
         <p class="hero-copy"><strong>Bizparkers is a digital studio for growing businesses.</strong> Websites, mobile apps, AI automation, branding, ads and Google SEO, all from one team that stays with you after launch.</p>
         <div class="hero-ctas">
           <a class="btn btn--orange" href="#contact">Start a project <svg><use href="#i-arrow"/></svg></a>
-          <a class="btn btn--ghost" href="#work">What we can build</a>
+          <a class="btn btn--ghost" href="#audit">Get a free audit</a>
         </div>
         <div class="trust">
           <span><svg><use href="#i-check"/></svg>Free consultation</span>
@@ -779,97 +780,37 @@ footer .wrap{padding-block:56px 32px;display:grid;gap:40px}
   </div>
 </section>
 
-<!-- ============ WHAT WE CAN BUILD ============ -->
-<section class="sec work" id="work" aria-labelledby="work-title">
+<!-- ============ FREE GROWTH AUDIT ============ -->
+<section class="audit" id="audit" aria-labelledby="audit-title">
   <div class="wrap">
-    <div class="sec-head">
-      <div>
-        <span class="eyebrow">Pick your business</span>
-        <h2 id="work-title">What we can <span class="hl-orange">build</span> for you</h2>
+    <div class="audit-card">
+      <div class="audit-pitch">
+        <span class="audit-tag">Free · No obligation</span>
+        <h2 id="audit-title">Get a free <span>growth audit</span></h2>
+        <p>Not sure what your business needs? Send us your website or Instagram. Within 24 hours you get a short, personal review with the 3 changes that would bring you the most customers.</p>
+        <ul class="audit-list">
+          <li><svg><use href="#i-check"/></svg>What's stopping visitors from enquiring</li>
+          <li><svg><use href="#i-check"/></svg>How you show up on Google and Maps</li>
+          <li><svg><use href="#i-check"/></svg>Where AI or automation can save you hours</li>
+        </ul>
       </div>
-      <p>Choose your type of business to see the websites, apps and automations that would make the biggest difference.</p>
+      <form class="audit-form" id="auditForm" novalidate>
+        <div id="auditFields" style="display:grid;gap:14px">
+          <h3>Where should we send it?</h3>
+          <div class="af"><label for="a-name">Your name</label><input id="a-name" autocomplete="name" placeholder="e.g. Rahul"></div>
+          <div class="af"><label for="a-phone">WhatsApp number</label><input id="a-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+91 98765 43210"></div>
+          <div class="af"><label for="a-link">Website or Instagram</label><input id="a-link" inputmode="url" placeholder="yourwebsite.com or @yourbrand"></div>
+          <p class="err" id="auditErr" hidden></p>
+          <button class="btn btn--orange" type="submit" id="auditBtn">Send me my free audit <svg><use href="#i-arrow"/></svg></button>
+          <p class="small">Takes 20 seconds. No spam, ever.</p>
+        </div>
+        <div class="audit-ok" id="auditOk" hidden>
+          <span class="tick"><svg><use href="#i-tick"/></svg></span>
+          <h3 id="auditOkTitle" tabindex="-1">Request received!</h3>
+          <p class="muted">We'll send your audit on WhatsApp within 24 hours.</p>
+        </div>
+      </form>
     </div>
-    <div class="biz-tabs" role="tablist" aria-label="Type of business">
-      <button type="button" role="tab" id="tab-restaurants" aria-controls="panel-restaurants" aria-selected="true" tabindex="0"><svg><use href="#i-mega"/></svg>Restaurants &amp; cafés</button>
-      <button type="button" role="tab" id="tab-shops" aria-controls="panel-shops" aria-selected="false" tabindex="-1"><svg><use href="#i-cart"/></svg>Shops &amp; showrooms</button>
-      <button type="button" role="tab" id="tab-realestate" aria-controls="panel-realestate" aria-selected="false" tabindex="-1"><svg><use href="#i-web"/></svg>Real estate</button>
-      <button type="button" role="tab" id="tab-startups" aria-controls="panel-startups" aria-selected="false" tabindex="-1"><svg><use href="#i-bolt"/></svg>Startups</button>
-      <button type="button" role="tab" id="tab-education" aria-controls="panel-education" aria-selected="false" tabindex="-1"><svg><use href="#i-pen"/></svg>Coaches &amp; institutes</button>
-      <button type="button" role="tab" id="tab-services" aria-controls="panel-services" aria-selected="false" tabindex="-1"><svg><use href="#i-search"/></svg>Local services</button>
-    </div>
-    <div class="biz-panel" role="tabpanel" id="panel-restaurants" aria-labelledby="tab-restaurants">
-      <div class="build-grid">
-        <article class="build"><span class="bi"><svg><use href="#i-web"/></svg></span><h3>Online menu &amp; ordering site</h3><p>Customers order straight from you, without paying aggregator commission.</p><span class="gain"><svg><use href="#i-arrow"/></svg>More direct orders</span></article>
-        <article class="build"><span class="bi"><svg><use href="#i-bot"/></svg></span><h3>WhatsApp booking &amp; order bot</h3><p>Takes table bookings and answers menu questions while you&#x27;re busy cooking.</p><span class="gain"><svg><use href="#i-arrow"/></svg>Fewer missed calls</span></article>
-        <article class="build"><span class="bi"><svg><use href="#i-search"/></svg></span><h3>Top spot on Google Maps</h3><p>Rank for “cafe near me” and get more reviews from happy diners.</p><span class="gain"><svg><use href="#i-arrow"/></svg>More walk-ins</span></article>
-        <article class="build"><span class="bi"><svg><use href="#i-phone"/></svg></span><h3>Reels &amp; local ad campaigns</h3><p>Short videos and ads that reach people within a few kilometres.</p><span class="gain"><svg><use href="#i-arrow"/></svg>Fuller tables</span></article>
-      </div>
-      <div class="plan-bar">
-        <p>Want this for <b>your restaurant</b>?<small>We'll send a free plan with timeline and a fixed quote.</small></p>
-        <a class="btn btn--orange" href="#contact" data-open="Website,AI chatbot,Google SEO,Digital marketing">Get my free plan <svg><use href="#i-arrow"/></svg></a>
-      </div>
-    </div>
-    <div class="biz-panel" role="tabpanel" id="panel-shops" aria-labelledby="tab-shops" hidden>
-      <div class="build-grid">
-        <article class="build"><span class="bi"><svg><use href="#i-cart"/></svg></span><h3>Catalogue site with UPI checkout</h3><p>Sell beyond your street with an online store that&#x27;s easy to manage.</p><span class="gain"><svg><use href="#i-arrow"/></svg>Sales 24/7</span></article>
-        <article class="build"><span class="bi"><svg><use href="#i-app"/></svg></span><h3>Stock &amp; billing web app</h3><p>Track inventory, GST bills and daily sales from your phone.</p><span class="gain"><svg><use href="#i-arrow"/></svg>Hours saved weekly</span></article>
-        <article class="build"><span class="bi"><svg><use href="#i-search"/></svg></span><h3>“Near me” Google ranking</h3><p>Show up first when people nearby search for what you sell.</p><span class="gain"><svg><use href="#i-arrow"/></svg>More footfall</span></article>
-        <article class="build"><span class="bi"><svg><use href="#i-mega"/></svg></span><h3>Festive sale campaigns</h3><p>Ads and posts timed for Diwali, weddings and season sales.</p><span class="gain"><svg><use href="#i-arrow"/></svg>Bigger sale days</span></article>
-      </div>
-      <div class="plan-bar">
-        <p>Want this for <b>your shop</b>?<small>We'll send a free plan with timeline and a fixed quote.</small></p>
-        <a class="btn btn--orange" href="#contact" data-open="E-commerce,Web app,Google SEO,Digital marketing">Get my free plan <svg><use href="#i-arrow"/></svg></a>
-      </div>
-    </div>
-    <div class="biz-panel" role="tabpanel" id="panel-realestate" aria-labelledby="tab-realestate" hidden>
-      <div class="build-grid">
-        <article class="build"><span class="bi"><svg><use href="#i-web"/></svg></span><h3>Property listing website</h3><p>Projects, floor plans and prices with filters buyers actually use.</p><span class="gain"><svg><use href="#i-arrow"/></svg>Better-quality leads</span></article>
-        <article class="build"><span class="bi"><svg><use href="#i-bot"/></svg></span><h3>24/7 lead-qualifying bot</h3><p>Asks budget, location and timeline before your team ever calls.</p><span class="gain"><svg><use href="#i-arrow"/></svg>Only serious buyers</span></article>
-        <article class="build"><span class="bi"><svg><use href="#i-bolt"/></svg></span><h3>Auto follow-ups &amp; site-visit reminders</h3><p>No lead goes cold: messages and reminders go out on their own.</p><span class="gain"><svg><use href="#i-arrow"/></svg>More site visits</span></article>
-        <article class="build"><span class="bi"><svg><use href="#i-mega"/></svg></span><h3>Lead ads for new launches</h3><p>Meta and Google campaigns that fill your calendar with enquiries.</p><span class="gain"><svg><use href="#i-arrow"/></svg>Lower cost per lead</span></article>
-      </div>
-      <div class="plan-bar">
-        <p>Want this for <b>your real estate business</b>?<small>We'll send a free plan with timeline and a fixed quote.</small></p>
-        <a class="btn btn--orange" href="#contact" data-open="Website,AI chatbot,AI automation,Digital marketing">Get my free plan <svg><use href="#i-arrow"/></svg></a>
-      </div>
-    </div>
-    <div class="biz-panel" role="tabpanel" id="panel-startups" aria-labelledby="tab-startups" hidden>
-      <div class="build-grid">
-        <article class="build"><span class="bi"><svg><use href="#i-app"/></svg></span><h3>MVP web app or SaaS</h3><p>Launch a working product fast, built to grow with your users.</p><span class="gain"><svg><use href="#i-arrow"/></svg>Launch in weeks</span></article>
-        <article class="build"><span class="bi"><svg><use href="#i-phone"/></svg></span><h3>Android &amp; iOS app</h3><p>One codebase, published on the Play Store and App Store.</p><span class="gain"><svg><use href="#i-arrow"/></svg>Reach mobile users</span></article>
-        <article class="build"><span class="bi"><svg><use href="#i-pen"/></svg></span><h3>Brand identity &amp; pitch-ready site</h3><p>Logo, colours and a website that makes investors take you seriously.</p><span class="gain"><svg><use href="#i-arrow"/></svg>Look funded</span></article>
-        <article class="build"><span class="bi"><svg><use href="#i-search"/></svg></span><h3>Launch page that ranks</h3><p>An SEO-ready landing page to collect sign-ups from day one.</p><span class="gain"><svg><use href="#i-arrow"/></svg>Early users</span></article>
-      </div>
-      <div class="plan-bar">
-        <p>Want this for <b>your startup</b>?<small>We'll send a free plan with timeline and a fixed quote.</small></p>
-        <a class="btn btn--orange" href="#contact" data-open="Web app,Mobile app,Logo &amp; branding,Google SEO">Get my free plan <svg><use href="#i-arrow"/></svg></a>
-      </div>
-    </div>
-    <div class="biz-panel" role="tabpanel" id="panel-education" aria-labelledby="tab-education" hidden>
-      <div class="build-grid">
-        <article class="build"><span class="bi"><svg><use href="#i-web"/></svg></span><h3>Course website with batch sign-ups</h3><p>Show courses, results and fees, and take admissions online.</p><span class="gain"><svg><use href="#i-arrow"/></svg>More admissions</span></article>
-        <article class="build"><span class="bi"><svg><use href="#i-phone"/></svg></span><h3>Student app</h3><p>Notes, schedules, tests and announcements in one app.</p><span class="gain"><svg><use href="#i-arrow"/></svg>Happier students</span></article>
-        <article class="build"><span class="bi"><svg><use href="#i-bolt"/></svg></span><h3>Fee &amp; attendance automation</h3><p>Reminders and reports go out automatically every month.</p><span class="gain"><svg><use href="#i-arrow"/></svg>No chasing fees</span></article>
-        <article class="build"><span class="bi"><svg><use href="#i-mega"/></svg></span><h3>Admission season ads</h3><p>Targeted campaigns to parents and students in your city.</p><span class="gain"><svg><use href="#i-arrow"/></svg>Fuller batches</span></article>
-      </div>
-      <div class="plan-bar">
-        <p>Want this for <b>your institute</b>?<small>We'll send a free plan with timeline and a fixed quote.</small></p>
-        <a class="btn btn--orange" href="#contact" data-open="Website,Mobile app,AI automation,Digital marketing">Get my free plan <svg><use href="#i-arrow"/></svg></a>
-      </div>
-    </div>
-    <div class="biz-panel" role="tabpanel" id="panel-services" aria-labelledby="tab-services" hidden>
-      <div class="build-grid">
-        <article class="build"><span class="bi"><svg><use href="#i-web"/></svg></span><h3>Portfolio website that gets calls</h3><p>Show your best work and make it one tap to call or enquire.</p><span class="gain"><svg><use href="#i-arrow"/></svg>More enquiries</span></article>
-        <article class="build"><span class="bi"><svg><use href="#i-search"/></svg></span><h3>Top 3 on Google Maps</h3><p>For interior designers, CAs, repair pros and every local expert.</p><span class="gain"><svg><use href="#i-arrow"/></svg>Found first</span></article>
-        <article class="build"><span class="bi"><svg><use href="#i-bot"/></svg></span><h3>Instant quote chatbot</h3><p>Answers common questions and collects job details for you.</p><span class="gain"><svg><use href="#i-arrow"/></svg>Faster quotes</span></article>
-        <article class="build"><span class="bi"><svg><use href="#i-pen"/></svg></span><h3>Logo &amp; visiting cards</h3><p>A professional look that builds trust before the first meeting.</p><span class="gain"><svg><use href="#i-arrow"/></svg>More trust</span></article>
-      </div>
-      <div class="plan-bar">
-        <p>Want this for <b>your business</b>?<small>We'll send a free plan with timeline and a fixed quote.</small></p>
-        <a class="btn btn--orange" href="#contact" data-open="Website,Google SEO,AI chatbot,Logo &amp; branding">Get my free plan <svg><use href="#i-arrow"/></svg></a>
-      </div>
-    </div>
-    <p style="margin-top:22px;color:var(--muted)">Don't see your business? We build for every industry. <a href="#contact" style="color:var(--orange);font-weight:700">Tell us what you do</a>.</p>
   </div>
 </section>
 
@@ -1208,7 +1149,7 @@ footer .wrap{padding-block:56px 32px;display:grid;gap:40px}
   <div class="wrap">
     <div class="foot-grid">
       <div class="foot-about">
-        <img src="assets/logo-full.png" alt="Bizparkers" width="156" height="38">
+        <img src="assets/logo-full.webp" alt="Bizparkers" width="156" height="38" loading="lazy" decoding="async">
         <p>A digital studio for websites, mobile apps, AI automation, branding, marketing and Google SEO. We help businesses get online, get found and grow.</p>
         <div class="socials" id="socials"></div>
       </div>
@@ -1221,7 +1162,7 @@ footer .wrap{padding-block:56px 32px;display:grid;gap:40px}
         <li><a href="#services">Digital marketing &amp; SEO</a></li>
       </ul></div>
       <div><h4>Studio</h4><ul>
-        <li><a href="#work">What we build</a></li>
+        <li><a href="#audit">Free growth audit</a></li>
         <li><a href="#why">Why us</a></li>
         <li><a href="#process">Process</a></li>
         <li><a href="#bundles">Packages</a></li>
@@ -1278,7 +1219,7 @@ const DEMO = !!window.__BP_DEMO || !/^https?:$/.test(location.protocol);
   if ("IntersectionObserver" in window) {
     const seen = new Set();
     const so = new IntersectionObserver(es => es.forEach(en => { const id = en.target.id; if (en.isIntersecting && !seen.has(id)) { seen.add(id); track("section", { label: id }); so.unobserve(en.target); } }), { threshold: .35 });
-    ["reveal", "services", "work", "why", "process", "bundles", "faq", "contact"].forEach(id => { const el = document.getElementById(id); if (el) so.observe(el); });
+    ["reveal", "services", "audit", "why", "process", "bundles", "faq", "contact"].forEach(id => { const el = document.getElementById(id); if (el) so.observe(el); });
   }
   document.addEventListener("click", e => {
     const a = e.target.closest("a, button"); if (!a) return;
@@ -1333,18 +1274,35 @@ const DEMO = !!window.__BP_DEMO || !/^https?:$/.test(location.protocol);
     $$(".marquees, .hero").forEach(el => po.observe(el));
   }
 
-  /* "what we can build" tabs (arrow keys move between them) */
-  const tabs = $$('.biz-tabs [role="tab"]');
-  const pickTab = t => {
-    tabs.forEach(x => { const on = x === t; x.setAttribute("aria-selected", on); x.tabIndex = on ? 0 : -1; $("#" + x.getAttribute("aria-controls")).hidden = !on; });
-  };
-  tabs.forEach((t, i) => {
-    t.addEventListener("click", () => pickTab(t));
-    t.addEventListener("keydown", e => {
-      const d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0; if (!d) return;
-      const n = tabs[(i + d + tabs.length) % tabs.length]; pickTab(n); n.focus(); e.preventDefault();
+  /* free growth audit form: saved as an enquiry in the admin panel */
+  (function(){
+    const f = $("#auditForm"); if (!f) return;
+    const err = $("#auditErr"), btn = $("#auditBtn");
+    const bad = (el, msg) => { err.textContent = msg; err.hidden = false; el.setAttribute("aria-invalid", "true"); el.focus(); return false; };
+    f.addEventListener("submit", async e => {
+      e.preventDefault();
+      err.hidden = true; $$("input", f).forEach(i => i.removeAttribute("aria-invalid"));
+      const name = $("#a-name").value.trim(), phone = $("#a-phone").value.trim(), link = $("#a-link").value.trim();
+      const digits = phone.replace(/\D/g, "");
+      if (name.length < 2) return bad($("#a-name"), "Please add your name.");
+      if (digits.length < 10 || digits.length > 13) return bad($("#a-phone"), "Please add a valid WhatsApp number.");
+      if (link.length < 3) return bad($("#a-link"), "Add your website or Instagram handle.");
+      btn.disabled = true; btn.textContent = "Sending…";
+      let ok = DEMO;
+      if (!DEMO) {
+        try {
+          const r = await post("/api/enquiries", { name, phone: digits.length === 10 ? "+91 " + digits : "+" + digits, services: ["Not sure yet"], budget: "",
+            message: "Free growth audit request for: " + link, sid, vid, source: { ref, landing: location.pathname + location.search, utm: utm ? [utm.s, utm.m, utm.c].filter(Boolean).join(" / ") : "", dev } });
+          const j = await r.json().catch(() => ({})); ok = r.ok && j.ok; if (!ok && j.error) err.textContent = j.error;
+        } catch (x) { ok = false; }
+      } else await new Promise(r => setTimeout(r, 400));
+      btn.disabled = false; btn.innerHTML = 'Send me my free audit <svg><use href="#i-arrow"/></svg>';
+      if (!ok) { if (!err.textContent) err.textContent = "We couldn't send this. Check your connection and try again."; err.hidden = false; return; }
+      track("form_submit", { label: "audit" });
+      $("#auditFields").hidden = true; $("#auditOk").hidden = false;
+      $("#auditOkTitle").textContent = `Thanks, ${name.split(" ")[0]}! Request received.`; $("#auditOkTitle").focus({ preventScroll: true });
     });
-  });
+  })();
 
   /* rotating headline words */
   const PAIRS = [["builders","we code websites"],["designers","we craft logos"],["app makers","we ship apps"],["AI nerds","we build AI bots"],["SEO geeks","we rank you #1"],["ad pros","we run smart ads"],["automators","we kill busywork"]];

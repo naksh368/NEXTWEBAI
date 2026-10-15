@@ -183,8 +183,12 @@ body.menu-open .mbar{transform:translateY(110%)}
 .reveal-grid .ri svg{width:22px;height:22px}
 .reveal-grid b{display:block;font-family:var(--f-display);font-weight:800;font-size:1.12rem;line-height:1.15}
 .reveal-grid span{display:block;color:var(--muted);font-size:.9rem;margin-top:3px}
-.scratch-canvas{position:absolute;inset:0;width:100%;height:100%;cursor:grab;touch-action:none;transition:opacity .6s ease}
-.scratch-canvas.gone{opacity:0;pointer-events:none}
+.scratch-canvas{position:absolute;inset:0;width:100%;height:100%;cursor:grab;touch-action:none;transform-origin:85% 0;transition:opacity .55s ease .1s, transform .75s cubic-bezier(.6,-.2,.7,1)}
+.scratch-canvas.gone{opacity:0;transform:translate(14%,-30%) rotate(14deg) scale(1.08);pointer-events:none}
+.scratch-card.revealed .reveal-grid > div{animation:tilePop .55s cubic-bezier(.2,1.4,.4,1) both;animation-delay:calc(var(--i) * 60ms + .15s)}
+@keyframes tilePop{from{opacity:0;transform:translateY(14px) scale(.94)}to{opacity:1;transform:none}}
+.scratch-card.revealed{animation:cardBump .5s ease .1s}
+@keyframes cardBump{40%{transform:scale(1.012)}}
 .scratch-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;margin-top:22px}
 .scratch-foot p{color:var(--muted)}
 @media (max-width:860px){
@@ -223,21 +227,19 @@ body.menu-open .mbar{transform:translateY(110%)}
 .svc-link:hover svg{transform:translateX(4px)}
 
 /* ---------- what we can build (by business type) ---------- */
-.work{background:var(--ink);color:var(--paper);border-block:var(--bw) solid var(--ink)}
-.work .eyebrow::before{border-color:var(--paper)}
-.work .sec-head p{color:color-mix(in srgb,var(--paper) 72%,transparent)}
+.work{background:var(--paper);color:var(--ink)}
 .biz-tabs{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:26px}
-.biz-tabs button{font:inherit;font-family:var(--f-display);font-weight:700;font-size:1rem;color:var(--paper);background:transparent;border:var(--bw) solid color-mix(in srgb,var(--paper) 45%,transparent);border-radius:999px;padding:.6rem 1.1rem;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:background .15s,color .15s,border-color .15s}
-.biz-tabs button:hover{border-color:var(--paper)}
-.biz-tabs button[aria-selected="true"]{background:var(--yellow);color:var(--ink);border-color:var(--yellow)}
+.biz-tabs button{font:inherit;font-family:var(--f-display);font-weight:700;font-size:1rem;color:var(--ink);background:var(--card);border:var(--bw) solid var(--ink);border-radius:999px;padding:.6rem 1.1rem;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:background .15s,color .15s,border-color .15s}
+.biz-tabs button:hover{background:color-mix(in srgb,var(--yellow) 35%,var(--card))}
+.biz-tabs button[aria-selected="true"]{background:var(--ink);color:var(--paper);box-shadow:3px 3px 0 var(--orange)}
 .biz-tabs svg{width:18px;height:18px}
 @media (max-width:560px){.biz-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px}.biz-tabs button{font-size:.86rem;padding:.55rem .7rem;justify-content:center;text-align:center}.biz-tabs svg{display:none}}
 .biz-panel{display:grid;gap:18px;animation:stepIn .35s cubic-bezier(.2,.8,.2,1) both}
 .build-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
 @media (max-width:1100px){.build-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:560px){.build-grid{grid-template-columns:1fr}}
-.build{background:var(--card);color:var(--ink);border:var(--bw) solid var(--paper);border-radius:var(--radius);padding:20px;display:flex;flex-direction:column;gap:10px;min-width:0;transition:transform .2s ease}
-.build:hover{transform:translateY(-4px)}
+.build{background:var(--card);color:var(--ink);border:var(--bw) solid var(--ink);box-shadow:5px 5px 0 var(--ink);border-radius:var(--radius);padding:20px;display:flex;flex-direction:column;gap:10px;min-width:0;transition:transform .2s ease}
+.build:hover{transform:translate(-3px,-3px);box-shadow:8px 8px 0 var(--ink)}
 .build .bi{width:46px;height:46px;border-radius:12px;border:var(--bw) solid var(--ink);display:grid;place-items:center;background:var(--yellow)}
 .build:nth-child(2) .bi{background:var(--orange);color:#fff}
 .build:nth-child(3) .bi{background:var(--blue);color:#fff}
@@ -247,10 +249,10 @@ body.menu-open .mbar{transform:translateY(110%)}
 .build p{color:var(--muted);font-size:.93rem}
 .build .gain{margin-top:auto;font-family:var(--f-mono);font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);display:flex;align-items:center;gap:6px;padding-top:10px;border-top:1.5px dashed color-mix(in srgb,var(--ink) 25%,transparent)}
 .build .gain svg{width:14px;height:14px;color:var(--orange)}
-.plan-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;padding:18px 22px;border:var(--bw) dashed color-mix(in srgb,var(--paper) 45%,transparent);border-radius:var(--radius)}
+.plan-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;padding:18px 22px;background:var(--yellow);border:var(--bw) solid var(--ink);border-radius:var(--radius)}
 .plan-bar p{font-size:1.05rem}
-.plan-bar p b{color:var(--yellow)}
-.plan-bar small{display:block;color:color-mix(in srgb,var(--paper) 65%,transparent);font-size:.88rem;margin-top:2px}
+.plan-bar p b{color:var(--orange)}
+.plan-bar small{display:block;color:var(--ink);opacity:.75;font-size:.88rem;margin-top:2px}
 
 /* ---------- why us (swipe) ---------- */
 .why-track{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(280px,340px);gap:20px;overflow-x:auto;scroll-snap-type:x mandatory;padding:6px 6px 22px;scrollbar-width:thin;overscroll-behavior-x:contain}
@@ -667,19 +669,19 @@ footer .wrap{padding-block:56px 32px;display:grid;gap:40px}
         <span class="eyebrow">Behind the curtain</span>
         <h2 id="scratch-title">Scratch to <span class="hl-orange">reveal</span></h2>
       </div>
-      <p>Nine ways we help businesses grow are hiding under this card. Rub it with your finger or mouse.</p>
+      <p>Nine ways we help businesses grow are hiding under this card. Swipe across it twice to open it.</p>
     </div>
     <div class="scratch-card">
       <div class="reveal-grid">
-          <div><span class="ri"><svg><use href="#i-web"/></svg></span><p><b>Websites</b><span>Fast sites that bring enquiries</span></p></div>
-          <div><span class="ri"><svg><use href="#i-cart"/></svg></span><p><b>Online stores</b><span>Shops with UPI and card payments</span></p></div>
-          <div><span class="ri"><svg><use href="#i-phone"/></svg></span><p><b>Mobile apps</b><span>Android and iOS, one codebase</span></p></div>
-          <div><span class="ri"><svg><use href="#i-app"/></svg></span><p><b>Web apps &amp; SaaS</b><span>Dashboards, portals, booking systems</span></p></div>
-          <div><span class="ri"><svg><use href="#i-bolt"/></svg></span><p><b>AI automation</b><span>Hand the busywork to AI</span></p></div>
-          <div><span class="ri"><svg><use href="#i-bot"/></svg></span><p><b>AI chatbots</b><span>Answer customers 24/7</span></p></div>
-          <div><span class="ri"><svg><use href="#i-pen"/></svg></span><p><b>Logo &amp; branding</b><span>A look people remember</span></p></div>
-          <div><span class="ri"><svg><use href="#i-mega"/></svg></span><p><b>Social media &amp; ads</b><span>Meta and Google campaigns</span></p></div>
-          <div><span class="ri"><svg><use href="#i-search"/></svg></span><p><b>Google SEO</b><span>Show up when people search</span></p></div>
+          <div style="--i:0"><span class="ri"><svg><use href="#i-web"/></svg></span><p><b>Websites</b><span>Fast sites that bring enquiries</span></p></div>
+          <div style="--i:1"><span class="ri"><svg><use href="#i-cart"/></svg></span><p><b>Online stores</b><span>Shops with UPI and card payments</span></p></div>
+          <div style="--i:2"><span class="ri"><svg><use href="#i-phone"/></svg></span><p><b>Mobile apps</b><span>Android and iOS, one codebase</span></p></div>
+          <div style="--i:3"><span class="ri"><svg><use href="#i-app"/></svg></span><p><b>Web apps &amp; SaaS</b><span>Dashboards, portals, booking systems</span></p></div>
+          <div style="--i:4"><span class="ri"><svg><use href="#i-bolt"/></svg></span><p><b>AI automation</b><span>Hand the busywork to AI</span></p></div>
+          <div style="--i:5"><span class="ri"><svg><use href="#i-bot"/></svg></span><p><b>AI chatbots</b><span>Answer customers 24/7</span></p></div>
+          <div style="--i:6"><span class="ri"><svg><use href="#i-pen"/></svg></span><p><b>Logo &amp; branding</b><span>A look people remember</span></p></div>
+          <div style="--i:7"><span class="ri"><svg><use href="#i-mega"/></svg></span><p><b>Social media &amp; ads</b><span>Meta and Google campaigns</span></p></div>
+          <div style="--i:8"><span class="ri"><svg><use href="#i-search"/></svg></span><p><b>Google SEO</b><span>Show up when people search</span></p></div>
       </div>
       <canvas class="scratch-canvas" id="scratch" aria-label="Scratch card. Drag across it to reveal our services." role="img"></canvas>
     </div>
@@ -867,7 +869,7 @@ footer .wrap{padding-block:56px 32px;display:grid;gap:40px}
         <a class="btn btn--orange" href="#contact" data-open="Website,Google SEO,AI chatbot,Logo &amp; branding">Get my free plan <svg><use href="#i-arrow"/></svg></a>
       </div>
     </div>
-    <p style="margin-top:22px;color:color-mix(in srgb,var(--paper) 70%,transparent)">Don't see your business? We build for every industry. <a href="#contact" style="color:var(--yellow);font-weight:700">Tell us what you do</a>.</p>
+    <p style="margin-top:22px;color:var(--muted)">Don't see your business? We build for every industry. <a href="#contact" style="color:var(--orange);font-weight:700">Tell us what you do</a>.</p>
   </div>
 </section>
 
@@ -1386,7 +1388,7 @@ const DEMO = !!window.__BP_DEMO || !/^https?:$/.test(location.protocol);
       ctx.fillText("SCRATCH HERE", w / 2, h / 2 - big * .45);
       ctx.fillStyle = "#FFC72E"; ctx.font = `800 ${Math.round(big * .38)}px "Bricolage Grotesque", Arial Black, sans-serif`;
       ctx.fillText("9 WAYS WE GROW YOUR BUSINESS", w / 2, h / 2 + big * .42);
-      const pill = "DRAG ACROSS WITH YOUR FINGER OR MOUSE";
+      const pill = "SWIPE TWICE TO OPEN";
       ctx.font = `700 ${Math.max(11, Math.round(big * .17))}px "Onest", system-ui, sans-serif`;
       const pw = ctx.measureText(pill).width + 36, ph = Math.max(30, big * .44), py = h - ph - 22;
       ctx.fillStyle = "#141414"; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(w / 2 - pw / 2, py, pw, ph, ph / 2) : ctx.rect(w / 2 - pw / 2, py, pw, ph); ctx.fill();
@@ -1395,18 +1397,19 @@ const DEMO = !!window.__BP_DEMO || !/^https?:$/.test(location.protocol);
     const pos = e => { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
     const scratch = p => {
       ctx.globalCompositeOperation = "destination-out"; ctx.strokeStyle = "#000"; ctx.lineCap = "round"; ctx.lineJoin = "round";
-      ctx.lineWidth = Math.max(44, w / 14);
+      ctx.lineWidth = Math.max(70, Math.min(w, h) / 3.2);
       const from = last || p;
       ctx.beginPath(); ctx.moveTo(from.x, from.y); ctx.lineTo(p.x, p.y); ctx.stroke();
       const r = ctx.lineWidth / 2, dist = Math.hypot(p.x - from.x, p.y - from.y), n = Math.max(1, Math.ceil(dist / (r / 2)));
       for (let k = 0; k <= n; k++) mark(from.x + (p.x - from.x) * k / n, from.y + (p.y - from.y) * k / n, r);
       last = p;
-      if (cleared / grid.length > .5) finish();
+      if (cleared / grid.length > .3) finish();
     };
-    const finish = () => { if (done) return; done = true; cv.classList.add("gone"); $("#revealAll").hidden = true; track("scratch", { label: "revealed" }); };
+    let strokes = 0;
+    const finish = () => { if (done) return; done = true; cv.classList.add("gone"); cv.parentElement.classList.add("revealed"); $("#revealAll").hidden = true; track("scratch", { label: "revealed" }); };
     cv.addEventListener("pointerdown", e => { if (done) return; down = true; last = null; cv.setPointerCapture(e.pointerId); scratch(pos(e)); });
     cv.addEventListener("pointermove", e => { if (down && !done) scratch(pos(e)); });
-    const up = () => { down = false; last = null; };
+    const up = () => { if (down && ++strokes >= 2 && cleared / grid.length > .08) finish(); down = false; last = null; };
     cv.addEventListener("touchmove", e => { if (!done) e.preventDefault(); }, { passive: false });
     cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
     $("#revealAll").addEventListener("click", finish);

@@ -46,6 +46,16 @@ To change the admin password later: update `ADMIN_PASSWORD` in your host's setti
 
 ## Deploy
 
+**Netlify (website on Netlify's CDN, API as a Netlify Function)**
+1. Create a free Postgres database at neon.tech and copy its connection string.
+2. Netlify → Add new site → Import from GitHub (or use the Netlify CLI) → pick this repo and the branch `claude/bizparkers-website`.
+3. Set **Base directory** to `bizparkers`. Leave build command and publish directory empty (they come from `bizparkers/netlify.toml`).
+4. Site configuration → Environment variables: `DATABASE_URL` (the Neon string), `ADMIN_EMAIL`, `ADMIN_PASSWORD` (a new, unique password), `SESSION_SECRET` (long random text), `SITE_URL` (e.g. `https://bizparkers.netlify.app`).
+5. Deploy. Check `https://your-site/healthz` shows `"storage":"postgres"`, then open `/admin`.
+
+Without GitHub: in the `bizparkers` folder run `npm i -g netlify-cli`, `npm ci`, `netlify login`, `netlify init`, then `netlify deploy --build --prod`.
+
+
 **Railway (simplest, about 5 minutes)**
 1. railway.app → New Project → Deploy from GitHub repo → pick this repo.
 2. In the service settings set **Root Directory** to `bizparkers`.

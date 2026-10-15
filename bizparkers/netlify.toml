@@ -1,0 +1,38 @@
+# Netlify settings for Bizparkers. In Netlify set "Base directory" to: bizparkers
+[build]
+  command = "npm ci && node scripts/build-netlify.js"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "20"
+  # these are settings, not secrets, so the secrets scan should not block on them
+  SECRETS_SCAN_OMIT_KEYS = "ADMIN_EMAIL,SITE_URL,TIMEZONE,NOTIFY_EMAIL,NOTIFY_FROM"
+
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["pg"]
+
+[[redirects]]
+  from = "/admin"
+  to = "/admin/"
+  status = 301
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Frame-Options = "SAMEORIGIN"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+[[headers]]
+  for = "/admin/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Cache-Control = "no-store"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"

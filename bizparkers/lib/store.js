@@ -76,7 +76,7 @@ class PgStore {
     const u = new URL(url);
     const local = /^(localhost|127\.0\.0\.1|::1)$/.test(u.hostname) || u.searchParams.get('sslmode') === 'disable' || process.env.PGSSL === 'disable';
     u.searchParams.delete('sslmode');
-    this.pool = new Pool({ connectionString: u.toString(), ssl: local ? false : { rejectUnauthorized: false }, max: 5 });
+    this.pool = new Pool({ connectionString: u.toString(), ssl: local ? false : { rejectUnauthorized: false }, max: process.env.NETLIFY ? 2 : 5 });
   }
 
   async init() {
@@ -127,10 +127,19 @@ class PgStore {
   }
 }
 
+class MissingStore {
+  constructor() { this.kind = 'none'; }
+  async init() {
+    throw Object.assign(new Error('No database connected. Add DATABASE_URL (a Postgres link, e.g. from Neon) in your Netlify environment variables, then redeploy.'), { code: 'NO_DATABASE' });
+  }
+}
+
 function createStore() {
-  return process.env.DATABASE_URL
-    ? new PgStore(process.env.DATABASE_URL)
-    : new FileStore(path.resolve(process.env.DATA_DIR || path.join(__dirname, '..', 'data')));
+  const url = process.env.DATABASE_URL || process.env.NETLIFY_DATABASE_URL;
+  if (url) return new PgStore(url);
+  // serverless hosts have no lasting disk, so file storage would silently lose data
+  if (process.env.NETLIFY || process.env.AWS_LAMBDA_FUNCTION_NAME) return new MissingStore();
+  return new FileStore(path.resolve(process.env.DATA_DIR || path.join(__dirname, '..', 'data')));
 }
 
 module.exports = { createStore };

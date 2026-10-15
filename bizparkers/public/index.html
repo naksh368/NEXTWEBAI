@@ -531,10 +531,11 @@ footer .wrap{padding-block:56px 32px;display:grid;gap:40px}
 
 @media (max-width:640px){.foot-grid ul a,.foot-bottom a{display:inline-block;padding:6px 0}.copy{padding:.45rem .8rem}}
 
+#services{padding-top:clamp(44px,6vw,80px)}
+
 /* ---------- performance: skip work for things you can't see ---------- */
 .paused .track,.paused .badge svg.ring,.paused .chip .dot{animation-play-state:paused}
 .track{will-change:transform}
-#reveal,#services,#audit,#why,#process,#bundles,#faq,#contact,footer{content-visibility:auto;contain-intrinsic-size:auto 900px}
 
 /* ---------- reveal ---------- */
 .reveal{transition:opacity .7s ease, transform .7s cubic-bezier(.2,.8,.2,1)}

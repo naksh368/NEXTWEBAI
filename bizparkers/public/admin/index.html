@@ -125,7 +125,7 @@ label.f small{font-weight:500;color:var(--muted)}
 .money-row span{font-size:.8rem;font-weight:600}
 .money-row b{font-family:var(--f-display);font-size:1.25rem;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .money-row .delta{font-size:.72rem}
-.sale-table .tr{grid-template-columns:minmax(0,1.4fr) 110px 130px 130px 120px minmax(190px,1fr)}
+.sale-table .tr{grid-template-columns:minmax(0,1.3fr) 96px 120px 120px 110px minmax(290px,1.2fr)}
 .pay{display:flex;gap:6px;align-items:center}
 .pay input{width:100%;min-width:0;padding:.4rem .6rem;border:1.5px solid var(--ink);border-radius:10px;background:var(--paper);font-size:.85rem}
 .due{color:var(--bad);font-weight:700}
@@ -304,6 +304,7 @@ dd{margin:0;overflow-wrap:anywhere;white-space:pre-wrap}
 .tl.note::before{background:var(--yellow)}
 .tl.status::before{background:var(--blue)}
 .tl.created::before{background:var(--orange)}
+.tl.payment::before,.tl.sale::before{background:#15803D}
 .tl small{display:block;font-family:var(--f-mono);font-size:.7rem;color:var(--muted)}
 .tl p{margin:2px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
 .danger{color:var(--bad)}
@@ -452,7 +453,7 @@ async function mock(path, opts) {
   if (path.endsWith("/enquiries") && m === "POST") {
     if (!b.name || b.name.trim().length < 2) throw new Error("Add the client name.");
     const e = { id: "BP-P" + Date.now().toString(36).toUpperCase(), createdAt: now, updatedAt: now, status: b.status || "New", starred: false,
-      value: +b.value || 0, paid: +b.paid || 0, closedAt: b.status === "Won" ? (b.closedAt || today()) : "", followUp: b.followUp || "", tags: [],
+      value: Math.max(+b.value || 0, +b.paid || 0), paid: +b.paid || 0, closedAt: b.status === "Won" ? (b.closedAt || today()) : "", followUp: b.followUp || "", tags: [],
       name: b.name.trim(), phone: b.phone || "", email: b.email || "", services: b.services || [], budget: "", message: b.message || "", brand: b.brand || "",
       hasSite: "", website: "", adSpend: "", improve: [], source: { ref: "manual" }, activity: [{ ts: now, type: "created", text: b.status === "Won" ? "Sale added manually in the admin panel" : "Added manually in the admin panel" }] };
     if (e.paid) e.activity.push({ ts: now, type: "payment", text: "Payment received: " + inr(e.paid) });
@@ -463,8 +464,9 @@ async function mock(path, opts) {
     const e = M.enquiries.find(x => x.id === one[1]);
     if (b.status && b.status !== e.status) { e.activity.push({ ts: now, type: "status", text: `Status changed from ${e.status} to ${b.status}` }); e.status = b.status; if (b.status === "Won" && !e.closedAt) e.closedAt = today(); }
     ["starred", "value", "paid", "followUp", "tags", "closedAt"].forEach(k => { if (b[k] !== undefined) e[k] = b[k]; });
-    if (+b.addPayment > 0 && e.value && (e.paid || 0) + +b.addPayment > e.value) throw new Error("That's more than what's still due.");
+    if (b.addWork && +b.addWork.amount > 0) { e.value = (e.value || 0) + +b.addWork.amount; if (!e.services.includes(b.addWork.service)) e.services.push(b.addWork.service); e.activity.push({ ts: now, type: "sale", text: `Added ${b.addWork.service}: ${inr(+b.addWork.amount)} (deal now ${inr(e.value)})` }); }
     if (+b.addPayment > 0) { e.paid = (e.paid || 0) + +b.addPayment; e.activity.push({ ts: now, type: "payment", text: "Payment received: " + inr(+b.addPayment) }); }
+    if ((e.paid || 0) > (e.value || 0)) { e.activity.push({ ts: now, type: "sale", text: "Deal amount raised to " + inr(e.paid) + " to match payments received" }); e.value = e.paid; }
     if (b.note) e.activity.push({ ts: now, type: "note", text: b.note });
     e.updatedAt = now; return { ok: true, enquiry: JSON.parse(JSON.stringify(e)) };
   }
@@ -494,7 +496,10 @@ function renderNav() {
   $("#sideNav").innerHTML = html; $("#tabNav").innerHTML = html;
 }
 
+let renderSeq = 0;
+const stale = seq => seq !== renderSeq;
 async function render() {
+  renderSeq++;
   renderNav();
   const r = route(), main = $("#main");
   window.scrollTo(0, 0);
@@ -574,9 +579,10 @@ async function renderDashboard(main) {
     <div id="dash"><div class="kpis">${'<div class="skeleton" style="height:96px"></div>'.repeat(5)}</div><div class="skeleton" style="height:280px"></div></div>`;
   $("#range").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; S.days = +b.dataset.d; renderDashboard(main); });
   $("#reload").addEventListener("click", () => renderDashboard(main));
-  let st;
+  let st; const seq = renderSeq;
   try { [st] = await Promise.all([api("/api/admin/stats?days=" + S.days), loadEnquiries()]); }
-  catch (e) { $("#dash").innerHTML = `<div class="card"><b>Couldn't load your dashboard.</b><p class="muted">${esc(e.message)}</p></div>`; return; }
+  catch (e) { if (stale(seq) || !$("#dash")) return; $("#dash").innerHTML = `<div class="card"><b>Couldn't load your dashboard.</b><p class="muted">${esc(e.message)}</p></div>`; return; }
+  if (stale(seq) || !$("#dash")) return;
   S.stats = st;
   const c = st.kpis.current, p = st.kpis.previous;
   $("#live").innerHTML = `<i></i><span>${st.live} on the website now</span>`;
@@ -664,7 +670,9 @@ async function renderEnquiries(main) {
         <span class="meta"><span>${esc(ago(e.createdAt))}</span><span>${esc(e.phone)}</span>${e.value ? `<span>${inr(e.value)}</span>` : ""}${overdue ? '<span class="fu">Follow-up due</span>' : ""}</span>
       </div>`; }).join("") : `<div class="empty"><b>${S.enquiries.length ? "No matches" : "No enquiries yet"}</b><span>${S.enquiries.length ? "Try a different search or filter." : "When someone fills in the form on your website, they show up here."}</span></div>`}</div>`;
   };
-  try { await loadEnquiries(); } catch (e) { $("#tbl").innerHTML = `<div class="card">${esc(e.message)}</div>`; return; }
+  const seq = renderSeq;
+  try { await loadEnquiries(); } catch (e) { if (!stale(seq) && $("#tbl")) $("#tbl").innerHTML = `<div class="card">${esc(e.message)}</div>`; return; }
+  if (stale(seq) || !$("#tbl")) return;
   draw();
   $("#q").addEventListener("input", e => { S.q = e.target.value; draw(); });
   $("#svc").addEventListener("change", e => { S.svc = e.target.value; draw(); });
@@ -719,6 +727,7 @@ function openDrawer(id, onChange) {
         <label class="f">Deal amount (₹)<input class="input" id="dValue" type="number" min="0" step="500" inputmode="numeric" value="${e.value || ""}" placeholder="0"></label>
         <label class="f">Received so far (₹)<input class="input" id="dPaid" type="number" min="0" step="500" inputmode="numeric" value="${e.paid || ""}" placeholder="0"></label>
         <label class="f">Add a payment (₹)<span class="pay"><input id="dPayAmt" type="number" min="1" inputmode="numeric" placeholder="e.g. 10000"><button class="btn btn--sm" type="button" id="dPayBtn">Add</button></span></label>
+        <div class="f" style="grid-column:1/-1"><span>Sold more to this client? <small>Adds to the deal amount</small></span><span class="pay"><select class="input" id="dWorkSvc" style="width:auto;padding:.4rem .6rem">${SVC_OPTIONS.map(x => `<option>${x}</option>`).join("")}</select><input id="dWorkAmt" type="number" min="1" inputmode="numeric" placeholder="₹ amount"><button class="btn btn--sm" type="button" id="dWorkBtn">Add work</button></span></div>
         <label class="f">Follow-up date<input class="input" id="dFollow" type="date" value="${esc(e.followUp || "")}"></label>
         ${e.status === "Won" ? `<label class="f">Closed on<input class="input" id="dClosed" type="date" value="${esc(e.closedAt || "")}"></label>
         <div class="f"><span>Still to collect</span><b class="${(e.value || 0) - (e.paid || 0) > 0 ? "due" : "paid-full"}" style="font-size:1.2rem">${(e.value || 0) - (e.paid || 0) > 0 ? inr((e.value || 0) - (e.paid || 0)) : "Fully paid"}</b></div>` : ""}
@@ -743,7 +752,8 @@ function openDrawer(id, onChange) {
   $("#dValue").onchange = async ev => refresh(await patch(id, { value: Number(ev.target.value) || 0 }));
   $("#dFollow").onchange = async ev => refresh(await patch(id, { followUp: ev.target.value }));
   $("#dPaid").onchange = async ev => refresh(await patch(id, { paid: Number(ev.target.value) || 0 }));
-  $("#dPayBtn").onclick = async () => { const v = Number($("#dPayAmt").value), due = (e.value || 0) - (e.paid || 0); if (!(v > 0)) { $("#dPayAmt").focus(); return; } if (e.value && v > due) { toast("That's more than what's still due (" + inr(Math.max(0, due)) + ")."); return; } refresh(await patch(id, { addPayment: v })); };
+  $("#dPayBtn").onclick = async () => { const v = Number($("#dPayAmt").value); if (!(v > 0)) { $("#dPayAmt").focus(); return; } refresh(await patch(id, { addPayment: v })); };
+  $("#dWorkBtn").onclick = async () => { const v = Number($("#dWorkAmt").value); if (!(v > 0)) { $("#dWorkAmt").focus(); return; } refresh(await patch(id, { addWork: { amount: v, service: $("#dWorkSvc").value } })); };
   if ($("#dClosed")) $("#dClosed").onchange = async ev => refresh(await patch(id, { closedAt: ev.target.value }));
   $("#dTags").onchange = async ev => refresh(await patch(id, { tags: ev.target.value.split(",").map(t => t.trim()).filter(Boolean) }));
   $("#dAddNote").onclick = async () => { const v = $("#dNote").value.trim(); if (!v) { $("#dNote").focus(); return; } refresh(await patch(id, { note: v })); };
@@ -784,7 +794,6 @@ function openNewForm(status, onDone) {
       message: $("#nNote").value.trim() };
     if (st === "Won") body.closedAt = date || today(); else body.followUp = date;
     if (body.name.length < 2) { err.textContent = "Add the client name."; err.hidden = false; $("#nName").focus(); return; }
-    if (body.paid > body.value && body.value) { err.textContent = "Received can't be more than the amount."; err.hidden = false; $("#nPaid").focus(); return; }
     $("#nSave").disabled = true;
     try { const j = await api("/api/admin/enquiries", { method: "POST", body }); S.enquiries.unshift(j.enquiry); renderNav(); closeDrawer(); toast(st === "Won" ? "Sale added" : "Enquiry added"); if (onDone) onDone(); }
     catch (x) { err.textContent = x.message; err.hidden = false; $("#nSave").disabled = false; }
@@ -798,7 +807,9 @@ addEventListener("keydown", e => { if (e.key === "Escape" && S.openId) closeDraw
 /* ================= pipeline ================= */
 async function renderPipeline(main) {
   main.innerHTML = `<div class="page-head"><div><h1>Pipe<span>line</span></h1><p class="sub">Drag a card to move it, or use the menu on the card.</p></div></div><div id="board"><div class="skeleton" style="height:300px"></div></div>`;
-  try { await loadEnquiries(); } catch (e) { $("#board").innerHTML = `<div class="card">${esc(e.message)}</div>`; return; }
+  const seq = renderSeq;
+  try { await loadEnquiries(); } catch (e) { if (!stale(seq) && $("#board")) $("#board").innerHTML = `<div class="card">${esc(e.message)}</div>`; return; }
+  if (stale(seq) || !$("#board")) return;
   const draw = () => {
     $("#board").innerHTML = `<div class="board">${STATUSES.map(s => {
       const list = S.enquiries.filter(e => e.status === s), total = list.reduce((a, e) => a + (e.value || 0), 0);
@@ -833,8 +844,9 @@ async function renderSales(main) {
   const days = S.salesDays || 30;
   $("#sRange").onclick = e => { const b = e.target.closest("button"); if (b) { S.salesDays = +b.dataset.d; renderSales(main); } };
   $("#addSale").onclick = () => openNewForm("Won", () => renderSales(main));
-  let st;
-  try { [st] = await Promise.all([api("/api/admin/stats?days=" + days), loadEnquiries()]); } catch (e) { $("#sales").innerHTML = `<div class="card">${esc(e.message)}</div>`; return; }
+  let st; const seq = renderSeq;
+  try { [st] = await Promise.all([api("/api/admin/stats?days=" + days), loadEnquiries()]); } catch (e) { if (!stale(seq) && $("#sales")) $("#sales").innerHTML = `<div class="card">${esc(e.message)}</div>`; return; }
+  if (stale(seq) || !$("#sales")) return;
   const sl = st.sales, won = S.enquiries.filter(e => e.status === "Won").sort((a, b) => (b.closedAt || "") < (a.closedAt || "") ? -1 : 1);
   const pending = S.enquiries.filter(e => OPEN.includes(e.status));
   $("#sales").innerHTML = `
@@ -857,13 +869,15 @@ async function renderSales(main) {
           <span class="hide-m ${due ? "due" : "paid-full"}">${due ? inr(due) : "Paid"}</span>
           <span class="amt money" style="display:none"></span>
           <span class="meta">${inr(e.value)} · received ${inr(e.paid)} · <span class="${due ? "due" : "paid-full"}">${due ? inr(due) + " to collect" : "fully paid"}</span></span>
-          ${due ? `<span class="pay"><input type="number" min="1" max="${due}" inputmode="numeric" placeholder="up to ${inr(due)}" aria-label="Payment amount for ${esc(e.name)}" data-pay="${esc(e.id)}"><button class="btn btn--sm" type="button" data-paybtn="${esc(e.id)}">Add</button></span>` : `<span class="pay paid-full">✓ Fully paid</span>`}
+          <span class="pay"><input type="number" min="1" inputmode="numeric" placeholder="${due ? inr(due) + " due" : "₹ amount"}" aria-label="Payment amount for ${esc(e.name)}" data-pay="${esc(e.id)}"><button class="btn btn--sm" type="button" data-paybtn="${esc(e.id)}">Add</button><button class="btn btn--sm" type="button" data-more="${esc(e.id)}" title="Sold more to this client">+ Sold more</button></span>
         </div>`; }).join("") : `<div class="empty"><b>No sales yet</b><span>Mark an enquiry as Won, or press “Add a sale” for clients who paid you directly.</span></div>`}</div></div>
     </div>`;
   barChart($("#chS"), sl.monthly, "amount", "#15803D", "Sales", { xfmt: fmtMonth, yfmt: inrShort, tfmt: inr, padL: 52 });
   $("#sales").onclick = async e => {
     const btn = e.target.closest("[data-paybtn]"), open = e.target.closest("[data-open-deal]");
-    if (btn) { const inp = $(`[data-pay="${btn.dataset.paybtn}"]`); const v = Number(inp.value), max = Number(inp.max); if (!(v > 0)) { inp.focus(); return; } if (max && v > max) { toast("That's more than what's still due (" + inr(max) + ")."); inp.focus(); return; } if (await patch(btn.dataset.paybtn, { addPayment: v }, true)) { toast("Payment added"); renderSales(main); } }
+    const more = e.target.closest("[data-more]");
+    if (more) { openDrawer(more.dataset.more, () => renderSales(main)); setTimeout(() => $("#dWorkAmt") && $("#dWorkAmt").focus(), 80); return; }
+    if (btn) { const inp = $(`[data-pay="${btn.dataset.paybtn}"]`); const v = Number(inp.value); if (!(v > 0)) { inp.focus(); return; } if (await patch(btn.dataset.paybtn, { addPayment: v }, true)) { toast("Payment added"); renderSales(main); } }
     else if (open) openDrawer(open.dataset.openDeal, () => renderSales(main));
   };
 }
@@ -871,7 +885,9 @@ async function renderSales(main) {
 /* ================= follow-ups ================= */
 async function renderFollowups(main) {
   main.innerHTML = `<div class="page-head"><div><h1>Follow-<span>ups</span></h1><p class="sub">Who to call today, so no lead goes cold.</p></div></div><div id="fu"><div class="skeleton" style="height:240px"></div></div>`;
-  try { await loadEnquiries(); } catch (e) { $("#fu").innerHTML = `<div class="card">${esc(e.message)}</div>`; return; }
+  const seq = renderSeq;
+  try { await loadEnquiries(); } catch (e) { if (!stale(seq) && $("#fu")) $("#fu").innerHTML = `<div class="card">${esc(e.message)}</div>`; return; }
+  if (stale(seq) || !$("#fu")) return;
   const draw = () => {
     const t = today(), open = S.enquiries.filter(e => !["Won", "Lost", "Spam"].includes(e.status));
     const groups = [
@@ -909,8 +925,9 @@ async function renderFollowups(main) {
 /* ================= settings ================= */
 async function renderSettings(main) {
   main.innerHTML = `<div class="page-head"><div><h1>Set<span>tings</span></h1><p class="sub">Change what the website shows, without touching code.</p></div></div><div id="set"><div class="skeleton" style="height:300px"></div></div>`;
-  let s;
-  try { s = (await api("/api/admin/settings")).settings; } catch (e) { $("#set").innerHTML = `<div class="card">${esc(e.message)}</div>`; return; }
+  let s; const seq = renderSeq;
+  try { s = (await api("/api/admin/settings")).settings; } catch (e) { if (!stale(seq) && $("#set")) $("#set").innerHTML = `<div class="card">${esc(e.message)}</div>`; return; }
+  if (stale(seq) || !$("#set")) return;
   $("#set").innerHTML = `
     <form class="grid" id="setForm" novalidate>
       <div class="card c6" style="display:grid;gap:14px;align-content:start"><h3>Contact details</h3><p class="note" style="margin:0">Shown in the contact section and footer of the website.</p>

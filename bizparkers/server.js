@@ -264,11 +264,10 @@ async function api(req, res, url) {
       if (name.length < 2) return send(res, 400, { ok: false, error: 'Add the client name.' });
       const status = STATUSES.includes(b.status) ? b.status : 'New';
       const now = new Date().toISOString();
-      if (money(b.value) && money(b.paid) > money(b.value)) return send(res, 400, { ok: false, error: "Received can't be more than the amount." });
       const e = {
         id: newId(), token: crypto.randomBytes(16).toString('hex'),
         createdAt: now, updatedAt: now, status, starred: false,
-        value: money(b.value), paid: money(b.paid), closedAt: status === 'Won' ? (ymd(b.closedAt) || now.slice(0, 10)) : '',
+        value: Math.max(money(b.value), money(b.paid)), paid: money(b.paid), closedAt: status === 'Won' ? (ymd(b.closedAt) || now.slice(0, 10)) : '',
         followUp: ymd(b.followUp), tags: [].concat(b.tags || []).map(t => str(t, 30)).filter(Boolean).slice(0, 10),
         name, phone: str(b.phone, 24), email: str(b.email, 120),
         services: [].concat(b.services || []).map(s => str(s, 40)).filter(Boolean).slice(0, 10),
@@ -304,15 +303,22 @@ async function api(req, res, url) {
       }
       if (b.starred !== undefined) e.starred = !!b.starred;
       if (b.value !== undefined) e.value = money(b.value);
-      const total = Number(e.value) || 0;
-      if (b.paid !== undefined && total && money(b.paid) > total) return send(res, 400, { ok: false, error: `Received can't be more than the deal amount (₹${total.toLocaleString('en-IN')}).` });
-      if (b.addPayment !== undefined && total && (Number(e.paid) || 0) + money(b.addPayment) > total) {
-        return send(res, 400, { ok: false, error: `That's more than what's still due (₹${Math.max(0, total - (Number(e.paid) || 0)).toLocaleString('en-IN')}).` });
+      // sold more to the same client: add the work and its price to the deal
+      if (b.addWork && money(b.addWork.amount) > 0) {
+        const amt = money(b.addWork.amount), what = str(b.addWork.service, 40) || 'Extra work';
+        e.value = (Number(e.value) || 0) + amt;
+        if (b.addWork.service && !e.services.includes(what)) e.services.push(what);
+        e.activity.push({ ts: now, type: 'sale', text: `Added ${what}: ₹${amt.toLocaleString('en-IN')} (deal now ₹${e.value.toLocaleString('en-IN')})` });
       }
       if (b.paid !== undefined) e.paid = money(b.paid);
       if (b.addPayment !== undefined && money(b.addPayment) > 0) {
         e.paid = (Number(e.paid) || 0) + money(b.addPayment);
         e.activity.push({ ts: now, type: 'payment', text: `Payment received: ₹${money(b.addPayment).toLocaleString('en-IN')}` });
+      }
+      // received more than the deal amount: the extra counts as extra sales
+      if ((Number(e.paid) || 0) > (Number(e.value) || 0)) {
+        e.activity.push({ ts: now, type: 'sale', text: `Deal amount raised to ₹${Number(e.paid).toLocaleString('en-IN')} to match payments received` });
+        e.value = Number(e.paid);
       }
       if (b.closedAt !== undefined) e.closedAt = /^\d{4}-\d{2}-\d{2}$/.test(b.closedAt) ? b.closedAt : '';
       if (b.followUp !== undefined) e.followUp = /^\d{4}-\d{2}-\d{2}$/.test(b.followUp) ? b.followUp : '';
